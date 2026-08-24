@@ -37,6 +37,20 @@ input, textarea {
   -webkit-user-select: text;
 }
 
+html, body {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 body {
   font-family: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
   background-color: #111;
@@ -45,6 +59,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   overflow: hidden;
 }
 
@@ -63,6 +78,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 /* インナーディスプレイ */
@@ -75,6 +92,8 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 /* --- ステータスバー --- */

@@ -129,15 +129,73 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- 操作制限 (デフォルト挙動の無効化) ---
+// --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---
 function applyOperationalRestrictions() {
-  // 右クリック禁止
+  // 右クリック・長押しコンテキストメニュー禁止
   document.addEventListener('contextmenu', e => e.preventDefault());
   
   // ピンチイン・アウトによる拡大縮小禁止（マルチタッチのみ、シングルタップは影響なし）
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length > 1) {
       e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Pull-to-refresh（上からの引っ張りリロード）および画面全体のオーバースクロールを完全防止
+  let touchStartY = 0;
+  let scrollTarget = null;
+
+  function findScrollableParent(el) {
+    while (el && el !== document.body && el !== document.documentElement) {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+      if (isScrollable) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStartY = e.touches[0].clientY;
+      scrollTarget = findScrollableParent(e.target);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!scrollTarget) {
+      // スクロール可能要素以外の場所（背景、ツールバー、Dock、ロック画面等）でのドラッグを全面禁止
+      e.preventDefault();
+      return;
+    }
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - touchStartY;
+    const isAtTop = scrollTarget.scrollTop <= 0;
+    const isAtBottom = scrollTarget.scrollTop + scrollTarget.clientHeight >= scrollTarget.scrollHeight - 1;
+
+    // 最上部で下に引っ張った場合（Pull-to-refreshの発動条件）はリロードをブロック
+    if (isAtTop && deltaY > 0) {
+      e.preventDefault();
+    }
+    // 最下部で上に引っ張った場合（バウンススクロール）もブロック
+    else if (isAtBottom && deltaY < 0) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // マウスホイールによる最外枠バウンスも防止
+  window.addEventListener('wheel', (e) => {
+    const target = findScrollableParent(e.target);
+    if (!target) {
+      e.preventDefault();
+    } else {
+      const isAtTop = target.scrollTop <= 0;
+      const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+      if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+        e.preventDefault();
+      }
     }
   }, { passive: false });
 }
