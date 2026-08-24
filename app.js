@@ -771,46 +771,61 @@ function toggleMetaQrScanner() {
 let activeStream = null;
 let qrScanTimeout = null;
 
-function startQrScanner(videoId, canvasId, callback) {
+function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-result') {
+  stopAllCameraStreams();
+
   const video = document.getElementById(videoId);
   const canvas = document.getElementById(canvasId);
-  const resultBox = document.getElementById('meta-qr-result');
+  const resultBox = document.getElementById(resultBoxId);
   
   if (resultBox) {
-    resultBox.innerText = "カメラ起動中...";
+    resultBox.innerText = "カメラを起動しています...";
     resultBox.className = "qr-result-box";
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (resultBox) {
+      resultBox.innerText = "⚠️ この端末はカメラAPIに対応していません。手動入力をご利用ください。";
+      resultBox.className = "qr-result-box error";
+    }
+    return;
   }
 
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
     .then(stream => {
       activeStream = stream;
-      video.srcObject = stream;
-      video.setAttribute("playsinline", true);
-      video.play();
-      if (resultBox) resultBox.innerText = "QRコードをスキャン中...";
+      if (video) {
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true);
+        video.play();
+      }
+      if (resultBox) {
+        resultBox.innerText = "🔍 QRコードをスキャン枠に合わせてください...";
+        resultBox.className = "qr-result-box";
+      }
       
       qrScanTimeout = requestAnimationFrame(tick);
     })
     .catch(err => {
-      console.error(err);
+      console.warn("カメラアクセス失敗/拒否:", err);
       if (resultBox) {
-        resultBox.innerText = "カメラへのアクセスが拒否されました。";
+        resultBox.innerText = "📷 カメラへのアクセスが許可されていません（手動入力をご利用ください）";
         resultBox.className = "qr-result-box error";
       }
     });
 
   function tick() {
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    if (video && video.readyState === video.HAVE_ENOUGH_DATA && canvas) {
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       canvas.height = video.videoHeight;
       canvas.width = video.videoWidth;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      const code = (typeof jsQR !== 'undefined') ? jsQR(imageData.data, imageData.width, imageData.height, {
         inversionAttempts: "dontInvert",
-      });
+      }) : null;
 
-      if (code) {
+      if (code && code.data) {
         stopAllCameraStreams();
         callback(code.data, resultBox);
         return;
@@ -1248,8 +1263,81 @@ function sendCustomLinkMessage() {
   logWriteToGAS("LINK_SEND_ATTEMPT", `メッセージ送信試行 (${gameState.activeChatContact}): ${text}`);
 }
 
+// --- LINK専用 QRコード友達追加 ---
 function openLinkQr() {
-  showIpadModal("LINK 友達追加", "QRコードをスキャンして連絡先を追加するには、メタアプリ内の「情報記録」から実行してください。");
+  const modal = document.getElementById('link-qr-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  
+  const resultBox = document.getElementById('link-qr-result');
+  if (resultBox) {
+    resultBox.innerText = "カメラを起動しています...";
+    resultBox.className = "qr-result-box";
+  }
+
+  startQrScanner('link-video', 'link-canvas', handleLinkQrScan, 'link-qr-result');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  logWriteToGAS("LINK_QR_MODAL_OPEN", "LINK友達追加QRリーダーを起動しました。");
+}
+
+function closeLinkQr() {
+  const modal = document.getElementById('link-qr-modal');
+  if (modal) modal.style.display = 'none';
+  stopAllCameraStreams();
+}
+
+function handleLinkQrScan(data, resultBox) {
+  const cleanData = (data || '').trim();
+  const friendMap = window.GAME_DATABASE.linkApp.addFriendQr || {};
+  const friend = friendMap[cleanData];
+
+  if (friend) {
+    // 友達リストに追加
+    if (!gameState.addedFriends.includes(friend.id)) {
+      gameState.addedFriends.push(friend.id);
+      saveStateToStorage();
+    }
+
+    if (resultBox) {
+      resultBox.innerText = `✅ ${friend.name} を友達に追加しました！`;
+      resultBox.className = "qr-result-box success";
+    }
+
+    showPushNotification("LINK", `${friend.name} を友達に追加しました`, "user-plus");
+    playSystemSound("fanfare");
+    logWriteToGAS("LINK_FRIEND_ADDED", `LINK友達追加成功: ${friend.name} (${cleanData})`);
+
+    // 1秒後にモーダルを閉じてトーク画面を自動オープン
+    setTimeout(() => {
+      closeLinkQr();
+      renderLinkChatList();
+      openLinkChat(friend.id);
+    }, 1100);
+  } else {
+    // 未知のコード
+    if (resultBox) {
+      resultBox.innerText = `⚠️ 未登録のQRコードです: ${cleanData}`;
+      resultBox.className = "qr-result-box error";
+    }
+    playSystemSound("error");
+    logWriteToGAS("LINK_QR_UNKNOWN", `LINK未登録QRコードスキャン: ${cleanData}`);
+  }
+}
+
+function handleManualLinkQr() {
+  const input = document.getElementById('link-manual-qr-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  
+  const resultBox = document.getElementById('link-qr-result');
+  handleLinkQrScan(val, resultBox);
+  input.value = "";
+}
+
+function simulateQrScan(qrCode) {
+  const resultBox = document.getElementById('link-qr-result');
+  handleLinkQrScan(qrCode, resultBox);
 }
 
 // ==========================================================================

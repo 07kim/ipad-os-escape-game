@@ -285,15 +285,27 @@
 
               <!-- インラインQRスキャナーカメラエリア（トグル開閉） -->
               <div id="meta-qr-inline-scanner" style="display:none; background:#f0f2f5; padding:16px; border-radius:12px; margin-bottom:20px; border:2px dashed var(--system-blue);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <strong style="font-size:13px; color:var(--system-blue);">📷 QRコードをカメラにかざしてください</strong>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <strong style="font-size:14px; color:var(--system-blue); display:flex; align-items:center; gap:6px;">📷 QRコードをカメラにかざしてください</strong>
                   <button class="btn-text" onclick="toggleMetaQrScanner()" style="font-size:12px; cursor:pointer;">✕ 閉じる</button>
                 </div>
-                <div class="camera-container" style="text-align:center;">
-                  <video id="meta-video" autoplay playsinline style="width: 100%; max-height: 220px; background: #000; border-radius: 8px;"></video>
-                  <canvas id="meta-canvas" style="display:none;"></canvas>
+                <!-- 正方形QRコードスキャナーフレーム -->
+                <div class="qr-scanner-box">
+                  <div class="qr-scanner-viewport">
+                    <video id="meta-video" autoplay playsinline></video>
+                    <canvas id="meta-canvas" style="display:none;"></canvas>
+                    <!-- スキャン枠 & レーザーライン -->
+                    <div class="qr-target-frame">
+                      <div class="qr-corner top-left"></div>
+                      <div class="qr-corner top-right"></div>
+                      <div class="qr-corner bottom-left"></div>
+                      <div class="qr-corner bottom-right"></div>
+                      <div class="qr-laser-line"></div>
+                    </div>
+                  </div>
+                  <p class="qr-guide-text">枠内に機密情報のQRコードを合わせてください</p>
                 </div>
-                <div class="qr-result-box" id="meta-qr-result" style="margin-top:8px;">カメラ起動中...</div>
+                <div class="qr-result-box" id="meta-qr-result" style="margin-top:10px;">カメラを起動しています...</div>
               </div>
 
               <!-- 入手情報カードリスト -->
@@ -426,12 +438,45 @@
         <div class="link-qr-modal" id="link-qr-modal">
           <div class="link-qr-modal-content">
             <div class="link-qr-modal-header">
-              <h3>連絡先を追加 (QRスキャン)</h3>
-              <button onclick="closeLinkQr()"><i data-lucide="x"></i></button>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <i data-lucide="user-plus" style="color:var(--system-blue);"></i>
+                <h3 style="font-size:16px; font-weight:700;">連絡先を追加 (QRスキャン)</h3>
+              </div>
+              <button onclick="closeLinkQr()" class="btn-icon" style="background:#f2f2f7; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
             </div>
-            <video id="link-video" autoplay playsinline style="width: 100%; max-height: 250px; background: #000; border-radius: 8px;"></video>
-            <canvas id="link-canvas" style="display:none;"></canvas>
-            <div class="qr-result-box" id="link-qr-result">スキャン待機中...</div>
+
+            <!-- 正方形QRコードスキャナーフレーム -->
+            <div class="qr-scanner-box">
+              <div class="qr-scanner-viewport">
+                <video id="link-video" autoplay playsinline></video>
+                <canvas id="link-canvas" style="display:none;"></canvas>
+                <!-- スキャン枠 & レーザーライン -->
+                <div class="qr-target-frame">
+                  <div class="qr-corner top-left"></div>
+                  <div class="qr-corner top-right"></div>
+                  <div class="qr-corner bottom-left"></div>
+                  <div class="qr-corner bottom-right"></div>
+                  <div class="qr-laser-line"></div>
+                </div>
+              </div>
+              <p class="qr-guide-text">枠内に友達のQRコードを合わせてください</p>
+            </div>
+
+            <div class="qr-result-box" id="link-qr-result">カメラを起動しています...</div>
+
+            <!-- 手動入力 / テスト用クイック追加 -->
+            <div class="qr-manual-box" style="margin-top:14px; padding-top:12px; border-top:1px solid #e5e5ea;">
+              <div style="font-size:11px; color:#8e8e93; margin-bottom:6px; font-weight:600;">カメラが使えない場合（ID・QRコード手動登録）:</div>
+              <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input type="text" id="link-manual-qr-input" placeholder="例: friend_jinnai" style="flex:1; padding:8px 12px; font-size:12px; border:1px solid #d1d5db; border-radius:8px;">
+                <button class="btn btn-primary" onclick="handleManualLinkQr()" style="padding:8px 14px; font-size:12px;">追加</button>
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn-subtle" onclick="simulateQrScan('friend_jinnai')" style="font-size:11px; padding:4px 8px;">＋ 陣内 樹を追加</button>
+                <button class="btn-subtle" onclick="simulateQrScan('friend_fukasawa')" style="font-size:11px; padding:4px 8px;">＋ 深澤 文哉を追加</button>
+                <button class="btn-subtle" onclick="simulateQrScan('friend_inukai')" style="font-size:11px; padding:4px 8px;">＋ 犬飼 玲を追加</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
