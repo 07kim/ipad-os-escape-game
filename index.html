@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>26__0094 - iPadOS Terminal</title>
+  
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23007aff'><rect width='512' height='512' rx='128'/><path d='M160 128h192v256H160z' fill='white'/></svg>">
+
+  <!-- Google Fonts & Lucide Icons & jsQR -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  <!-- キャッシュバイパス用インラインスタイル（CSSが古い場合の上書き） -->
+  <style>
+    .home-screen {
+      flex: 0 0 auto;
+      padding: 40px 24px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px 12px;
+      align-content: start;
+      height: auto;
+    }
+    .app-icon-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      padding-bottom: 4px;
+    }
+    .app-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      transition: transform 0.15s ease;
+      background-color: #fff;
+    }
+    .app-label {
+      font-size: 11px;
+      margin-top: 5px;
+      text-align: center;
+      color: #1c1c1e;
+      font-weight: 500;
+    }
+    .lock-screen.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- iPad本体の枠（レスポンシブで4:3比率を維持） -->
+  <div class="ipad-frame">
+    <div class="ipad-screen">
+
+      <!-- ========================================== -->
+      <!-- 1. ステータスバー（画面上部） -->
+      <!-- ========================================== -->
+      <div class="status-bar">
+        <div class="status-bar-left">
+          <span id="sb-team-id">No Team</span>
+          <i data-lucide="wifi" class="wifi-icon"></i>
+          <span style="font-size: 11px;">2126G</span>
+        </div>
+        <div class="status-bar-center" id="sb-clock">
+          10:00
+        </div>
+        <div class="status-bar-right">
+          <i data-lucide="bluetooth" style="width: 12px; height: 12px;"></i>
+          <span style="font-size: 11px; margin-right: 4px;">999%</span>
+          <div class="battery-icon"></div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 1.5. iPadOS風 プッシュ通知バナー ＆ モーダル -->
+      <!-- ========================================== -->
+      <div class="push-notification-banner" id="push-notification-banner" onclick="handleBannerClick()">
+        <div class="push-notif-icon-wrap" id="push-notif-icon-wrap">
+          <i data-lucide="message-square" id="push-notif-icon"></i>
+        </div>
+        <div class="push-notif-body">
+          <div class="push-notif-header">
+            <span id="push-notif-app">LINK</span>
+            <span id="push-notif-time">只今</span>
+          </div>
+          <div class="push-notif-title" id="push-notif-title">通知タイトル</div>
+          <div class="push-notif-desc" id="push-notif-desc">通知本文</div>
+        </div>
+      </div>
+
+      <!-- フロストグラス調 iPadOS風モーダルダイアログ -->
+      <div class="ipad-modal-overlay" id="ipad-modal-overlay">
+        <div class="ipad-modal-box">
+          <div class="ipad-modal-content">
+            <div class="ipad-modal-title" id="ipad-modal-title">タイトル</div>
+            <div class="ipad-modal-msg" id="ipad-modal-msg">メッセージ内容</div>
+          </div>
+          <div class="ipad-modal-actions" id="ipad-modal-actions">
+            <button class="ipad-modal-btn" onclick="closeIpadModal()">OK</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 2. ロック画面（全画面オーバーレイ） -->
+      <!-- ========================================== -->
+      <div class="lock-screen" id="lock-screen">
+        <div class="lock-info">
+          <div class="lock-clock" id="lock-clock">10:00</div>
+          <div class="lock-date" id="lock-date">8月22日 金曜日</div>
+        </div>
+        
+        <!-- リアルな日常通知センター（ネタバレなし） -->
+        <div class="lock-notifications" id="lock-notifications">
+          <div class="lock-notifications-list" id="lock-notifications-list"></div>
+        </div>
+
+        <div class="lock-footer">
+          <div class="swipe-to-unlock" id="swipe-to-unlock-btn" onclick="unlockScreen()">
+            <span class="swipe-arrow">→</span> タップしてロック解除
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 3. ホーム画面 -->
+      <!-- ========================================== -->
+      <div class="home-screen" id="home-screen">
+        <!-- アプリグリッド -->
+        <div class="app-grid">
+          
+          <div class="app-icon-wrapper" onclick="openApp('meta-app')">
+            <div class="app-icon app-meta-icon">
+              <i data-lucide="folder-open"></i>
+            </div>
+            <span class="app-name">26__0094</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('browser-app')">
+            <div class="app-icon app-browser-icon">
+              <i data-lucide="globe"></i>
+            </div>
+            <span class="app-name">Google</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('link-app')">
+            <div class="app-icon app-link-icon">
+              <i data-lucide="message-square"></i>
+            </div>
+            <span class="app-name">LINK</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('manaba-app')">
+            <div class="app-icon app-manaba-icon">
+              <span>m</span>
+            </div>
+            <span class="app-name">manaba</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('mail-app')">
+            <div class="app-icon app-mail-icon">
+              <i data-lucide="mail"></i>
+            </div>
+            <span class="app-name">メール</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('phone-app')">
+            <div class="app-icon app-phone-icon">
+              <i data-lucide="phone"></i>
+            </div>
+            <span class="app-name">電話</span>
+          </div>
+
+          <div class="app-icon-wrapper" onclick="openApp('settings-app')">
+            <div class="app-icon app-settings-icon">
+              <i data-lucide="settings"></i>
+            </div>
+            <span class="app-name">設定</span>
+          </div>
+
+        </div>
+
+        <!-- 下部ドック (Dock) -->
+        <div class="dock-container">
+          <div class="dock">
+            <div class="dock-icon" onclick="openApp('meta-app')"><i data-lucide="folder-open"></i></div>
+            <div class="dock-icon" onclick="openApp('browser-app')"><i data-lucide="globe"></i></div>
+            <div class="dock-icon" onclick="openApp('link-app')"><i data-lucide="message-square"></i></div>
+            <div class="dock-icon manaba-dock-icon" onclick="openApp('manaba-app')">m</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 4. アプリケーションウィンドウ群 -->
+      <!-- ========================================== -->
+      
+      <!-- ------------------------------------------ -->
+      <!-- ① メタアプリ「26__0094」 -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-meta-app">
+        <div class="app-window-header">
+          <span class="window-title"><i data-lucide="folder" style="width:16px; height:16px; vertical-align:middle; margin-right:4px;"></i> 26__0094 - 情報管理フォルダ</span>
+        </div>
+        <div class="meta-container">
+          <!-- サイドメニュー -->
+          <div class="meta-sidebar">
+            <button class="meta-tab-btn active" onclick="switchMetaTab('rules')"><i data-lucide="book-open"></i> 操作ガイド</button>
+            <button class="meta-tab-btn" onclick="switchMetaTab('synopsis')"><i data-lucide="git-merge"></i> あらすじ・相関図</button>
+            <button class="meta-tab-btn" onclick="switchMetaTab('hints')"><i data-lucide="archive"></i> 情報記録</button>
+            <button class="meta-tab-btn" onclick="switchMetaTab('memo')"><i data-lucide="edit-3"></i> 調査メモ</button>
+          </div>
+          <!-- コンテンツ表示エリア -->
+          <div class="meta-content">
+            <!-- ガイド -->
+            <div class="meta-panel active" id="meta-panel-rules">
+              <h2>2126年 端末操作ガイド</h2>
+              <div class="panel-inner" id="meta-rules-text">ルール読み込み中...</div>
+              <h3 style="margin-top:20px;">学内マップ（2126年フロア構成）</h3>
+              <img id="meta-map-img" class="meta-map" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" alt="MAP">
+            </div>
+
+            <!-- あらすじ・相関図 -->
+            <div class="meta-panel" id="meta-panel-synopsis">
+              <h2>学内調査状況 ＆ ビジュアル相関図</h2>
+              <div id="meta-synopsis-timeline"></div>
+              
+              <h3 style="margin-top:24px; margin-bottom:12px;">登場人物 相関図</h3>
+              <div class="visual-relationship-container">
+                <div class="rel-group">
+                  <div class="rel-group-title">【現代組】2024年からの漂流者（学生5名）</div>
+                  <div class="rel-cards-grid">
+                    <div class="rel-card modern"><span class="rel-sym">A</span><strong>矢田 逞</strong><small>2年・企画 / 主人公</small></div>
+                    <div class="rel-card modern"><span class="rel-sym">B</span><strong>鷺坂 のの</strong><small>3年・知能メディア</small></div>
+                    <div class="rel-card modern"><span class="rel-sym">C</span><strong>櫻井 康佑</strong><small>3年・知能メディア</small></div>
+                    <div class="rel-card modern"><span class="rel-sym">D</span><strong>渡辺 夢叶</strong><small>2年・渉外 / 洞察</small></div>
+                    <div class="rel-card modern warning"><span class="rel-sym">E</span><strong>鵜沢 向希</strong><small>福祉 / 120歳大富豪へ</small></div>
+                  </div>
+                </div>
+
+                <div class="rel-divider">⬇︎ 100年の時空跳躍 ⇄ 世界線分岐 ⬇︎</div>
+
+                <div class="rel-group">
+                  <div class="rel-group-title">【未来組】2126年の関係者（学友会 / U.Z.W.）</div>
+                  <div class="rel-cards-grid">
+                    <div class="rel-card future"><span class="rel-sym">F</span><strong>深澤 文哉</strong><small>広報 / まとめ役</small></div>
+                    <div class="rel-card future"><span class="rel-sym">G</span><strong>外園 胡春</strong><small>企画 / 頼れる仲間</small></div>
+                    <div class="rel-card future"><span class="rel-sym">H</span><strong>比嘉 俊希</strong><small>総務 / Fの仲間</small></div>
+                    <div class="rel-card future"><span class="rel-sym">I</span><strong>七瀬 いろは</strong><small>総務1年 / ヒロイン</small></div>
+                    <div class="rel-card future"><span class="rel-sym">J</span><strong>陣内 樹</strong><small>企画3年 / PC所持</small></div>
+                    <div class="rel-card future danger"><span class="rel-sym">K</span><strong>森野 航</strong><small>財務3年 / 実行犯</small></div>
+                    <div class="rel-card future dark"><span class="rel-sym">M</span><strong>犬飼 玲</strong><small>U.Z.W.鵜沢の忠臣</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 情報記録（入手情報 ＆ QRスキャナー統合） -->
+            <div class="meta-panel" id="meta-panel-hints">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h2>情報記録（アーカイブ）</h2>
+                <button class="btn btn-primary" onclick="toggleMetaQrScanner()"><i data-lucide="qr-code"></i> ➕ QRスキャンで情報を追加</button>
+              </div>
+
+              <!-- インラインQRスキャナーカメラエリア（トグル開閉） -->
+              <div id="meta-qr-inline-scanner" style="display:none; background:#f0f2f5; padding:16px; border-radius:12px; margin-bottom:20px; border:2px dashed var(--system-blue);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <strong style="font-size:13px; color:var(--system-blue);">📷 QRコードをカメラにかざしてください</strong>
+                  <button class="btn-text" onclick="toggleMetaQrScanner()" style="font-size:12px; cursor:pointer;">✕ 閉じる</button>
+                </div>
+                <div class="camera-container" style="text-align:center;">
+                  <video id="meta-video" autoplay playsinline style="width: 100%; max-height: 220px; background: #000; border-radius: 8px;"></video>
+                  <canvas id="meta-canvas" style="display:none;"></canvas>
+                </div>
+                <div class="qr-result-box" id="meta-qr-result" style="margin-top:8px;">カメラ起動中...</div>
+              </div>
+
+              <!-- 入手情報カードリスト -->
+              <div class="panel-inner" id="meta-hints-list">
+                <p style="color: var(--text-muted); font-size:13px;">探索中にスキャンした機密情報・手がかりがここにアーカイブされます。</p>
+              </div>
+            </div>
+
+            <!-- 調査メモ -->
+            <div class="meta-panel" id="meta-panel-memo">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2>調査メモ</h2>
+                <span style="font-size:11px; color:var(--text-muted);">自動保存中（周回しても保持されます）</span>
+              </div>
+              <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">ニュースや資料の「メモに転記」ボタンを押すと、重要な文章がここに自動追記されます。</p>
+              <textarea id="meta-memo-area" placeholder="ここに調査メモを入力してください...（自動保存されます）"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ② Googleブラウザ（Yahoo!ニュース風リッチUI） -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-browser-app">
+        <div class="browser-navbar">
+          <div class="browser-nav-buttons">
+            <button onclick="goBrowserHome()"><i data-lucide="home"></i></button>
+            <button onclick="backBrowserPage()" id="browser-back-btn" disabled><i data-lucide="chevron-left"></i></button>
+          </div>
+          <div class="browser-address-bar">
+            <i data-lucide="search" style="width: 14px; height: 14px; margin-right: 6px; color: #8e8e93;"></i>
+            <input type="text" id="browser-search-input" placeholder="Google で検索、または URL を入力..." onkeydown="handleBrowserSearch(event)">
+          </div>
+        </div>
+
+        <div class="browser-body" id="browser-body">
+          <!-- 検索トップ画面 -->
+          <div id="browser-home" class="browser-page-container">
+            <div class="browser-logo">
+              <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+            </div>
+            <div class="browser-search-box">
+              <input type="text" id="browser-main-search" placeholder="Google で検索、または URL を入力" onkeydown="handleBrowserSearch(event)">
+            </div>
+            
+            <!-- サジェスト（3周目のみ表示） -->
+            <div class="search-suggests" id="search-suggests" style="display:none;">
+              <strong>急上昇ワード:</strong>
+              <div class="suggest-tags" id="suggest-tags"></div>
+            </div>
+
+            <!-- Yahoo!ニュース風ニュースフィード -->
+            <div class="yahoo-news-section">
+              <div class="yahoo-news-header">
+                <h3>NEWS FEED 2126</h3>
+                <!-- カテゴリタブ -->
+                <div class="news-category-tabs">
+                  <button class="cat-tab active" onclick="switchNewsCategory('all')">主要</button>
+                  <button class="cat-tab" onclick="switchNewsCategory('it')">IT・科学</button>
+                  <button class="cat-tab" onclick="switchNewsCategory('ent')">エンタメ</button>
+                  <button class="cat-tab" onclick="switchNewsCategory('campus')">学内・社会</button>
+                  <button class="cat-tab ranking-tab" onclick="openBrowserPage('market_ranking')">📈 時価総額</button>
+                </div>
+              </div>
+
+              <!-- Top Hero主要記事コンテナ -->
+              <div id="news-hero-container"></div>
+
+              <!-- 2列ニュースカードグリッド -->
+              <div id="news-grid-container" class="news-grid"></div>
+            </div>
+          </div>
+
+          <!-- 検索結果一覧画面 -->
+          <div id="browser-results" class="browser-page-container" style="display:none;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+              「<span id="search-query-text"></span>」の検索結果 (<span id="search-count">0</span>件)
+            </div>
+            <div id="search-results-list"></div>
+          </div>
+
+          <!-- 個別記事/ウェブページ画面 -->
+          <div id="browser-webpage" class="browser-page-container article-view" style="display:none;">
+            <div class="article-header">
+              <h1 class="webpage-title" id="webpage-title">ページタイトル</h1>
+              <div class="article-subbar">
+                <div class="webpage-meta" id="webpage-meta">2126/08/22 10:00 配信 | 東金タイムズ</div>
+                <button class="clip-memo-btn" onclick="clipCurrentPageToMemo()">
+                  <i data-lucide="clipboard-copy"></i> 調査メモに転記
+                </button>
+              </div>
+            </div>
+            <div class="webpage-content" id="webpage-content">ページ本文</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ③ メッセージアプリ「LINK」 -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-link-app">
+        <div class="link-layout">
+          <!-- トークリスト（左側） -->
+          <div class="link-sidebar">
+            <div class="link-sidebar-header">
+              <span>トーク</span>
+              <button onclick="openLinkQr()" class="link-qr-btn" title="友達追加QR"><i data-lucide="user-plus"></i></button>
+            </div>
+            <div class="link-chat-list" id="link-chat-list"></div>
+          </div>
+          <!-- トークルーム（右側） -->
+          <div class="link-room">
+            <div class="link-room-header" id="link-room-header">
+              <span class="contact-name" id="chat-contact-name">連絡先を選択</span>
+            </div>
+            <div class="link-messages" id="link-messages-container">
+              <div style="text-align:center; color:#8e8e93; font-size:12px; margin-top:40px;">
+                左のリストから会話を選択してください
+              </div>
+            </div>
+            <div class="link-input-bar">
+              <input type="text" id="link-input-text" placeholder="メッセージを入力..." onkeydown="handleLinkInputKey(event)">
+              <button class="link-send-btn" onclick="sendCustomLinkMessage()"><i data-lucide="send"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINK専用 友達追加用QRスキャンモーダル -->
+        <div class="link-qr-modal" id="link-qr-modal">
+          <div class="link-qr-modal-content">
+            <div class="link-qr-modal-header">
+              <h3>連絡先を追加 (QRスキャン)</h3>
+              <button onclick="closeLinkQr()"><i data-lucide="x"></i></button>
+            </div>
+            <video id="link-video" autoplay playsinline style="width: 100%; max-height: 250px; background: #000; border-radius: 8px;"></video>
+            <canvas id="link-canvas" style="display:none;"></canvas>
+            <div class="qr-result-box" id="link-qr-result">スキャン待機中...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング） -->
+      <!-- ------------------------------------------ -->
+      <div class="hacking-modal" id="hacking-modal">
+        <!-- 偽Googleフォーム -->
+        <div class="gform-container" id="gform-view">
+          <div class="gform-header">
+            <div class="gform-header-bar"></div>
+            <h1 id="gform-title">無題のフォーム</h1>
+            <p id="gform-desc">学友会執行委員会 内部保管データ申請フォーム</p>
+          </div>
+          <div class="gform-card">
+            <label class="gform-label">閲覧申請者 (セキュリティIDまたは本名)</label>
+            <input type="text" class="gform-input" id="gform-input-user" placeholder="例: J-098">
+          </div>
+          <div class="gform-card">
+            <label class="gform-label">閲覧目的</label>
+            <input type="text" class="gform-input" placeholder="閲覧理由を記述">
+          </div>
+          <div class="gform-footer">
+            <button class="gform-submit-btn" onclick="submitGForm()">送信</button>
+            <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input').forEach(i => i.value='')">フォームをクリア</button>
+          </div>
+          <!-- Googleフォーム公式風 編集ペンマーク（右下フローティングアクションボタン） -->
+          <button class="gform-edit-fab" id="gform-edit-fab" onclick="openGSpreadsheet(event)" title="このフォームを編集 / スプレッドシートを開く">
+            <i data-lucide="edit-3"></i>
+          </button>
+        </div>
+
+        <!-- 偽スプレッドシート -->
+        <div class="gsheet-container" id="gsheet-view" style="display:none;">
+          <div class="gsheet-header">
+            <div class="gsheet-header-top">
+              <i data-lucide="table" style="color:#107c41; width:22px; height:22px;"></i>
+              <span class="gsheet-filename" id="gsheet-filename">学友会執行委員会_重要名簿・予算管理 (2126年度)</span>
+              <div class="gsheet-top-actions">
+                <button class="gsheet-edit-mode-btn" id="gsheet-edit-btn" onclick="toggleGSheetEdit()" title="シートを編集">
+                  <i data-lucide="edit-2" style="width:14px; height:14px;"></i> <span id="gsheet-edit-label">編集モード</span>
+                </button>
+                <button class="gsheet-close-btn" onclick="closeHacking()"><i data-lucide="x"></i> 閉じる</button>
+              </div>
+            </div>
+            <div class="gsheet-menu-bar">
+              <span>ファイル</span><span>編集</span><span>表示</span><span>挿入</span><span>フォーマット</span><span>データ</span><span>ツール</span><span>拡張機能</span><span>ヘルプ</span>
+            </div>
+            <!-- シートタブ -->
+            <div class="gsheet-tabs" id="gsheet-tabs"></div>
+          </div>
+          <div class="gsheet-body">
+            <div class="gsheet-grid-wrapper">
+              <table class="gsheet-table" id="gsheet-table"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑤ LMS「manaba」（千葉工業大学） -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-manaba-app">
+        
+        <!-- manaba ログイン画面 -->
+        <div class="manaba-login-container" id="manaba-login-view">
+          <div class="manaba-login-card">
+            <div class="manaba-rabbit-logo">🐰</div>
+            <h1 class="manaba-title">manaba</h1>
+            <p style="font-size:12px; color:var(--success); font-weight:bold; text-align:center; margin-bottom:15px;" id="manaba-notice">
+              メンテナンス情報：2026-08-10 システム復旧のお知らせ
+            </p>
+            <div class="form-group">
+              <label>ユーザID (User ID)</label>
+              <input type="text" id="manaba-id-input" placeholder="stxxxxxx">
+            </div>
+            <div class="form-group">
+              <label>パスワード (Password)</label>
+              <input type="password" id="manaba-pass-input" placeholder="••••••••">
+            </div>
+            <button class="manaba-btn" onclick="loginManaba()">ログイン (Login)</button>
+            <div class="manaba-error-msg" id="manaba-error" style="display:none;">
+              ユーザIDまたはパスワードが正しくありません。
+            </div>
+          </div>
+        </div>
+
+        <!-- manaba ログイン後マイページ -->
+        <div class="manaba-portal" id="manaba-portal-view" style="display:none;">
+          <div class="manaba-header">
+            <div class="manaba-header-left">
+              <span class="manaba-logo-text">manaba</span>
+              <span class="manaba-subtitle">千葉工業大学</span>
+            </div>
+            <div class="manaba-header-right">
+              <span id="manaba-header-date">2026-08-22 (Sat)</span>
+              <span id="manaba-user-name">テスト 太郎</span>
+              <a href="#" onclick="logoutManaba()">ログアウト</a>
+            </div>
+          </div>
+          <!-- メインタブ -->
+          <div class="manaba-tabs">
+            <button class="manaba-tab active" onclick="switchManabaTab('mypage')">マイページ</button>
+            <button class="manaba-tab" onclick="switchManabaTab('courses')">コース</button>
+            <button class="manaba-tab" onclick="switchManabaTab('portfolio')">ポートフォリオ</button>
+          </div>
+          
+          <div class="manaba-body">
+            <!-- マイページタブ -->
+            <div class="manaba-panel active" id="manaba-panel-mypage">
+              <h3>今週の時間割</h3>
+              <table class="manaba-timetable">
+                <thead>
+                  <tr><th></th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th></tr>
+                </thead>
+                <tbody id="manaba-timetable-body">
+                  <!-- JSで動的に構築 -->
+                </tbody>
+              </table>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:8px;">※金曜5限の「情報デザイン論及び演習」を選択するとコース詳細を開きます。</p>
+            </div>
+
+            <!-- コースタブ -->
+            <div class="manaba-panel" id="manaba-panel-courses">
+              <h3>所属コース一覧</h3>
+              <div class="manaba-course-list">
+                <div class="manaba-course-card" onclick="openManabaCourse()">
+                  <h4>情報デザイン論及び演習 (2026 前期 金曜 5限)</h4>
+                  <p>担当教員: 安藤 昌也 | 教室: 津田沼校舎2号館</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- コース詳細画面 -->
+            <div class="manaba-course-detail" id="manaba-course-detail-view" style="display:none;">
+              <div class="course-detail-header">
+                <button onclick="backToManabaPortal()" class="course-back-btn">← マイページに戻る</button>
+                <h3 id="manaba-course-title">情報デザイン論及び演習</h3>
+                <p>担当教員: <span id="manaba-course-teacher">安藤 昌也</span> | 開講: <span id="manaba-course-term">前期金曜5限</span></p>
+              </div>
+              <div class="course-grid">
+                <!-- ニュース（左） -->
+                <div class="course-news">
+                  <h4>コースニュース</h4>
+                  <ul id="manaba-course-news-list"></ul>
+                </div>
+                <!-- 授業資料（右） -->
+                <div class="course-materials">
+                  <h4>授業資料リスト</h4>
+                  <div class="course-materials-list" id="manaba-materials-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF/添付ファイルビューア -->
+            <div class="manaba-pdf-viewer" id="manaba-pdf-viewer" style="display:none;">
+              <div class="pdf-viewer-header">
+                <span id="pdf-filename">document.pdf</span>
+                <button onclick="closePdfViewer()">閉じる</button>
+              </div>
+              <div class="pdf-viewer-body" id="pdf-viewer-body">
+                PDFのプレビュー内容を表示
+              </div>
+            </div>
+
+            <!-- ポートフォリオタブ -->
+            <div class="manaba-panel" id="manaba-panel-portfolio">
+              <h3>マイポートフォリオ</h3>
+              <p style="color:var(--text-muted);">提出済みの課題やふりかえりシートのログはありません。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑥ メールアプリ -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-mail-app">
+        <div class="mail-layout">
+          <!-- メールリスト -->
+          <div class="mail-sidebar">
+            <div class="mail-sidebar-header">
+              受信箱 (未来会員宛て)
+            </div>
+            <div class="mail-list" id="mail-list"></div>
+          </div>
+          <!-- メール本文 -->
+          <div class="mail-body">
+            <div class="mail-body-header" id="mail-body-header">
+              メールを選択してください。
+            </div>
+            <div class="mail-body-content" id="mail-body-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑦ 電話アプリ -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-phone-app">
+        <div class="phone-dial-container">
+          <div class="phone-display" id="phone-display"></div>
+          <div class="phone-keypad">
+            <button onclick="pressPhoneKey('1')">1</button>
+            <button onclick="pressPhoneKey('2')">2</button>
+            <button onclick="pressPhoneKey('3')">3</button>
+            <button onclick="pressPhoneKey('4')">4</button>
+            <button onclick="pressPhoneKey('5')">5</button>
+            <button onclick="pressPhoneKey('6')">6</button>
+            <button onclick="pressPhoneKey('7')">7</button>
+            <button onclick="pressPhoneKey('8')">8</button>
+            <button onclick="pressPhoneKey('9')">9</button>
+            <button onclick="pressPhoneKey('*')">*</button>
+            <button onclick="pressPhoneKey('0')">0</button>
+            <button onclick="pressPhoneKey('#')">#</button>
+          </div>
+          <div style="display:flex; justify-content:center; gap: 20px; width:100%; margin-top:20px;">
+            <button class="phone-call-btn" onclick="makePhoneCall()"><i data-lucide="phone"></i></button>
+            <button class="phone-clear-btn" onclick="clearPhoneKey()"><i data-lucide="delete"></i></button>
+          </div>
+        </div>
+
+        <!-- 電話発信・音声ガイダンス中オーバーレイ画面 -->
+        <div class="phone-calling-overlay" id="phone-calling-overlay">
+          <div class="phone-calling-info">
+            <div class="phone-calling-number" id="phone-calling-number">090-XXXX-XXXX</div>
+            <div class="phone-calling-status" id="phone-calling-status">発信中...</div>
+          </div>
+          <div style="text-align:center; padding:20px;">
+            <div style="width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+              <i data-lucide="volume-2" style="width:36px; height:36px; color:#fff;"></i>
+            </div>
+            <p id="phone-audio-subtitles" style="font-size:13px; line-height:1.6; color:#d1d5db; min-height:45px;"></p>
+          </div>
+          <button class="phone-end-call-btn" onclick="endPhoneCall()">
+            <i data-lucide="phone-off" style="width:28px; height:28px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑧ 設定アプリ -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-settings-app">
+        <div class="settings-layout">
+          <div class="settings-sidebar">
+            <div class="settings-profile">
+              <div class="settings-avatar" id="settings-avatar-icon">No.4</div>
+              <div>
+                <strong id="settings-apple-id">No.4</strong>
+                <div style="font-size:11px; color:var(--text-muted);">Apple ID、iCloud、メディアと購入</div>
+              </div>
+            </div>
+            <div class="settings-menu-list">
+              <button class="settings-menu-item active" onclick="switchSettingsTab('general')">一般</button>
+              <button class="settings-menu-item" onclick="triggerSettingsRestriction('Wi-Fi')">Wi-Fi</button>
+              <button class="settings-menu-item" onclick="triggerSettingsRestriction('Bluetooth')">Bluetooth</button>
+              <button class="settings-menu-item" onclick="triggerSettingsRestriction('コントロールセンター')">コントロールセンター</button>
+              <button class="settings-menu-item" onclick="triggerSettingsRestriction('画面表示と明るさ')">画面表示と明るさ</button>
+            </div>
+          </div>
+          <div class="settings-body">
+            <h2>一般 (General)</h2>
+            <table class="spec-table">
+              <tr><td>システム名</td><td>iPad Terminal Emulator</td></tr>
+              <tr><td>OSバージョン</td><td id="spec-os">iPadOS 120.4</td></tr>
+              <tr><td>プロセッサ</td><td id="spec-processor">Quantum A30 Bionic</td></tr>
+              <tr><td>RAMメモリ</td><td id="spec-ram">2.0 TB</td></tr>
+              <tr><td>ストレージ</td><td id="spec-storage">500 TB</td></tr>
+              <tr><td>シリアル番号</td><td id="spec-serial">SF2126-LOOP-0094</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 5. 架空のホームバー（画面最下部） -->
+      <!-- ========================================== -->
+      <div class="home-bar" id="home-bar" onclick="goHome()"></div>
+
+      <!-- ========================================== -->
+      <!-- 6. 全画面アラート（運営からの指示割込） -->
+      <!-- ========================================== -->
+      <div class="system-alert-overlay" id="system-alert-overlay">
+        <div class="system-alert-box">
+          <i data-lucide="alert-triangle" style="width:48px; height:48px; color:var(--danger); margin-bottom:15px;"></i>
+          <h2>保安局からの緊急警告</h2>
+          <p id="system-alert-message">元の位置へ戻ってください。</p>
+          <button onclick="dismissSystemAlert()">確認 (Close)</button>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 7. スタッフ用 隠しセットアップ画面 (ワンタップGUI) -->
+      <!-- ========================================== -->
+      <div class="staff-modal" id="staff-modal">
+        <div class="staff-modal-content" style="width:360px; max-width:92%;">
+          <h3 style="margin-bottom:8px;">⚙️ 端末設定管理 (Staff Setup)</h3>
+          <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:12px;">タップでチームを選択し、保存して再起動してください。</p>
+          
+          <label style="font-size:12px; font-weight:700; color:#333;">クイック選択 (チーム / 班):</label>
+          <div class="staff-team-grid">
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームA')">チームA</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームB')">チームB</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームC')">チームC</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームD')">チームD</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームE')">チームE</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('チームF')">チームF</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('1班')">1班</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('2班')">2班</button>
+            <button class="staff-team-btn" onclick="selectStaffTeam('3班')">3班</button>
+          </div>
+
+          <div class="form-group">
+            <label>選択中の端末識別ID:</label>
+            <input type="text" id="staff-team-id" placeholder="チームA" style="font-weight:700; text-align:center;">
+          </div>
+
+          <button class="btn btn-primary" onclick="saveStaffConfig()">💾 保存してクイック再起動</button>
+          <button class="btn btn-danger" style="margin-top:8px; background:#8e8e93;" onclick="closeStaffModal()">閉じる</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>26__0094 - 進行統制 ＆ 運営ダッシュボード</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --text-muted: #64748b;
+      --primary: #007aff;
+      --primary-hover: #0056b3;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .header-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+
+    .header-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      color: #333;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f172a;
+    }
+
+    /* プリセットボタングリッド */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .preset-card-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .preset-card-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      border-color: #94a3b8;
+    }
+
+    .preset-stage-tag {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .preset-info {
+      flex: 1;
+    }
+
+    .preset-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+
+    .preset-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .preset-run-icon {
+      color: var(--primary);
+      opacity: 0.7;
+    }
+
+    /* サウンドトリガーグリッド */
+    .sound-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .sound-btn {
+      padding: 12px 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      transition: all 0.15s ease;
+    }
+    .sound-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* チーム進行状況モニタリングカードグリッド */
+    .team-monitor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .team-monitor-card {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .team-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+
+    .team-id-badge {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .team-loop-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 4px;
+    }
+
+    .team-stat-row {
+      font-size: 11px;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .team-stat-val {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* アラート送信フォーム */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #475569;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+
+    /* トースト通知 */
+    #admin-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title-wrap">
+      <h1>26__0094 ADMIN DASHBOARD</h1>
+      <span class="header-badge">リアルタイム進行統制</span>
+    </div>
+    <div class="header-links">
+      <a href="index.html" target="_blank" class="nav-btn"><i data-lucide="tablet"></i> iPad端末画面</a>
+      <a href="editor.html" class="nav-btn"><i data-lucide="edit-3"></i> コンテンツGUIエディタ</a>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
+    <div>
+      <!-- 🎬 シーン別進行プリセットパネル -->
+      <div class="card">
+        <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（ワンクリック同期）</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">ボタンを押すと、全稼働中のiPad端末へ周回切り替え・演出アラートが一斉送信されます。</p>
+        
+        <div class="preset-grid" id="preset-buttons-container"></div>
+      </div>
+
+      <!-- 🔊 効果音・サイレン遠隔再生パネル -->
+      <div class="card">
+        <div class="card-title"><i data-lucide="volume-2" style="color:var(--warning);"></i> 効果音・サイレン遠隔再生</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">クリックした瞬間に全iPad端末で大迫力のWeb Audio APIシンセサウンドが鳴り響きます。</p>
+        
+        <div class="sound-grid">
+          <button class="sound-btn" onclick="triggerRemoteSound('alarm')">
+            <i data-lucide="alert-triangle" style="color:var(--danger); width:24px; height:24px;"></i>
+            <span>非常サイレン</span>
+          </button>
+          <button class="sound-btn" onclick="triggerRemoteSound('distortion')">
+            <i data-lucide="zap" style="color:#af52de; width:24px; height:24px;"></i>
+            <span>時空歪み音</span>
+          </button>
+          <button class="sound-btn" onclick="triggerRemoteSound('fanfare')">
+            <i data-lucide="award" style="color:var(--success); width:24px; height:24px;"></i>
+            <span>ファンファーレ</span>
+          </button>
+          <button class="sound-btn" onclick="triggerRemoteSound('notif')">
+            <i data-lucide="bell" style="color:var(--primary); width:24px; height:24px;"></i>
+            <span>プッシュ通知音</span>
+          </button>
+          <button class="sound-btn" onclick="triggerRemoteSound('ringback')">
+            <i data-lucide="phone-call" style="color:#0284c7; width:24px; height:24px;"></i>
+            <span>電話コール音</span>
+          </button>
+          <button class="sound-btn" onclick="triggerRemoteSound('error')">
+            <i data-lucide="x-octagon" style="color:#64748b; width:24px; height:24px;"></i>
+            <span>エラー・銃声</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右カラム：チーム進捗モニタリング ＆ 緊急指令送信 -->
+    <div>
+      <!-- 📊 チーム別進行モニタリングダッシュボード -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;"><i data-lucide="activity" style="color:var(--success);"></i> チーム別 進行状況モニタリング</div>
+          <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:4px 8px; font-size:11px;"><i data-lucide="refresh-cw"></i> 更新</button>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">各チームの周回・manabaログイン・入手ヒント数をリアルタイム表示（詰まっているチームを即座に特定）。</p>
+        
+        <div class="team-monitor-grid" id="team-monitor-container"></div>
+      </div>
+
+      <!-- 📢 全画面緊急アラート送信 -->
+      <div class="card">
+        <div class="card-title"><i data-lucide="radio" style="color:var(--danger);"></i> 全画面 緊急アラート送信（指示割込）</div>
+        
+        <div class="form-group">
+          <label>表示メッセージ（端末の画面全体をジャックして表示）</label>
+          <textarea id="remote-alert-text" rows="3" placeholder="【保安局より緊急指示】直ちに大ホールへ集合してください。"></textarea>
+        </div>
+
+        <button class="btn btn-danger" onclick="sendCustomRemoteAlert()"><i data-lucide="send"></i> 全端末へ緊急アラート送信</button>
+      </div>
+
+      <!-- ⚙️ スプレッドシート連携設定 -->
+      <div class="card">
+        <div class="card-title"><i data-lucide="settings" style="color:#64748b;"></i> Google Apps Script (GAS) ログ同期設定</div>
+        <div class="form-group">
+          <label>GAS Web App URL (ログ受信・ステータス同期用)</label>
+          <input type="text" id="admin-gas-url" placeholder="https://script.google.com/macros/s/xxxx/exec">
+        </div>
+        <button class="btn btn-primary" onclick="saveAdminGasUrl()"><i data-lucide="save"></i> URLを保存して適用</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="admin-toast">
+    <i data-lucide="check-circle" style="color:var(--success);"></i>
+    <span id="admin-toast-text">実行しました</span>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    // 初期ロード
+    document.addEventListener('DOMContentLoaded', () => {
+      renderPresetButtons();
+      refreshMonitoringDashboard();
+      
+      const savedGas = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system.gasUrl);
+      if (savedGas) document.getElementById('admin-gas-url').value = savedGas;
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      // 定期的にモニタリングダッシュボードをリフレッシュ
+      setInterval(refreshMonitoringDashboard, 3000);
+    });
+
+    // 進行プリセットボタンの描画
+    function renderPresetButtons() {
+      const container = document.getElementById('preset-buttons-container');
+      if (!container) return;
+
+      const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
+      container.innerHTML = "";
+
+      presets.forEach(p => {
+        container.innerHTML += `
+          <div class="preset-card-btn" onclick="executePreset('${p.id}')">
+            <span class="preset-stage-tag" style="background:${p.color || '#007aff'};">${p.stage}</span>
+            <div class="preset-info">
+              <div class="preset-name">${p.name}</div>
+              <div class="preset-desc">${p.desc}</div>
+            </div>
+            <i data-lucide="play" class="preset-run-icon"></i>
+          </div>
+        `;
+      });
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // プリセット実行
+    function executePreset(presetId) {
+      const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
+      const p = presets.find(item => item.id === presetId);
+      if (!p) return;
+
+      const payload = {
+        id: p.id,
+        stage: p.stage,
+        loop: p.loop,
+        alertMsg: p.alertMsg,
+        sound: p.sound,
+        forceLock: p.forceLock,
+        clockISO: p.clockISO
+      };
+
+      // LocalStorageを介して稼働中iPad端末へ一斉通知
+      localStorage.setItem('admin_preset_trigger', JSON.stringify(payload));
+      localStorage.setItem('admin_preset_trigger_time', Date.now());
+
+      showToast(`プリセット「${p.name}」を実行しました`);
+    }
+
+    // 遠隔サウンド再生
+    function triggerRemoteSound(soundType) {
+      localStorage.setItem('admin_sound_trigger', soundType);
+      localStorage.setItem('admin_sound_trigger_time', Date.now());
+      showToast(`効果音「${soundType}」を全端末で再生しました`);
+    }
+
+    // 全画面アラート送信
+    function sendCustomRemoteAlert() {
+      const text = document.getElementById('remote-alert-text').value.trim();
+      if (!text) return;
+
+      localStorage.setItem('admin_alert_trigger', text);
+      localStorage.setItem('admin_alert_trigger_time', Date.now());
+      showToast("緊急アラートを送信しました");
+    }
+
+    // モニタリングダッシュボードの描画
+    function refreshMonitoringDashboard() {
+      const container = document.getElementById('team-monitor-container');
+      if (!container) return;
+
+      // チームリスト
+      const teams = ["チームA", "チームB", "チームC", "チームD", "1班", "2班"];
+      const currentTeam = localStorage.getItem('game_team_id') || "チームA";
+      const currentLoop = localStorage.getItem('game_loop') || 1;
+      const currentHints = JSON.parse(localStorage.getItem('game_unlocked_hints') || "[]");
+      const currentManaba = localStorage.getItem('game_manaba_user') || "未ログイン";
+      const lastUpdate = localStorage.getItem('mon_last_update');
+      const timeStr = lastUpdate ? new Date(parseInt(lastUpdate)).toLocaleTimeString() : "通信中";
+
+      container.innerHTML = "";
+      teams.forEach(t => {
+        const isCurrent = t === currentTeam;
+        const loopVal = isCurrent ? currentLoop : 1;
+        const hintsCount = isCurrent ? currentHints.length : 0;
+        const manabaStatus = isCurrent ? (currentManaba ? 'ログイン済' : '未ログイン') : '未ログイン';
+
+        container.innerHTML += `
+          <div class="team-monitor-card" style="${isCurrent ? 'border-color:var(--primary); background:#eff6ff;' : ''}">
+            <div class="team-card-header">
+              <span class="team-id-badge">${t}</span>
+              <span class="team-loop-tag">${loopVal}周目</span>
+            </div>
+            <div class="team-stat-row">
+              <span>manaba:</span>
+              <span class="team-stat-val">${manabaStatus}</span>
+            </div>
+            <div class="team-stat-row">
+              <span>入手情報:</span>
+              <span class="team-stat-val">${hintsCount} 件</span>
+            </div>
+            <div class="team-stat-row" style="font-size:10px; color:#94a3b8; margin-top:2px;">
+              <span>最終同期:</span>
+              <span>${isCurrent ? timeStr : '--:--'}</span>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function saveAdminGasUrl() {
+      const url = document.getElementById('admin-gas-url').value.trim();
+      localStorage.setItem('gas_url', url);
+      showToast("GAS URLを保存しました");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('admin-toast');
+      document.getElementById('admin-toast-text').innerText = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

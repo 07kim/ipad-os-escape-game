@@ -1,0 +1,17 @@
+{
+  "short_name": "26__0094",
+  "name": "26__0094 - 架空iPadOS脱出ゲーム",
+  "description": "2126年を舞台にした架空iPadOS脱出ゲームシステム",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f2f5",
+  "theme_color": "#007aff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23007aff'><rect width='512' height='512' rx='128'/><path d='M160 128h192v256H160z' fill='white'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
