@@ -2067,14 +2067,6 @@ function pressPhoneKey(key) {
     gameState.phoneInput += key;
     document.getElementById('phone-display').innerText = gameState.phoneInput;
     playSystemSound("dtmf");
-
-    // 『**##**』が入力された瞬間に隠しスタッフ画面を起動
-    if (gameState.phoneInput === '**##**') {
-      clearPhoneKey();
-      playSystemSound("fanfare");
-      showStaffModal();
-      return;
-    }
   }
 }
 
@@ -2092,7 +2084,7 @@ function makePhoneCall() {
   
   const dialNum = gameState.phoneInput.trim();
 
-  // 隠しコマンド判定（『**##**』のみ）
+  // 隠しコマンド判定（『**##**』を入力して電話ボタンを押した時にスタッフシステム起動）
   if (dialNum === '**##**') {
     clearPhoneKey();
     playSystemSound("fanfare");

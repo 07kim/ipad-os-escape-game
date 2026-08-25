@@ -806,11 +806,34 @@
 
       const devices = Object.values(deviceMap);
 
+      // ログイン状態判定ヘルパー
+      function isDeviceLoggedIn(d) {
+        if (!d.manaba) return false;
+        const m = String(d.manaba).trim();
+        return m !== "未ログイン" && m !== "-" && m !== "未" && m !== "";
+      }
+
       // 絞り込み ＆ 検索
       const filtered = devices.filter(d => {
         if (monitorFilter !== 'all' && String(d.loop) !== String(monitorFilter)) return false;
         if (searchKeyword && !d.name.toLowerCase().includes(searchKeyword) && !d.id.toLowerCase().includes(searchKeyword)) return false;
         return true;
+      });
+
+      // ★ ログイン済みが上（ログイン順・通信順）、未ログインは下へソート
+      filtered.sort((a, b) => {
+        const aLog = isDeviceLoggedIn(a);
+        const bLog = isDeviceLoggedIn(b);
+        if (aLog !== bLog) {
+          return aLog ? -1 : 1; // ログイン済みが上
+        }
+        if (aLog && bLog) {
+          // ログイン済み同士: 最終通信/ログイン日時の降順
+          return (b.lastSeen || "").localeCompare(a.lastSeen || "");
+        }
+        // 未ログイン同士: 通信中優先 ＆ 端末ID昇順
+        if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+        return a.id.localeCompare(b.id, undefined, { numeric: true });
       });
 
       container.innerHTML = "";
@@ -826,16 +849,17 @@
           3: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' }
         };
         const color = loopColors[d.loop] || loopColors[1];
+        const isLogged = isDeviceLoggedIn(d);
 
         container.innerHTML += `
-          <div class="team-monitor-card" style="${d.isActive ? 'border-color:var(--primary); background:#f0f9ff;' : ''}">
+          <div class="team-monitor-card" style="${isLogged ? 'border-color:#10b981; background:#f0fdf4;' : (d.isActive ? 'border-color:var(--primary); background:#f0f9ff;' : '')}">
             <div class="team-card-header">
               <span class="team-id-badge" title="${d.name}">${d.name}</span>
               <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${d.loop}周目</span>
             </div>
             <div class="team-stat-row">
               <span>manaba:</span>
-              <span class="team-stat-val" style="font-size:10px;">${d.manaba}</span>
+              <span class="team-stat-val" style="font-size:10px; color:${isLogged ? '#059669; font-weight:700;' : '#64748b;'}">${d.manaba}</span>
             </div>
             <div class="team-stat-row">
               <span>入手情報:</span>
@@ -882,15 +906,26 @@
       const rankContainer = document.getElementById('team-ranking-container');
       if (!rankContainer) return;
 
+      // ログイン状態判定ヘルパー
+      function isDeviceLoggedIn(d) {
+        if (!d.manaba) return false;
+        const m = String(d.manaba).trim();
+        return m !== "未ログイン" && m !== "-" && m !== "未" && m !== "";
+      }
+
       // スコア計算（30台一斉進行仕様）：入手情報数×100 + manabaログイン完了×500
       const ranked = devicesList.map(d => {
         let score = (d.hints || 0) * 100;
-        if (d.manaba && d.manaba.includes("ログイン中")) score += 500;
-        return Object.assign({ score: score }, d);
+        const isLogged = isDeviceLoggedIn(d);
+        if (isLogged) score += 500;
+        return Object.assign({ score: score, isLogged: isLogged }, d);
       });
 
-      // 降順ソート（同点の場合は最終同期時間順）
+      // 降順ソート（★ログイン済み優先 ＆ スコア降順 ＆ 最終同期時間順）
       ranked.sort((a, b) => {
+        if (a.isLogged !== b.isLogged) {
+          return a.isLogged ? -1 : 1; // ログイン済みが上
+        }
         if (b.score !== a.score) return b.score - a.score;
         return (b.lastSeen || "").localeCompare(a.lastSeen || "");
       });
