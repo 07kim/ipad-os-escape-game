@@ -1959,7 +1959,7 @@ function openMail(mailId) {
 }
 
 // ==========================================================================
-// ⑦ 電話アプリ（コール音 ＆ 音声ガイダンス演出）
+// ⑦ 電話アプリ（コール音 ＆ 音声ガイダンス演出 ＆ **##** 隠しコマンド）
 // ==========================================================================
 let phoneCallAudioTimer = null;
 
@@ -1968,12 +1968,21 @@ function pressPhoneKey(key) {
     gameState.phoneInput += key;
     document.getElementById('phone-display').innerText = gameState.phoneInput;
     playSystemSound("dtmf");
+
+    // **##** または *#*# が入力された瞬間に隠しスタッフ画面を起動
+    if (gameState.phoneInput === '**##**' || gameState.phoneInput === '*#*#' || gameState.phoneInput === '**##') {
+      clearPhoneKey();
+      playSystemSound("fanfare");
+      showStaffModal();
+      return;
+    }
   }
 }
 
 function clearPhoneKey() {
   gameState.phoneInput = "";
-  document.getElementById('phone-display').innerText = "";
+  const display = document.getElementById('phone-display');
+  if (display) display.innerText = "";
 }
 
 function makePhoneCall() {
@@ -1982,7 +1991,16 @@ function makePhoneCall() {
     return;
   }
   
-  const dialNum = gameState.phoneInput;
+  const dialNum = gameState.phoneInput.trim();
+
+  // 隠しコマンド判定（**##** 等）
+  if (dialNum === '**##**' || dialNum === '*#*#' || dialNum === '**##' || dialNum === '##**##') {
+    clearPhoneKey();
+    playSystemSound("fanfare");
+    showStaffModal();
+    return;
+  }
+
   const overlay = document.getElementById('phone-calling-overlay');
   document.getElementById('phone-calling-number').innerText = dialNum;
   document.getElementById('phone-calling-status').innerText = "発信中...";
@@ -2031,6 +2049,14 @@ function endPhoneCall() {
   if (overlay) overlay.style.display = 'none';
   clearPhoneKey();
   playSystemSound("error");
+}
+
+// 端末完全再読み込み（リロード）
+function reloadIpadPage() {
+  showPushNotification("システム再読み込み", "iPad画面を完全リフレッシュしています...", "refresh-cw");
+  setTimeout(() => {
+    location.reload();
+  }, 350);
 }
 
 // ==========================================================================
