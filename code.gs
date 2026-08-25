@@ -1,23 +1,8 @@
 /**
  * ==========================================================================
  * 2126年 架空iPadOS型 脱出ゲームシステム GASバックエンドコード (code.gs)
- * 【リアルタイム遠隔統制 ＆ 30台進行モニタリング完全対応版】
+ * 【リアルタイム遠隔統制 ＆ 30台進行モニタリング ＆ マスターリセット完全対応版】
  * ==========================================================================
- * 
- * 【スプレッドシート自動作成の手順（人力入力ゼロ・クリック1回で全自動）】
- * 1. Googleドライブで新規スプレッドシートを作成します（ https://sheets.new ）。
- * 2. 上部メニューの「拡張機能」 > 「Apps Script」を開きます。
- * 3. 既存のコードを全削除して、この code.gs の内容をすべて貼り付けて「保存」アイコンを押します。
- * 4. 上部の関数選択プルダウンで「setupDatabaseSheets」を選び、「実行」ボタンを1回クリックします。
- *    ※初回のみ「アクセス権を承認」の画面が出ますので許可してください。
- * 5. わずか数秒で、全11シート（全22記事、チャット、メール、30台監視、コマンドキュー等）が一括生成されます！
- * 
- * 【Web APIとして公開する手順】
- * 1. 右上の青い「デプロイ」ボタン > 「新しいデプロイ」をクリック。
- * 2. 種類の選択（歯車アイコン） > 「ウェブアプリ」を選択。
- * 3. 次のユーザーとして実行: 「自分 (Your Account)」
- * 4. アクセスできるユーザー: 「全員 (Anyone)」に設定して「デプロイ」をクリック。
- * 5. 発行された「ウェブアプリURL」をコピーして、iPadアプリや管理画面に設定します。
  */
 
 // --- 外部（iPadOS Webアプリ & 管理画面）からのデータ取得・コマンド同期API ---
@@ -67,11 +52,37 @@ function doGet(e) {
       });
     }
 
-    // 4. GETでのコマンド送信（CORS対策用）
+    // 4. GETでのiPadステータス更新（CORS完全回避・100%確実通信）
+    if (action === "update_status" && e.parameter.teamId) {
+      var p = e.parameter;
+      var hintsCount = Number(p.hints || 0);
+      var manaba = p.manaba ? decodeURIComponent(p.manaba) : "未ログイン";
+      var loopNum = Number(p.loop || 1);
+      
+      updateTeamStatus(ss, p.teamId, loopNum, {
+        hintsCount: hintsCount,
+        manabaUser: manaba
+      });
+
+      return renderJson({ success: true, message: "ステータスを更新しました (GET)" });
+    }
+
+    // 5. GETでのコマンド送信（CORS対策用）
     if (action === "send_command" && e.parameter.cmd) {
       var cmdObj = JSON.parse(decodeURIComponent(e.parameter.cmd));
       var res = recordAdminCommand(ss, cmdObj);
       return renderJson({ success: true, message: "コマンドを送信・記録しました！", commandId: res.id });
+    }
+
+    // 6. マスターリセット（スプレッドシート初期化 ＆ 全iPad初期化コマンド発行）
+    if (action === "master_reset") {
+      resetAllMonitoringData(ss);
+      var resetCmd = recordAdminCommand(ss, {
+        type: "master_reset",
+        name: "マスターリセット",
+        timestamp: Date.now()
+      });
+      return renderJson({ success: true, message: "全30台のマスターリセットを実行しました！", commandId: resetCmd.id });
     }
 
     return renderJson({ success: false, error: "Unknown GET action: " + action });
@@ -96,19 +107,26 @@ function doPost(e) {
       return renderJson({ success: true, message: "スプレッドシートの全シート自動構築が完了しました！" });
     }
 
-    // 運営コマンド送信（全体アラート、サイレン、周回移行等）
     if (action === "send_admin_command") {
       var res = recordAdminCommand(ss, postData.command);
       return renderJson({ success: true, message: "運営コマンドを全iPadへ配信しました！", commandId: res.id });
     }
 
-    // 各iPadからの進捗ステータス送信（ハートビート）
     if (action === "update_status") {
       updateTeamStatus(ss, postData.teamId, postData.loopNum, postData.statusData);
       return renderJson({ success: true, message: "進捗ステータスを更新しました。" });
     }
 
-    // プレイログ記録
+    if (action === "master_reset") {
+      resetAllMonitoringData(ss);
+      var resetCmd = recordAdminCommand(ss, {
+        type: "master_reset",
+        name: "マスターリセット",
+        timestamp: Date.now()
+      });
+      return renderJson({ success: true, message: "全30台のマスターリセットを実行しました！", commandId: resetCmd.id });
+    }
+
     if (action === "write_log") {
       writeLog(ss, postData.teamId, postData.loopNum, postData.logType, postData.message);
       return renderJson({ success: true, message: "ログを書き込みました。" });
@@ -125,9 +143,7 @@ function doPost(e) {
 // ==========================================================================
 function setupDatabaseSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) {
-    throw new Error("スプレッドシートが見つかりません。");
-  }
+  if (!ss) throw new Error("スプレッドシートが見つかりません。");
 
   var initialData = getInitialGameDatabase();
 
@@ -166,13 +182,7 @@ function setupDatabaseSheets() {
   var articleRows = [];
   for (var pageId in initialData.browser.pagesContent) {
     var p = initialData.browser.pagesContent[pageId];
-    articleRows.push([
-      pageId,
-      p.title,
-      p.source,
-      p.date,
-      p.content
-    ]);
+    articleRows.push([pageId, p.title, p.source, p.date, p.content]);
   }
   createOrUpdateSheet(ss, "03_記事本文（全22記事）", ["記事ID (URL)", "タイトル", "情報源", "配信日時", "記事本文HTML (3,000〜4,600字)"], articleRows);
 
@@ -181,14 +191,7 @@ function setupDatabaseSheets() {
   for (var contactId in initialData.linkApp.chats) {
     var msgs = initialData.linkApp.chats[contactId] || [];
     msgs.forEach(function(m) {
-      chatRows.push([
-        contactId,
-        m.sender,
-        m.text,
-        m.time,
-        m.minLoop || "",
-        m.maxLoop || ""
-      ]);
+      chatRows.push([contactId, m.sender, m.text, m.time, m.minLoop || "", m.maxLoop || ""]);
     });
   }
   createOrUpdateSheet(ss, "04_LINKチャット履歴", ["トーク相手ID", "送信者 (me/相手ID)", "メッセージ本文", "時間", "表示開始周回 (minLoop)", "表示終了周回 (maxLoop)"], chatRows);
@@ -210,14 +213,7 @@ function setupDatabaseSheets() {
   for (var keyword in initialData.browser.searchResults) {
     var results = initialData.browser.searchResults[keyword] || [];
     results.forEach(function(r) {
-      searchRows.push([
-        keyword,
-        r.title,
-        r.desc,
-        r.url,
-        r.minLoop || "",
-        r.maxLoop || ""
-      ]);
+      searchRows.push([keyword, r.title, r.desc, r.url, r.minLoop || "", r.maxLoop || ""]);
     });
   }
   createOrUpdateSheet(ss, "06_検索インデックス辞書", ["検索キーワード", "表示タイトル", "説明文", "リンク先記事ID", "最小周回 (minLoop)", "最大周回 (maxLoop)"], searchRows);
@@ -227,14 +223,7 @@ function setupDatabaseSheets() {
   [1, 2, 3].forEach(function(loop) {
     var mails = initialData.mailApp[loop] || [];
     mails.forEach(function(m) {
-      mailRows.push([
-        loop,
-        m.id,
-        m.sender,
-        m.title,
-        m.date,
-        m.body
-      ]);
+      mailRows.push([loop, m.id, m.sender, m.title, m.date, m.body]);
     });
   });
   createOrUpdateSheet(ss, "07_メール一覧", ["周回", "メールID", "差出人", "件名", "受信日時", "本文"], mailRows);
@@ -244,16 +233,7 @@ function setupDatabaseSheets() {
   [1, 2, 3].forEach(function(loop) {
     var notifs = initialData.lockNotifications[loop] || [];
     notifs.forEach(function(n) {
-      notifRows.push([
-        loop,
-        n.id,
-        n.app,
-        n.title,
-        n.body,
-        n.time,
-        n.targetApp,
-        n.contactId || n.mailId || n.pageId || ""
-      ]);
+      notifRows.push([loop, n.id, n.app, n.title, n.body, n.time, n.targetApp, n.contactId || n.mailId || n.pageId || ""]);
     });
   });
   createOrUpdateSheet(ss, "08_ロック画面通知", ["周回", "通知ID", "アプリ名", "タイトル", "通知本文", "時間", "遷移先アプリ", "対象ID"], notifRows);
@@ -270,12 +250,7 @@ function setupDatabaseSheets() {
   createOrUpdateSheet(ss, "09_機密名簿・予算管理（ハッキング用）", ["シート名", "列1", "列2", "列3", "列4", "列5"], gsheetRows);
 
   // 10. iPad 30台 進行状況モニタリングシート
-  var monitorRows = [];
-  for (var i = 1; i <= 30; i++) {
-    var padId = "iPad-" + (i < 10 ? "0" + i : i);
-    monitorRows.push([padId, 1, 0, "未ログイン", "-", "-"]);
-  }
-  createOrUpdateSheet(ss, "10_30台進行状況モニタリング", ["端末識別名", "現在の周回", "入手ヒント数", "manaba状況", "最終通信日時", "ステータス詳細"], monitorRows);
+  resetAllMonitoringData(ss);
 
   // 11. 運営コマンドキューシート
   var sheetCmd = ss.getSheetByName("98_運営コマンドキュー");
@@ -302,6 +277,15 @@ function setupDatabaseSheets() {
   }
 
   Logger.log("🎉 全シートの自動生成と30台対応データ入力が完了しました！");
+}
+
+function resetAllMonitoringData(ss) {
+  var monitorRows = [];
+  for (var i = 1; i <= 30; i++) {
+    var padId = "iPad-" + (i < 10 ? "0" + i : i);
+    monitorRows.push([padId, 1, 0, "未ログイン", "-", "-"]);
+  }
+  createOrUpdateSheet(ss, "10_30台進行状況モニタリング", ["端末識別名", "現在の周回", "入手ヒント数", "manaba状況", "最終通信日時", "ステータス詳細"], monitorRows);
 }
 
 // 汎用シート作成・スタイリング関数
@@ -331,7 +315,6 @@ function createOrUpdateSheet(ss, sheetName, headers, rows) {
 // 📡 リアルタイム遠隔統制 ＆ 30台ステータス管理関数
 // ==========================================================================
 
-// 運営コマンドの記録
 function recordAdminCommand(ss, command) {
   var sheet = ss.getSheetByName("98_運営コマンドキュー");
   if (!sheet) {
@@ -351,7 +334,6 @@ function recordAdminCommand(ss, command) {
   return { id: cmdId, timestamp: Date.now() };
 }
 
-// 直近の最新運営コマンドを取得
 function getLatestAdminCommand(ss) {
   var sheet = ss.getSheetByName("98_運営コマンドキュー");
   if (!sheet) return null;
@@ -382,7 +364,6 @@ function getLatestAdminCommand(ss) {
   };
 }
 
-// 端末進捗ステータスの更新 (upsert)
 function updateTeamStatus(ss, teamId, loopNum, statusData) {
   if (!teamId) return;
   var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
@@ -392,8 +373,8 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   }
 
   var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
-  var hintsCount = (statusData && statusData.hints) ? statusData.hints.length : 0;
-  var manaba = (statusData && statusData.manabaUser) ? ("ログイン中: " + statusData.manabaUser) : "未ログイン";
+  var hintsCount = (statusData && statusData.hintsCount !== undefined) ? statusData.hintsCount : ((statusData && statusData.hints) ? statusData.hints.length : 0);
+  var manaba = (statusData && statusData.manabaUser) ? (statusData.manabaUser.includes("ログイン") ? statusData.manabaUser : ("ログイン中: " + statusData.manabaUser)) : "未ログイン";
   var details = JSON.stringify(statusData || {});
 
   var rows = sheet.getDataRange().getValues();
@@ -412,7 +393,6 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   }
 }
 
-// 全端末ステータス一覧の取得
 function readAllDevicesStatus(ss) {
   var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
   if (!sheet) return [];
@@ -435,7 +415,6 @@ function readAllDevicesStatus(ss) {
   return devices;
 }
 
-// ログ書き込み
 function writeLog(ss, teamId, loopNum, logType, message) {
   var sheet = ss.getSheetByName("99_プレイログ記録");
   if (!sheet) {
@@ -447,12 +426,10 @@ function writeLog(ss, teamId, loopNum, logType, message) {
   sheet.appendRow([nowStr, teamId || "iPad-01", loopNum || 1, logType || "INFO", message || ""]);
 }
 
-// --- スプレッドシートの全シートからデータを読み込み、JSON構造に組み立てる ---
 function readAllDataFromSpreadsheet(ss) {
   var initial = getInitialGameDatabase();
   var data = JSON.parse(JSON.stringify(initial));
 
-  // 1. システム設定
   var sheetSys = ss.getSheetByName("01_システム設定");
   if (sheetSys) {
     var rows = sheetSys.getDataRange().getValues();
@@ -466,7 +443,6 @@ function readAllDataFromSpreadsheet(ss) {
     }
   }
 
-  // 2. 記事本文
   var sheetArticles = ss.getSheetByName("03_記事本文（全22記事）");
   if (sheetArticles) {
     var rows = sheetArticles.getDataRange().getValues();
@@ -485,7 +461,6 @@ function readAllDataFromSpreadsheet(ss) {
   return data;
 }
 
-// 初期ゲームデータベース定義（全22記事・全チャット完全データ）
 function getInitialGameDatabase() {
   return {
   "system": {

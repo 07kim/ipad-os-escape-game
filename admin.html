@@ -434,6 +434,17 @@
 
         <button class="btn btn-danger" onclick="sendCustomRemoteAlert()"><i data-lucide="send"></i> 全30台の端末へ緊急アラート送信</button>
       </div>
+
+      <!-- 🚨 全30台 一斉マスターデータリセット（公演前初期化） -->
+      <div class="card" style="border:1.5px solid #fecaca; background:#fff5f5;">
+        <div class="card-title" style="color:#b91c1c;"><i data-lucide="rotate-ccw" style="color:#ef4444;"></i> 公演前 一括マスターデータリセット</div>
+        <p style="font-size:12px; color:#7f1d1d; margin-bottom:12px;">
+          本番公演の開始前やテスト終了後に、<strong>稼働中の全30台のiPadを一斉に初期状態（1周目・ロック画面・データ全消去）へ戻し、スプレッドシートのログも完全クリア</strong>します。
+        </p>
+        <button class="btn btn-danger" style="background:#dc2626;" onclick="executeGlobalMasterReset()">
+          <i data-lucide="trash-2"></i> 🚨 全30台を一斉に初期化リセット（本番前クリア）
+        </button>
+      </div>
     </div>
   </div>
 
@@ -597,6 +608,32 @@
       refreshMonitoringDashboard();
     }
 
+    // --- 公演前 一括マスターデータリセット ---
+    function executeGlobalMasterReset() {
+      if (!confirm("⚠️ 【確認】全30台のiPadを一斉に初期状態（1周目・ロック画面）へ戻し、スプレッドシートのログを完全クリアしますか？\n\n※この操作は取り消せません。公演開始前の実行を推奨します。")) {
+        return;
+      }
+
+      sendCloudAdminCommand({
+        id: "RESET_" + Date.now(),
+        type: "master_reset",
+        name: "公演前マスターリセット",
+        params: {
+          timestamp: Date.now()
+        }
+      }, "🚨 全30台の一括マスターリセットを実行しました！");
+
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (gasUrl) {
+        // GAS側シートも全初期化
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
+      }
+
+      // ローカルモニタリングデータも初期化
+      latestDevicesData = [];
+      renderMonitoringCards();
+    }
+
     // --- 30台モニタリングダッシュボード ---
     function setMonitorFilter(filterType) {
       monitorFilter = filterType;
@@ -620,10 +657,30 @@
           if (json && json.success && json.devices) {
             latestDevicesData = json.devices;
             renderMonitoringCards();
+          } else {
+            // フォールバック: action=get_data で取得
+            fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
+              .then(r => r.json())
+              .then(d => {
+                if (d && d.data && d.data.devicesStatus) {
+                  latestDevicesData = d.data.devicesStatus;
+                }
+                renderMonitoringCards();
+              })
+              .catch(() => renderMonitoringCards());
           }
         })
         .catch(() => {
-          renderMonitoringCards();
+          // さらにフォールバック
+          fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.data && d.data.devicesStatus) {
+                latestDevicesData = d.data.devicesStatus;
+              }
+              renderMonitoringCards();
+            })
+            .catch(() => renderMonitoringCards());
         });
     }
 

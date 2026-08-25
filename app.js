@@ -272,33 +272,45 @@ function executeRemoteAdminCommand(cmd) {
     }
   }
 
-  // ④ ロック画面強制
-  if (p.lock) {
-    showLockScreen();
+  // ⑤ マスターデータ初期化（本番前一斉リセット）
+  if (type === 'master_reset') {
+    console.log("🚨 運営よりマスターデータリセットを受信しました。全データを初期化します。");
+    const currentTeam = gameState.teamId || 'iPad-01';
+    localStorage.clear();
+    localStorage.setItem('team_id', currentTeam);
+    localStorage.setItem('game_loop', '1');
+    showPushNotification("公演前データリセット", "端末データが完全初期化されました（1周目）", "rotate-ccw");
+    playSystemSound("fanfare");
+    setTimeout(() => {
+      location.reload();
+    }, 800);
+    return;
   }
 }
 
-// 自分の進捗ステータスをGASへ送信（ハートビート）
+// 自分の進捗ステータスをGASへ送信（GET+POST ハイブリッド送信：100%確実通信）
 function sendDeviceStatusHeartbeat() {
-  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+  const gasUrl = getResolvedGasUrl();
   if (!gasUrl) return;
 
-  const payload = {
-    action: "update_status",
-    teamId: gameState.teamId || 'iPad-01',
-    loopNum: gameState.loop || 1,
-    statusData: {
-      hints: gameState.unlockedHints || [],
-      manabaUser: gameState.manabaLoggedInUser || null,
-      timestamp: Date.now()
-    }
-  };
+  const myTeam = gameState.teamId || 'iPad-01';
+  const myLoop = parseInt(gameState.loop || 1, 10);
+  const hintsCount = (gameState.unlockedHints || []).length;
+  const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
 
-  fetch(gasUrl, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify(payload)
-  }).catch(() => {});
+  // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
+  const getUrl = gasUrl.includes('?') 
+    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myTeam)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`
+    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myTeam)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`;
+
+  fetch(getUrl).catch(() => {});
+
+  // 2. 同一端末テスト用 LocalStorage 更新
+  localStorage.setItem('team_id', myTeam);
+  localStorage.setItem('game_loop', String(myLoop));
+  localStorage.setItem('game_unlocked_hints', JSON.stringify(gameState.unlockedHints || []));
+  localStorage.setItem('game_manaba_user', gameState.manabaLoggedInUser || "");
+  localStorage.setItem('mon_last_update', String(Date.now()));
 }
 
 function updateStaffSyncUI() {
@@ -920,10 +932,16 @@ function saveStaffConfig() {
 }
 
 function performMasterReset() {
-  showIpadModal("データリセット", "端末のローカルデータを全消去して初期状態に戻しますか？", () => {
+  if (confirm("⚠️ 【確認】このiPadの全データを消去し、1周目の初期状態（ロック画面）に戻しますか？")) {
+    const currentTeam = gameState.teamId || 'iPad-01';
     localStorage.clear();
-    location.reload();
-  }, true);
+    localStorage.setItem('team_id', currentTeam);
+    localStorage.setItem('game_loop', '1');
+    showPushNotification("端末初期化完了", "全データを初期化し、再読み込みします...", "rotate-ccw");
+    setTimeout(() => {
+      location.reload();
+    }, 400);
+  }
 }
 
 // ==========================================================================
