@@ -2218,7 +2218,113 @@ function unlockSafariAudio() {
   document.addEventListener(evt, unlockSafariAudio, { once: false, passive: true });
 });
 
+// WAV PCM Data-URI 生成エンジン（Safari完全互換）
+function generateWavDataUri(type) {
+  const sampleRate = 22050;
+  let duration = 0.25;
+  let samples = [];
+
+  if (type === "notif" || type === "success") {
+    duration = 0.35;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = t < 0.12 ? 587.33 : 880.00;
+      let env = Math.exp(-t * 6);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.7);
+    }
+  } else if (type === "alarm" || type === "error") {
+    duration = 0.75;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = type === "alarm" ? (440 + Math.sin(2 * Math.PI * 4 * t) * 220) : 180;
+      let env = type === "error" ? Math.exp(-t * 5) : 0.8;
+      samples.push((Math.sin(2 * Math.PI * freq * t) > 0 ? 0.7 : -0.7) * env);
+    }
+  } else if (type === "fanfare") {
+    duration = 0.85;
+    const totalSamples = Math.floor(sampleRate * duration);
+    const freqs = [523.25, 659.25, 783.99, 1046.50];
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      const noteIdx = Math.min(3, Math.floor(t / 0.2));
+      const freq = freqs[noteIdx];
+      let env = Math.exp(-(t % 0.2) * 5);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.8);
+    }
+  } else if (type === "distortion") {
+    duration = 1.0;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = 120 + (t < 0.5 ? t * 1200 : (1.0 - t) * 1200);
+      samples.push((Math.sin(2 * Math.PI * freq * t) + Math.sin(4 * Math.PI * freq * t) * 0.4) * 0.7);
+    }
+  } else {
+    // beep / dtmf
+    duration = 0.18;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = type === "dtmf" ? 697 : 800;
+      samples.push(Math.sin(2 * Math.PI * freq * t) * 0.6);
+    }
+  }
+
+  const numSamples = samples.length;
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // Byte rate
+  view.setUint16(32, 2, true); // Block align
+  view.setUint16(34, 16, true); // Bits per sample
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  for (let i = 0; i < numSamples; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return 'data:audio/wav;base64,' + btoa(binary);
+}
+
 function playSystemSound(type) {
+  // 1. HTML5 <audio> エレメントでの直接再生（Safariの最も確実な再生方式）
+  try {
+    const audioEl = document.getElementById('master-system-audio');
+    if (audioEl) {
+      audioEl.src = generateWavDataUri(type);
+      audioEl.volume = 1.0;
+      audioEl.play().catch(e => {
+        console.warn("HTML5 audio playback error:", e);
+      });
+    }
+  } catch (err) {
+    console.warn("Audio Element fallback error:", err);
+  }
+
+  // 2. Web Audio API での同時シンセサイズ再生（ハイブリッドバックアップ）
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -2233,22 +2339,11 @@ function playSystemSound(type) {
       osc.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.12);
-    } else if (type === "success") {
+    } else if (type === "success" || type === "notif") {
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-      osc1.connect(ctx.destination);
-      osc2.connect(ctx.destination);
-      osc1.start();
-      osc1.stop(ctx.currentTime + 0.08);
-      osc2.start(ctx.currentTime + 0.08);
-      osc2.stop(ctx.currentTime + 0.25);
-    } else if (type === "notif") {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); // A5
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08);
       osc1.connect(ctx.destination);
       osc2.connect(ctx.destination);
       osc1.start();
@@ -2265,30 +2360,7 @@ function playSystemSound(type) {
       osc.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + (type === "alarm" ? 0.6 : 0.25));
-    } else if (type === "ringback") {
-      // プルルル… コール音
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      osc1.frequency.setValueAtTime(400, ctx.currentTime);
-      osc2.frequency.setValueAtTime(440, ctx.currentTime);
-      osc1.connect(ctx.destination);
-      osc2.connect(ctx.destination);
-      osc1.start();
-      osc2.start();
-      osc1.stop(ctx.currentTime + 1.0);
-      osc2.stop(ctx.currentTime + 1.0);
-    } else if (type === "distortion") {
-      // 時空歪み音
-      const osc = ctx.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(120, ctx.currentTime);
-      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.5);
-      osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 1.0);
-      osc.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 1.0);
     } else if (type === "fanfare") {
-      // ファンファーレ
       const notes = [523.25, 659.25, 783.99, 1046.50];
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator();
@@ -2299,7 +2371,7 @@ function playSystemSound(type) {
       });
     }
   } catch (e) {
-    console.warn("Audio Context playback failed:", e);
+    console.warn("Audio Context playback error:", e);
   }
 }
 
