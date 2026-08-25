@@ -132,76 +132,208 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- スプレッドシート（Google Sheets / GAS Web API）からの最新データ自動同期（リロード不要） ---
+// --- スプレッドシート（Google Sheets / GAS Web API）からの最新データ自動同期 ＆ 遠隔統制コマンド受信 ---
 let lastDataHash = "";
+let lastExecutedCommandId = localStorage.getItem('last_exec_cmd_id') || "";
+window.CLOUD_SYNC_STATUS = {
+  connected: false,
+  lastSyncTime: null,
+  lastError: null,
+  latencyMs: 0
+};
 
 function fetchLatestDataFromSpreadsheet() {
   const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
-  if (!gasUrl) return;
+  if (!gasUrl) {
+    window.CLOUD_SYNC_STATUS.connected = false;
+    window.CLOUD_SYNC_STATUS.lastError = "GAS URLが設定されていません";
+    updateStaffSyncUI();
+    return;
+  }
 
+  const startTime = Date.now();
   const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
   
   fetch(url)
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+      return res.json();
+    })
     .then(json => {
+      window.CLOUD_SYNC_STATUS.latencyMs = Date.now() - startTime;
+      window.CLOUD_SYNC_STATUS.lastSyncTime = Date.now();
+      window.CLOUD_SYNC_STATUS.connected = true;
+      window.CLOUD_SYNC_STATUS.lastError = null;
+      updateStaffSyncUI();
+
       if (json && json.success && json.data) {
+        // 1. 運営コマンドの受信 ＆ リアルタイム実行
+        if (json.data.latestCommand) {
+          executeRemoteAdminCommand(json.data.latestCommand);
+        }
+
+        // 2. スプレッドシートデータ差分更新
         const rawJsonStr = JSON.stringify(json.data);
-        // データに変更がない場合は不要な再描画をスキップ
-        if (rawJsonStr === lastDataHash) return;
-        lastDataHash = rawJsonStr;
-
-        console.log("🔄 スプレッドシートの変更を検知し、リロードなしでリアルタイム反映しました！", json.data);
-        
-        // 取得したスプレッドシートデータで window.GAME_DATABASE を更新
-        if (json.data.browser && json.data.browser.pagesContent) {
-          Object.assign(window.GAME_DATABASE.browser.pagesContent, json.data.browser.pagesContent);
-        }
-        if (json.data.browser && json.data.browser.news) {
-          window.GAME_DATABASE.browser.news = json.data.browser.news;
-        }
-        if (json.data.browser && json.data.browser.searchResults) {
-          window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
-        }
-        if (json.data.linkApp && json.data.linkApp.chats) {
-          window.GAME_DATABASE.linkApp.chats = json.data.linkApp.chats;
-        }
-        if (json.data.mailApp) {
-          window.GAME_DATABASE.mailApp = json.data.mailApp;
-        }
-        if (json.data.lockNotifications) {
-          window.GAME_DATABASE.lockNotifications = json.data.lockNotifications;
-        }
-        if (json.data.system) {
-          Object.assign(window.GAME_DATABASE.system, json.data.system);
-        }
-
-        // 画面を最新データで再描画
-        updateAppUI();
-
-        // もし現在LINKチャットやメールを開いていれば、その中身もリアルタイム更新
-        if (gameState.activeChatContact) {
-          const linkApp = document.getElementById('app-link-app');
-          if (linkApp && linkApp.style.display !== 'none') {
-            openLinkChat(gameState.activeChatContact);
+        if (rawJsonStr !== lastDataHash) {
+          lastDataHash = rawJsonStr;
+          console.log("🔄 スプレッドシートの変更を検知し、リアルタイム反映しました！", json.data);
+          
+          if (json.data.browser && json.data.browser.pagesContent) {
+            Object.assign(window.GAME_DATABASE.browser.pagesContent, json.data.browser.pagesContent);
           }
-        }
-        if (gameState.activeMailId) {
-          const mailApp = document.getElementById('app-mail-app');
-          if (mailApp && mailApp.style.display !== 'none') {
-            openMailDetail(gameState.activeMailId);
+          if (json.data.browser && json.data.browser.news) {
+            window.GAME_DATABASE.browser.news = json.data.browser.news;
+          }
+          if (json.data.browser && json.data.browser.searchResults) {
+            window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
+          }
+          if (json.data.linkApp && json.data.linkApp.chats) {
+            window.GAME_DATABASE.linkApp.chats = json.data.linkApp.chats;
+          }
+          if (json.data.mailApp) {
+            window.GAME_DATABASE.mailApp = json.data.mailApp;
+          }
+          if (json.data.lockNotifications) {
+            window.GAME_DATABASE.lockNotifications = json.data.lockNotifications;
+          }
+          if (json.data.system) {
+            Object.assign(window.GAME_DATABASE.system, json.data.system);
+          }
+
+          updateAppUI();
+
+          if (gameState.activeChatContact) {
+            const linkApp = document.getElementById('app-link-app');
+            if (linkApp && linkApp.style.display !== 'none') {
+              openLinkChat(gameState.activeChatContact);
+            }
+          }
+          if (gameState.activeMailId) {
+            const mailApp = document.getElementById('app-mail-app');
+            if (mailApp && mailApp.style.display !== 'none') {
+              openMailDetail(gameState.activeMailId);
+            }
           }
         }
       }
+
+      // 3. 自分の進捗ステータスをGASへ定期送信（ハートビート）
+      sendDeviceStatusHeartbeat();
     })
     .catch(err => {
-      // 通信エラー時は静かにスキップ
+      window.CLOUD_SYNC_STATUS.connected = false;
+      window.CLOUD_SYNC_STATUS.lastError = err.message || "ネットワーク通信エラー";
+      console.warn("⚠️ クラウド同期エラー:", err);
+      updateStaffSyncUI();
     });
+}
+
+// 運営からの遠隔コマンドを実行
+function executeRemoteAdminCommand(cmd) {
+  if (!cmd || !cmd.id) return;
+  if (cmd.id === lastExecutedCommandId) return; // 実行済み
+
+  // 宛先判定（ALL または 自分のteamId）
+  const myTeam = gameState.teamId || 'iPad-01';
+  if (cmd.target && cmd.target !== 'ALL' && cmd.target !== myTeam) {
+    return; // 自分宛てではない
+  }
+
+  // コマンドが古すぎる場合はスキップ（10分以上前）
+  const cmdAge = cmd.params && cmd.params.timestamp ? (Date.now() - cmd.params.timestamp) : 0;
+  if (cmdAge > 600000) return;
+
+  console.log("⚡ 運営からの遠隔コマンドを受信・実行します:", cmd);
+  lastExecutedCommandId = cmd.id;
+  localStorage.setItem('last_exec_cmd_id', cmd.id);
+
+  const type = cmd.type || (cmd.params && cmd.params.type);
+  const p = cmd.params || {};
+
+  // ① 全画面緊急アラート
+  if (type === 'alert' || type === 'preset') {
+    const alertMsg = p.alertMsg || cmd.message || p.message;
+    if (alertMsg) {
+      showSystemAlert(alertMsg);
+    }
+  }
+
+  // ② 効果音・サイレン再生
+  if (p.sound || type === 'sound') {
+    const soundName = p.sound || cmd.message;
+    if (soundName) {
+      playSystemSound(soundName);
+    }
+  }
+
+  // ③ 周回強制移行
+  if (p.loop) {
+    const nextLoop = parseInt(p.loop, 10);
+    if (!isNaN(nextLoop) && gameState.loop !== nextLoop) {
+      triggerLoopTransition(nextLoop);
+    }
+  }
+
+  // ④ ロック画面強制
+  if (p.lock) {
+    showLockScreen();
+  }
+}
+
+// 自分の進捗ステータスをGASへ送信（ハートビート）
+function sendDeviceStatusHeartbeat() {
+  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+  if (!gasUrl) return;
+
+  const payload = {
+    action: "update_status",
+    teamId: gameState.teamId || 'iPad-01',
+    loopNum: gameState.loop || 1,
+    statusData: {
+      hints: gameState.unlockedHints || [],
+      manabaUser: gameState.manabaLoggedInUser || null,
+      timestamp: Date.now()
+    }
+  };
+
+  fetch(gasUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload)
+  }).catch(() => {});
+}
+
+function updateStaffSyncUI() {
+  const statusEl = document.getElementById('staff-sync-status');
+  if (!statusEl) return;
+
+  if (window.CLOUD_SYNC_STATUS.connected) {
+    statusEl.innerHTML = `
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:8px 10px; border-radius:8px; font-size:11px; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <span style="display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>
+          <strong>クラウド連携中 (正常)</strong>
+        </span>
+        <span style="color:#65a30d;">応答: ${window.CLOUD_SYNC_STATUS.latencyMs}ms</span>
+      </div>
+    `;
+  } else {
+    statusEl.innerHTML = `
+      <div style="background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:8px 10px; border-radius:8px; font-size:11px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>
+          通信エラー / 未接続
+        </div>
+        <div style="font-size:10px; color:#b91c1c; margin-top:2px;">${window.CLOUD_SYNC_STATUS.lastError || "GAS接続を確認してください"}</div>
+      </div>
+    `;
+  }
 }
 
 function startAutoSpreadsheetSync() {
   fetchLatestDataFromSpreadsheet();
-  // 10秒おきに裏側で自動チェック（リロード不要）
-  setInterval(fetchLatestDataFromSpreadsheet, 10000);
+  // 6秒おきに裏側で自動チェック・コマンド受信（リロード不要）
+  setInterval(fetchLatestDataFromSpreadsheet, 6000);
 }
 
 // --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---

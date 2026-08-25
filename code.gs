@@ -1,26 +1,26 @@
 /**
  * ==========================================================================
  * 2126年 架空iPadOS型 脱出ゲームシステム GASバックエンドコード (code.gs)
+ * 【リアルタイム遠隔統制 ＆ 30台進行モニタリング完全対応版】
  * ==========================================================================
  * 
  * 【スプレッドシート自動作成の手順（人力入力ゼロ・クリック1回で全自動）】
- * 1. Googleドライブで新規スプレッドシートを作成します（ https://sheets.new を開くだけ ）。
+ * 1. Googleドライブで新規スプレッドシートを作成します（ https://sheets.new ）。
  * 2. 上部メニューの「拡張機能」 > 「Apps Script」を開きます。
- * 3. 既存のコードを全削除して、この code.gs の内容をすべて貼り付けて「保存」アイコン（フロッピーマーク）を押します。
+ * 3. 既存のコードを全削除して、この code.gs の内容をすべて貼り付けて「保存」アイコンを押します。
  * 4. 上部の関数選択プルダウンで「setupDatabaseSheets」を選び、「実行」ボタンを1回クリックします。
- *    ※初回のみ「アクセス権を承認」の画面が出ますので、アカウントを選んで「詳細」>「移動」>「許可」をクリックします。
- * 5. わずか数秒で、スプレッドシート内に全22記事（各3,000〜4,600字）やLINKチャット、メール、
- *    検索辞書、システム設定などのシートが自動で一括生成されます！
+ *    ※初回のみ「アクセス権を承認」の画面が出ますので許可してください。
+ * 5. わずか数秒で、全11シート（全22記事、チャット、メール、30台監視、コマンドキュー等）が一括生成されます！
  * 
  * 【Web APIとして公開する手順】
  * 1. 右上の青い「デプロイ」ボタン > 「新しいデプロイ」をクリック。
  * 2. 種類の選択（歯車アイコン） > 「ウェブアプリ」を選択。
  * 3. 次のユーザーとして実行: 「自分 (Your Account)」
  * 4. アクセスできるユーザー: 「全員 (Anyone)」に設定して「デプロイ」をクリック。
- * 5. 発行された「ウェブアプリURL」をコピーして、iPadアプリの管理画面等に設定します。
+ * 5. 発行された「ウェブアプリURL」をコピーして、iPadアプリや管理画面に設定します。
  */
 
-// --- 外部（iPadOS Webアプリ）からのデータ取得・同期API ---
+// --- 外部（iPadOS Webアプリ & 管理画面）からのデータ取得・コマンド同期API ---
 function doGet(e) {
   var action = (e && e.parameter) ? e.parameter.action : "get_data";
   
@@ -35,11 +35,43 @@ function doGet(e) {
       return renderJson({ success: false, error: "Active spreadsheet not found." });
     }
 
-    if (action === "get_data") {
+    // 1. 疎通診断（Ping / Pong）
+    if (action === "ping") {
       return renderJson({
         success: true,
-        data: readAllDataFromSpreadsheet(ss)
+        message: "pong",
+        serverTime: new Date().toISOString(),
+        timestamp: Date.now()
       });
+    }
+
+    // 2. 30台の進行ステータス ＆ 最新運営コマンドのみを軽量取得
+    if (action === "get_status") {
+      return renderJson({
+        success: true,
+        devices: readAllDevicesStatus(ss),
+        latestCommand: getLatestAdminCommand(ss),
+        timestamp: Date.now()
+      });
+    }
+
+    // 3. 全ゲームデータ ＋ 最新コマンド ＋ 端末ステータスの一括取得
+    if (action === "get_data") {
+      var allData = readAllDataFromSpreadsheet(ss);
+      allData.latestCommand = getLatestAdminCommand(ss);
+      allData.devicesStatus = readAllDevicesStatus(ss);
+      return renderJson({
+        success: true,
+        data: allData,
+        timestamp: Date.now()
+      });
+    }
+
+    // 4. GETでのコマンド送信（CORS対策用）
+    if (action === "send_command" && e.parameter.cmd) {
+      var cmdObj = JSON.parse(decodeURIComponent(e.parameter.cmd));
+      var res = recordAdminCommand(ss, cmdObj);
+      return renderJson({ success: true, message: "コマンドを送信・記録しました！", commandId: res.id });
     }
 
     return renderJson({ success: false, error: "Unknown GET action: " + action });
@@ -64,14 +96,22 @@ function doPost(e) {
       return renderJson({ success: true, message: "スプレッドシートの全シート自動構築が完了しました！" });
     }
 
-    if (action === "write_log") {
-      writeLog(ss, postData.teamId, postData.loopNum, postData.logType, postData.message);
-      return renderJson({ success: true, message: "ログを書き込みました。" });
+    // 運営コマンド送信（全体アラート、サイレン、周回移行等）
+    if (action === "send_admin_command") {
+      var res = recordAdminCommand(ss, postData.command);
+      return renderJson({ success: true, message: "運営コマンドを全iPadへ配信しました！", commandId: res.id });
     }
 
+    // 各iPadからの進捗ステータス送信（ハートビート）
     if (action === "update_status") {
       updateTeamStatus(ss, postData.teamId, postData.loopNum, postData.statusData);
       return renderJson({ success: true, message: "進捗ステータスを更新しました。" });
+    }
+
+    // プレイログ記録
+    if (action === "write_log") {
+      writeLog(ss, postData.teamId, postData.loopNum, postData.logType, postData.message);
+      return renderJson({ success: true, message: "ログを書き込みました。" });
     }
 
     return renderJson({ success: false, error: "Unknown POST action: " + action });
@@ -86,7 +126,7 @@ function doPost(e) {
 function setupDatabaseSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) {
-    throw new Error("スプレッドシートが見つかりません。スプレッドシートに紐づくApps Scriptで実行してください。");
+    throw new Error("スプレッドシートが見つかりません。");
   }
 
   var initialData = getInitialGameDatabase();
@@ -229,11 +269,28 @@ function setupDatabaseSheets() {
   }
   createOrUpdateSheet(ss, "09_機密名簿・予算管理（ハッキング用）", ["シート名", "列1", "列2", "列3", "列4", "列5"], gsheetRows);
 
-  // 10. 進行ログ記録シート（プレイヤーの探索ログ受信用）
+  // 10. iPad 30台 進行状況モニタリングシート
+  var monitorRows = [];
+  for (var i = 1; i <= 30; i++) {
+    var padId = "iPad-" + (i < 10 ? "0" + i : i);
+    monitorRows.push([padId, 1, 0, "未ログイン", "-", "-"]);
+  }
+  createOrUpdateSheet(ss, "10_30台進行状況モニタリング", ["端末識別名", "現在の周回", "入手ヒント数", "manaba状況", "最終通信日時", "ステータス詳細"], monitorRows);
+
+  // 11. 運営コマンドキューシート
+  var sheetCmd = ss.getSheetByName("98_運営コマンドキュー");
+  if (!sheetCmd) {
+    sheetCmd = ss.insertSheet("98_運営コマンドキュー");
+    sheetCmd.appendRow(["コマンドID", "日時", "対象端末", "コマンド種別", "メッセージ/演出内容", "実行パラメータJSON"]);
+    sheetCmd.getRange(1, 1, 1, 6).setBackground("#7c3aed").setFontColor("#ffffff").setFontWeight("bold");
+    sheetCmd.setFrozenRows(1);
+  }
+
+  // 12. 進行ログ記録シート
   var sheetLog = ss.getSheetByName("99_プレイログ記録");
   if (!sheetLog) {
     sheetLog = ss.insertSheet("99_プレイログ記録");
-    sheetLog.appendRow(["日時", "チーム名", "周回", "ログ種別", "内容"]);
+    sheetLog.appendRow(["日時", "端末名", "周回", "ログ種別", "内容"]);
     sheetLog.getRange(1, 1, 1, 5).setBackground("#334155").setFontColor("#ffffff").setFontWeight("bold");
     sheetLog.setFrozenRows(1);
   }
@@ -244,7 +301,7 @@ function setupDatabaseSheets() {
     ss.deleteSheet(defaultSheet);
   }
 
-  Logger.log("🎉 全10シートの自動生成とデータ入力が100%完了しました！");
+  Logger.log("🎉 全シートの自動生成と30台対応データ入力が完了しました！");
 }
 
 // 汎用シート作成・スタイリング関数
@@ -256,14 +313,12 @@ function createOrUpdateSheet(ss, sheetName, headers, rows) {
     sheet.clear();
   }
 
-  // ヘッダー追加
   sheet.appendRow(headers);
   sheet.getRange(1, 1, 1, headers.length)
     .setBackground("#1e293b")
     .setFontColor("#ffffff")
     .setFontWeight("bold");
 
-  // データ追加
   if (rows && rows.length > 0) {
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
@@ -272,16 +327,124 @@ function createOrUpdateSheet(ss, sheetName, headers, rows) {
   sheet.autoResizeColumns(1, headers.length);
 }
 
+// ==========================================================================
+// 📡 リアルタイム遠隔統制 ＆ 30台ステータス管理関数
+// ==========================================================================
+
+// 運営コマンドの記録
+function recordAdminCommand(ss, command) {
+  var sheet = ss.getSheetByName("98_運営コマンドキュー");
+  if (!sheet) {
+    sheet = ss.insertSheet("98_運営コマンドキュー");
+    sheet.appendRow(["コマンドID", "日時", "対象端末", "コマンド種別", "メッセージ/演出内容", "実行パラメータJSON"]);
+  }
+
+  var cmdId = "CMD_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
+  
+  var target = (command && command.target) ? command.target : "ALL";
+  var type = (command && command.type) ? command.type : "alert";
+  var msg = (command && (command.message || command.alertMsg || command.name)) ? (command.message || command.alertMsg || command.name) : "";
+  var params = JSON.stringify(command || {});
+
+  sheet.appendRow([cmdId, nowStr, target, type, msg, params]);
+  return { id: cmdId, timestamp: Date.now() };
+}
+
+// 直近の最新運営コマンドを取得
+function getLatestAdminCommand(ss) {
+  var sheet = ss.getSheetByName("98_運営コマンドキュー");
+  if (!sheet) return null;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return null;
+
+  var row = sheet.getRange(lastRow, 1, 1, 6).getValues()[0];
+  var cmdId = row[0];
+  var timeStr = row[1];
+  var target = row[2];
+  var type = row[3];
+  var msg = row[4];
+  var paramsStr = row[5];
+
+  var params = {};
+  try {
+    params = JSON.parse(paramsStr);
+  } catch (e) {}
+
+  return {
+    id: cmdId,
+    time: timeStr,
+    target: target,
+    type: type,
+    message: msg,
+    params: params
+  };
+}
+
+// 端末進捗ステータスの更新 (upsert)
+function updateTeamStatus(ss, teamId, loopNum, statusData) {
+  if (!teamId) return;
+  var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
+  if (!sheet) {
+    sheet = ss.insertSheet("10_30台進行状況モニタリング");
+    sheet.appendRow(["端末識別名", "現在の周回", "入手ヒント数", "manaba状況", "最終通信日時", "ステータス詳細"]);
+  }
+
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
+  var hintsCount = (statusData && statusData.hints) ? statusData.hints.length : 0;
+  var manaba = (statusData && statusData.manabaUser) ? ("ログイン中: " + statusData.manabaUser) : "未ログイン";
+  var details = JSON.stringify(statusData || {});
+
+  var rows = sheet.getDataRange().getValues();
+  var foundRow = -1;
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0] === teamId) {
+      foundRow = i + 1;
+      break;
+    }
+  }
+
+  if (foundRow > 0) {
+    sheet.getRange(foundRow, 2, 1, 5).setValues([[loopNum || 1, hintsCount, manaba, nowStr, details]]);
+  } else {
+    sheet.appendRow([teamId, loopNum || 1, hintsCount, manaba, nowStr, details]);
+  }
+}
+
+// 全端末ステータス一覧の取得
+function readAllDevicesStatus(ss) {
+  var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
+  if (!sheet) return [];
+
+  var rows = sheet.getDataRange().getValues();
+  var devices = [];
+  for (var i = 1; i < rows.length; i++) {
+    var id = rows[i][0];
+    if (id) {
+      devices.push({
+        id: id,
+        loop: Number(rows[i][1]) || 1,
+        hintsCount: Number(rows[i][2]) || 0,
+        manaba: rows[i][3] || "未ログイン",
+        lastSeen: rows[i][4] || "--:--",
+        details: rows[i][5] || ""
+      });
+    }
+  }
+  return devices;
+}
+
 // ログ書き込み
 function writeLog(ss, teamId, loopNum, logType, message) {
   var sheet = ss.getSheetByName("99_プレイログ記録");
   if (!sheet) {
     sheet = ss.insertSheet("99_プレイログ記録");
-    sheet.appendRow(["日時", "チーム名", "周回", "ログ種別", "内容"]);
+    sheet.appendRow(["日時", "端末名", "周回", "ログ種別", "内容"]);
     sheet.getRange(1, 1, 1, 5).setBackground("#334155").setFontColor("#ffffff").setFontWeight("bold");
   }
   var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
-  sheet.appendRow([nowStr, teamId || "チームA", loopNum || 1, logType || "INFO", message || ""]);
+  sheet.appendRow([nowStr, teamId || "iPad-01", loopNum || 1, logType || "INFO", message || ""]);
 }
 
 // --- スプレッドシートの全シートからデータを読み込み、JSON構造に組み立てる ---
@@ -289,7 +452,7 @@ function readAllDataFromSpreadsheet(ss) {
   var initial = getInitialGameDatabase();
   var data = JSON.parse(JSON.stringify(initial));
 
-  // 1. システム設定シート
+  // 1. システム設定
   var sheetSys = ss.getSheetByName("01_システム設定");
   if (sheetSys) {
     var rows = sheetSys.getDataRange().getValues();
@@ -303,7 +466,7 @@ function readAllDataFromSpreadsheet(ss) {
     }
   }
 
-  // 2. 記事本文シート
+  // 2. 記事本文
   var sheetArticles = ss.getSheetByName("03_記事本文（全22記事）");
   if (sheetArticles) {
     var rows = sheetArticles.getDataRange().getValues();

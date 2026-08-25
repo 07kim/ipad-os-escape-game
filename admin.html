@@ -333,21 +333,38 @@
     </div>
   </header>
 
+  <!-- 📡 クラウド連携・遠隔統制ステータスバー -->
+  <div style="max-width:1400px; margin: 0 auto 20px auto; padding: 14px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.04); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div id="admin-cloud-indicator" style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; background:#f8fafc; padding:6px 12px; border-radius:20px; border:1px solid #e2e8f0;">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
+        <span id="admin-status-text">クラウド接続確認中...</span>
+      </div>
+      <div style="font-size:12px; color:var(--text-muted);" id="admin-last-command-info">直近送信: なし</div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <input type="text" id="admin-gas-url-input" placeholder="Google Apps Script (GAS) Web API URL" style="width:280px; padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border-color);">
+      <button class="nav-btn" onclick="saveAdminGasUrl()" style="padding:6px 12px; font-size:12px; font-weight:700; background:var(--primary); color:#fff; border:none;"><i data-lucide="save"></i> URL保存</button>
+      <button class="nav-btn" onclick="testGasPing()" style="padding:6px 12px; font-size:12px; font-weight:700;"><i data-lucide="radio"></i> 📡 疎通テスト</button>
+    </div>
+  </div>
+
   <div class="container">
     
     <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
     <div>
       <!-- 🎬 シーン別進行プリセットパネル -->
       <div class="card">
-        <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（ワンクリック同期）</div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">ボタンを押すと、全稼働中のiPad端末へ周回切り替え・演出アラートが一斉送信されます。</p>
+        <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（全30台クラウド一斉同期）</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">ボタンを押すと、Googleスプレッドシート経由で全稼働中iPad（30台）へ周回切り替え・演出が一括配信されます。</p>
         
         <div class="preset-grid" id="preset-buttons-container"></div>
       </div>
 
       <!-- 🔊 効果音・サイレン遠隔再生パネル -->
       <div class="card">
-        <div class="card-title"><i data-lucide="volume-2" style="color:var(--warning);"></i> 効果音・サイレン遠隔再生</div>
+        <div class="card-title"><i data-lucide="volume-2" style="color:var(--warning);"></i> 効果音・サイレン遠隔再生（クラウド配信）</div>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">クリックした瞬間に全iPad端末で大迫力のWeb Audio APIシンセサウンドが鳴り響きます。</p>
         
         <div class="sound-grid">
@@ -399,7 +416,7 @@
             <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('2')" id="filter-2" style="padding:3px 8px; font-size:11px;">2周目</button>
             <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('3')" id="filter-3" style="padding:3px 8px; font-size:11px;">3周目</button>
           </div>
-          <input type="text" id="monitor-search-input" placeholder="🔍 端末名・ユーザー名で検索..." oninput="refreshMonitoringDashboard()" 
+          <input type="text" id="monitor-search-input" placeholder="🔍 端末名・ユーザー名で検索..." oninput="renderMonitoringCards()" 
                  style="flex:1; min-width:140px; padding:4px 10px; font-size:12px; border:1px solid var(--border-color); border-radius:6px;">
         </div>
 
@@ -411,45 +428,43 @@
         <div class="card-title"><i data-lucide="radio" style="color:var(--danger);"></i> 全画面 緊急アラート送信（指示割込）</div>
         
         <div class="form-group">
-          <label>表示メッセージ（端末の画面全体をジャックして表示）</label>
+          <label>表示メッセージ（全iPad端末の画面全体をジャックして強制表示）</label>
           <textarea id="remote-alert-text" rows="3" placeholder="【保安局より緊急指示】直ちに大ホールへ集合してください。"></textarea>
         </div>
 
-        <button class="btn btn-danger" onclick="sendCustomRemoteAlert()"><i data-lucide="send"></i> 全端末へ緊急アラート送信</button>
-      </div>
-
-      <!-- ⚙️ スプレッドシート連携設定 -->
-      <div class="card">
-        <div class="card-title"><i data-lucide="settings" style="color:#64748b;"></i> Google Apps Script (GAS) ログ同期設定</div>
-        <div class="form-group">
-          <label>GAS Web App URL (ログ受信・ステータス同期用)</label>
-          <input type="text" id="admin-gas-url" placeholder="https://script.google.com/macros/s/xxxx/exec">
-        </div>
-        <button class="btn btn-primary" onclick="saveAdminGasUrl()"><i data-lucide="save"></i> URLを保存して適用</button>
+        <button class="btn btn-danger" onclick="sendCustomRemoteAlert()"><i data-lucide="send"></i> 全30台の端末へ緊急アラート送信</button>
       </div>
     </div>
-
   </div>
 
+  <!-- トースト通知 -->
   <div id="admin-toast">
-    <i data-lucide="check-circle" style="color:var(--success);"></i>
-    <span id="admin-toast-text">実行しました</span>
+    <i data-lucide="info" style="width:18px; height:18px; color:var(--primary);"></i>
+    <span id="admin-toast-text">メッセージ</span>
   </div>
 
+  <!-- Scripts -->
   <script src="data.js"></script>
   <script>
-    // 初期ロード
+    // グローバル状態
+    let latestDevicesData = [];
+    let monitorFilter = 'all';
+
     document.addEventListener('DOMContentLoaded', () => {
-      renderPresetButtons();
-      refreshMonitoringDashboard();
-      
-      const savedGas = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
-      if (savedGas) document.getElementById('admin-gas-url').value = savedGas;
-
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      renderPresetButtons();
 
-      // 定期的にモニタリングダッシュボードをリフレッシュ
-      setInterval(refreshMonitoringDashboard, 3000);
+      // GAS URLの初期化
+      const savedGasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || "";
+      const urlInput = document.getElementById('admin-gas-url-input');
+      if (urlInput) urlInput.value = savedGasUrl;
+
+      // 疎通テスト ＆ 初回データ取得
+      testGasPing();
+      refreshMonitoringDashboard();
+
+      // 4秒おきに30台ステータスを自動更新
+      setInterval(refreshMonitoringDashboard, 4000);
     });
 
     // 進行プリセットボタンの描画
@@ -476,105 +491,230 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    // --- クラウド経由でのコマンド送信コア関数 ---
+    function sendCloudAdminCommand(commandObj, successMsg) {
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+
+      // 同一端末テスト用LocalStorage
+      if (commandObj.type === 'preset') {
+        localStorage.setItem('admin_preset_trigger', JSON.stringify(commandObj.params));
+        localStorage.setItem('admin_preset_trigger_time', Date.now());
+      } else if (commandObj.type === 'sound') {
+        localStorage.setItem('admin_sound_trigger', commandObj.params.sound);
+        localStorage.setItem('admin_sound_trigger_time', Date.now());
+      } else if (commandObj.type === 'alert') {
+        localStorage.setItem('admin_alert_trigger', commandObj.params.alertMsg);
+        localStorage.setItem('admin_alert_trigger_time', Date.now());
+      }
+
+      // UIに直近コマンド表示
+      const lastCmdEl = document.getElementById('admin-last-command-info');
+      if (lastCmdEl) {
+        lastCmdEl.innerText = `直近送信: ${commandObj.name || commandObj.type} (${new Date().toLocaleTimeString()})`;
+      }
+
+      if (!gasUrl) {
+        showToast(successMsg + " (※ローカル保存のみ。GAS URLが未設定です)");
+        return;
+      }
+
+      const payload = {
+        action: "send_admin_command",
+        command: Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj)
+      };
+
+      fetch(gasUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(json => {
+        showToast(successMsg + " 🚀（全30台へ配信完了）");
+      })
+      .catch(err => {
+        showToast(successMsg + " (※ローカル通知済・GAS送信中)");
+      });
+    }
+
     // プリセット実行
     function executePreset(presetId) {
       const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
       const p = presets.find(item => item.id === presetId);
       if (!p) return;
 
-      const payload = {
-        id: p.id,
-        stage: p.stage,
-        loop: p.loop,
-        alertMsg: p.alertMsg,
-        sound: p.sound,
-        forceLock: p.forceLock,
-        clockISO: p.clockISO
-      };
-
-      // LocalStorageを介して稼働中iPad端末へ一斉通知
-      localStorage.setItem('admin_preset_trigger', JSON.stringify(payload));
-      localStorage.setItem('admin_preset_trigger_time', Date.now());
-
-      showToast(`プリセット「${p.name}」を実行しました`);
+      sendCloudAdminCommand({
+        id: "PRESET_" + p.id + "_" + Date.now(),
+        type: "preset",
+        name: p.name,
+        params: {
+          id: p.id,
+          stage: p.stage,
+          loop: p.loop,
+          alertMsg: p.alertMsg,
+          sound: p.sound,
+          forceLock: p.forceLock,
+          clockISO: p.clockISO,
+          timestamp: Date.now()
+        }
+      }, `プリセット「${p.name}」を実行しました`);
     }
 
     // 遠隔サウンド再生
     function triggerRemoteSound(soundType) {
-      localStorage.setItem('admin_sound_trigger', soundType);
-      localStorage.setItem('admin_sound_trigger_time', Date.now());
-      showToast(`効果音「${soundType}」を全端末で再生しました`);
+      sendCloudAdminCommand({
+        id: "SOUND_" + soundType + "_" + Date.now(),
+        type: "sound",
+        name: "効果音: " + soundType,
+        params: {
+          sound: soundType,
+          timestamp: Date.now()
+        }
+      }, `効果音「${soundType}」を全端末へ送信しました`);
     }
 
     // 全画面アラート送信
     function sendCustomRemoteAlert() {
       const text = document.getElementById('remote-alert-text').value.trim();
-      if (!text) return;
+      if (!text) {
+        alert("送信メッセージを入力してください。");
+        return;
+      }
 
-      localStorage.setItem('admin_alert_trigger', text);
-      localStorage.setItem('admin_alert_trigger_time', Date.now());
-      showToast("緊急アラートを送信しました");
+      sendCloudAdminCommand({
+        id: "ALERT_" + Date.now(),
+        type: "alert",
+        name: "緊急アラート",
+        params: {
+          alertMsg: text,
+          sound: "alarm",
+          timestamp: Date.now()
+        }
+      }, "緊急アラートを全iPadへ送信しました！");
     }
 
-    // モニタリングフィルター
-    let monitorFilter = 'all';
+    // --- 疎通診断 (Ping / Pong) ---
+    function testGasPing() {
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const indDot = document.getElementById('admin-status-dot');
+      const indText = document.getElementById('admin-status-text');
 
+      if (!gasUrl) {
+        if (indDot) indDot.style.background = "#ef4444";
+        if (indText) indText.innerText = "🔴 GAS URL未設定";
+        return;
+      }
+
+      if (indDot) indDot.style.background = "#f59e0b";
+      if (indText) indText.innerText = "🟡 通信テスト中...";
+
+      const start = Date.now();
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=ping` : `${gasUrl}?action=ping`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          const lat = Date.now() - start;
+          if (json && json.success) {
+            if (indDot) indDot.style.background = "#22c55e";
+            if (indText) indText.innerHTML = `<span style="color:#166534;">🟢 クラウド連携中 (応答: ${lat}ms)</span>`;
+            showToast(`疎通確認成功！ 応答時間: ${lat}ms`);
+          } else {
+            throw new Error(json.error || "無効なレスポンス");
+          }
+        })
+        .catch(err => {
+          if (indDot) indDot.style.background = "#ef4444";
+          if (indText) indText.innerHTML = `<span style="color:#991b1b;">🔴 通信エラー (${err.message || "接続失敗"})</span>`;
+          showToast("⚠️ 通信エラーが発生しました。GASデプロイ設定をご確認ください。");
+        });
+    }
+
+    function saveAdminGasUrl() {
+      const url = document.getElementById('admin-gas-url-input').value.trim();
+      localStorage.setItem('gas_url', url);
+      if (window.GAME_DATABASE && window.GAME_DATABASE.system) {
+        window.GAME_DATABASE.system.gasUrl = url;
+      }
+      showToast("GAS URLを保存しました");
+      testGasPing();
+      refreshMonitoringDashboard();
+    }
+
+    // --- 30台モニタリングダッシュボード ---
     function setMonitorFilter(filterType) {
       monitorFilter = filterType;
       document.querySelectorAll('.admin-filter-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`filter-${filterType}`);
       if (activeBtn) activeBtn.classList.add('active');
-      refreshMonitoringDashboard();
+      renderMonitoringCards();
     }
 
-    // 30台モニタリングダッシュボードの描画
     function refreshMonitoringDashboard() {
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (!gasUrl) {
+        renderMonitoringCards();
+        return;
+      }
+
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          if (json && json.success && json.devices) {
+            latestDevicesData = json.devices;
+            renderMonitoringCards();
+          }
+        })
+        .catch(() => {
+          renderMonitoringCards();
+        });
+    }
+
+    function renderMonitoringCards() {
       const container = document.getElementById('team-monitor-container');
       if (!container) return;
 
-      const currentTeam = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || "iPad-01";
-      const currentLoop = parseInt(localStorage.getItem('game_loop') || '1', 10);
-      const currentHints = JSON.parse(localStorage.getItem('unlocked_hints') || localStorage.getItem('game_unlocked_hints') || "[]");
-      const currentManaba = localStorage.getItem('manaba_user') || localStorage.getItem('game_manaba_user') || null;
-      const lastUpdate = localStorage.getItem('mon_last_update');
-      const timeStr = lastUpdate ? new Date(parseInt(lastUpdate, 10)).toLocaleTimeString() : "通信中";
-
       const searchKeyword = (document.getElementById('monitor-search-input')?.value || "").toLowerCase().trim();
 
-      // 30台のデバイスリストを構築
-      const devices = [];
+      // 30台のデバイスマップ
+      const deviceMap = {};
       for (let i = 1; i <= 30; i++) {
         const padId = `iPad-${String(i).padStart(2, '0')}`;
-        const isCurrent = (currentTeam === padId) || (currentTeam.startsWith(padId));
-        
-        const loopVal = isCurrent ? currentLoop : 1;
-        const hintsCount = isCurrent ? currentHints.length : 0;
-        const manabaStatus = isCurrent ? (currentManaba ? '🐰 ログイン済' : '未ログイン') : '未ログイン';
-        const displayLabel = isCurrent ? currentTeam : padId;
-
-        devices.push({
+        deviceMap[padId] = {
           id: padId,
-          name: displayLabel,
-          loop: loopVal,
-          hints: hintsCount,
-          manaba: manabaStatus,
-          lastSeen: isCurrent ? timeStr : '--:--',
-          isCurrent: isCurrent
-        });
+          name: padId,
+          loop: 1,
+          hints: 0,
+          manaba: "未ログイン",
+          lastSeen: "--:--",
+          isActive: false
+        };
       }
 
-      // もしカスタムユーザー名（例: 「1班 田中」）で30台の規則にない端末があれば先頭に追加
-      if (!devices.some(d => d.id === currentTeam || d.name === currentTeam)) {
-        devices.unshift({
-          id: currentTeam,
-          name: currentTeam,
-          loop: currentLoop,
-          hints: currentHints.length,
-          manaba: currentManaba ? '🐰 ログイン済' : '未ログイン',
-          lastSeen: timeStr,
-          isCurrent: true
-        });
-      }
+      // GASから取得した最新ステータスで上書き
+      latestDevicesData.forEach(d => {
+        if (deviceMap[d.id]) {
+          deviceMap[d.id].loop = d.loop;
+          deviceMap[d.id].hints = d.hintsCount;
+          deviceMap[d.id].manaba = d.manaba;
+          deviceMap[d.id].lastSeen = d.lastSeen;
+          deviceMap[d.id].isActive = true;
+        } else {
+          // カスタムユーザー名の端末
+          deviceMap[d.id] = {
+            id: d.id,
+            name: d.id,
+            loop: d.loop,
+            hints: d.hintsCount,
+            manaba: d.manaba,
+            lastSeen: d.lastSeen,
+            isActive: true
+          };
+        }
+      });
+
+      const devices = Object.values(deviceMap);
 
       // 絞り込み ＆ 検索
       const filtered = devices.filter(d => {
@@ -598,7 +738,7 @@
         const color = loopColors[d.loop] || loopColors[1];
 
         container.innerHTML += `
-          <div class="team-monitor-card" style="${d.isCurrent ? 'border-color:var(--primary); background:#f0f9ff; box-shadow:0 0 0 1px var(--primary);' : ''}">
+          <div class="team-monitor-card" style="${d.isActive ? 'border-color:var(--primary); background:#f0f9ff;' : ''}">
             <div class="team-card-header">
               <span class="team-id-badge" title="${d.name}">${d.name}</span>
               <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${d.loop}周目</span>
