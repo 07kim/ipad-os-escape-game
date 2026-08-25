@@ -166,7 +166,7 @@ function fetchLatestDataFromSpreadsheet() {
       window.CLOUD_SYNC_STATUS.lastError = null;
       updateStaffSyncUI();
 
-      if (json && json.success && json.data) {
+      if (json && (json.success || json.data) && json.data) {
         // 1. 運営コマンドの受信 ＆ リアルタイム実行
         if (json.data.latestCommand) {
           executeRemoteAdminCommand(json.data.latestCommand);

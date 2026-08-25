@@ -514,7 +514,7 @@
       }
 
       if (!gasUrl) {
-        showToast(successMsg + " (※ローカル保存のみ。GAS URLが未設定です)");
+        showToast(successMsg + " (※ローカル通知完了。GAS URL未設定)");
         return;
       }
 
@@ -523,6 +523,7 @@
         command: Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj)
       };
 
+      // POST送信（CORS対策 text/plain）
       fetch(gasUrl, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -533,67 +534,18 @@
         showToast(successMsg + " 🚀（全30台へ配信完了）");
       })
       .catch(err => {
-        showToast(successMsg + " (※ローカル通知済・GAS送信中)");
+        // フォールバック: GETクエリでも送信（CORS完全回避）
+        const getUrl = gasUrl.includes('?') 
+          ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(payload.command))}` 
+          : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(payload.command))}`;
+        
+        fetch(getUrl)
+          .then(() => showToast(successMsg + " 🚀（全30台へ配信完了）"))
+          .catch(() => showToast(successMsg + " (※ローカル通知済)"));
       });
     }
 
-    // プリセット実行
-    function executePreset(presetId) {
-      const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
-      const p = presets.find(item => item.id === presetId);
-      if (!p) return;
-
-      sendCloudAdminCommand({
-        id: "PRESET_" + p.id + "_" + Date.now(),
-        type: "preset",
-        name: p.name,
-        params: {
-          id: p.id,
-          stage: p.stage,
-          loop: p.loop,
-          alertMsg: p.alertMsg,
-          sound: p.sound,
-          forceLock: p.forceLock,
-          clockISO: p.clockISO,
-          timestamp: Date.now()
-        }
-      }, `プリセット「${p.name}」を実行しました`);
-    }
-
-    // 遠隔サウンド再生
-    function triggerRemoteSound(soundType) {
-      sendCloudAdminCommand({
-        id: "SOUND_" + soundType + "_" + Date.now(),
-        type: "sound",
-        name: "効果音: " + soundType,
-        params: {
-          sound: soundType,
-          timestamp: Date.now()
-        }
-      }, `効果音「${soundType}」を全端末へ送信しました`);
-    }
-
-    // 全画面アラート送信
-    function sendCustomRemoteAlert() {
-      const text = document.getElementById('remote-alert-text').value.trim();
-      if (!text) {
-        alert("送信メッセージを入力してください。");
-        return;
-      }
-
-      sendCloudAdminCommand({
-        id: "ALERT_" + Date.now(),
-        type: "alert",
-        name: "緊急アラート",
-        params: {
-          alertMsg: text,
-          sound: "alarm",
-          timestamp: Date.now()
-        }
-      }, "緊急アラートを全iPadへ送信しました！");
-    }
-
-    // --- 疎通診断 (Ping / Pong) ---
+    // --- 疎通診断 (ハイブリッド互換: ping または get_data で判定) ---
     function testGasPing() {
       const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
       const indDot = document.getElementById('admin-status-dot');
@@ -609,16 +561,20 @@
       if (indText) indText.innerText = "🟡 通信テスト中...";
 
       const start = Date.now();
-      const url = gasUrl.includes('?') ? `${gasUrl}&action=ping` : `${gasUrl}?action=ping`;
+      // まずは軽量な get_data (全バージョン共通) で疎通確認
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
 
       fetch(url)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
         .then(json => {
           const lat = Date.now() - start;
-          if (json && json.success) {
+          if (json && (json.success || json.data)) {
             if (indDot) indDot.style.background = "#22c55e";
             if (indText) indText.innerHTML = `<span style="color:#166534;">🟢 クラウド連携中 (応答: ${lat}ms)</span>`;
-            showToast(`疎通確認成功！ 応答時間: ${lat}ms`);
+            showToast(`疎通確認成功！ 応答時間: ${lat}ms 🟢`);
           } else {
             throw new Error(json.error || "無効なレスポンス");
           }
