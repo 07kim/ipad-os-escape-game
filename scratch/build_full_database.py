@@ -380,7 +380,7 @@ header_text = """// ============================================================
 window.GAME_DATABASE = {
   // --- システム基本設定 ---
   system: {
-    gasUrl: "",
+    gasUrl: "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec",
     teamId: "チームA",
     deviceOwner: "26__0094 調査端末",
     spec: {

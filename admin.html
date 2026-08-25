@@ -429,7 +429,7 @@
       renderPresetButtons();
       refreshMonitoringDashboard();
       
-      const savedGas = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system.gasUrl);
+      const savedGas = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
       if (savedGas) document.getElementById('admin-gas-url').value = savedGas;
 
       if (typeof lucide !== 'undefined') lucide.createIcons();

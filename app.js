@@ -109,11 +109,14 @@ window.addEventListener('DOMContentLoaded', () => {
       unlockBtn.addEventListener('click', unlockScreen);
     }
 
-    // 初期画面構築
+    // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
     
     // 60分タイマー開始
     startCountdownTimer();
+
+    // スプレッドシート（Google Sheets / GAS）から最新データを非同期同期
+    fetchLatestDataFromSpreadsheet();
 
   } catch(startupError) {
     // 起動時エラーを画面に直接表示（デバッグ用）
@@ -128,6 +131,51 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
   }
 });
+
+// --- スプレッドシート（Google Sheets / GAS Web API）からの最新データ自動同期 ---
+function fetchLatestDataFromSpreadsheet() {
+  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+  if (!gasUrl) return;
+
+  const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
+  
+  fetch(url)
+    .then(res => res.json())
+    .then(json => {
+      if (json && json.success && json.data) {
+        console.log("✅ スプレッドシートから最新データを同期しました！", json.data);
+        
+        // 取得したスプレッドシートデータで window.GAME_DATABASE を更新
+        if (json.data.browser && json.data.browser.pagesContent) {
+          Object.assign(window.GAME_DATABASE.browser.pagesContent, json.data.browser.pagesContent);
+        }
+        if (json.data.browser && json.data.browser.news) {
+          window.GAME_DATABASE.browser.news = json.data.browser.news;
+        }
+        if (json.data.browser && json.data.browser.searchResults) {
+          window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
+        }
+        if (json.data.linkApp && json.data.linkApp.chats) {
+          window.GAME_DATABASE.linkApp.chats = json.data.linkApp.chats;
+        }
+        if (json.data.mailApp) {
+          window.GAME_DATABASE.mailApp = json.data.mailApp;
+        }
+        if (json.data.lockNotifications) {
+          window.GAME_DATABASE.lockNotifications = json.data.lockNotifications;
+        }
+        if (json.data.system) {
+          Object.assign(window.GAME_DATABASE.system, json.data.system);
+        }
+
+        // 画面を最新データで再描画
+        updateAppUI();
+      }
+    })
+    .catch(err => {
+      console.warn("スプレッドシート同期スキップ（ローカルデータで動作継続）:", err);
+    });
+}
 
 // --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---
 function applyOperationalRestrictions() {
