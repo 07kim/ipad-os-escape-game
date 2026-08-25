@@ -1575,23 +1575,28 @@ function renderManabaPortal() {
   const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser];
   if (!user) return;
 
-  document.getElementById('manaba-user-display').innerText = `${user.name} (${user.studentId})`;
+  const userEl = document.getElementById('manaba-user-display') || document.getElementById('manaba-user-name');
+  if (userEl) {
+    userEl.innerText = `${user.name} (${user.studentId})`;
+  }
 
   // 時間割描画
   const tbody = document.getElementById('manaba-timetable-body');
-  tbody.innerHTML = "";
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  for (let period = 0; period < 5; period++) {
-    let rowHtml = `<tr><td class="timetable-period">${period + 1}限</td>`;
-    days.forEach(day => {
-      const subject = user.timetable[day] ? user.timetable[day][period] : "空き";
-      const isTarget = subject.includes("21世紀会計史") || subject.includes("情報科学特論") || subject.includes("時間軸");
-      const highlightStyle = isTarget ? "color:var(--manaba-green); font-weight:bold; cursor:pointer;" : "";
-      const clickAction = isTarget ? "onclick='openManabaCourse()'" : "";
-      rowHtml += `<td class="timetable-cell" style="${highlightStyle}" ${clickAction}>${subject}</td>`;
-    });
-    rowHtml += "</tr>";
-    tbody.innerHTML += rowHtml;
+  if (tbody) {
+    tbody.innerHTML = "";
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    for (let period = 0; period < 5; period++) {
+      let rowHtml = `<tr><td class="timetable-period">${period + 1}限</td>`;
+      days.forEach(day => {
+        const subject = (user.timetable && user.timetable[day]) ? user.timetable[day][period] : "空き";
+        const isTarget = subject && (subject.includes("21世紀会計史") || subject.includes("情報科学特論") || subject.includes("時間軸"));
+        const highlightStyle = isTarget ? "color:var(--manaba-green); font-weight:bold; cursor:pointer;" : "";
+        const clickAction = isTarget ? "onclick='openManabaCourse()'" : "";
+        rowHtml += `<td class="timetable-cell" style="${highlightStyle}" ${clickAction}>${subject || '空き'}</td>`;
+      });
+      rowHtml += "</tr>";
+      tbody.innerHTML += rowHtml;
+    }
   }
 }
 
