@@ -1083,12 +1083,24 @@ function searchBrowserKeyword(q) {
   const input2 = document.getElementById('browser-main-search');
   if (input2) input2.value = q;
 
-  const results = (window.GAME_DATABASE.browser.searchResults && window.GAME_DATABASE.browser.searchResults[q]) || [];
+  const curLoop = parseInt(gameState.loop || 1, 10);
+  let results = (window.GAME_DATABASE.browser.searchResults && window.GAME_DATABASE.browser.searchResults[q]) || [];
+
+  // もし完全一致で見つからない場合は部分一致でキーを検索
+  if (results.length === 0 && window.GAME_DATABASE.browser.searchResults) {
+    for (const key in window.GAME_DATABASE.browser.searchResults) {
+      if (q.includes(key) || key.includes(q)) {
+        results = results.concat(window.GAME_DATABASE.browser.searchResults[key]);
+      }
+    }
+  }
   
-  // 周回制限でフィルタリング
+  // 周回制限で厳密にフィルタリング（型安全：数値・文字列どちらでも確実判定）
   const filtered = results.filter(item => {
-    if (item.minLoop && gameState.loop < item.minLoop) return false;
-    if (item.maxLoop && gameState.loop > item.maxLoop) return false;
+    const min = (item.minLoop !== undefined && item.minLoop !== "" && item.minLoop !== null) ? parseInt(item.minLoop, 10) : null;
+    const max = (item.maxLoop !== undefined && item.maxLoop !== "" && item.maxLoop !== null) ? parseInt(item.maxLoop, 10) : null;
+    if (min !== null && !isNaN(min) && curLoop < min) return false;
+    if (max !== null && !isNaN(max) && curLoop > max) return false;
     return true;
   });
 
