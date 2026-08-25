@@ -237,42 +237,59 @@ function executeRemoteAdminCommand(cmd) {
     return; // 自分宛てではない
   }
 
+  // params のアンパック（2重ネスト・文字列JSONを完全吸収）
+  let p = cmd.params || {};
+  if (typeof p === 'string') {
+    try { p = JSON.parse(p); } catch (e) {}
+  }
+  if (p.params && typeof p.params === 'object') {
+    p = Object.assign({}, p, p.params);
+  }
+
   // コマンドが古すぎる場合はスキップ（10分以上前）
-  const cmdAge = cmd.params && cmd.params.timestamp ? (Date.now() - cmd.params.timestamp) : 0;
+  const cmdTimestamp = p.timestamp || cmd.timestamp || 0;
+  const cmdAge = cmdTimestamp ? (Date.now() - cmdTimestamp) : 0;
   if (cmdAge > 600000) return;
 
-  console.log("⚡ 運営からの遠隔コマンドを受信・実行します:", cmd);
+  console.log("⚡ 運営からの遠隔コマンドを受信・実行します:", cmd, p);
   lastExecutedCommandId = cmd.id;
   localStorage.setItem('last_exec_cmd_id', cmd.id);
 
-  const type = cmd.type || (cmd.params && cmd.params.type);
-  const p = cmd.params || {};
+  const type = cmd.type || p.type;
 
-  // ① 全画面緊急アラート
-  if (type === 'alert' || type === 'preset') {
-    const alertMsg = p.alertMsg || cmd.message || p.message;
-    if (alertMsg) {
-      showSystemAlert(alertMsg);
-    }
+  // ① 全画面緊急アラート（プリセット or アラート）
+  const alertMsg = p.alertMsg || p.message || cmd.message;
+  if (alertMsg && (type === 'alert' || type === 'preset')) {
+    showSystemAlert(alertMsg);
   }
 
   // ② 効果音・サイレン再生
-  if (p.sound || type === 'sound') {
-    const soundName = p.sound || cmd.message;
-    if (soundName) {
-      playSystemSound(soundName);
-    }
+  const soundName = p.sound || (type === 'sound' ? (alertMsg || cmd.message) : null);
+  if (soundName) {
+    playSystemSound(soundName);
   }
 
   // ③ 周回強制移行
-  if (p.loop) {
+  if (p.loop !== undefined && p.loop !== null && p.loop !== "") {
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop) && gameState.loop !== nextLoop) {
       triggerLoopTransition(nextLoop);
     }
   }
 
-  // ⑤ マスターデータ初期化（本番前一斉リセット）
+  // ④ ロック画面強制
+  if (p.forceLock === true || p.lock === true) {
+    showLockScreen();
+  }
+
+  // ⑤ 時計強制同期
+  if (p.clockISO) {
+    localStorage.setItem('fake_clock_start_iso', p.clockISO);
+    gameState.clockStartISO = p.clockISO;
+    updateAppUI();
+  }
+
+  // ⑥ マスターデータ初期化（本番前一斉リセット）
   if (type === 'master_reset') {
     console.log("🚨 運営よりマスターデータリセットを受信しました。全データを初期化します。");
     const currentTeam = gameState.teamId || 'iPad-01';

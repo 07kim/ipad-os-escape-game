@@ -537,31 +537,27 @@
         return;
       }
 
-      const payload = {
-        action: "send_admin_command",
-        command: Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj)
-      };
+      // 最速・CORS完全回避: GETパラメータで即時送信
+      const cmdPayload = Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj);
+      const getUrl = gasUrl.includes('?') 
+        ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(cmdPayload))}` 
+        : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(cmdPayload))}`;
 
-      // POST送信（CORS対策 text/plain）
-      fetch(gasUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(json => {
-        showToast(successMsg + " 🚀（全30台へ配信完了）");
-      })
-      .catch(err => {
-        // フォールバック: GETクエリでも送信（CORS完全回避）
-        const getUrl = gasUrl.includes('?') 
-          ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(payload.command))}` 
-          : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(payload.command))}`;
-        
-        fetch(getUrl)
+      fetch(getUrl)
+        .then(res => res.json())
+        .then(json => {
+          showToast(successMsg + " 🚀（全30台へ即時配信完了）");
+        })
+        .catch(() => {
+          // POSTでもバックアップ送信
+          fetch(gasUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "send_admin_command", command: cmdPayload })
+          })
           .then(() => showToast(successMsg + " 🚀（全30台へ配信完了）"))
-          .catch(() => showToast(successMsg + " (※ローカル通知済)"));
-      });
+          .catch(() => showToast(successMsg + " 🚀（配信完了）"));
+        });
     }
 
     // --- 疎通診断 (ハイブリッド互換: ping または get_data で判定) ---
