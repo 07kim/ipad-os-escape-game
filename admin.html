@@ -301,22 +301,38 @@
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { opacity: 0.9; }
 
-    /* トースト通知 */
+    /* トースト通知（トップ中央・超視認性バナー） */
     #admin-toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0f172a;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
       display: none;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      z-index: 9999;
+      gap: 12px;
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.35), 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 99999;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+    }
+    #admin-toast.show {
+      display: flex;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    @keyframes highlightPulse {
+      0% { background: #dcfce7; transform: scale(1.02); }
+      100% { background: transparent; transform: scale(1); }
+    }
+    .status-highlight {
+      animation: highlightPulse 1.2s ease-out;
     }
   </style>
 </head>
@@ -508,6 +524,63 @@
       });
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // 進行プリセット実行
+    function executePreset(presetId) {
+      const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
+      const p = presets.find(item => item.id === presetId);
+      if (!p) return;
+
+      sendCloudAdminCommand({
+        id: "PRESET_" + p.id + "_" + Date.now(),
+        type: "preset",
+        name: p.name,
+        params: {
+          id: p.id,
+          stage: p.stage,
+          loop: p.loop,
+          alertMsg: p.alertMsg,
+          sound: p.sound,
+          forceLock: p.forceLock,
+          clockISO: p.clockISO,
+          timestamp: Date.now()
+        }
+      }, `✅ プリセット「${p.name}」を全30台へ送信完了しました！`);
+    }
+
+    // 遠隔サウンド再生
+    function triggerRemoteSound(soundType) {
+      sendCloudAdminCommand({
+        id: "SOUND_" + soundType + "_" + Date.now(),
+        type: "sound",
+        name: "効果音: " + soundType,
+        params: {
+          sound: soundType,
+          timestamp: Date.now()
+        }
+      }, `🔊 効果音「${soundType}」を全端末へ送信完了しました！`);
+    }
+
+    // 全画面アラート送信
+    function sendCustomRemoteAlert() {
+      const textEl = document.getElementById('remote-alert-text');
+      const text = textEl ? textEl.value.trim() : "";
+      if (!text) {
+        alert("送信メッセージを入力してください。");
+        return;
+      }
+
+      sendCloudAdminCommand({
+        id: "ALERT_" + Date.now(),
+        type: "alert",
+        name: "緊急アラート",
+        params: {
+          alertMsg: text,
+          sound: "alarm",
+          timestamp: Date.now()
+        }
+      }, `📢 緊急アラートを全iPadへ一斉送信完了しました！`);
     }
 
     // --- クラウド経由でのコマンド送信コア関数 ---
@@ -895,13 +968,40 @@
       showToast("GAS URLを保存しました");
     }
 
-    function showToast(msg) {
+    let toastTimer = null;
+    function showToast(msg, isError = false) {
       const toast = document.getElementById('admin-toast');
-      document.getElementById('admin-toast-text').innerText = msg;
+      const textEl = document.getElementById('admin-toast-text');
+      if (!toast || !textEl) return;
+
+      textEl.innerText = msg;
+      if (isError) {
+        toast.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+      } else {
+        toast.style.background = "linear-gradient(135deg, #10b981, #059669)";
+      }
+
       toast.style.display = 'flex';
-      setTimeout(() => {
-        toast.style.display = 'none';
-      }, 3000);
+      // 次のフレームでshowクラスを付与（トランジション発火）
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+
+      // 直近送信エリアのハイライト
+      const lastCmdEl = document.getElementById('admin-last-command-info');
+      if (lastCmdEl) {
+        lastCmdEl.classList.remove('status-highlight');
+        void lastCmdEl.offsetWidth; // リフロー
+        lastCmdEl.classList.add('status-highlight');
+      }
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 300);
+      }, 3500);
     }
   </script>
 </body>
