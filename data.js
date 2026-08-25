@@ -575,11 +575,12 @@ window.GAME_DATABASE = {
       ],
       "fukasawa": [
         { sender: "fukasawa", text: "大ホールの施錠連絡忘れてただろ。ちゃんと施錠してから部屋出てくれよな。", time: "09:30", maxLoop: 1 },
+        { sender: "fukasawa", text: "あと、執行部の内部意見収集アンケートにまだ未回答なら、ここから回答お願い！<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム（アクセス制限あり）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "09:32" },
         { sender: "fukasawa", text: "陣内先輩、最近ちょっとおかしいよね…？", time: "09:40", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "私、執行部の裏のデータベースから怪しいURLを見つけたの。", time: "09:41", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "これ、学生名簿とか予算が入ってるみたいなんだけど、アクセスに権限が必要で…", time: "09:42", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "URL送るから、ハッキングの得意なあなたの方で中身を見られない？", time: "09:43", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "リンク：<a href='#' onclick='openHackingForm()' class='chat-form-link'>▶ 2126年 メンタルヘルス・スキャン（内部名簿）を開く</a>", time: "09:44", minLoop: 2, maxLoop: 2 }
+        { sender: "fukasawa", text: "リンク：<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン（内部名簿）</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・予算管理（※編集権限から侵入可能）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "09:44", minLoop: 2, maxLoop: 2 }
       ],
       "inukai": [
         { sender: "inukai", text: "調査の進捗はどうですか？", time: "08:00", maxLoop: 1 },
@@ -590,6 +591,7 @@ window.GAME_DATABASE = {
       "committee_group": [
         { sender: "jinnai", text: "明日の会議は13時に研修室2集合な。", time: "昨日", maxLoop: 1 },
         { sender: "fukasawa", text: "了解しました。安藤先生の講義資料も持参しますね。", time: "昨日", maxLoop: 1 },
+        { sender: "fukasawa", text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "昨日" },
         { sender: "inukai", text: "委員長も同席されます。遅れないように。", time: "昨日", maxLoop: 2 },
         { sender: "jinnai", text: "明日の会議は13時にSyzen社のラボ前集合な。", time: "昨日", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "了解しました。安藤先生の資料も持っていきますね。", time: "昨日", minLoop: 2, maxLoop: 2 }

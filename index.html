@@ -421,6 +421,17 @@
           <div class="link-room">
             <div class="link-room-header" id="link-room-header">
               <span class="contact-name" id="chat-contact-name">連絡先を選択</span>
+              <button class="btn-subtle" onclick="openHackingForm()" style="font-size:11px; padding:4px 8px; display:flex; align-items:center; gap:4px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe;">
+                <i data-lucide="file-text" style="width:13px; height:13px;"></i> 共有フォーム
+              </button>
+            </div>
+            <!-- ピン留めフォームバナー -->
+            <div class="link-pinned-banner" onclick="openHackingForm()" title="共有されたフォームを開く">
+              <div class="link-pinned-banner-text">
+                <i data-lucide="pin" style="width:13px; height:13px;"></i>
+                <span>共有ファイル: 2126年 メンタルヘルス・スキャン（内部名簿）</span>
+              </div>
+              <span style="color:#7c3aed; font-size:11px; font-weight:700;">開く ↗</span>
             </div>
             <div class="link-messages" id="link-messages-container">
               <div style="text-align:center; color:#8e8e93; font-size:12px; margin-top:40px;">
@@ -487,7 +498,8 @@
       <div class="hacking-modal" id="hacking-modal">
         <!-- 偽Googleフォーム -->
         <div class="gform-container" id="gform-view">
-          <div class="gform-header">
+          <div class="gform-header" style="position:relative;">
+            <button onclick="closeHacking()" class="btn-icon" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;" title="閉じる"><i data-lucide="x" style="width:16px; height:16px;"></i></button>
             <div class="gform-header-bar"></div>
             <h1 id="gform-title">無題のフォーム</h1>
             <p id="gform-desc">学友会執行委員会 内部保管データ申請フォーム</p>

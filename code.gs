@@ -326,7 +326,7 @@ function readAllDataFromSpreadsheet(ss) {
 function getInitialGameDatabase() {
   return {
   "system": {
-    "gasUrl": "",
+    "gasUrl": "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec",
     "teamId": "チームA",
     "deviceOwner": "26__0094 調査端末",
     "spec": {
@@ -1268,6 +1268,11 @@ function getInitialGameDatabase() {
         },
         {
           "sender": "fukasawa",
+          "text": "あと、執行部の内部意見収集アンケートにまだ未回答なら、ここから回答お願い！<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム（アクセス制限あり）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>",
+          "time": "09:32"
+        },
+        {
+          "sender": "fukasawa",
           "text": "陣内先輩、最近ちょっとおかしいよね…？",
           "time": "09:40",
           "minLoop": 2,
@@ -1296,7 +1301,7 @@ function getInitialGameDatabase() {
         },
         {
           "sender": "fukasawa",
-          "text": "リンク：<a href='#' onclick='openHackingForm()' class='chat-form-link'>▶ 2126年 メンタルヘルス・スキャン（内部名簿）を開く</a>",
+          "text": "リンク：<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン（内部名簿）</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・予算管理（※編集権限から侵入可能）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>",
           "time": "09:44",
           "minLoop": 2,
           "maxLoop": 2
@@ -1341,6 +1346,11 @@ function getInitialGameDatabase() {
           "text": "了解しました。安藤先生の講義資料も持参しますね。",
           "time": "昨日",
           "maxLoop": 1
+        },
+        {
+          "sender": "fukasawa",
+          "text": "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>",
+          "time": "昨日"
         },
         {
           "sender": "inukai",
