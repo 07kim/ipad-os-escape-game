@@ -381,15 +381,29 @@
 
     <!-- 右カラム：チーム進捗モニタリング ＆ 緊急指令送信 -->
     <div>
-      <!-- 📊 チーム別進行モニタリングダッシュボード -->
+      <!-- 📊 iPad 30台 進行モニタリングダッシュボード -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <div class="card-title" style="margin-bottom:0;"><i data-lucide="activity" style="color:var(--success);"></i> チーム別 進行状況モニタリング</div>
-          <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:4px 8px; font-size:11px;"><i data-lucide="refresh-cw"></i> 更新</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div class="card-title" style="margin-bottom:0;"><i data-lucide="activity" style="color:var(--success);"></i> iPad 30台 リアルタイム進行モニタリング</div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:4px 8px; font-size:11px;"><i data-lucide="refresh-cw"></i> 最新情報に更新</button>
+          </div>
         </div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">各チームの周回・manabaログイン・入手ヒント数をリアルタイム表示（詰まっているチームを即座に特定）。</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">30台のiPadの周回（1〜3周目）、manabaログイン、入手ヒント数をリアルタイムで一覧監視します。</p>
         
-        <div class="team-monitor-grid" id="team-monitor-container"></div>
+        <!-- 絞り込み ＆ 検索バー -->
+        <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+          <div style="display:flex; gap:4px;">
+            <button class="nav-btn admin-filter-btn active" onclick="setMonitorFilter('all')" id="filter-all" style="padding:3px 8px; font-size:11px;">全30台</button>
+            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('1')" id="filter-1" style="padding:3px 8px; font-size:11px;">1周目</button>
+            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('2')" id="filter-2" style="padding:3px 8px; font-size:11px;">2周目</button>
+            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('3')" id="filter-3" style="padding:3px 8px; font-size:11px;">3周目</button>
+          </div>
+          <input type="text" id="monitor-search-input" placeholder="🔍 端末名・ユーザー名で検索..." oninput="refreshMonitoringDashboard()" 
+                 style="flex:1; min-width:140px; padding:4px 10px; font-size:12px; border:1px solid var(--border-color); border-radius:6px;">
+        </div>
+
+        <div class="team-monitor-grid" id="team-monitor-container" style="max-height:480px; overflow-y:auto; padding-right:4px;"></div>
       </div>
 
       <!-- 📢 全画面緊急アラート送信 -->
@@ -502,44 +516,104 @@
       showToast("緊急アラートを送信しました");
     }
 
-    // モニタリングダッシュボードの描画
+    // モニタリングフィルター
+    let monitorFilter = 'all';
+
+    function setMonitorFilter(filterType) {
+      monitorFilter = filterType;
+      document.querySelectorAll('.admin-filter-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`filter-${filterType}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      refreshMonitoringDashboard();
+    }
+
+    // 30台モニタリングダッシュボードの描画
     function refreshMonitoringDashboard() {
       const container = document.getElementById('team-monitor-container');
       if (!container) return;
 
-      // チームリスト
-      const teams = ["チームA", "チームB", "チームC", "チームD", "1班", "2班"];
-      const currentTeam = localStorage.getItem('game_team_id') || "チームA";
-      const currentLoop = localStorage.getItem('game_loop') || 1;
-      const currentHints = JSON.parse(localStorage.getItem('game_unlocked_hints') || "[]");
-      const currentManaba = localStorage.getItem('game_manaba_user') || "未ログイン";
+      const currentTeam = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || "iPad-01";
+      const currentLoop = parseInt(localStorage.getItem('game_loop') || '1', 10);
+      const currentHints = JSON.parse(localStorage.getItem('unlocked_hints') || localStorage.getItem('game_unlocked_hints') || "[]");
+      const currentManaba = localStorage.getItem('manaba_user') || localStorage.getItem('game_manaba_user') || null;
       const lastUpdate = localStorage.getItem('mon_last_update');
-      const timeStr = lastUpdate ? new Date(parseInt(lastUpdate)).toLocaleTimeString() : "通信中";
+      const timeStr = lastUpdate ? new Date(parseInt(lastUpdate, 10)).toLocaleTimeString() : "通信中";
 
-      container.innerHTML = "";
-      teams.forEach(t => {
-        const isCurrent = t === currentTeam;
+      const searchKeyword = (document.getElementById('monitor-search-input')?.value || "").toLowerCase().trim();
+
+      // 30台のデバイスリストを構築
+      const devices = [];
+      for (let i = 1; i <= 30; i++) {
+        const padId = `iPad-${String(i).padStart(2, '0')}`;
+        const isCurrent = (currentTeam === padId) || (currentTeam.startsWith(padId));
+        
         const loopVal = isCurrent ? currentLoop : 1;
         const hintsCount = isCurrent ? currentHints.length : 0;
-        const manabaStatus = isCurrent ? (currentManaba ? 'ログイン済' : '未ログイン') : '未ログイン';
+        const manabaStatus = isCurrent ? (currentManaba ? '🐰 ログイン済' : '未ログイン') : '未ログイン';
+        const displayLabel = isCurrent ? currentTeam : padId;
+
+        devices.push({
+          id: padId,
+          name: displayLabel,
+          loop: loopVal,
+          hints: hintsCount,
+          manaba: manabaStatus,
+          lastSeen: isCurrent ? timeStr : '--:--',
+          isCurrent: isCurrent
+        });
+      }
+
+      // もしカスタムユーザー名（例: 「1班 田中」）で30台の規則にない端末があれば先頭に追加
+      if (!devices.some(d => d.id === currentTeam || d.name === currentTeam)) {
+        devices.unshift({
+          id: currentTeam,
+          name: currentTeam,
+          loop: currentLoop,
+          hints: currentHints.length,
+          manaba: currentManaba ? '🐰 ログイン済' : '未ログイン',
+          lastSeen: timeStr,
+          isCurrent: true
+        });
+      }
+
+      // 絞り込み ＆ 検索
+      const filtered = devices.filter(d => {
+        if (monitorFilter !== 'all' && String(d.loop) !== String(monitorFilter)) return false;
+        if (searchKeyword && !d.name.toLowerCase().includes(searchKeyword) && !d.id.toLowerCase().includes(searchKeyword)) return false;
+        return true;
+      });
+
+      container.innerHTML = "";
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:12px;">該当する端末が見つかりません</div>`;
+        return;
+      }
+
+      filtered.forEach(d => {
+        const loopColors = {
+          1: { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd' },
+          2: { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa' },
+          3: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' }
+        };
+        const color = loopColors[d.loop] || loopColors[1];
 
         container.innerHTML += `
-          <div class="team-monitor-card" style="${isCurrent ? 'border-color:var(--primary); background:#eff6ff;' : ''}">
+          <div class="team-monitor-card" style="${d.isCurrent ? 'border-color:var(--primary); background:#f0f9ff; box-shadow:0 0 0 1px var(--primary);' : ''}">
             <div class="team-card-header">
-              <span class="team-id-badge">${t}</span>
-              <span class="team-loop-tag">${loopVal}周目</span>
+              <span class="team-id-badge" title="${d.name}">${d.name}</span>
+              <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${d.loop}周目</span>
             </div>
             <div class="team-stat-row">
               <span>manaba:</span>
-              <span class="team-stat-val">${manabaStatus}</span>
+              <span class="team-stat-val" style="font-size:10px;">${d.manaba}</span>
             </div>
             <div class="team-stat-row">
               <span>入手情報:</span>
-              <span class="team-stat-val">${hintsCount} 件</span>
+              <span class="team-stat-val">${d.hints} 件</span>
             </div>
             <div class="team-stat-row" style="font-size:10px; color:#94a3b8; margin-top:2px;">
               <span>最終同期:</span>
-              <span>${isCurrent ? timeStr : '--:--'}</span>
+              <span>${d.lastSeen}</span>
             </div>
           </div>
         `;

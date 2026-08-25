@@ -691,47 +691,100 @@ function dismissSystemAlert() {
   logWriteToGAS("ALERT_DISMISS", "全画面アラートが解除されました。");
 }
 
-// --- 隠しセットアップ画面（スタッフ用 ワンタップGUI） ---
+// --- 隠しセットアップ画面（スタッフ用 30台＆ユーザー名対応GUI） ---
+let tempStaffLoop = 1;
+
 function showStaffModal() {
-  document.getElementById('staff-modal').style.display = 'flex';
-  document.getElementById('staff-team-id').value = gameState.teamId;
+  const modal = document.getElementById('staff-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
   
-  // 選択中ボタンをハイライト
-  document.querySelectorAll('.staff-team-btn').forEach(btn => {
-    if (btn.innerText === gameState.teamId) {
-      btn.classList.add('selected');
+  const inputEl = document.getElementById('staff-team-id');
+  if (inputEl) inputEl.value = gameState.teamId || 'iPad-01';
+
+  tempStaffLoop = parseInt(gameState.loop || 1, 10);
+  updateStaffLoopButtons();
+
+  // iPad 01〜30 のボタングリッドを生成
+  const grid = document.getElementById('staff-ipad-grid');
+  if (grid) {
+    grid.innerHTML = "";
+    for (let i = 1; i <= 30; i++) {
+      const padNum = String(i).padStart(2, '0');
+      const padName = `iPad-${padNum}`;
+      const isSelected = gameState.teamId === padName;
+      grid.innerHTML += `
+        <button type="button" class="btn-subtle staff-ipad-btn ${isSelected ? 'selected' : ''}" 
+                onclick="selectStaffIpad('${padName}')"
+                style="padding:6px 2px; font-size:11px; font-weight:700; ${isSelected ? 'background:var(--system-blue); color:#fff;' : ''}">
+          ${padNum}
+        </button>
+      `;
+    }
+  }
+}
+
+function selectStaffIpad(name) {
+  const inputEl = document.getElementById('staff-team-id');
+  if (inputEl) inputEl.value = name;
+  document.querySelectorAll('.staff-ipad-btn').forEach(b => {
+    if (b.innerText.trim() === name.replace('iPad-', '')) {
+      b.style.background = 'var(--system-blue)';
+      b.style.color = '#fff';
     } else {
-      btn.classList.remove('selected');
+      b.style.background = '';
+      b.style.color = '';
     }
   });
 }
 
-function selectStaffTeam(teamName) {
-  document.getElementById('staff-team-id').value = teamName;
-  document.querySelectorAll('.staff-team-btn').forEach(btn => {
-    if (btn.innerText === teamName) {
-      btn.classList.add('selected');
-    } else {
-      btn.classList.remove('selected');
+function setStaffLoop(loopNum) {
+  tempStaffLoop = loopNum;
+  updateStaffLoopButtons();
+}
+
+function updateStaffLoopButtons() {
+  [1, 2, 3].forEach(l => {
+    const btn = document.getElementById(`staff-loop-btn-${l}`);
+    if (btn) {
+      if (tempStaffLoop === l) {
+        btn.style.background = 'var(--system-blue)';
+        btn.style.color = '#fff';
+        btn.style.fontWeight = '700';
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.fontWeight = 'normal';
+      }
     }
   });
 }
 
 function closeStaffModal() {
-  document.getElementById('staff-modal').style.display = 'none';
+  const modal = document.getElementById('staff-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function saveStaffConfig() {
-  const newTeamId = document.getElementById('staff-team-id').value.trim();
+  const inputEl = document.getElementById('staff-team-id');
+  const newTeamId = inputEl ? inputEl.value.trim() : 'iPad-01';
   if (newTeamId) {
     gameState.teamId = newTeamId;
+    gameState.loop = tempStaffLoop;
     saveStateToStorage();
-    document.getElementById('sb-team-id').innerText = newTeamId;
-    if (document.getElementById('settings-apple-id')) document.getElementById('settings-apple-id').innerText = newTeamId;
-    if (document.getElementById('settings-avatar-icon')) document.getElementById('settings-avatar-icon').innerText = newTeamId;
+    
+    const sbTeam = document.getElementById('sb-team-id');
+    if (sbTeam) sbTeam.innerText = newTeamId;
+    const settApple = document.getElementById('settings-apple-id');
+    if (settApple) settApple.innerText = newTeamId;
+    const settIcon = document.getElementById('settings-avatar-icon');
+    if (settIcon) settIcon.innerText = newTeamId;
+
+    logWriteToGAS("STAFF_CONFIG_SAVED", `端末名: ${newTeamId}, 周回: ${tempStaffLoop} に設定保存されました。`);
+    showPushNotification("設定完了", `端末名: ${newTeamId} (周回: ${tempStaffLoop})`, "check-circle");
   }
   closeStaffModal();
-  location.reload();
+  updateAppUI();
 }
 
 function performMasterReset() {
