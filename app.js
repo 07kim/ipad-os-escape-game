@@ -97,6 +97,9 @@ window.addEventListener('DOMContentLoaded', () => {
       unlockBtn.addEventListener('click', unlockScreen);
     }
 
+    // 画面上端からの下スワイプでロック画面（カバーシート）を呼び出し
+    initTopSwipeForLockScreen();
+
     // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
     
@@ -256,10 +259,11 @@ function executeRemoteAdminCommand(cmd) {
   localStorage.setItem('last_exec_cmd_id', cmd.id);
 
   const type = cmd.type || p.type;
+  const isLoopChange = (p.loop !== undefined && p.loop !== null && p.loop !== "");
 
-  // ① 全画面緊急アラート（プリセット or アラート）
+  // ① 全画面緊急アラート（※周回変化プリセット時は通知を出さず、直接ロック画面へ）
   const alertMsg = p.alertMsg || p.message || cmd.message;
-  if (alertMsg && (type === 'alert' || type === 'preset')) {
+  if (alertMsg && (type === 'alert' || (type === 'preset' && !isLoopChange))) {
     showSystemAlert(alertMsg);
   }
 
@@ -269,21 +273,29 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行
-  if (p.loop !== undefined && p.loop !== null && p.loop !== "") {
+  // ③ 周回強制移行 ＆ 時刻09:04リセット ＆ 勝手にロック画面へ移行
+  if (isLoopChange) {
     const nextLoop = parseInt(p.loop, 10);
-    if (!isNaN(nextLoop) && gameState.loop !== nextLoop) {
-      triggerLoopTransition(nextLoop);
-    }
-  }
+    if (!isNaN(nextLoop)) {
+      gameState.loop = nextLoop;
+      localStorage.setItem('game_loop', String(nextLoop));
+      
+      // 時刻を 09:04 に強制リセット
+      const loopClockISO = "2126-08-22T09:04:00";
+      localStorage.setItem('fake_clock_start_iso', loopClockISO);
+      gameState.clockStartISO = loopClockISO;
 
-  // ④ ロック画面強制
-  if (p.forceLock === true || p.lock === true) {
+      // 通知は出さず、勝手にロック画面へ強制移行
+      showLockScreen();
+      updateAppUI();
+    }
+  } else if (p.forceLock === true || p.lock === true) {
+    // ④ ロック画面強制
     showLockScreen();
   }
 
-  // ⑤ 時計強制同期
-  if (p.clockISO) {
+  // ⑤ 時計強制同期（周回変化以外の場合）
+  if (p.clockISO && !isLoopChange) {
     localStorage.setItem('fake_clock_start_iso', p.clockISO);
     gameState.clockStartISO = p.clockISO;
     updateAppUI();
@@ -774,6 +786,70 @@ function showIpadModal(title, msg, onOk = null, isConfirm = false) {
 function closeIpadModal() {
   const overlay = document.getElementById('ipad-modal-overlay');
   if (overlay) overlay.style.display = 'none';
+}
+
+// --- ロック画面表示（カバーシート呼び出し） ---
+function showLockScreen() {
+  const lockScreen = document.getElementById('lock-screen');
+  if (lockScreen) {
+    lockScreen.classList.remove('hidden');
+    renderLockNotifications();
+    playSystemSound("dtmf");
+    logWriteToGAS("LOCK_TRIGGERED", "ロック画面が表示されました。");
+  }
+}
+
+// --- 画面上端からの下スワイプでロック画面を呼び出し（iPadOSジェスチャー） ---
+function initTopSwipeForLockScreen() {
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let isTrackingTopSwipe = false;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length === 1) {
+      const touch = e.touches[0];
+      // 画面上部75px以内でタッチ開始された場合のみ追跡
+      if (touch.clientY <= 75) {
+        touchStartY = touch.clientY;
+        touchStartX = touch.clientX;
+        isTrackingTopSwipe = true;
+      } else {
+        isTrackingTopSwipe = false;
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isTrackingTopSwipe || !e.touches || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - touchStartY;
+    const deltaX = Math.abs(touch.clientX - touchStartX);
+
+    // 下方向に60px以上スワイプかつ横ブレが少ない場合
+    if (deltaY > 60 && deltaX < 80) {
+      isTrackingTopSwipe = false;
+      showLockScreen();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    isTrackingTopSwipe = false;
+  }, { passive: true });
+
+  // ステータスバー（PC用マウスクリック対応）
+  const statusBar = document.getElementById('status-bar');
+  if (statusBar) {
+    let mouseStartY = 0;
+    statusBar.addEventListener('mousedown', (e) => {
+      mouseStartY = e.clientY;
+    });
+    document.addEventListener('mouseup', (e) => {
+      if (mouseStartY > 0 && (e.clientY - mouseStartY) > 50) {
+        showLockScreen();
+      }
+      mouseStartY = 0;
+    });
+  }
 }
 
 // --- ロック画面解除 ---
@@ -2100,12 +2176,56 @@ function triggerSettingsRestriction(itemName) {
 }
 
 // ==========================================================================
-// 音響効果 ＆ ログ送信ユーティリティ（Web Audio API 完全シンセサイザー）
+// 音響効果 ＆ ログ送信ユーティリティ（Safari完全対応 Web Audio シンセサイザー）
 // ==========================================================================
+let globalAudioCtx = null;
+
+function getAudioContext() {
+  if (!globalAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      globalAudioCtx = new AudioContextClass();
+    }
+  }
+  if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume().catch(() => {});
+  }
+  return globalAudioCtx;
+}
+
+// ユーザーの画面タッチ時に Safari の AudioContext ロックを一発解除
+function unlockSafariAudio() {
+  const ctx = getAudioContext();
+  if (ctx) {
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        console.log("🔊 Safari AudioContext unlocked successfully!");
+      }).catch(() => {});
+    }
+    // 無音バッファを1回再生して確実にアンロック
+    try {
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch (e) {}
+  }
+}
+
+// 画面タッチ・クリックで自動アンロックを登録
+['touchstart', 'touchend', 'click', 'pointerdown'].forEach(evt => {
+  document.addEventListener(evt, unlockSafariAudio, { once: false, passive: true });
+});
+
 function playSystemSound(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
     if (type === "beep" || type === "dtmf") {
       const osc = ctx.createOscillator();
       osc.type = "sine";
