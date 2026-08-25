@@ -142,8 +142,18 @@ window.CLOUD_SYNC_STATUS = {
   latencyMs: 0
 };
 
+function getResolvedGasUrl() {
+  const fromStorage = (localStorage.getItem('gas_url') || "").trim();
+  if (fromStorage) return fromStorage;
+  if (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) {
+    const fromDb = window.GAME_DATABASE.system.gasUrl.trim();
+    if (fromDb) return fromDb;
+  }
+  return "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec";
+}
+
 function fetchLatestDataFromSpreadsheet() {
-  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+  const gasUrl = getResolvedGasUrl();
   if (!gasUrl) {
     window.CLOUD_SYNC_STATUS.connected = false;
     window.CLOUD_SYNC_STATUS.lastError = "GAS URLが設定されていません";
@@ -836,6 +846,8 @@ function showStaffModal() {
 
   tempStaffLoop = parseInt(gameState.loop || 1, 10);
   updateStaffLoopButtons();
+  updateStaffSyncUI();
+  fetchLatestDataFromSpreadsheet();
 
   // iPad 01〜30 のボタングリッドを生成
   const grid = document.getElementById('staff-ipad-grid');
