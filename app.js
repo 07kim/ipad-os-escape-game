@@ -115,8 +115,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // 60分タイマー開始
     startCountdownTimer();
 
-    // スプレッドシート（Google Sheets / GAS）から最新データを非同期同期
-    fetchLatestDataFromSpreadsheet();
+    // スプレッドシート（Google Sheets / GAS）から10秒おきに自動同期（リロード不要）
+    startAutoSpreadsheetSync();
 
   } catch(startupError) {
     // 起動時エラーを画面に直接表示（デバッグ用）
@@ -132,7 +132,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- スプレッドシート（Google Sheets / GAS Web API）からの最新データ自動同期 ---
+// --- スプレッドシート（Google Sheets / GAS Web API）からの最新データ自動同期（リロード不要） ---
+let lastDataHash = "";
+
 function fetchLatestDataFromSpreadsheet() {
   const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
   if (!gasUrl) return;
@@ -143,7 +145,12 @@ function fetchLatestDataFromSpreadsheet() {
     .then(res => res.json())
     .then(json => {
       if (json && json.success && json.data) {
-        console.log("✅ スプレッドシートから最新データを同期しました！", json.data);
+        const rawJsonStr = JSON.stringify(json.data);
+        // データに変更がない場合は不要な再描画をスキップ
+        if (rawJsonStr === lastDataHash) return;
+        lastDataHash = rawJsonStr;
+
+        console.log("🔄 スプレッドシートの変更を検知し、リロードなしでリアルタイム反映しました！", json.data);
         
         // 取得したスプレッドシートデータで window.GAME_DATABASE を更新
         if (json.data.browser && json.data.browser.pagesContent) {
@@ -170,11 +177,31 @@ function fetchLatestDataFromSpreadsheet() {
 
         // 画面を最新データで再描画
         updateAppUI();
+
+        // もし現在LINKチャットやメールを開いていれば、その中身もリアルタイム更新
+        if (gameState.activeChatContact) {
+          const linkApp = document.getElementById('app-link-app');
+          if (linkApp && linkApp.style.display !== 'none') {
+            openLinkChat(gameState.activeChatContact);
+          }
+        }
+        if (gameState.activeMailId) {
+          const mailApp = document.getElementById('app-mail-app');
+          if (mailApp && mailApp.style.display !== 'none') {
+            openMailDetail(gameState.activeMailId);
+          }
+        }
       }
     })
     .catch(err => {
-      console.warn("スプレッドシート同期スキップ（ローカルデータで動作継続）:", err);
+      // 通信エラー時は静かにスキップ
     });
+}
+
+function startAutoSpreadsheetSync() {
+  fetchLatestDataFromSpreadsheet();
+  // 10秒おきに裏側で自動チェック（リロード不要）
+  setInterval(fetchLatestDataFromSpreadsheet, 10000);
 }
 
 // --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---
