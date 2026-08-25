@@ -88,18 +88,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // 操作制限の適用
     applyOperationalRestrictions();
 
-    // 隠しコマンド（ステータスバーの時計を5回タップ）
-    let clockTapCount = 0;
-    document.getElementById('sb-clock').addEventListener('click', () => {
-      clockTapCount++;
-      if (clockTapCount >= 5) {
-        clockTapCount = 0;
-        showStaffModal();
-      }
-      // 3秒間タップがなければリセット
-      setTimeout(() => { clockTapCount = 0; }, 3000);
-    });
-
     // LocalStorage変更イベント購読（運営画面からのリアルタイム変更をキャッチ）
     window.addEventListener('storage', handleStorageEvent);
 
@@ -1969,8 +1957,8 @@ function pressPhoneKey(key) {
     document.getElementById('phone-display').innerText = gameState.phoneInput;
     playSystemSound("dtmf");
 
-    // **##** または *#*# が入力された瞬間に隠しスタッフ画面を起動
-    if (gameState.phoneInput === '**##**' || gameState.phoneInput === '*#*#' || gameState.phoneInput === '**##') {
+    // 『**##**』が入力された瞬間に隠しスタッフ画面を起動
+    if (gameState.phoneInput === '**##**') {
       clearPhoneKey();
       playSystemSound("fanfare");
       showStaffModal();
@@ -1993,8 +1981,8 @@ function makePhoneCall() {
   
   const dialNum = gameState.phoneInput.trim();
 
-  // 隠しコマンド判定（**##** 等）
-  if (dialNum === '**##**' || dialNum === '*#*#' || dialNum === '**##' || dialNum === '##**##') {
+  // 隠しコマンド判定（『**##**』のみ）
+  if (dialNum === '**##**') {
     clearPhoneKey();
     playSystemSound("fanfare");
     showStaffModal();
