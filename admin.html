@@ -813,15 +813,18 @@
       const rankContainer = document.getElementById('team-ranking-container');
       if (!rankContainer) return;
 
-      // スコア計算：周回×1000 + 手がかり数×50 + manabaログイン×100
+      // スコア計算（30台一斉進行仕様）：入手情報数×100 + manabaログイン完了×500
       const ranked = devicesList.map(d => {
-        let score = (d.loop || 1) * 1000 + (d.hints || 0) * 50;
-        if (d.manaba && d.manaba.includes("ログイン中")) score += 100;
+        let score = (d.hints || 0) * 100;
+        if (d.manaba && d.manaba.includes("ログイン中")) score += 500;
         return Object.assign({ score: score }, d);
       });
 
-      // 降順ソート
-      ranked.sort((a, b) => b.score - a.score);
+      // 降順ソート（同点の場合は最終同期時間順）
+      ranked.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return (b.lastSeen || "").localeCompare(a.lastSeen || "");
+      });
 
       let html = `
         <table style="width:100%; border-collapse:collapse; font-size:12px; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
