@@ -818,10 +818,11 @@
 
           <div class="form-group" style="margin-top:8px; margin-bottom:10px;">
             <label style="font-size:11px; font-weight:700; color:#666;">🔊 サウンド疎通テスト (iPadスピーカー確認):</label>
-            <div style="display:flex; gap:6px;">
-              <button type="button" class="btn-subtle" onclick="playSystemSound('notif')" style="flex:1; padding:6px 2px; font-size:11px;">🔔 通知音</button>
-              <button type="button" class="btn-subtle" onclick="playSystemSound('alarm')" style="flex:1; padding:6px 2px; font-size:11px;">🚨 警報</button>
-              <button type="button" class="btn-subtle" onclick="playSystemSound('fanfare')" style="flex:1; padding:6px 2px; font-size:11px;">🎉 ファンファーレ</button>
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;">
+              <button type="button" class="btn-subtle" onclick="playSystemSound('ringback')" style="padding:6px 2px; font-size:11px;">📞 プルルル</button>
+              <button type="button" class="btn-subtle" onclick="playSystemSound('notif')" style="padding:6px 2px; font-size:11px;">🔔 通知音</button>
+              <button type="button" class="btn-subtle" onclick="playSystemSound('alarm')" style="padding:6px 2px; font-size:11px;">🚨 警報</button>
+              <button type="button" class="btn-subtle" onclick="playSystemSound('fanfare')" style="padding:6px 2px; font-size:11px;">🎉 歓声</button>
             </div>
             <p style="font-size:10px; color:#94a3b8; margin-top:4px;">※iPad本体横の消音スイッチやコントロールセンターの消音モードがOFFになっているかご確認ください。</p>
           </div>

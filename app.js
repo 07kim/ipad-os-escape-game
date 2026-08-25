@@ -2107,9 +2107,16 @@ function makePhoneCall() {
   overlay.style.display = 'flex';
 
   playSystemSound("ringback");
+  // 1.5秒後に2回目の「プルルルルル……」
+  setTimeout(() => {
+    if (overlay && overlay.style.display !== 'none') {
+      playSystemSound("ringback");
+    }
+  }, 1400);
+
   logWriteToGAS("PHONE_CALL_ATTEMPT", `発信試行: ${dialNum}`);
 
-  // 2.5秒後に音声ガイダンスアナウンスへ移行
+  // 3.0秒後に音声ガイダンスアナウンスへ移行
   phoneCallAudioTimer = setTimeout(() => {
     document.getElementById('phone-calling-status').innerText = "ガイダンス応答";
     const guidanceText = "おかけになった電話番号は、現在使われておりません。または時間線の不整合により接続できません。番号をお確かめになって、もう一度お掛け直しください。";
@@ -2122,7 +2129,7 @@ function makePhoneCall() {
     setTimeout(() => {
       endPhoneCall();
     }, 6500);
-  }, 2500);
+  }, 3000);
 }
 
 function speakGuidanceAudio(text) {
@@ -2260,6 +2267,21 @@ function generateWavDataUri(type) {
       const t = i / sampleRate;
       let freq = 120 + (t < 0.5 ? t * 1200 : (1.0 - t) * 1200);
       samples.push((Math.sin(2 * Math.PI * freq * t) + Math.sin(4 * Math.PI * freq * t) * 0.4) * 0.7);
+    }
+  } else if (type === "ringback") {
+    // 日本の電話呼出音（400Hz + 16Hz 振幅変調「プルルルルル……」）
+    duration = 1.0;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      // 400Hz の正弦波に 16Hz の振幅変調を適用
+      const carrier = Math.sin(2 * Math.PI * 400 * t);
+      const modulation = 0.5 + 0.5 * Math.sin(2 * Math.PI * 16 * t);
+      // エンベロープ（最初と最後をわずかにフェード）
+      let env = 1.0;
+      if (t < 0.02) env = t / 0.02;
+      if (t > 0.98) env = (1.0 - t) / 0.02;
+      samples.push(carrier * modulation * env * 0.75);
     }
   } else {
     // beep / dtmf
