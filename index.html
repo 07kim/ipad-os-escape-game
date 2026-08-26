@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.19.1">
   <!-- キャッシュバイパス用インラインスタイル（CSSが古い場合の上書き） -->
   <style>
     .home-screen {
@@ -110,7 +110,7 @@
       </div>
 
       <!-- フロストグラス調 iPadOS風モーダルダイアログ -->
-      <div class="ipad-modal-overlay" id="ipad-modal-overlay">
+      <div class="ipad-modal-overlay" id="ipad-modal-overlay" style="display:none;">
         <div class="ipad-modal-box">
           <div class="ipad-modal-content">
             <div class="ipad-modal-title" id="ipad-modal-title">タイトル</div>
@@ -561,7 +561,7 @@
       <!-- ------------------------------------------ -->
       <!-- ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング） -->
       <!-- ------------------------------------------ -->
-      <div class="hacking-modal" id="hacking-modal">
+      <div class="hacking-modal" id="hacking-modal" style="display:none;">
         <!-- ① 偽Googleフォーム (回答閲覧画面) -->
         <div class="gform-container" id="gform-view">
           <div class="gform-header" style="position:relative;">
@@ -891,7 +891,7 @@
         </div>
 
         <!-- 電話発信・音声ガイダンス中オーバーレイ画面 -->
-        <div class="phone-calling-overlay" id="phone-calling-overlay">
+        <div class="phone-calling-overlay" id="phone-calling-overlay" style="display:none;">
           <div class="phone-calling-info">
             <div class="phone-calling-number" id="phone-calling-number">090-XXXX-XXXX</div>
             <div class="phone-calling-status" id="phone-calling-status">発信中...</div>
@@ -951,7 +951,7 @@
       <!-- ========================================== -->
       <!-- 6. 全画面アラート（運営からの指示割込） -->
       <!-- ========================================== -->
-      <div class="system-alert-overlay" id="system-alert-overlay">
+      <div class="system-alert-overlay" id="system-alert-overlay" style="display:none;">
         <div class="system-alert-box">
           <i data-lucide="alert-triangle" style="width:48px; height:48px; color:var(--danger); margin-bottom:15px;"></i>
           <h2>保安局からの緊急警告</h2>
@@ -961,12 +961,9 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- 7. スタッフ用 隠しセットアップ画面 (ワンタップGUI) -->
-      <!-- ========================================== -->
-      <!-- ========================================== -->
       <!-- 7. スタッフ用 隠しセットアップ画面 (30台対応) -->
       <!-- ========================================== -->
-      <div class="staff-modal" id="staff-modal">
+      <div class="staff-modal" id="staff-modal" style="display:none;">
         <div class="staff-modal-content" style="width:420px; max-width:94%; max-height:85vh; overflow-y:auto;">
           <h3 style="margin-bottom:6px; font-size:16px;">⚙️ 端末・ユーザー設定 (iPad 30台対応)</h3>
           <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:8px;">端末番号（iPad-01〜30）またはユーザー名を選択・入力してください。</p>
@@ -1077,6 +1074,10 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- End of ipad-screen and ipad-frame -->
     </div>
   </div>
 
