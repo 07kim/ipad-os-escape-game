@@ -533,6 +533,8 @@ body {
   font-size: 20px;
   margin-bottom: 12px;
   color: var(--system-blue);
+}
+
 .panel-header-row {
   display: flex;
   justify-content: space-between;
@@ -740,6 +742,8 @@ body {
   height: auto;
   object-fit: contain;
   border-radius: 6px;
+}
+
 /* 📦 調査資料 (2列カードグリッド & 右下＋FAB & モーダル) */
 .evidence-cards-grid {
   display: grid;
