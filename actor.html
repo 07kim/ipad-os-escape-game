@@ -72,11 +72,6 @@
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
-    .sync-badge.error {
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-      border-color: rgba(239, 68, 68, 0.3);
-    }
 
     /* ① 演者選択画面 */
     #view-select-actor {
@@ -181,6 +176,11 @@
       gap: 14px;
       transition: all 0.2s ease;
     }
+    .trigger-item-card.locked {
+      opacity: 0.55;
+      background: #151f30;
+      border-color: #243044;
+    }
 
     .trigger-header {
       display: flex;
@@ -189,9 +189,9 @@
     }
 
     .trigger-badge {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 6px;
       background: #334155;
       color: #94a3b8;
@@ -206,36 +206,23 @@
     }
     .trigger-status.ready { color: #38bdf8; }
     .trigger-status.sent { color: var(--success); }
+    .trigger-status.locked { color: var(--warning); }
 
-    .msg-preview-box {
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 13.5px;
-      line-height: 1.5;
-      color: #e2e8f0;
-      border-left: 3.5px solid var(--primary);
-    }
-
-    .auto-reply-box {
-      font-size: 11.5px;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.08);
-      padding: 6px 10px;
-      border-radius: 6px;
+    .lock-hint-text {
+      font-size: 11px;
+      color: var(--warning);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     /* 巨大アクションボタン */
     .send-trigger-btn {
       width: 100%;
-      padding: 16px;
+      padding: 18px 16px;
       font-size: 16px;
       font-weight: 900;
-      border-radius: 12px;
+      border-radius: 14px;
       border: none;
       background: linear-gradient(135deg, #007aff, #0056b3);
       color: #fff;
@@ -322,13 +309,13 @@
 
   <!-- ① 演者選択画面 -->
   <div id="view-select-actor">
-    <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">あなたの担当キャラクターを選択してください：</div>
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">担当キャラクターを選択してください：</div>
     
     <div class="actor-select-card" onclick="selectActor('J')">
       <div class="actor-avatar j">J</div>
       <div class="actor-card-info">
         <div class="actor-name">陣内 樹（J）</div>
-        <div class="actor-sub">全周回：大ホール施錠連絡 ＆ F自動返信</div>
+        <div class="actor-sub">大ホール施錠連絡（全周回共通）</div>
       </div>
       <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
     </div>
@@ -337,7 +324,7 @@
       <div class="actor-avatar g">G</div>
       <div class="actor-card-info">
         <div class="actor-name">外園 胡春（G）</div>
-        <div class="actor-sub">1周目：森野捜索 ＆ タイムワープ報告（計2通）</div>
+        <div class="actor-sub">1周目：森野捜索 ＆ タイムワープ報告（計2回・順序ロック付）</div>
       </div>
       <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
     </div>
@@ -346,7 +333,7 @@
       <div class="actor-avatar h">H</div>
       <div class="actor-card-info">
         <div class="actor-name">比嘉 俊希（H）</div>
-        <div class="actor-sub">2周目・3周目：タイムワープ報告 ＆ U.Z.W.情報（計2通）</div>
+        <div class="actor-sub">2周目・3周目：タイムワープ報告 ＆ U.Z.W.情報（計2回）</div>
       </div>
       <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
     </div>
@@ -367,7 +354,7 @@
 
   <script src="data.js"></script>
   <script>
-    // 演者メッセージ定義
+    // 演者メッセージ固定定義（※外部からの改変不可・システム固定フラグ）
     const ACTOR_SCRIPTS = {
       J: {
         code: "J",
@@ -376,10 +363,9 @@
         triggers: [
           {
             id: "j_exit_hall",
-            stageTitle: "1周目〜3周目共通（各周回1回）",
+            stageTitle: "1〜3周目共通（各周回1回）",
             btnLabel: "【送信】大ホール施錠連絡",
             text: "大ホール退出しました。施錠お願いします。遅れてすみません。",
-            autoReply: "F（深澤 文哉）から「おけ」と自動返信されます",
             autoReplySender: "fukasawa",
             autoReplyText: "おけ"
           }
@@ -400,7 +386,8 @@
             id: "g_timewarp_alert",
             stageTitle: "1周目：タイミング②",
             btnLabel: "【送信②】タイムワープの自覚報告",
-            text: "タイムワープしてます！"
+            text: "タイムワープしてます！",
+            dependsOn: "g_search_morino" // ①を送信するまでロック
           }
         ]
       },
@@ -430,6 +417,18 @@
 
     // 通信チャンネル（ローカル同一ブラウザ用）
     const adminBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('escape_game_admin_channel') : null;
+    if (adminBroadcast) {
+      adminBroadcast.onmessage = (e) => {
+        if (e.data && (e.data.type === 'master_reset' || e.data.type === 'reset_actor_triggers')) {
+          sentTriggers = {};
+          localStorage.removeItem('actor_sent_triggers');
+          if (selectedActorKey && ACTOR_SCRIPTS[selectedActorKey]) {
+            renderTriggers(ACTOR_SCRIPTS[selectedActorKey]);
+          }
+          showToast("🔄 公演リセットに伴い、送信履歴が初期化されました", false);
+        }
+      };
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       if (selectedActorKey && ACTOR_SCRIPTS[selectedActorKey]) {
@@ -472,38 +471,49 @@
       const container = document.getElementById('trigger-buttons-container');
       container.innerHTML = "";
 
-      actor.triggers.forEach((tr, idx) => {
+      actor.triggers.forEach((tr) => {
         const isSent = !!sentTriggers[tr.id];
+        const isLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
+
+        let statusText = "待機中";
+        let statusClass = "ready";
+        let statusIcon = "radio";
+
+        if (isSent) {
+          statusText = "送信完了";
+          statusClass = "sent";
+          statusIcon = "check-circle";
+        } else if (isLocked) {
+          statusText = "ロック中（1通目送信待ち）";
+          statusClass = "locked";
+          statusIcon = "lock";
+        }
 
         container.innerHTML += `
-          <div class="trigger-item-card">
+          <div class="trigger-item-card ${isLocked ? 'locked' : ''}">
             <div class="trigger-header">
               <span class="trigger-badge">${tr.stageTitle}</span>
-              <span class="trigger-status ${isSent ? 'sent' : 'ready'}">
-                <i data-lucide="${isSent ? 'check-circle' : 'radio'}"></i>
-                ${isSent ? '送信完了' : '待機中'}
+              <span class="trigger-status ${statusClass}">
+                <i data-lucide="${statusIcon}"></i>
+                ${statusText}
               </span>
             </div>
 
-            <div class="msg-preview-box">
-              「${tr.text}」
-            </div>
-
-            ${tr.autoReply ? `
-              <div class="auto-reply-box">
-                <i data-lucide="corner-down-right" style="width:14px; height:14px;"></i>
-                <span>${tr.autoReply}</span>
+            ${isLocked ? `
+              <div class="lock-hint-text">
+                <i data-lucide="info" style="width:13px; height:13px;"></i>
+                <span>※【送信①】を先に送信すると解除されます</span>
               </div>
             ` : ''}
 
             <button 
-              class="send-trigger-btn ${isSent ? 'disabled' : ''}" 
+              class="send-trigger-btn ${isSent || isLocked ? 'disabled' : ''}" 
               id="btn-${tr.id}"
-              ${isSent ? 'disabled' : ''}
-              onclick="fireTrigger('${actor.code}', '${tr.id}', '${encodeURIComponent(tr.text)}', '${tr.autoReplySender || ''}', '${encodeURIComponent(tr.autoReplyText || '')}')"
+              ${isSent || isLocked ? 'disabled' : ''}
+              onclick="fireTrigger('${actor.code}', '${tr.id}')"
             >
-              <i data-lucide="${isSent ? 'check' : 'send'}"></i>
-              <span>${isSent ? '✅ 送信済み' : tr.btnLabel}</span>
+              <i data-lucide="${isSent ? 'check' : (isLocked ? 'lock' : 'send')}"></i>
+              <span>${isSent ? '✅ 送信済み' : (isLocked ? '🔒 ロック中（1通目待ち）' : tr.btnLabel)}</span>
             </button>
           </div>
         `;
@@ -513,18 +523,26 @@
     }
 
     // 🚀 トリガー送信実行
-    async function fireTrigger(actorCode, triggerId, encodedText, autoReplySender, encodedReplyText) {
+    async function fireTrigger(actorCode, triggerId) {
+      const actor = ACTOR_SCRIPTS[actorCode];
+      if (!actor) return;
+      const tr = actor.triggers.find(t => t.id === triggerId);
+      if (!tr) return;
+
+      // 依存ロックチェック
+      if (tr.dependsOn && !sentTriggers[tr.dependsOn]) {
+        showToast("⚠️ 先に1通目を送信してください", true);
+        return;
+      }
+
       const btn = document.getElementById(`btn-${triggerId}`);
       if (!btn || btn.disabled) return;
-
-      const text = decodeURIComponent(encodedText);
-      const replyText = encodedReplyText ? decodeURIComponent(encodedReplyText) : null;
 
       // 送信中スピナー表示
       btn.disabled = true;
       btn.innerHTML = `<div class="spinner"></div> <span>送信中...</span>`;
 
-      // スマホのバイブレーションフィードバック
+      // スマホバイブレーション
       if (navigator.vibrate) navigator.vibrate(50);
 
       const commandPayload = {
@@ -532,9 +550,9 @@
         id: "ACTOR_" + triggerId + "_" + Date.now(),
         actor: actorCode,
         triggerId: triggerId,
-        text: text,
-        autoReplySender: autoReplySender,
-        autoReplyText: replyText,
+        text: tr.text,
+        autoReplySender: tr.autoReplySender || null,
+        autoReplyText: tr.autoReplyText || null,
         time: getNowClockTime(),
         timestamp: Date.now()
       };
@@ -550,7 +568,7 @@
         localStorage.setItem('latest_actor_command', JSON.stringify(commandPayload));
         localStorage.setItem('latest_actor_command_time', Date.now());
 
-        // 2. Google Apps Script (GAS) クラウド送信（全iPadへ遠隔中継）
+        // 2. Google Apps Script (GAS) クラウド中継送信
         const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
         if (gasUrl) {
           const sendUrl = gasUrl.includes('?') 
@@ -568,13 +586,8 @@
         if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
         showToast("✅ 送信完了！全iPadへ配信されました", false);
 
-        // ボタンを「送信済み」に変更
-        btn.innerHTML = `<i data-lucide="check"></i> <span>✅ 送信済み</span>`;
-        btn.classList.add('disabled');
-
-        // カード再描画
-        const actor = ACTOR_SCRIPTS[selectedActorKey];
-        if (actor) renderTriggers(actor);
+        // カード再描画（Gの2通目のロック解除などを含む）
+        renderTriggers(actor);
 
       } catch (err) {
         console.error("Trigger failed:", err);
