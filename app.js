@@ -3041,26 +3041,65 @@ function playSystemSound(type) {
     const now = ctx.currentTime;
 
     if (type === "beep" || type === "dtmf") {
-      // 🎹 短いキータッチ・プッシュ音（クリックノイズのないクリアな正弦波）
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(type === "dtmf" ? 697 : 800, now);
+      // 🎹 電話キーパッド・プッシュ音（ハッキリ歯切れのよいDTMFデュアルトーン）
+      const f1 = 697;
+      const f2 = 1209;
+      const dur = 0.10;
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      [f1, f2].forEach(freq => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.13);
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.45, now + 0.004); // 瞬時アタック
+        gain.gain.setValueAtTime(0.40, now + dur - 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + dur + 0.01);
+      });
+
+    } else if (type === "ringback") {
+      // 📞 日本の電話呼出音（400Hz + 16Hz 振幅変調「プルルルルル……」）
+      const dur = 1.0;
+      const carrier = ctx.createOscillator();
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const masterGain = ctx.createGain();
+
+      carrier.type = "sine";
+      carrier.frequency.setValueAtTime(400, now);
+
+      mod.type = "sine";
+      mod.frequency.setValueAtTime(16, now); // 16Hz 変調
+
+      // 振幅変調器
+      modGain.gain.setValueAtTime(0.5, now);
+      mod.connect(modGain.gain);
+
+      // マスター音量エンベロープ
+      masterGain.gain.setValueAtTime(0.01, now);
+      masterGain.gain.linearRampToValueAtTime(0.65, now + 0.03);
+      masterGain.gain.setValueAtTime(0.65, now + dur - 0.04);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      carrier.connect(masterGain);
+      masterGain.connect(ctx.destination);
+
+      carrier.start(now);
+      mod.start(now);
+      carrier.stop(now + dur + 0.02);
+      mod.stop(now + dur + 0.02);
 
     } else if (type === "success" || type === "notif") {
-      // 🔔 Apple純正ライクな美しい2和音通知サウンド（上品なチャイム）
+      // 🔔 Apple純正ライクな美しい2和音通知サウンド（ハッキリ心地よいチャイム）
       const notes = [
-        { freq: 587.33, start: 0.00, dur: 0.22, vol: 0.4 },  // D5
-        { freq: 880.00, start: 0.07, dur: 0.35, vol: 0.45 }  // A5
+        { freq: 587.33, start: 0.00, dur: 0.20, vol: 0.70 },  // D5
+        { freq: 880.00, start: 0.06, dur: 0.40, vol: 0.80 }  // A5
       ];
       notes.forEach(n => {
         const osc = ctx.createOscillator();
@@ -3069,8 +3108,9 @@ function playSystemSound(type) {
         osc.frequency.setValueAtTime(n.freq, now + n.start);
 
         const t0 = now + n.start;
-        gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(n.vol, t0 + 0.02);
+        gain.gain.setValueAtTime(0.01, t0);
+        gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.006); // 瞬時アタック
+        gain.gain.setValueAtTime(n.vol * 0.7, t0 + 0.04);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
 
         osc.connect(gain);
@@ -3080,22 +3120,22 @@ function playSystemSound(type) {
       });
 
     } else if (type === "fanfare") {
-      // 🎺 輝かしいクリアなファンファーレ（4音アルペジオ＋豊かな余韻）
+      // 🎺 輝かしいファンファーレ（4音アルペジオ＋豊かなアタックとサステイン）
       const chordNotes = [
-        { freq: 523.25, start: 0.00, dur: 0.35, vol: 0.35 },  // C5
-        { freq: 659.25, start: 0.10, dur: 0.35, vol: 0.35 },  // E5
-        { freq: 783.99, start: 0.20, dur: 0.45, vol: 0.40 },  // G5
-        { freq: 1046.50, start: 0.32, dur: 0.65, vol: 0.50 }  // C6 (ロングトーン)
+        { freq: 523.25, start: 0.00, dur: 0.30, vol: 0.65 },  // C5
+        { freq: 659.25, start: 0.09, dur: 0.30, vol: 0.65 },  // E5
+        { freq: 783.99, start: 0.18, dur: 0.40, vol: 0.75 },  // G5
+        { freq: 1046.50, start: 0.28, dur: 0.75, vol: 0.85 }  // C6 (主音)
       ];
       chordNotes.forEach(n => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "triangle"; // 丸みと輝きのあるトライアングル波
+        osc.type = "triangle";
         osc.frequency.setValueAtTime(n.freq, now + n.start);
 
         const t0 = now + n.start;
-        gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(n.vol, t0 + 0.03);
+        gain.gain.setValueAtTime(0.01, t0);
+        gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.008);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
 
         osc.connect(gain);
@@ -3105,10 +3145,10 @@ function playSystemSound(type) {
       });
 
     } else if (type === "hangup") {
-      // 📞 リアルな受話器切断音（カチッ・コトッという2段階フック音）
+      // 📞 リアルな受話器切断音（ガチャッという確かな手応えのフック音）
       const clicks = [
-        { freq: 1400, start: 0.00, dur: 0.03, vol: 0.35 },
-        { freq: 350, start: 0.03, dur: 0.14, vol: 0.45 }
+        { freq: 1200, start: 0.00, dur: 0.035, vol: 0.75 },
+        { freq: 280, start: 0.025, dur: 0.16, vol: 0.85 }
       ];
       clicks.forEach(c => {
         const osc = ctx.createOscillator();
@@ -3117,8 +3157,8 @@ function playSystemSound(type) {
         osc.frequency.setValueAtTime(c.freq, now + c.start);
 
         const t0 = now + c.start;
-        gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(c.vol, t0 + 0.008);
+        gain.gain.setValueAtTime(0.01, t0);
+        gain.gain.linearRampToValueAtTime(c.vol, t0 + 0.003);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + c.dur);
 
         osc.connect(gain);
@@ -3128,19 +3168,20 @@ function playSystemSound(type) {
       });
 
     } else if (type === "error" || type === "alarm") {
-      // ⚠️ 警告・エラー音（スムーズなフェード付き警告音）
+      // ⚠️ 警告・エラー音（ハッキリとしたアタックと音圧）
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type === "alarm" ? "sawtooth" : "square";
       
-      const dur = type === "alarm" ? 0.55 : 0.22;
+      const dur = type === "alarm" ? 0.55 : 0.20;
       osc.frequency.setValueAtTime(type === "alarm" ? 440 : 180, now);
       if (type === "alarm") {
         osc.frequency.exponentialRampToValueAtTime(880, now + dur * 0.7);
       }
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.linearRampToValueAtTime(0.3, now + 0.03);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.65, now + 0.008);
+      gain.gain.setValueAtTime(0.50, now + dur * 0.5);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
       osc.connect(gain);
@@ -3149,7 +3190,7 @@ function playSystemSound(type) {
       osc.stop(now + dur + 0.02);
 
     } else if (type === "distortion") {
-      // ⚡ 時空歪曲グリッチノイズ（周波数スライド＋マイクロフェード）
+      // ⚡ 時空歪曲グリッチノイズ（迫力ある周波数スライド）
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sawtooth";
@@ -3157,8 +3198,8 @@ function playSystemSound(type) {
       osc.frequency.exponentialRampToValueAtTime(900, now + 0.4);
       osc.frequency.exponentialRampToValueAtTime(120, now + 0.85);
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.70, now + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
 
       osc.connect(gain);
