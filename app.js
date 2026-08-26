@@ -2783,9 +2783,9 @@ function makePhoneCall() {
     // Web Speech API で音声合成アナウンス（日本語女性トーン）
     speakGuidanceAudio(guidanceText);
 
-    // 6.5秒後に自動切断（無音で安全に終了）
+    // 6.5秒後に自動切断（ガチャッと切断）
     const timer2 = setTimeout(() => {
-      endPhoneCall(true);
+      endPhoneCall(false);
     }, 6500);
     phoneCallTimers.push(timer2);
   }, 3000);
@@ -2818,7 +2818,10 @@ function endPhoneCall(isSilent = false) {
   if (overlay) overlay.style.display = 'none';
   clearPhoneKey();
 
-  // 切断時の不快なエラー音（ブー音）は鳴らさない
+  // 切断ボタンまたはガイダンス終了時のみ、リアルな「ガチャッ」音を再生
+  if (!isSilent) {
+    playSystemSound("hangup");
+  }
 }
 
 // 端末完全再読み込み（リロード）
@@ -2938,14 +2941,32 @@ function generateWavDataUri(type) {
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
-      // 400Hz の正弦波に 16Hz の振幅変調を適用
       const carrier = Math.sin(2 * Math.PI * 400 * t);
       const modulation = 0.5 + 0.5 * Math.sin(2 * Math.PI * 16 * t);
-      // エンベロープ（最初と最後をわずかにフェード）
       let env = 1.0;
       if (t < 0.02) env = t / 0.02;
       if (t > 0.98) env = (1.0 - t) / 0.02;
       samples.push(carrier * modulation * env * 0.75);
+    }
+  } else if (type === "hangup") {
+    // 電話切断音「ガチャッ」（受話器フック音）
+    duration = 0.22;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let sample = 0;
+      // 1回目のクリック (t = 0.00s)
+      if (t < 0.04) {
+        let env1 = Math.exp(-t * 100);
+        sample += (Math.sin(2 * Math.PI * 1600 * t) * 0.4 + Math.sin(2 * Math.PI * 480 * t) * 0.6) * env1;
+      }
+      // 2回目の重いフック音 (t = 0.035s)
+      if (t >= 0.035 && t < 0.20) {
+        let t2 = t - 0.035;
+        let env2 = Math.exp(-t2 * 40);
+        sample += (Math.sin(2 * Math.PI * 720 * t2) * 0.5 + Math.sin(2 * Math.PI * 240 * t2) * 0.8) * env2;
+      }
+      samples.push(sample * 0.75);
     }
   } else {
     // beep / dtmf
