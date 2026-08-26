@@ -40,65 +40,164 @@ window.GAME_DATABASE = {
   // --- メタアプリ 「26__0094」用コンテンツ ---
   metaApp: {
     title: "26__0094",
-    rules: `【2126年 端末操作ガイド】
-1. 本端末は「学友会執行委員会」が管理する特殊情報記録端末です。
-2. 時間のループが発生した場合、端末は強制的にロックされます。ロック解除後、一部の情報が書き換わっている可能性があります。
-3. 探索中に発見したQRコードは、このアプリ内の「情報記録」タブからスキャンしてアーカイブに追加できます。
-4. ニュースや講義資料の重要なテキストは「メモに転記」ボタンで調査メモへ蓄積できます。`,
 
-    // 周回ごとのあらすじ・状況整理
-    synopsis: {
+    // 【1. 概要タブ用ファイル一覧】周回ごとに解放（1周目:2枚 / 2周目:4枚 / 3周目:6枚、最大6枚）
+    overviewFiles: [
+      {
+        id: "overview_01",
+        unlockLoop: 1,
+        fileName: "2126年_学友会基本規約.png",
+        title: "学友会基本規約",
+        image: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=1200",
+        desc: "2126年度 学友会執行委員会 保管資料"
+      },
+      {
+        id: "overview_02",
+        unlockLoop: 1,
+        fileName: "時間跳躍実験_初期概要.png",
+        title: "時間跳躍実験 初期概要",
+        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=1200",
+        desc: "量子力学研究室 タイムマシンプロトタイプ計画"
+      },
+      {
+        id: "overview_03",
+        unlockLoop: 2,
+        fileName: "世界線分岐観測レポート.png",
+        title: "世界線分岐観測レポート",
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200",
+        desc: "歴史改変とタイムパラドックスの観測ログ"
+      },
+      {
+        id: "overview_04",
+        unlockLoop: 2,
+        fileName: "21世紀会計史_特異点抜粋.png",
+        title: "21世紀会計史 特異点抜粋",
+        image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1200",
+        desc: "2024〜2026年の市場データと資産推移"
+      },
+      {
+        id: "overview_05",
+        unlockLoop: 3,
+        fileName: "UZWコーポレーション組織図.png",
+        title: "U.Z.W. 組織構造図",
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200",
+        desc: "巨大コングロマリット U.Z.W. 内部極秘資料"
+      },
+      {
+        id: "overview_06",
+        unlockLoop: 3,
+        fileName: "最終帰還シーケンス設計図.png",
+        title: "最終帰還シーケンス設計図",
+        image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200",
+        desc: "時空修復アンカー起動コード"
+      }
+    ],
+
+    // 【2. 順路タブ用マップ】周回連動（パターンA: 該当周回のマップ1枚をアスペクト比維持で最大表示）
+    routeMaps: {
       1: {
-        title: "【1周目】100年後の未来への跳躍と森野の痕跡",
-        summary: "大ホールの激しいバグ演出の後、2024年の学生5人（矢田・鷺坂・櫻井・渡辺・鵜沢）だけが残された。探索中、森野航の財布と学生証を発見。なぜか矢田と同一の学生番号『25B1150』が記されていた。陣内（J）のパソコン（パスワード: JNNITMNR）を起動し帰還を試みるが、タイムマシンが突然停止し再ループへ巻き込まれる。",
-        objectives: ["大ホール周辺の部屋を調査する", "落とし物の財布から身元を特定する", "JのPCを起動して帰還シーケンスを実行する"],
-        keyCharacters: ["矢田 逞（現代）", "鵜沢 向希（現代）", "深澤 文哉（未来）", "陣内 樹（未来）"]
+        loop: 1,
+        title: "1周目：大ホール ＆ 研修室1〜3 調査順路",
+        image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
+        note: "大ホールを出発し、研修室3・PCルームを探索せよ。"
       },
       2: {
-        title: "【2周目】歴史改変の兆候と歪んだ富豪",
-        summary: "再び9時4分へ巻き戻った。深澤（F）から「過去を変えても新たな世界線が分岐するだけで未来は救われない」と告げられる。鵜沢（E）は未来の会計資料（21世紀会計史）を持ち帰り未来を変えようと画策。ニュースでは鵜沢が『100億の資産家』として報道される歴史改変が発生していた。充電不足によりタイムマシンが再落下し、世界線はさらなる歪みへ。",
-        objectives: ["深澤・比嘉から世界線分岐の真相を聞く", "研修室4の未来資料と悪評リストを確認する", "鵜沢の怪しい単独行動を警戒する"],
-        keyCharacters: ["鷺坂 のの（現代）", "櫻井 康佑（現代）", "七瀬 いろは（未来）", "外園 胡春（未来）"]
+        loop: 2,
+        title: "2周目：未来資料保管庫 ＆ 役員室 調査順路",
+        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600",
+        note: "研修室4の未来資料と鵜沢の足取りを追跡せよ。"
       },
       3: {
-        title: "【3周目】巨大悪徳企業「U.Z.W.」の君臨と学友会消滅",
-        summary: "3回目の世界線。学友会は35年前に解散させられ、存在していなかった。日本は119歳となった鵜沢向希が率いる巨大悪徳企業『United Zillion Worldwide (U.Z.W.)』に牛耳られていた。U.Z.W.の手下・犬飼（M）が不正の証拠を隠滅するため銃を持って襲撃してくる。ループを断ち切る唯一の方法は、現代に戻り自分たちの手で学友会を守り抜くことだ。",
-        objectives: ["U.Z.W.の時価総額ランキングと不正疑惑を暴く", "犬飼（M）の襲撃を退け、鵜沢のスマホデータを確保する", "最終帰還シーケンスを実行し、現代で学友会を存続させる"],
-        keyCharacters: ["渡辺 夢叶（現代）", "犬飼 玲（忠臣）", "深澤 文哉（未来）", "全員"]
+        loop: 3,
+        title: "3周目：U.Z.W.本社タワー ＆ 最終脱出ルート",
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600",
+        note: "セキュリティを突破し、最上階タイムマシンへ到達せよ。"
       }
     },
 
-    // QRコード読み取り時の対応表 (hint_xxx)
-    qrHints: {
-      "hint_001": {
-        id: "hint_001",
-        title: "「テレポート実験」の極秘メモ",
-        category: "機密文書",
-        content: "「実験は成功した。被験者は2026年へと跳躍した。しかし、戻るための座標が2126年側に固定されていないため、周期的なループが発生してしまう。キーは学友会執行委員会の名簿データにある。」",
-        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=600"
+    // 【3. 調査資料タブ用アイテム】カード形式、QRコード読み取り対応、周回別テキスト変化対応、保持継続
+    evidenceItems: [
+      {
+        id: "item_teleport_note",
+        qrKey: "QR_ITEM_001",
+        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=800",
+        names: {
+          1: "「テレポート実験」の極秘メモ",
+          2: "テレポート実験報告書（加筆版）",
+          3: "時空歪曲アンカーの設計記録"
+        },
+        shortDescs: {
+          1: "大ホール裏で発見された手書きの実験記録用紙。",
+          2: "世界線分岐の数式と注意書きが追加されている。",
+          3: "100年の時空跳躍を安定させる最後のキーコード。"
+        },
+        detailDescs: {
+          1: "【第1次調査ログ】\n大ホール裏の機材ケースから回収された手書きのメモ。\n\n「実験は成功した。被験者は2026年へと跳躍した。しかし、戻るための座標が2126年側に固定されていないため、周期的なループが発生してしまう。キーは学友会執行委員会の名簿データにある。」",
+          2: "【第2次調査ログ（世界線分岐確認）】\n余白に新たな筆跡でメモが追記されている。\n\n「過去に干渉しても元の世界線は救われない。新たな分岐が生まれるだけだ。鵜沢が未来の会計資料を持ち出そうとしている。彼を止めなければ世界は歪んでしまう。」",
+          3: "【第3次調査ログ（最終解析結果）】\nU.Z.W.の手下・犬飼が隠滅しようとした決定的な原本文書。\n\n「時空跳躍のアンカー周波数は名簿の認証コード『SF2126-LOOP-0094』と同期している。現代に戻り学友会を守り抜くことで、U.Z.W.の支配する未来を消滅させられる。」"
+        }
       },
-      "hint_002": {
-        id: "hint_002",
-        title: "破損したチップのログ（森野の記録）",
-        category: "端末ログ",
-        content: "「本当はわかっている。過去に干渉しようが意味はない。それでも、人間らしいアナログな体験を守るもっといい適応の仕方があったはずなんだ……その未来を見てみたいだけなんだ！」",
-        image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=600"
+      {
+        id: "item_morino_chip",
+        qrKey: "QR_ITEM_002",
+        image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800",
+        names: {
+          1: "破損したチップのログ",
+          2: "森野航の端末ストレージ",
+          3: "森野航の遺言メッセージ"
+        },
+        shortDescs: {
+          1: "研修室の床に落ちていたデータストレージの破片。",
+          2: "森野航が残した私的な音声日記データ。",
+          3: "学友会消滅を悔やむ森野の魂の叫び。"
+        },
+        detailDescs: {
+          1: "【回収データ解析】\n破損したメモリーチップから復元された音声ログの断片。\n\n「本当はわかっている。過去に干渉しようが意味はない。それでも、人間らしいアナログな体験を守るもっといい適応の仕方があったはずなんだ……その未来を見てみたいだけなんだ！」",
+          2: "【復元セクター2】\n「タイムマシンの動力セルが足りない。2024年の5人を巻き込んでしまったのは私の責任だ。陣内のPCに緊急シーケンスを残した。どうか無事に戻ってくれ……」",
+          3: "【完全復元メッセージ】\n「鵜沢に騙された。彼が会社を作り、学友会を解散に追い込んだ張本人だった。現代の矢田、鷺坂、櫻井、渡辺……君たちだけがこの歪んだ未来を修正できる。」"
+        }
       },
-      "hint_003": {
-        id: "hint_003",
-        title: "21世紀会計史：特異点以前の資産運用（抜粋）",
-        category: "未来資料",
-        content: "「2024年から2026年にかけて急成長した技術群と市場データ。これを事前に知っていれば、誰でも確実に市場を独占できる。」（※鵜沢が密かに隠し持った資料のコピー）",
-        image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=600"
+      {
+        id: "item_accounting_history",
+        qrKey: "QR_ITEM_003",
+        image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800",
+        names: {
+          1: "21世紀会計史：特異点以前の資産運用",
+          2: "鵜沢のメモ書き入り会計資料",
+          3: "U.Z.W. 創業インサイダー証拠原本"
+        },
+        shortDescs: {
+          1: "2024〜2026年の急成長市場をまとめた未来の書籍。",
+          2: "鵜沢向希の筆跡で投資銘柄が丸で囲まれている。",
+          3: "120歳の鵜沢が現代から築いた不正財閥の原点。"
+        },
+        detailDescs: {
+          1: "【図書資料】\n2126年の図書館から持ち出された経済史の書籍。\n\n「2024年から2026年にかけて急成長した技術群と市場データ。これを事前に知っていれば、誰でも確実に市場を独占できる。」（※鵜沢が密かに隠し持った資料のコピー）",
+          2: "【書き込みの解析】\n余白に「東金テック」「バイオAI」「U.Z.W.ホールディングス」の銘柄名と『現代に持ち帰れば勝ち確定』という鵜沢の殴り書きがある。",
+          3: "【証拠能力認定】\n119歳となった鵜沢が日本市場の90%を牛耳る基盤となった歴史改変インサイダー取引の決定的一握り。これを突きつけることでU.Z.W.の正当性は崩壊する。"
+        }
       },
-      "hint_004": {
-        id: "hint_004",
-        title: "U.Z.W. 内部告発文書（極秘）",
-        category: "告発データ",
-        content: "「代表・鵜沢向希（119歳）による時間犯罪の全記録。過去の経済データを不正利用したインサイダー取引により、日本市場の90%を独占。忠臣・犬飼が証拠隠滅を担当。」",
-        image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600"
+      {
+        id: "item_uzw_internal_leak",
+        qrKey: "QR_ITEM_004",
+        image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800",
+        names: {
+          1: "U.Z.W. 内部告発文書（極秘）",
+          2: "U.Z.W. 社長室特命監査ファイル",
+          3: "代表取締役・鵜沢向希の時空犯罪調書"
+        },
+        shortDescs: {
+          1: "巨大企業U.Z.W.の暗部を記録した告発データ。",
+          2: "忠臣・犬飼による証拠隠滅の指示書。",
+          3: "警察・特務局が作成した最終起訴状。"
+        },
+        detailDescs: {
+          1: "【機密リーク文書】\n代表・鵜沢向希（119歳）による時間犯罪の全記録。過去の経済データを不正利用したインサイダー取引により、日本市場の90%を独占。忠臣・犬飼が証拠隠滅を担当。",
+          2: "【犬飼の特命メモ】\n「2024年から来た学生どもを見つけ次第拘束せよ。特に矢田と渡辺の所持端末は即時初期化すること。鵜沢会長の過去改変が露見すれば我々の帝国は終わる。」",
+          3: "【最終調書】\n時空法第4条違反・歴史独占罪。\nすべての原因は100年前の学友会執行委員会における鵜沢の単独行動にあった。真実の歴史を取り戻せ。"
+        }
       }
-    }
+    ]
   },
 
   // --- Googleブラウザ用コンテンツ ---
@@ -562,7 +661,15 @@ window.GAME_DATABASE = {
       { id: "committee_group", name: "【閉鎖】学友会執行委員会", icon: "x-circle", isGroup: true, desc: "この組織は35年前に解散されました。" }
     ],
 
-    // トーク履歴データ（周回による厳密なメッセージ制御）
+    // マイQRコード情報
+    myQr: {
+      teamName: "学友会執行委員会 調査端末",
+      qrImage: "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT",
+      copyLinkUrl: "https://link.line.me/ti/p/cit_student_council_2126",
+      desc: "QRコードやリンクを使って、友だち追加しましょう。"
+    },
+
+    // トーク履歴データ（周回による厳密なメッセージ制御 ＆ URL＋LINE風OGPカード）
     chats: {
       "jinnai": [
         { sender: "jinnai", text: "ごめん！パソコン研修室1に置きっぱなしにしちゃった！", time: "10:10", maxLoop: 1 },
@@ -575,12 +682,36 @@ window.GAME_DATABASE = {
       ],
       "fukasawa": [
         { sender: "fukasawa", text: "大ホールの施錠連絡忘れてただろ。ちゃんと施錠してから部屋出てくれよな。", time: "09:30", maxLoop: 1 },
-        { sender: "fukasawa", text: "あと、執行部の内部意見収集アンケートにまだ未回答なら、ここから回答お願い！<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム（アクセス制限あり）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "09:32" },
+        { 
+          sender: "fukasawa", 
+          text: "あと、執行部の内部アンケートにまだ未回答なら、ここから回答お願い！\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
+          time: "09:32",
+          ogpCard: {
+            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
+            title: "2126年 メンタルヘルス・スキャン（意見収集）",
+            desc: "学友会執行委員会 内部名簿・健康管理アンケート",
+            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
+            formId: "form_mental_scan"
+          }
+        },
         { sender: "fukasawa", text: "陣内先輩、最近ちょっとおかしいよね…？", time: "09:40", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "私、執行部の裏のデータベースから怪しいURLを見つけたの。", time: "09:41", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "これ、学生名簿とか予算が入ってるみたいなんだけど、アクセスに権限が必要で…", time: "09:42", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "URL送るから、ハッキングの得意なあなたの方で中身を見られない？", time: "09:43", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "リンク：<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン（内部名簿）</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・予算管理（※編集権限から侵入可能）</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "09:44", minLoop: 2, maxLoop: 2 }
+        { 
+          sender: "fukasawa", 
+          text: "リンク送るね：\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
+          time: "09:44", 
+          minLoop: 2, 
+          maxLoop: 2,
+          ogpCard: {
+            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
+            title: "2126年 メンタルヘルス・スキャン（内部名簿）",
+            desc: "学友会執行委員会 内部名簿・予算管理（※編集権限から侵入可能）",
+            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
+            formId: "form_mental_scan"
+          }
+        }
       ],
       "inukai": [
         { sender: "inukai", text: "調査の進捗はどうですか？", time: "08:00", maxLoop: 1 },
@@ -591,7 +722,18 @@ window.GAME_DATABASE = {
       "committee_group": [
         { sender: "jinnai", text: "明日の会議は13時に研修室2集合な。", time: "昨日", maxLoop: 1 },
         { sender: "fukasawa", text: "了解しました。安藤先生の講義資料も持参しますね。", time: "昨日", maxLoop: 1 },
-        { sender: "fukasawa", text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。<div class='chat-form-card' onclick='openHackingForm()'><div class='chat-form-card-badge'>📋 Google Forms</div><div class='chat-form-card-title'>2126年 メンタルヘルス・スキャン</div><div class='chat-form-card-desc'>学友会執行委員会 内部名簿・意見収集フォーム</div><div class='chat-form-card-btn'>フォームを開く ↗</div></div>", time: "昨日" },
+        { 
+          sender: "fukasawa", 
+          text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
+          time: "昨日",
+          ogpCard: {
+            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
+            title: "2126年 メンタルヘルス・スキャン",
+            desc: "学友会執行委員会 内部名簿・意見収集フォーム",
+            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
+            formId: "form_mental_scan"
+          }
+        },
         { sender: "inukai", text: "委員長も同席されます。遅れないように。", time: "昨日", maxLoop: 2 },
         { sender: "jinnai", text: "明日の会議は13時にSyzen社のラボ前集合な。", time: "昨日", minLoop: 2, maxLoop: 2 },
         { sender: "fukasawa", text: "了解しました。安藤先生の資料も持っていきますね。", time: "昨日", minLoop: 2, maxLoop: 2 }

@@ -226,102 +226,115 @@
         <div class="meta-container">
           <!-- サイドメニュー -->
           <div class="meta-sidebar">
-            <button class="meta-tab-btn active" onclick="switchMetaTab('rules')"><i data-lucide="book-open"></i> 操作ガイド</button>
-            <button class="meta-tab-btn" onclick="switchMetaTab('synopsis')"><i data-lucide="git-merge"></i> あらすじ・相関図</button>
-            <button class="meta-tab-btn" onclick="switchMetaTab('hints')"><i data-lucide="archive"></i> 情報記録</button>
-            <button class="meta-tab-btn" onclick="switchMetaTab('memo')"><i data-lucide="edit-3"></i> 調査メモ</button>
+            <button class="meta-tab-btn active" id="meta-tab-overview-btn" onclick="switchMetaTab('overview')"><i data-lucide="file-text"></i> 概要</button>
+            <button class="meta-tab-btn" id="meta-tab-route-btn" onclick="switchMetaTab('route')"><i data-lucide="map"></i> 順路</button>
+            <button class="meta-tab-btn" id="meta-tab-evidence-btn" onclick="switchMetaTab('evidence')"><i data-lucide="folder-archive"></i> 調査資料</button>
+            <button class="meta-tab-btn" id="meta-tab-memo-btn" onclick="switchMetaTab('memo')"><i data-lucide="edit-3"></i> メモ</button>
           </div>
           <!-- コンテンツ表示エリア -->
           <div class="meta-content">
-            <!-- ガイド -->
-            <div class="meta-panel active" id="meta-panel-rules">
-              <h2>2126年 端末操作ガイド</h2>
-              <div class="panel-inner" id="meta-rules-text">ルール読み込み中...</div>
-              <h3 style="margin-top:20px;">学内マップ（2126年フロア構成）</h3>
-              <img id="meta-map-img" class="meta-map" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" alt="MAP">
-            </div>
-
-            <!-- あらすじ・相関図 -->
-            <div class="meta-panel" id="meta-panel-synopsis">
-              <h2>学内調査状況 ＆ ビジュアル相関図</h2>
-              <div id="meta-synopsis-timeline"></div>
-              
-              <h3 style="margin-top:24px; margin-bottom:12px;">登場人物 相関図</h3>
-              <div class="visual-relationship-container">
-                <div class="rel-group">
-                  <div class="rel-group-title">【現代組】2024年からの漂流者（学生5名）</div>
-                  <div class="rel-cards-grid">
-                    <div class="rel-card modern"><span class="rel-sym">A</span><strong>矢田 逞</strong><small>2年・企画 / 主人公</small></div>
-                    <div class="rel-card modern"><span class="rel-sym">B</span><strong>鷺坂 のの</strong><small>3年・知能メディア</small></div>
-                    <div class="rel-card modern"><span class="rel-sym">C</span><strong>櫻井 康佑</strong><small>3年・知能メディア</small></div>
-                    <div class="rel-card modern"><span class="rel-sym">D</span><strong>渡辺 夢叶</strong><small>2年・渉外 / 洞察</small></div>
-                    <div class="rel-card modern warning"><span class="rel-sym">E</span><strong>鵜沢 向希</strong><small>福祉 / 120歳大富豪へ</small></div>
-                  </div>
-                </div>
-
-                <div class="rel-divider">⬇︎ 100年の時空跳躍 ⇄ 世界線分岐 ⬇︎</div>
-
-                <div class="rel-group">
-                  <div class="rel-group-title">【未来組】2126年の関係者（学友会 / U.Z.W.）</div>
-                  <div class="rel-cards-grid">
-                    <div class="rel-card future"><span class="rel-sym">F</span><strong>深澤 文哉</strong><small>広報 / まとめ役</small></div>
-                    <div class="rel-card future"><span class="rel-sym">G</span><strong>外園 胡春</strong><small>企画 / 頼れる仲間</small></div>
-                    <div class="rel-card future"><span class="rel-sym">H</span><strong>比嘉 俊希</strong><small>総務 / Fの仲間</small></div>
-                    <div class="rel-card future"><span class="rel-sym">I</span><strong>七瀬 いろは</strong><small>総務1年 / ヒロイン</small></div>
-                    <div class="rel-card future"><span class="rel-sym">J</span><strong>陣内 樹</strong><small>企画3年 / PC所持</small></div>
-                    <div class="rel-card future danger"><span class="rel-sym">K</span><strong>森野 航</strong><small>財務3年 / 実行犯</small></div>
-                    <div class="rel-card future dark"><span class="rel-sym">M</span><strong>犬飼 玲</strong><small>U.Z.W.鵜沢の忠臣</small></div>
-                  </div>
-                </div>
+            <!-- 1. 概要 (Finder風ファイル一覧) -->
+            <div class="meta-panel active" id="meta-panel-overview">
+              <div class="panel-header-row">
+                <h2>📁 概要資料フォルダ</h2>
+                <span class="loop-badge" id="overview-loop-indicator">1周目 (2件解放中)</span>
+              </div>
+              <p class="panel-subtext">タップするとファイルを画面全体でプレビューできます。</p>
+              <div class="finder-grid" id="meta-overview-grid">
+                <!-- JSで動的レンダリング -->
               </div>
             </div>
 
-            <!-- 情報記録（入手情報 ＆ QRスキャナー統合） -->
-            <div class="meta-panel" id="meta-panel-hints">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h2>情報記録（アーカイブ）</h2>
-                <button class="btn btn-primary" onclick="toggleMetaQrScanner()"><i data-lucide="qr-code"></i> ➕ QRスキャンで情報を追加</button>
+            <!-- 2. 順路 (アスペクト比維持 1枚最大表示マップ) -->
+            <div class="meta-panel" id="meta-panel-route">
+              <div class="panel-header-row">
+                <h2 id="meta-route-title">🗺️ 1周目 調査順路マップ</h2>
+                <span class="tap-zoom-hint"><i data-lucide="zoom-in"></i> タップで全画面拡大</span>
               </div>
-
-              <!-- インラインQRスキャナーカメラエリア（トグル開閉） -->
-              <div id="meta-qr-inline-scanner" style="display:none; background:#f0f2f5; padding:16px; border-radius:12px; margin-bottom:20px; border:2px dashed var(--system-blue);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                  <strong style="font-size:14px; color:var(--system-blue); display:flex; align-items:center; gap:6px;">📷 QRコードをカメラにかざしてください</strong>
-                  <button class="btn-text" onclick="toggleMetaQrScanner()" style="font-size:12px; cursor:pointer;">✕ 閉じる</button>
-                </div>
-                <!-- 正方形QRコードスキャナーフレーム -->
-                <div class="qr-scanner-box">
-                  <div class="qr-scanner-viewport">
-                    <video id="meta-video" autoplay playsinline></video>
-                    <canvas id="meta-canvas" style="display:none;"></canvas>
-                    <!-- スキャン枠 & レーザーライン -->
-                    <div class="qr-target-frame">
-                      <div class="qr-corner top-left"></div>
-                      <div class="qr-corner top-right"></div>
-                      <div class="qr-corner bottom-left"></div>
-                      <div class="qr-corner bottom-right"></div>
-                      <div class="qr-laser-line"></div>
-                    </div>
-                  </div>
-                  <p class="qr-guide-text">枠内に機密情報のQRコードを合わせてください</p>
-                </div>
-                <div class="qr-result-box" id="meta-qr-result" style="margin-top:10px;">カメラを起動しています...</div>
+              <div class="route-map-container" onclick="openMetaLightbox(document.getElementById('meta-route-img').src, document.getElementById('meta-route-title').innerText)">
+                <img id="meta-route-img" class="route-fit-img" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600" alt="順路マップ">
               </div>
-
-              <!-- 入手情報カードリスト -->
-              <div class="panel-inner" id="meta-hints-list">
-                <p style="color: var(--text-muted); font-size:13px;">探索中にスキャンした機密情報・手がかりがここにアーカイブされます。</p>
-              </div>
+              <div class="route-note-box" id="meta-route-note">大ホールを出発し、研修室3・PCルームを探索せよ。</div>
             </div>
 
-            <!-- 調査メモ -->
+            <!-- 3. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
+            <div class="meta-panel" id="meta-panel-evidence">
+              <div class="panel-header-row">
+                <h2>📦 調査資料・証拠アーカイブ</h2>
+                <span class="loop-badge" id="evidence-count-badge">0件 記録済み</span>
+              </div>
+              <p class="panel-subtext">探索で入手したアイテムや証拠資料がカード形式で記録されます。</p>
+
+              <!-- 2列カードグリッド (初期は空表示) -->
+              <div class="evidence-cards-grid" id="meta-evidence-grid">
+                <div class="evidence-empty-state">
+                  <i data-lucide="archive" class="empty-icon"></i>
+                  <p>記録された調査資料はありません。<br>右下の「＋」ボタンからQRコードを読み取ってください。</p>
+                </div>
+              </div>
+
+              <!-- 右下の丸型「＋」フローティングボタン -->
+              <button class="evidence-fab-btn" id="meta-evidence-fab" onclick="openMetaEvidenceQrScanner()" title="QRコードをスキャンして資料を追加">
+                <i data-lucide="plus"></i>
+              </button>
+            </div>
+
+            <!-- 4. メモ (タブ増設式 ノート罫線テキスト ＋ 手書きお絵描きCanvas) -->
             <div class="meta-panel" id="meta-panel-memo">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2>調査メモ</h2>
-                <span style="font-size:11px; color:var(--text-muted);">自動保存中（周回しても保持されます）</span>
+              <!-- メモ上部ヘッダー（タブバー ＆ モード切替） -->
+              <div class="memo-top-controls">
+                <div class="memo-tabs-bar" id="memo-tabs-bar">
+                  <!-- JSでタブを動的レンダリング -->
+                  <button class="memo-tab-item active" onclick="selectMemoTab(0)">
+                    <span>メモ 1</span>
+                  </button>
+                  <button class="memo-add-tab-btn" onclick="addNewMemoTab()" title="新しいメモページを追加">
+                    <i data-lucide="plus"></i>
+                  </button>
+                </div>
+
+                <div class="memo-mode-switch-group">
+                  <button class="memo-mode-btn active" id="memo-mode-text-btn" onclick="setMemoMode('text')">
+                    <i data-lucide="type"></i> テキスト
+                  </button>
+                  <button class="memo-mode-btn" id="memo-mode-draw-btn" onclick="setMemoMode('draw')">
+                    <i data-lucide="pen-tool"></i> 手書き
+                  </button>
+                </div>
               </div>
-              <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">ニュースや資料の「メモに転記」ボタンを押すと、重要な文章がここに自動追記されます。</p>
-              <textarea id="meta-memo-area" placeholder="ここに調査メモを入力してください...（自動保存されます）"></textarea>
+
+              <!-- ① テキスト入力モード（美しいノート罫線UI） -->
+              <div class="memo-panel-view active" id="memo-text-view">
+                <textarea class="memo-notebook-area" id="meta-memo-textarea" placeholder="ここに調査メモを入力してください...（自動保存されます）"></textarea>
+              </div>
+
+              <!-- ② 手書きお絵描きモード（Canvas ＆ ツールバー） -->
+              <div class="memo-panel-view" id="memo-draw-view" style="display:none;">
+                <div class="memo-canvas-toolbar">
+                  <!-- カラーパレット -->
+                  <div class="canvas-color-group">
+                    <button class="canvas-color-dot active" style="background:#1e293b;" onclick="setCanvasColor('#1e293b')" title="黒"></button>
+                    <button class="canvas-color-dot" style="background:#ef4444;" onclick="setCanvasColor('#ef4444')" title="赤"></button>
+                    <button class="canvas-color-dot" style="background:#0284c7;" onclick="setCanvasColor('#0284c7')" title="青"></button>
+                    <button class="canvas-color-dot" style="background:#16a34a;" onclick="setCanvasColor('#16a34a')" title="緑"></button>
+                  </div>
+                  <!-- ペン太さ -->
+                  <div class="canvas-size-group">
+                    <button class="canvas-size-btn active" onclick="setCanvasLineWidth(2)">細</button>
+                    <button class="canvas-size-btn" onclick="setCanvasLineWidth(5)">中</button>
+                    <button class="canvas-size-btn" onclick="setCanvasLineWidth(10)">太</button>
+                  </div>
+                  <!-- 消しゴム & クリア -->
+                  <div class="canvas-action-group">
+                    <button class="canvas-tool-btn" id="canvas-eraser-btn" onclick="toggleCanvasEraser()"><i data-lucide="eraser"></i> 消しゴム</button>
+                    <button class="canvas-tool-btn danger" onclick="clearCurrentCanvas()"><i data-lucide="trash-2"></i> 全消去</button>
+                  </div>
+                </div>
+
+                <div class="memo-canvas-container" id="memo-canvas-wrapper">
+                  <canvas id="memo-canvas"></canvas>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -413,7 +426,7 @@
           <div class="link-sidebar">
             <div class="link-sidebar-header">
               <span>トーク</span>
-              <button onclick="openLinkQr()" class="link-qr-btn" title="友達追加QR"><i data-lucide="user-plus"></i></button>
+              <button onclick="openLinkAddFriendScanner()" class="link-qr-btn" title="友だち追加 (QRスキャン)"><i data-lucide="user-plus"></i></button>
             </div>
             <div class="link-chat-list" id="link-chat-list"></div>
           </div>
@@ -445,49 +458,102 @@
           </div>
         </div>
 
-        <!-- LINK専用 友達追加用QRスキャンモーダル -->
-        <div class="link-qr-modal" id="link-qr-modal">
-          <div class="link-qr-modal-content">
-            <div class="link-qr-modal-header">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="user-plus" style="color:var(--system-blue);"></i>
-                <h3 style="font-size:16px; font-weight:700;">連絡先を追加 (QRスキャン)</h3>
-              </div>
-              <button onclick="closeLinkQr()" class="btn-icon" style="background:#f2f2f7; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+        <!-- 🟢 LINK専用 LINE風 友だち追加 QRスキャナーモーダル (常時エラー仕様) -->
+        <div class="modal-overlay" id="link-qr-scanner-modal" style="display:none;" onclick="closeLinkAddFriendScanner()">
+          <div class="line-scanner-container" onclick="event.stopPropagation()">
+            <!-- 上部バー -->
+            <div class="line-scanner-topbar">
+              <button class="line-scanner-close-btn" onclick="closeLinkAddFriendScanner()" title="閉じる">✕</button>
+              <span class="line-scanner-title">QRコードリーダー</span>
+              <div style="width:28px;"></div>
             </div>
 
-            <!-- 正方形QRコードスキャナーフレーム -->
-            <div class="qr-scanner-box">
-              <div class="qr-scanner-viewport">
-                <video id="link-video" autoplay playsinline></video>
-                <canvas id="link-canvas" style="display:none;"></canvas>
-                <!-- スキャン枠 & レーザーライン -->
-                <div class="qr-target-frame">
-                  <div class="qr-corner top-left"></div>
-                  <div class="qr-corner top-right"></div>
-                  <div class="qr-corner bottom-left"></div>
-                  <div class="qr-corner bottom-right"></div>
-                  <div class="qr-laser-line"></div>
-                </div>
-              </div>
-              <p class="qr-guide-text">枠内に友達のQRコードを合わせてください</p>
-            </div>
-
-            <div class="qr-result-box" id="link-qr-result">カメラを起動しています...</div>
-
-            <!-- 手動入力 / テスト用クイック追加 -->
-            <div class="qr-manual-box" style="margin-top:14px; padding-top:12px; border-top:1px solid #e5e5ea;">
-              <div style="font-size:11px; color:#8e8e93; margin-bottom:6px; font-weight:600;">カメラが使えない場合（ID・QRコード手動登録）:</div>
-              <div style="display:flex; gap:6px; margin-bottom:8px;">
-                <input type="text" id="link-manual-qr-input" placeholder="例: friend_jinnai" style="flex:1; padding:8px 12px; font-size:12px; border:1px solid #d1d5db; border-radius:8px;">
-                <button class="btn btn-primary" onclick="handleManualLinkQr()" style="padding:8px 14px; font-size:12px;">追加</button>
-              </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="btn-subtle" onclick="simulateQrScan('friend_jinnai')" style="font-size:11px; padding:4px 8px;">＋ 陣内 樹を追加</button>
-                <button class="btn-subtle" onclick="simulateQrScan('friend_fukasawa')" style="font-size:11px; padding:4px 8px;">＋ 深澤 文哉を追加</button>
-                <button class="btn-subtle" onclick="simulateQrScan('friend_inukai')" style="font-size:11px; padding:4px 8px;">＋ 犬飼 玲を追加</button>
+            <!-- スキャナーカメラ枠 -->
+            <div class="line-scanner-frame-wrap">
+              <video id="link-scanner-video" autoplay playsinline></video>
+              <canvas id="link-scanner-canvas" style="display:none;"></canvas>
+              <div class="line-scanner-overlay">
+                <div class="line-corner tl"></div>
+                <div class="line-corner tr"></div>
+                <div class="line-corner bl"></div>
+                <div class="line-corner br"></div>
+                <div class="line-scan-laser"></div>
               </div>
             </div>
+
+            <!-- マイQRコード切替ボタン -->
+            <div class="line-scanner-actions">
+              <button class="line-switch-myqr-btn" onclick="openLinkMyQrModal()">
+                <i data-lucide="qr-code"></i> マイQRコード
+              </button>
+            </div>
+
+            <!-- 案内テキスト ＆ エラー演出表示エリア -->
+            <div class="line-scanner-info">
+              <p class="line-scanner-guide" id="link-scanner-guide">QRコードをスキャンして友だち追加などの機能を利用できます。</p>
+              <div class="line-scanner-error-toast" id="link-scanner-error" style="display:none;">
+                <i data-lucide="alert-circle"></i>
+                <span>⚠️ 該当するユーザーが見つかりません。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🟢 LINK専用 LINE風 マイQRコード表示モーダル -->
+        <div class="modal-overlay" id="link-my-qr-modal" style="display:none;" onclick="closeLinkMyQrModal()">
+          <div class="line-myqr-card" onclick="event.stopPropagation()">
+            <div class="line-myqr-header">
+              <span class="line-myqr-title">マイQRコード</span>
+              <button class="line-myqr-close-btn" onclick="closeLinkMyQrModal()">✕</button>
+            </div>
+
+            <div class="line-myqr-body">
+              <div class="line-myqr-avatar">
+                <i data-lucide="shield"></i>
+              </div>
+              <h4 class="line-myqr-name" id="link-myqr-name">学友会執行委員会 調査端末</h4>
+              <p class="line-myqr-desc">QRコードやリンクを使って、友だち追加しましょう。</p>
+
+              <!-- QRコード画像表示枠 -->
+              <div class="line-myqr-image-box">
+                <img id="link-myqr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT" alt="マイQRコード">
+              </div>
+
+              <!-- 下部アクションバー -->
+              <div class="line-myqr-buttons-row">
+                <button class="line-myqr-btn" onclick="copyLinkMyQrUrl()">
+                  <i data-lucide="link"></i>
+                  <span>リンクをコピー</span>
+                </button>
+                <button class="line-myqr-btn" onclick="showPushNotification('共有', 'マイQRコードの共有メニューを開きました', 'share-2')">
+                  <i data-lucide="share-2"></i>
+                  <span>シェア</span>
+                </button>
+                <button class="line-myqr-btn" onclick="showPushNotification('保存完了', 'マイQRコード画像を写真に保存しました', 'download')">
+                  <i data-lucide="download"></i>
+                  <span>保存</span>
+                </button>
+                <button class="line-myqr-btn" onclick="refreshLinkMyQr()">
+                  <i data-lucide="refresh-cw"></i>
+                  <span>更新</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📱 LINK専用 アプリ内フォームオーバーレイ (LINE風 スルッと上に乗るシート) -->
+        <div class="link-inapp-overlay" id="link-inapp-form-overlay" style="display:none;">
+          <div class="inapp-browser-header">
+            <button class="inapp-close-btn" onclick="closeLinkInAppForm()"><i data-lucide="x"></i></button>
+            <div class="inapp-title-box">
+              <span class="inapp-site-name">Google フォーム</span>
+              <span class="inapp-site-url">docs.google.com</span>
+            </div>
+            <button class="inapp-action-btn" onclick="refreshLinkInAppForm()"><i data-lucide="rotate-cw"></i></button>
+          </div>
+          <div class="inapp-browser-content" id="link-inapp-form-body">
+            <!-- フォーム内容がここに埋め込まれる -->
           </div>
         </div>
       </div>
@@ -496,13 +562,20 @@
       <!-- ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング） -->
       <!-- ------------------------------------------ -->
       <div class="hacking-modal" id="hacking-modal">
-        <!-- 偽Googleフォーム -->
+        <!-- ① 偽Googleフォーム (回答閲覧画面) -->
         <div class="gform-container" id="gform-view">
           <div class="gform-header" style="position:relative;">
             <button onclick="closeHacking()" class="btn-icon" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;" title="閉じる"><i data-lucide="x" style="width:16px; height:16px;"></i></button>
             <div class="gform-header-bar"></div>
-            <h1 id="gform-title">無題のフォーム</h1>
-            <p id="gform-desc">学友会執行委員会 内部保管データ申請フォーム</p>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <h1 id="gform-title">2126年 メンタルヘルス・スキャン</h1>
+                <p id="gform-desc">学友会執行委員会 内部保管データ申請フォーム</p>
+              </div>
+              <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="edit-3" style="width:14px; height:14px;"></i> ✏️ フォームを編集
+              </button>
+            </div>
           </div>
           <div class="gform-card">
             <label class="gform-label">閲覧申請者 (セキュリティIDまたは本名)</label>
@@ -517,9 +590,113 @@
             <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input').forEach(i => i.value='')">フォームをクリア</button>
           </div>
           <!-- Googleフォーム公式風 編集ペンマーク（右下フローティングアクションボタン） -->
-          <button class="gform-edit-fab" id="gform-edit-fab" onclick="openGSpreadsheet(event)" title="このフォームを編集 / スプレッドシートを開く">
+          <button class="gform-edit-fab" id="gform-edit-fab" onclick="openHackingEditor()" title="このフォームを編集">
             <i data-lucide="edit-3"></i>
           </button>
+        </div>
+
+        <!-- ② 偽Googleフォーム公式風 編集画面 (質問タブ ＆ 回答タブ ➡️ スプレッドシート連携) -->
+        <div class="gform-editor-container" id="gform-editor-view" style="display:none;">
+          <div class="gform-editor-navbar">
+            <div class="editor-nav-left">
+              <button class="editor-back-btn" onclick="openHackingForm()" title="フォーム表示へ戻る"><i data-lucide="arrow-left"></i></button>
+              <div class="editor-file-info">
+                <span class="editor-file-title" id="editor-file-title">2126年 メンタルヘルス・スキャン</span>
+                <span class="editor-file-status">すべての変更をドライブに保存しました</span>
+              </div>
+            </div>
+            <div class="editor-nav-tabs">
+              <button class="editor-tab-btn active" id="editor-tab-questions-btn" onclick="switchEditorTab('questions')">質問</button>
+              <button class="editor-tab-btn" id="editor-tab-responses-btn" onclick="switchEditorTab('responses')">
+                回答 <span class="editor-badge" id="editor-responses-count">3</span>
+              </button>
+              <button class="editor-tab-btn" id="editor-tab-settings-btn" onclick="switchEditorTab('settings')">設定</button>
+            </div>
+            <div class="editor-nav-right">
+              <button onclick="closeHacking()" class="editor-close-btn" title="閉じる">✕</button>
+            </div>
+          </div>
+
+          <!-- ① 質問タブ -->
+          <div class="editor-panel-content" id="editor-panel-questions">
+            <div class="gform-card editor-header-card">
+              <div class="gform-header-bar"></div>
+              <h2 class="editor-form-title">2126年 メンタルヘルス・スキャン</h2>
+              <p class="editor-form-desc">学友会執行委員会 内部保管データ申請フォーム（※管理者編集画面）</p>
+            </div>
+            <div class="gform-card editor-question-card">
+              <div class="editor-q-header">
+                <span class="editor-q-title">申請者氏名・セキュリティID</span>
+                <span class="editor-q-type">記述式 (テキスト)</span>
+              </div>
+              <input type="text" class="gform-input" disabled value="回答者の記述テキスト">
+            </div>
+            <div class="gform-card editor-question-card">
+              <div class="editor-q-header">
+                <span class="editor-q-title">申請理由・閲覧目的</span>
+                <span class="editor-q-type">段落 (長文テキスト)</span>
+              </div>
+              <textarea class="gform-textarea" disabled style="height:60px;">回答者の詳細テキスト</textarea>
+            </div>
+          </div>
+
+          <!-- ② 回答タブ (スプレッドシート連携ボタン配置！) -->
+          <div class="editor-panel-content" id="editor-panel-responses" style="display:none;">
+            <div class="gform-card editor-responses-summary-card">
+              <div class="responses-top-bar">
+                <div class="responses-count-heading">
+                  <h3>3 件の回答</h3>
+                  <span class="responses-accepting-badge">回答を受付中</span>
+                </div>
+                <!-- 📊 スプレッドシートで表示（スプレッドシート作成）ボタン -->
+                <button class="btn-create-gsheet" onclick="openGSpreadsheet(event)" title="スプレッドシートで回答を表示">
+                  <i data-lucide="table" style="color:#107c41;"></i>
+                  <span>📊 スプレッドシートで表示</span>
+                </button>
+              </div>
+
+              <!-- 集計プレビュー一覧 -->
+              <div class="responses-preview-section">
+                <h4 class="responses-sub-title">最近の回答者ログ</h4>
+                <div class="response-log-item">
+                  <div class="response-log-meta">
+                    <strong>陣内 樹 (J-098)</strong>
+                    <span>2126/08/22 09:15</span>
+                  </div>
+                  <div class="response-log-text">安藤教授の研究室から持ち出された機密データ暗号の解除要請</div>
+                </div>
+                <div class="response-log-item">
+                  <div class="response-log-meta">
+                    <strong>深澤 文哉 (F-042)</strong>
+                    <span>2126/08/22 09:28</span>
+                  </div>
+                  <div class="response-log-text">学友会予算執行状況および役員名簿の緊急照会</div>
+                </div>
+                <div class="response-log-item">
+                  <div class="response-log-meta">
+                    <strong>犬飼 玲 (I-012)</strong>
+                    <span>2126/08/22 09:40</span>
+                  </div>
+                  <div class="response-log-text">【統制局】2024年度跳躍者の所持端末の初期化・回収手続き</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ 設定タブ -->
+          <div class="editor-panel-content" id="editor-panel-settings" style="display:none;">
+            <div class="gform-card">
+              <h3 style="font-size:15px; margin:0 0 10px;">フォームの設定</h3>
+              <p style="font-size:12px; color:#64748b; margin:0 0 14px;">回答の収集、表示、デフォルト設定を管理します。</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid #f1f5f9;">
+                <div>
+                  <strong style="font-size:13px; color:#1e293b;">メールアドレスを収集する</strong>
+                  <div style="font-size:11px; color:#94a3b8;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
+                </div>
+                <input type="checkbox" checked disabled>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 偽スプレッドシート -->
@@ -834,6 +1011,72 @@
         </div>
       </div>
 
+  <!-- フルスクリーン拡大プレビューモーダル (概要/順路用) -->
+  <div class="modal-overlay" id="meta-lightbox-modal" style="display:none;" onclick="closeMetaLightbox()">
+    <div class="lightbox-content-wrapper" onclick="event.stopPropagation()">
+      <button class="lightbox-close-btn" onclick="closeMetaLightbox()">✕</button>
+      <div class="lightbox-header">
+        <span id="lightbox-title">プレビュー</span>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-img" src="" alt="拡大プレビュー">
+      </div>
+    </div>
+  </div>
+
+  <!-- 📦 調査資料専用 QRコードスキャナーモーダル -->
+  <div class="modal-overlay" id="meta-evidence-qr-modal" style="display:none;" onclick="closeMetaEvidenceQrScanner()">
+    <div class="evidence-scanner-card" onclick="event.stopPropagation()">
+      <div class="scanner-card-header">
+        <span class="scanner-header-title">📷 調査資料 QRコードスキャン</span>
+        <button class="scanner-close-btn" onclick="closeMetaEvidenceQrScanner()">✕</button>
+      </div>
+      <div class="scanner-card-body">
+        <div class="scanner-viewport-box">
+          <video id="evidence-scanner-video" autoplay playsinline></video>
+          <canvas id="evidence-scanner-canvas" style="display:none;"></canvas>
+          <div class="scanner-frame-overlay">
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+            <div class="scan-laser"></div>
+          </div>
+        </div>
+        <p class="scanner-guidance-text">枠内にアイテムや資料のQRコードを合わせてください</p>
+        <div class="scanner-status-msg" id="evidence-scanner-status">カメラを準備中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎉 調査資料 記録完了ポップアップトースト -->
+  <div class="evidence-record-toast" id="meta-evidence-toast" style="display:none;">
+    <div class="toast-icon-badge">✨</div>
+    <div class="toast-body-text">
+      <strong id="meta-toast-item-name">アイテム名</strong>
+      <span>が調査資料に記録されました</span>
+    </div>
+  </div>
+
+  <!-- 🔍 調査資料 カード詳細モーダル -->
+  <div class="modal-overlay" id="meta-evidence-detail-modal" style="display:none;" onclick="closeMetaEvidenceDetail()">
+    <div class="evidence-detail-card" onclick="event.stopPropagation()">
+      <button class="detail-close-btn" onclick="closeMetaEvidenceDetail()">✕</button>
+      <div class="evidence-detail-grid">
+        <div class="evidence-detail-media">
+          <img id="detail-item-img" src="" alt="アイテム画像">
+        </div>
+        <div class="evidence-detail-info">
+          <h3 id="detail-item-title">アイテム情報名</h3>
+          <div class="detail-meta-row">
+            <span class="detail-time-tag" id="detail-item-time">🕒 09:12 取得</span>
+            <span class="detail-loop-tag" id="detail-item-loop">周回 1</span>
+          </div>
+          <div class="detail-desc-box" id="detail-item-desc">
+            詳細な説明文がここに表示されます。
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -18,7 +18,7 @@ let gameState = {
   manabaUser: null,
   addedFriends: ["jinnai", "fukasawa", "committee_group"], // 初期友達
   activeApp: null,
-  activeMetaTab: "rules",
+  activeMetaTab: "overview",
   activeManabaTab: "mypage",
   activeGSheetTab: "名簿データ",
   currentBrowserPage: "home", // home, results, webpage
@@ -27,8 +27,9 @@ let gameState = {
   activeChatContact: null,
   phoneInput: "",
   alertDismissed: true,
-  timerInterval: null,
-  timeRemaining: 3600 // 60分 (秒単位)
+  memoTabs: [{ title: "メモ 1", text: "", drawData: null }],
+  activeMemoTabIndex: 0,
+  memoMode: "text"
 };
 
 // --- PWA Service Worker 登録 ---
@@ -76,14 +77,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // 嘘の時計を開始
     startFakeClock();
 
-    // メモ帳の復元と自動保存イベント
-    const memoArea = document.getElementById('meta-memo-area');
-    if (memoArea) {
-      memoArea.value = localStorage.getItem('game_memo') || '';
-      memoArea.addEventListener('input', (e) => {
-        localStorage.setItem('game_memo', e.target.value);
-      });
-    }
+    // 📝 メモ帳の復元と初期化
+    initMetaMemo();
 
     // 操作制限の適用
     applyOperationalRestrictions();
@@ -102,9 +97,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
-    
-    // 60分タイマー開始
-    startCountdownTimer();
 
     // スプレッドシート（Google Sheets / GAS）から10秒おきに自動同期（リロード不要）
     startAutoSpreadsheetSync();
@@ -459,6 +451,26 @@ function loadStateFromStorage() {
     gameState.unlockedHints = [];
   }
 
+  // 📦 調査資料アイテムリスト復元
+  try {
+    gameState.collectedEvidence = JSON.parse(localStorage.getItem('collected_evidence') || '[]');
+  } catch (e) {
+    gameState.collectedEvidence = [];
+  }
+
+  // 📝 メモ帳タブ復元
+  try {
+    const savedTabs = JSON.parse(localStorage.getItem('game_memo_tabs_data') || 'null');
+    if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
+      gameState.memoTabs = savedTabs;
+    } else {
+      const oldMemo = localStorage.getItem('game_memo') || '';
+      gameState.memoTabs = [{ title: "メモ 1", text: oldMemo, drawData: null }];
+    }
+  } catch (e) {
+    gameState.memoTabs = [{ title: "メモ 1", text: "", drawData: null }];
+  }
+
   try {
     gameState.addedFriends = JSON.parse(localStorage.getItem('added_friends') || '["jinnai", "fukasawa", "committee_group"]');
   } catch (e) {
@@ -466,6 +478,14 @@ function loadStateFromStorage() {
   }
 
   gameState.manabaUser = localStorage.getItem('manaba_user') || null;
+
+  // 📊 カスタムスプレッドシート編集データの復元
+  try {
+    const customRows = JSON.parse(localStorage.getItem('game_custom_gsheet_rows') || 'null');
+    if (customRows && window.GAME_DATABASE && window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.spreadsheet) {
+      window.GAME_DATABASE.hacking.spreadsheet.rows = customRows;
+    }
+  } catch (e) {}
 
   // 画面表示反映（nullチェック付き）
   const sbTeamEl = document.getElementById('sb-team-id');
@@ -478,6 +498,8 @@ function saveStateToStorage() {
   localStorage.setItem('game_loop', gameState.loop);
   localStorage.setItem('team_id', gameState.teamId);
   localStorage.setItem('unlocked_hints', JSON.stringify(gameState.unlockedHints));
+  localStorage.setItem('collected_evidence', JSON.stringify(gameState.collectedEvidence || []));
+  localStorage.setItem('game_memo_tabs_data', JSON.stringify(gameState.memoTabs || []));
   localStorage.setItem('added_friends', JSON.stringify(gameState.addedFriends));
   if (gameState.manabaUser) {
     localStorage.setItem('manaba_user', gameState.manabaUser);
@@ -553,28 +575,6 @@ function startFakeClock() {
   setInterval(updateClock, 1000);
 }
 
-// --- 探索残り時間タイマー ---
-function startCountdownTimer() {
-  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-  
-  gameState.timeRemaining = parseInt(localStorage.getItem('time_remaining') || '3600');
-
-  gameState.timerInterval = setInterval(() => {
-    if (gameState.timeRemaining > 0) {
-      gameState.timeRemaining--;
-      localStorage.setItem('time_remaining', gameState.timeRemaining);
-      
-      const mm = String(Math.floor(gameState.timeRemaining / 60)).padStart(2, '0');
-      const ss = String(gameState.timeRemaining % 60).padStart(2, '0');
-      const timerEl = document.getElementById('meta-timer');
-      if (timerEl) timerEl.innerText = `探索残り時間 ${mm}:${ss}`;
-    } else {
-      const timerEl = document.getElementById('meta-timer');
-      if (timerEl) timerEl.innerText = `探索時間終了`;
-    }
-  }, 1000);
-}
-
 // --- 周回（ループ）の強制切り替え演出 ---
 function triggerLoopTransition(nextLoop) {
   // 効果音（ブラウザのAudio制限対策としてエラーハンドリング）
@@ -629,14 +629,10 @@ function updateAppUI() {
   if (document.getElementById('spec-storage') && spec.storage) document.getElementById('spec-storage').innerText = spec.storage;
   if (document.getElementById('spec-serial') && spec.serial) document.getElementById('spec-serial').innerText = spec.serial;
 
-  // メタアプリ：ルール/あらすじ/相関図の読み込み
-  const metaRulesEl = document.getElementById('meta-rules-text');
-  if (metaRulesEl && window.GAME_DATABASE.metaApp) metaRulesEl.innerText = window.GAME_DATABASE.metaApp.rules || "";
-  
-  renderMetaSynopsis();
-
-  // メタアプリ：入手済みのヒント描画
-  renderUnlockedHints();
+  // メタアプリ：概要＆順路＆調査資料の更新
+  renderMetaOverview();
+  renderMetaRoute();
+  renderMetaEvidence();
 
   // メールリスト更新
   renderMailList();
@@ -1046,7 +1042,8 @@ function switchMetaTab(tabId) {
   document.querySelectorAll('.meta-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.meta-panel').forEach(panel => panel.classList.remove('active'));
 
-  const activeBtn = Array.from(document.querySelectorAll('.meta-tab-btn')).find(btn => {
+  const btnId = `meta-tab-${tabId}-btn`;
+  const activeBtn = document.getElementById(btnId) || Array.from(document.querySelectorAll('.meta-tab-btn')).find(btn => {
     const oc = btn.getAttribute('onclick');
     return oc && oc.includes(tabId);
   });
@@ -1058,83 +1055,554 @@ function switchMetaTab(tabId) {
   stopAllCameraStreams();
   const inlineScanner = document.getElementById('meta-qr-inline-scanner');
   if (inlineScanner) inlineScanner.style.display = 'none';
+
+  if (tabId === 'overview') {
+    renderMetaOverview();
+  } else if (tabId === 'route') {
+    renderMetaRoute();
+  } else if (tabId === 'evidence') {
+    renderMetaEvidence();
+  } else if (tabId === 'memo') {
+    initMetaMemo();
+  }
 }
 
-// あらすじ・タイムライン描画
-function renderMetaSynopsis() {
-  const container = document.getElementById('meta-synopsis-timeline');
+// 📁 【概要】タブ描画: 周回ごとに解放 (1周目:2枚 / 2周目:4枚 / 3周目:6枚)
+function renderMetaOverview() {
+  const container = document.getElementById('meta-overview-grid');
+  const indicator = document.getElementById('overview-loop-indicator');
   if (!container) return;
 
-  const currentSynopsis = window.GAME_DATABASE.metaApp.synopsis[gameState.loop];
-  if (!currentSynopsis) return;
+  const currentLoop = Number(gameState.loop) || 1;
+  const maxVisible = currentLoop === 1 ? 2 : (currentLoop === 2 ? 4 : 6);
 
-  let objHtml = "";
-  if (currentSynopsis.objectives) {
-    objHtml = `
-      <div class="timeline-obj-list">
-        <strong>現在の調査目標:</strong>
-        <ul style="margin:0; padding-left:16px; color:#555;">
-          ${currentSynopsis.objectives.map(o => `<li>${o}</li>`).join('')}
-        </ul>
-      </div>
-    `;
+  if (indicator) {
+    indicator.innerText = `${currentLoop}周目 (${maxVisible}件解放中)`;
   }
 
-  container.innerHTML = `
-    <div class="timeline-step-card">
-      <div class="timeline-step-header">
-        <span class="rel-sym" style="background:#e0f2fe; color:#0369a1;">周回 ${gameState.loop}</span>
-        <span class="timeline-step-title">${currentSynopsis.title}</span>
+  const allFiles = window.GAME_DATABASE.metaApp.overviewFiles || [];
+  const visibleFiles = allFiles.slice(0, maxVisible);
+
+  container.innerHTML = visibleFiles.map((file, idx) => `
+    <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')">
+      <div class="finder-thumb-wrapper">
+        <img src="${file.image}" class="finder-thumb-img" alt="${file.title}" loading="lazy">
       </div>
-      <div class="timeline-step-body">${currentSynopsis.summary}</div>
-      ${objHtml}
+      <div class="finder-file-name">${file.fileName}</div>
+      <div class="finder-file-desc">${file.desc || ''}</div>
     </div>
-  `;
+  `).join('');
+
+  if (window.lucide) lucide.createIcons();
 }
 
-// 入手済みアーカイブ情報描画
-function renderUnlockedHints() {
-  const container = document.getElementById('meta-hints-list');
+// 🗺️ 【順路】タブ描画: 周回連動マップ1枚最大表示 (アスペクト比維持)
+function renderMetaRoute() {
+  const currentLoop = Number(gameState.loop) || 1;
+  const routeData = (window.GAME_DATABASE.metaApp.routeMaps && window.GAME_DATABASE.metaApp.routeMaps[currentLoop]) || {
+    title: `${currentLoop}周目 調査順路マップ`,
+    image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
+    note: "指定の調査エリアを探索せよ。"
+  };
+
+  const titleEl = document.getElementById('meta-route-title');
+  const imgEl = document.getElementById('meta-route-img');
+  const noteEl = document.getElementById('meta-route-note');
+
+  if (titleEl) titleEl.innerText = `🗺️ ${routeData.title}`;
+  if (imgEl) {
+    imgEl.src = routeData.image;
+    imgEl.alt = routeData.title;
+  }
+  if (noteEl) noteEl.innerText = routeData.note;
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// 🔍 フルスクリーン拡大プレビューモーダル開閉
+function openMetaLightbox(imgUrl, title) {
+  const modal = document.getElementById('meta-lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const titleEl = document.getElementById('lightbox-title');
+  if (!modal || !img) return;
+
+  img.src = imgUrl;
+  if (titleEl) titleEl.innerText = title || "プレビュー";
+  modal.style.display = 'flex';
+}
+
+function closeMetaLightbox() {
+  const modal = document.getElementById('meta-lightbox-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// 📦 【調査資料】タブ描画: 2列カードグリッド & 周回別テキスト動的解決 & 保持
+function renderMetaEvidence() {
+  const container = document.getElementById('meta-evidence-grid');
+  const badge = document.getElementById('evidence-count-badge');
   if (!container) return;
 
-  if (gameState.unlockedHints.length === 0) {
-    container.innerHTML = `<p style="color: var(--text-muted); font-size:13px;">探索中にQRコードをスキャンして入手した機密データがここにアーカイブされます。</p>`;
+  const currentLoop = Number(gameState.loop) || 1;
+  const collected = gameState.collectedEvidence || [];
+
+  if (badge) {
+    badge.innerText = `${collected.length}件 記録済み`;
+  }
+
+  if (collected.length === 0) {
+    container.innerHTML = `
+      <div class="evidence-empty-state">
+        <i data-lucide="archive" class="empty-icon"></i>
+        <p>記録された調査資料はありません。<br>右下の「＋」ボタンからQRコードを読み取ってください。</p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
     return;
   }
 
-  container.innerHTML = "";
-  gameState.unlockedHints.forEach(hintId => {
-    const hint = window.GAME_DATABASE.metaApp.qrHints[hintId];
-    if (hint) {
-      const imgHtml = hint.image ? `<img src="${hint.image}" class="archive-hint-img" alt="hint">` : '';
-      container.innerHTML += `
-        <div class="archive-hint-card">
-          ${imgHtml}
-          <div class="archive-hint-content">
-            <span class="archive-hint-category">${hint.category || '調査データ'}</span>
-            <div class="archive-hint-title">${hint.title}</div>
-            <div class="archive-hint-text">${hint.content}</div>
-          </div>
+  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
+  
+  container.innerHTML = collected.map(entry => {
+    const item = allItems.find(it => it.id === entry.id || it.qrKey === entry.id);
+    if (!item) return '';
+
+    // 周回に応じた名称・説明文の解決
+    const itemName = (item.names && item.names[currentLoop]) || (item.names && item.names[1]) || item.id;
+    const itemDesc = (item.shortDescs && item.shortDescs[currentLoop]) || (item.shortDescs && item.shortDescs[1]) || '';
+    const timeStr = entry.collectedTime || "記録済み";
+
+    return `
+      <div class="evidence-card" onclick="openMetaEvidenceDetail('${item.id}', '${entry.collectedTime || ''}', ${entry.collectedLoop || currentLoop})">
+        <img src="${item.image}" class="evidence-card-thumb" alt="${itemName}" loading="lazy">
+        <div class="evidence-card-body">
+          <div class="evidence-card-title">${itemName}</div>
+          <div class="evidence-card-desc">${itemDesc}</div>
+          <div class="evidence-card-time"><i data-lucide="clock" style="width:12px; height:12px;"></i> ${timeStr} 取得</div>
         </div>
-      `;
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// 📦 調査資料 専用QRスキャナーモーダル開閉
+function openMetaEvidenceQrScanner() {
+  const modal = document.getElementById('meta-evidence-qr-modal');
+  const statusEl = document.getElementById('evidence-scanner-status');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+  if (statusEl) statusEl.innerText = "カメラを起動中...";
+
+  startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
+}
+
+function closeMetaEvidenceQrScanner() {
+  const modal = document.getElementById('meta-evidence-qr-modal');
+  if (modal) modal.style.display = 'none';
+  stopAllCameraStreams();
+}
+
+// 📦 調査資料 QRコード読み取り成功ハンドラー
+function handleEvidenceQrDetected(decodedText, statusBox) {
+  if (!decodedText) return;
+  const cleanKey = decodedText.trim();
+
+  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
+  const matched = allItems.find(it => it.qrKey === cleanKey || it.id === cleanKey);
+
+  if (!matched) {
+    if (statusBox) {
+      statusBox.innerText = "⚠️ 該当する調査資料データが見つかりません。";
+      statusBox.className = "scanner-status-msg error";
     }
+    // 少し待って再スキャン待機
+    setTimeout(() => {
+      if (document.getElementById('meta-evidence-qr-modal').style.display === 'flex') {
+        startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
+      }
+    }, 1500);
+    return;
+  }
+
+  // 既に所持しているか確認
+  if (!gameState.collectedEvidence) gameState.collectedEvidence = [];
+  const alreadyHas = gameState.collectedEvidence.some(e => e.id === matched.id);
+
+  const currentLoop = Number(gameState.loop) || 1;
+  const currentClock = getFormattedFakeTime();
+  const itemName = (matched.names && matched.names[currentLoop]) || matched.id;
+
+  if (!alreadyHas) {
+    gameState.collectedEvidence.push({
+      id: matched.id,
+      collectedTime: currentClock,
+      collectedLoop: currentLoop,
+      timestamp: Date.now()
+    });
+    saveStateToStorage();
+    logWriteToGAS("EVIDENCE_COLLECTED", `調査資料取得: ${itemName} (${matched.id})`);
+  }
+
+  // スキャナーを閉じる
+  closeMetaEvidenceQrScanner();
+
+  // 演出トースト表示 ＆ 効果音
+  showEvidenceRecordToast(itemName);
+  playSystemSound("fanfare");
+
+  // 画面再描画
+  renderMetaEvidence();
+}
+
+// 🎉 調査資料 記録完了ポップアップトースト
+function showEvidenceRecordToast(itemName) {
+  const toast = document.getElementById('meta-evidence-toast');
+  const nameEl = document.getElementById('meta-toast-item-name');
+  if (!toast) return;
+
+  if (nameEl) nameEl.innerText = itemName;
+  toast.style.display = 'flex';
+
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 3500);
+}
+
+// 🔍 調査資料 カード詳細モーダル開閉
+function openMetaEvidenceDetail(itemId, timeStr, itemLoop) {
+  const modal = document.getElementById('meta-evidence-detail-modal');
+  const imgEl = document.getElementById('detail-item-img');
+  const titleEl = document.getElementById('detail-item-title');
+  const timeEl = document.getElementById('detail-item-time');
+  const loopEl = document.getElementById('detail-item-loop');
+  const descEl = document.getElementById('detail-item-desc');
+  if (!modal) return;
+
+  const currentLoop = Number(gameState.loop) || 1;
+  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
+  const item = allItems.find(it => it.id === itemId);
+  if (!item) return;
+
+  const name = (item.names && item.names[currentLoop]) || (item.names && item.names[1]) || item.id;
+  const desc = (item.detailDescs && item.detailDescs[currentLoop]) || (item.detailDescs && item.detailDescs[1]) || '';
+
+  if (imgEl) imgEl.src = item.image;
+  if (titleEl) titleEl.innerText = name;
+  if (timeEl) timeEl.innerText = `🕒 ${timeStr || getFormattedFakeTime()} 取得`;
+  if (loopEl) loopEl.innerText = `周回 ${itemLoop || currentLoop}`;
+  if (descEl) descEl.innerText = desc;
+
+  modal.style.display = 'flex';
+}
+
+function closeMetaEvidenceDetail() {
+  const modal = document.getElementById('meta-evidence-detail-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ==========================================================================
+// 📝 【メモ】タブ ロジック: タブ増設 & テキスト/手書きCanvasデュアルモード & 永続保存
+// ==========================================================================
+let canvasDrawing = false;
+let canvasColor = "#1e293b";
+let canvasLineWidth = 2;
+let canvasIsEraser = false;
+let memoCanvasInitialized = false;
+
+// メモ帳初期化 (起動時およびタブ表示時)
+function initMetaMemo() {
+  if (!gameState.memoTabs || !Array.isArray(gameState.memoTabs) || gameState.memoTabs.length === 0) {
+    gameState.memoTabs = [{ title: "メモ 1", text: "", drawData: null }];
+  }
+  if (gameState.activeMemoTabIndex === undefined || gameState.activeMemoTabIndex >= gameState.memoTabs.length) {
+    gameState.activeMemoTabIndex = 0;
+  }
+
+  renderMemoTabs();
+  loadActiveMemoContent();
+  setupMemoEventListeners();
+}
+
+// タブ一覧描画
+function renderMemoTabs() {
+  const bar = document.getElementById('memo-tabs-bar');
+  if (!bar) return;
+
+  const tabsHtml = (gameState.memoTabs || []).map((tab, idx) => {
+    const isActive = idx === gameState.activeMemoTabIndex;
+    const canDelete = gameState.memoTabs.length > 1;
+    const delBtnHtml = canDelete ? `<button class="memo-tab-del-btn" onclick="deleteMemoTab(${idx}, event)" title="このメモを削除">✕</button>` : '';
+
+    return `
+      <div class="memo-tab-item ${isActive ? 'active' : ''}" onclick="selectMemoTab(${idx})">
+        <span>${tab.title || `メモ ${idx + 1}`}</span>
+        ${delBtnHtml}
+      </div>
+    `;
+  }).join('');
+
+  bar.innerHTML = `
+    ${tabsHtml}
+    <button class="memo-add-tab-btn" onclick="addNewMemoTab()" title="新しいメモページを追加">
+      <i data-lucide="plus"></i>
+    </button>
+  `;
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// タブ選択
+function selectMemoTab(index) {
+  // 現在のタブの内容を保存
+  saveCurrentMemoTabContent();
+
+  gameState.activeMemoTabIndex = index;
+  renderMemoTabs();
+  loadActiveMemoContent();
+}
+
+// 新規タブ追加
+function addNewMemoTab() {
+  saveCurrentMemoTabContent();
+
+  const newIndex = (gameState.memoTabs || []).length + 1;
+  gameState.memoTabs.push({
+    title: `メモ ${newIndex}`,
+    text: "",
+    drawData: null
+  });
+  gameState.activeMemoTabIndex = gameState.memoTabs.length - 1;
+
+  saveStateToStorage();
+  renderMemoTabs();
+  loadActiveMemoContent();
+}
+
+// タブ削除
+function deleteMemoTab(index, event) {
+  if (event) event.stopPropagation();
+  if (gameState.memoTabs.length <= 1) return;
+
+  if (confirm(`「${gameState.memoTabs[index].title}」を削除しますか？`)) {
+    gameState.memoTabs.splice(index, 1);
+    if (gameState.activeMemoTabIndex >= gameState.memoTabs.length) {
+      gameState.activeMemoTabIndex = gameState.memoTabs.length - 1;
+    }
+    saveStateToStorage();
+    renderMemoTabs();
+    loadActiveMemoContent();
+  }
+}
+
+// 現在のアクティブタブの内容を画面にロード
+function loadActiveMemoContent() {
+  const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex] || { text: "", drawData: null };
+  
+  // テキストエリア更新
+  const textarea = document.getElementById('meta-memo-textarea');
+  if (textarea) {
+    textarea.value = activeTab.text || "";
+  }
+
+  // 手書きCanvas復元
+  restoreCanvasImage(activeTab.drawData);
+}
+
+// 現在のアクティブタブの内容を保存
+function saveCurrentMemoTabContent() {
+  const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex];
+  if (!activeTab) return;
+
+  const textarea = document.getElementById('meta-memo-textarea');
+  if (textarea) {
+    activeTab.text = textarea.value;
+  }
+
+  const canvas = document.getElementById('memo-canvas');
+  if (canvas && memoCanvasInitialized) {
+    try {
+      activeTab.drawData = canvas.toDataURL();
+    } catch (e) {}
+  }
+
+  saveStateToStorage();
+}
+
+// メモモード切り替え (text / draw)
+function setMemoMode(mode) {
+  gameState.memoMode = mode;
+  const textBtn = document.getElementById('memo-mode-text-btn');
+  const drawBtn = document.getElementById('memo-mode-draw-btn');
+  const textView = document.getElementById('memo-text-view');
+  const drawView = document.getElementById('memo-draw-view');
+
+  if (mode === 'text') {
+    if (textBtn) textBtn.classList.add('active');
+    if (drawBtn) drawBtn.classList.remove('active');
+    if (textView) textView.style.display = 'block';
+    if (drawView) drawView.style.display = 'none';
+  } else {
+    if (textBtn) textBtn.classList.remove('active');
+    if (drawBtn) drawBtn.classList.add('active');
+    if (textView) textView.style.display = 'none';
+    if (drawView) drawView.style.display = 'block';
+
+    // Canvasの初期化とサイズ調整
+    setTimeout(() => {
+      initMemoCanvas();
+    }, 50);
+  }
+}
+
+// イベントリスナー設定
+function setupMemoEventListeners() {
+  const textarea = document.getElementById('meta-memo-textarea');
+  if (textarea && !textarea._memoBound) {
+    textarea._memoBound = true;
+    textarea.addEventListener('input', () => {
+      const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex];
+      if (activeTab) {
+        activeTab.text = textarea.value;
+        saveStateToStorage();
+      }
+    });
+  }
+}
+
+// --- ✏️ Canvas手書き描画エンジン ---
+function initMemoCanvas() {
+  const canvas = document.getElementById('memo-canvas');
+  const wrapper = document.getElementById('memo-canvas-wrapper');
+  if (!canvas || !wrapper) return;
+
+  const rect = wrapper.getBoundingClientRect();
+  if (rect.width > 0 && rect.height > 0) {
+    // 既存の画像データを一時退避
+    let prevData = null;
+    if (memoCanvasInitialized) {
+      try { prevData = canvas.toDataURL(); } catch (e) {}
+    } else {
+      const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex];
+      if (activeTab && activeTab.drawData) prevData = activeTab.drawData;
+    }
+
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (prevData) {
+      restoreCanvasImage(prevData);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  if (!canvas._drawBound) {
+    canvas._drawBound = true;
+
+    function getCoords(e) {
+      const b = canvas.getBoundingClientRect();
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX - b.left, y: e.touches[0].clientY - b.top };
+      }
+      return { x: e.clientX - b.left, y: e.clientY - b.top };
+    }
+
+    function startDraw(e) {
+      e.preventDefault();
+      canvasDrawing = true;
+      const ctx = canvas.getContext('2d');
+      const p = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.strokeStyle = canvasIsEraser ? '#ffffff' : canvasColor;
+      ctx.lineWidth = canvasIsEraser ? canvasLineWidth * 3 : canvasLineWidth;
+    }
+
+    function draw(e) {
+      if (!canvasDrawing) return;
+      e.preventDefault();
+      const ctx = canvas.getContext('2d');
+      const p = getCoords(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    function stopDraw(e) {
+      if (!canvasDrawing) return;
+      canvasDrawing = false;
+      saveCurrentMemoTabContent();
+    }
+
+    // マウスイベント
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDraw);
+
+    // タッチイベント (iPad Safari)
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw, { passive: false });
+  }
+
+  memoCanvasInitialized = true;
+}
+
+function restoreCanvasImage(dataUrl) {
+  const canvas = document.getElementById('memo-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!dataUrl) return;
+
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0);
+  };
+  img.src = dataUrl;
+}
+
+function setCanvasColor(color) {
+  canvasColor = color;
+  canvasIsEraser = false;
+  document.querySelectorAll('.canvas-color-dot').forEach(dot => {
+    dot.classList.toggle('active', dot.style.background.includes(color) || dot.getAttribute('onclick').includes(color));
+  });
+  const eraserBtn = document.getElementById('canvas-eraser-btn');
+  if (eraserBtn) eraserBtn.classList.remove('active');
+}
+
+function setCanvasLineWidth(width) {
+  canvasLineWidth = width;
+  document.querySelectorAll('.canvas-size-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(String(width)));
   });
 }
 
-// インラインQRスキャナートグル
-let metaQrActive = false;
+function toggleCanvasEraser() {
+  canvasIsEraser = !canvasIsEraser;
+  const eraserBtn = document.getElementById('canvas-eraser-btn');
+  if (eraserBtn) eraserBtn.classList.toggle('active', canvasIsEraser);
+}
 
-function toggleMetaQrScanner() {
-  const scannerBox = document.getElementById('meta-qr-inline-scanner');
-  if (!scannerBox) return;
-
-  metaQrActive = !metaQrActive;
-  if (metaQrActive) {
-    scannerBox.style.display = 'block';
-    startQrScanner('meta-video', 'meta-canvas', handleMetaQrScan);
-  } else {
-    scannerBox.style.display = 'none';
-    stopAllCameraStreams();
+function clearCurrentCanvas() {
+  if (confirm("このページの手書き内容をすべて消去しますか？")) {
+    const canvas = document.getElementById('memo-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveCurrentMemoTabContent();
+    }
   }
 }
 
@@ -1573,9 +2041,35 @@ function openLinkChat(contactId) {
   filteredMessages.forEach(msg => {
     const isMe = msg.sender === "me" || msg.sender === "yada";
     const bubbleClass = isMe ? "outgoing" : "incoming";
+    
+    // URLの自動リンク化
+    let formattedText = msg.text || '';
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    formattedText = formattedText.replace(urlRegex, (url) => {
+      return `<a href="javascript:void(0)" onclick="openLinkInAppForm()" style="color:#0284c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
+    });
+    formattedText = formattedText.replace(/\n/g, '<br>');
+
+    // LINE風 OGPカードHTML
+    let ogpHtml = '';
+    if (msg.ogpCard) {
+      const ogp = msg.ogpCard;
+      ogpHtml = `
+        <div class="line-ogp-card" onclick="openLinkInAppForm('${ogp.formId || ''}')">
+          <img src="${ogp.image}" class="line-ogp-thumb" alt="${ogp.title}" loading="lazy">
+          <div class="line-ogp-body">
+            <div class="line-ogp-title">${ogp.title}</div>
+            <div class="line-ogp-desc">${ogp.desc}</div>
+            <div class="line-ogp-url"><i data-lucide="globe" style="width:10px; height:10px;"></i> docs.google.com</div>
+          </div>
+        </div>
+      `;
+    }
+
     messageArea.innerHTML += `
       <div class="message-bubble ${bubbleClass}">
-        ${msg.text}
+        ${formattedText}
+        ${ogpHtml}
         <span class="message-time">${msg.time}</span>
       </div>
     `;
@@ -1586,6 +2080,7 @@ function openLinkChat(contactId) {
     messageArea.innerHTML += `<div class="link-welcome-msg" style="color:var(--system-red); font-size:11px; margin-top:8px; text-align:center;">⚠️ 警告：接続中の相手はシステム保安局により物理的に排除された可能性があります。</div>`;
   }
 
+  if (window.lucide) lucide.createIcons();
   messageArea.scrollTop = messageArea.scrollHeight;
   logWriteToGAS("LINK_CHAT_OPEN", `LINKトークを開きました: ${contactId}`);
 }
@@ -1646,99 +2141,213 @@ function sendCustomLinkMessage() {
   logWriteToGAS("LINK_SEND_ATTEMPT", `メッセージ送信試行 (${gameState.activeChatContact}): ${text}`);
 }
 
-// --- LINK専用 QRコード友達追加 ---
-function openLinkQr() {
-  const modal = document.getElementById('link-qr-modal');
+// ==========================================================================
+// 🟢 LINK専用 LINE風 友だち追加 QRスキャナー (常時エラー仕様)
+// ==========================================================================
+function openLinkAddFriendScanner() {
+  const modal = document.getElementById('link-qr-scanner-modal');
+  const errorEl = document.getElementById('link-scanner-error');
   if (!modal) return;
-  modal.style.display = 'flex';
-  
-  const resultBox = document.getElementById('link-qr-result');
-  if (resultBox) {
-    resultBox.innerText = "カメラを起動しています...";
-    resultBox.className = "qr-result-box";
-  }
 
-  startQrScanner('link-video', 'link-canvas', handleLinkQrScan, 'link-qr-result');
+  if (errorEl) errorEl.style.display = 'none';
+  modal.style.display = 'flex';
+
+  startQrScanner('link-scanner-video', 'link-scanner-canvas', handleLinkAddFriendQrScanned);
   if (typeof lucide !== 'undefined') lucide.createIcons();
-  logWriteToGAS("LINK_QR_MODAL_OPEN", "LINK友達追加QRリーダーを起動しました。");
+  logWriteToGAS("LINK_QR_SCANNER_OPEN", "LINE風 友だち追加スキャナーを起動しました。");
 }
 
-function closeLinkQr() {
-  const modal = document.getElementById('link-qr-modal');
+function closeLinkAddFriendScanner() {
+  const modal = document.getElementById('link-qr-scanner-modal');
   if (modal) modal.style.display = 'none';
   stopAllCameraStreams();
 }
 
-function handleLinkQrScan(data, resultBox) {
-  const cleanData = (data || '').trim();
-  const friendMap = window.GAME_DATABASE.linkApp.addFriendQr || {};
-  const friend = friendMap[cleanData];
-
-  if (friend) {
-    // 友達リストに追加
-    if (!gameState.addedFriends.includes(friend.id)) {
-      gameState.addedFriends.push(friend.id);
-      saveStateToStorage();
-    }
-
-    if (resultBox) {
-      resultBox.innerText = `✅ ${friend.name} を友達に追加しました！`;
-      resultBox.className = "qr-result-box success";
-    }
-
-    showPushNotification("LINK", `${friend.name} を友達に追加しました`, "user-plus");
-    playSystemSound("fanfare");
-    logWriteToGAS("LINK_FRIEND_ADDED", `LINK友達追加成功: ${friend.name} (${cleanData})`);
-
-    // 1秒後にモーダルを閉じてトーク画面を自動オープン
-    setTimeout(() => {
-      closeLinkQr();
-      renderLinkChatList();
-      openLinkChat(friend.id);
-    }, 1100);
-  } else {
-    // 未知のコード
-    if (resultBox) {
-      resultBox.innerText = `⚠️ 未登録のQRコードです: ${cleanData}`;
-      resultBox.className = "qr-result-box error";
-    }
-    playSystemSound("error");
-    logWriteToGAS("LINK_QR_UNKNOWN", `LINK未登録QRコードスキャン: ${cleanData}`);
+// ★ 何を読み取っても常時エラーで読み取れない演出
+function handleLinkAddFriendQrScanned(decodedText) {
+  console.log("LINK QR Scanned (Always Error):", decodedText);
+  const errorEl = document.getElementById('link-scanner-error');
+  if (errorEl) {
+    errorEl.style.display = 'flex';
   }
-}
+  playSystemSound("error");
 
-function handleManualLinkQr() {
-  const input = document.getElementById('link-manual-qr-input');
-  if (!input) return;
-  const val = input.value.trim();
-  if (!val) return;
-  
-  const resultBox = document.getElementById('link-qr-result');
-  handleLinkQrScan(val, resultBox);
-  input.value = "";
-}
-
-function simulateQrScan(qrCode) {
-  const resultBox = document.getElementById('link-qr-result');
-  handleLinkQrScan(qrCode, resultBox);
+  // 2秒後にエラーを消して再スキャン可能に
+  setTimeout(() => {
+    if (errorEl) errorEl.style.display = 'none';
+    if (document.getElementById('link-qr-scanner-modal').style.display === 'flex') {
+      startQrScanner('link-scanner-video', 'link-scanner-canvas', handleLinkAddFriendQrScanned);
+    }
+  }, 2200);
 }
 
 // ==========================================================================
-// ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング）
+// 🟢 LINK専用 LINE風 マイQRコード表示モーダル
+// ==========================================================================
+function openLinkMyQrModal() {
+  closeLinkAddFriendScanner();
+  const modal = document.getElementById('link-my-qr-modal');
+  if (!modal) return;
+
+  const myQrData = window.GAME_DATABASE.linkApp.myQr || {};
+  const nameEl = document.getElementById('link-myqr-name');
+  const imgEl = document.getElementById('link-myqr-img');
+
+  if (nameEl && myQrData.teamName) nameEl.innerText = myQrData.teamName;
+  if (imgEl && myQrData.qrImage) imgEl.src = myQrData.qrImage;
+
+  modal.style.display = 'flex';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeLinkMyQrModal() {
+  const modal = document.getElementById('link-my-qr-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function copyLinkMyQrUrl() {
+  const myQrData = window.GAME_DATABASE.linkApp.myQr || {};
+  const url = myQrData.copyLinkUrl || "https://link.line.me/cit_student_council_2126";
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url);
+  }
+  showPushNotification("リンクコピー", "マイQRコードの招待リンクをコピーしました", "check-circle");
+  playSystemSound("success");
+}
+
+function refreshLinkMyQr() {
+  const imgEl = document.getElementById('link-myqr-img');
+  if (imgEl) {
+    imgEl.style.opacity = '0.3';
+    setTimeout(() => {
+      imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT_REFRESH_${Date.now()}`;
+      imgEl.style.opacity = '1';
+      showPushNotification("マイQRコード", "QRコードを新しく更新しました", "refresh-cw");
+    }, 400);
+  }
+}
+
+// ==========================================================================
+// 📱 LINK専用 LINE風 アプリ内フォームオーバーレイ
+// ==========================================================================
+function openLinkInAppForm(formId) {
+  const overlay = document.getElementById('link-inapp-form-overlay');
+  const bodyEl = document.getElementById('link-inapp-form-body');
+  if (!overlay || !bodyEl) {
+    openHackingForm();
+    return;
+  }
+
+  // フォームコンテンツの生成
+  const formData = (window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.form) || {
+    title: "2126年 メンタルヘルス・スキャン",
+    description: "学友会執行委員会 内部保管データ申請フォーム"
+  };
+
+  bodyEl.innerHTML = `
+    <div class="gform-container" style="max-width:680px; margin:0 auto; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+      <div class="gform-header" style="position:relative;">
+        <div class="gform-header-bar"></div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h1 style="font-size:22px; font-weight:700; color:#1e293b; margin:0 0 8px;">${formData.title}</h1>
+            <p style="font-size:13px; color:#64748b; margin:0;">${formData.description}</p>
+          </div>
+          <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="edit-3" style="width:14px; height:14px;"></i> ✏️ フォームを編集
+          </button>
+        </div>
+      </div>
+      <div class="gform-card">
+        <label class="gform-label">申請者氏名 <span class="req">*</span></label>
+        <input type="text" class="gform-input" id="inapp-form-name" placeholder="氏名を入力してください">
+      </div>
+      <div class="gform-card">
+        <label class="gform-label">所属・学籍番号 <span class="req">*</span></label>
+        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="例: 学友会執行委員会 3年">
+      </div>
+      <div class="gform-card">
+        <label class="gform-label">申請理由・目的 <span class="req">*</span></label>
+        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="閲覧・取得の目的を入力してください"></textarea>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:0 4px;">
+        <button class="btn btn-primary" onclick="submitInAppForm()" style="padding:10px 28px; font-size:14px; background:#7c3aed; border-color:#7c3aed;">送信</button>
+        <span style="font-size:11px; color:#94a3b8;">Google フォームでパスワードを送信しないでください。</span>
+      </div>
+    </div>
+  `;
+
+  overlay.style.display = 'flex';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  logWriteToGAS("LINK_INAPP_FORM_OPEN", "LINE風アプリ内オーバーレイでフォームを開きました。");
+}
+
+function closeLinkInAppForm() {
+  const overlay = document.getElementById('link-inapp-form-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function refreshLinkInAppForm() {
+  openLinkInAppForm();
+  showPushNotification("更新", "フォームを再読み込みしました", "rotate-cw");
+}
+
+function submitInAppForm() {
+  const nameEl = document.getElementById('inapp-form-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) {
+    alert("必須項目（申請者氏名）を入力してください。");
+    return;
+  }
+
+  showPushNotification("送信完了", "回答を記録しました。", "check-circle");
+  playSystemSound("success");
+  closeLinkInAppForm();
+}
+
+// ==========================================================================
+// ④ 偽Googleフォーム & 編集画面 & 偽スプレッドシート（ハッキング）
 // ==========================================================================
 function openHackingForm() {
   const modal = document.getElementById('hacking-modal');
   if (!modal) return;
   modal.style.display = 'flex';
   document.getElementById('gform-view').style.display = 'block';
+  document.getElementById('gform-editor-view').style.display = 'none';
   document.getElementById('gsheet-view').style.display = 'none';
   
   const form = window.GAME_DATABASE.hacking.form;
-  document.getElementById('gform-title').innerText = form.title;
-  document.getElementById('gform-desc').innerText = form.description;
+  const titleEl = document.getElementById('gform-title');
+  const descEl = document.getElementById('gform-desc');
+  if (titleEl) titleEl.innerText = form.title;
+  if (descEl) descEl.innerText = form.description;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
   logWriteToGAS("HACKING_FORM_OPEN", "2126年メンタルヘルス・スキャンを表示しました。");
+}
+
+// 🟣 Googleフォーム公式風 編集画面を開く
+function openHackingEditor() {
+  const modal = document.getElementById('hacking-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.getElementById('gform-view').style.display = 'none';
+  document.getElementById('gform-editor-view').style.display = 'block';
+  document.getElementById('gsheet-view').style.display = 'none';
+
+  switchEditorTab('questions');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  logWriteToGAS("HACKING_EDITOR_OPEN", "Googleフォーム編集画面（質問/回答）を開きました。");
+}
+
+function switchEditorTab(tabId) {
+  ['questions', 'responses', 'settings'].forEach(t => {
+    const btn = document.getElementById(`editor-tab-${t}-btn`);
+    const panel = document.getElementById(`editor-panel-${t}`);
+    if (btn) btn.classList.toggle('active', t === tabId);
+    if (panel) panel.style.display = (t === tabId) ? 'flex' : 'none';
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function submitGForm() {
@@ -1749,6 +2358,7 @@ function submitGForm() {
 function openGSpreadsheet(e) {
   if (e) e.preventDefault();
   document.getElementById('gform-view').style.display = 'none';
+  document.getElementById('gform-editor-view').style.display = 'none';
   document.getElementById('gsheet-view').style.display = 'flex';
 
   if (!gameState.activeGSheetTab) {
@@ -1834,6 +2444,9 @@ function handleCellEdit(cellEl, tab, rIdx, cIdx) {
   const ss = window.GAME_DATABASE.hacking.spreadsheet;
   if (ss && ss.rows && ss.rows[tab] && ss.rows[tab][rIdx]) {
     ss.rows[tab][rIdx][cIdx] = cellEl.innerText;
+    try {
+      localStorage.setItem('game_custom_gsheet_rows', JSON.stringify(ss.rows));
+    } catch (e) {}
   }
 }
 
