@@ -375,6 +375,44 @@
       border-color: var(--primary);
       background: #eff6ff;
     }
+
+    /* 画像アップロードコントロール */
+    .img-upload-field-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 4px;
+      background: #ffffff;
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .img-upload-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      background: #f8fafc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .img-upload-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .img-upload-inputs {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -681,11 +719,22 @@
                 <textarea rows="2" onchange="updateNewsField(${loop}, ${idx}, 'desc', this.value)">${item.desc}</textarea>
               </div>
               <div class="form-row">
-                <div class="form-group">
-                  <label>画像URL</label>
-                  <input type="text" value="${item.image || ''}" onchange="updateNewsField(${loop}, ${idx}, 'image', this.value)">
+                <div class="form-group" style="flex:2;">
+                  <label>記事画像（URLまたはPCからファイル選択）</label>
+                  <div class="img-upload-field-group">
+                    <div class="img-upload-thumb">
+                      <img src="${item.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300'}" id="news-thumb-${loop}-${idx}">
+                    </div>
+                    <div class="img-upload-inputs">
+                      <input type="text" value="${item.image || ''}" id="news-img-input-${loop}-${idx}" onchange="updateNewsField(${loop}, ${idx}, 'image', this.value); document.getElementById('news-thumb-${loop}-${idx}').src = this.value;">
+                      <label class="btn btn-outline" style="padding:6px 10px; font-size:12px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px; margin:0;">
+                        <i data-lucide="upload"></i> ファイル選択
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageFileUpload(event, (b64) => { updateNewsField(${loop}, ${idx}, 'image', b64); document.getElementById('news-img-input-${loop}-${idx}').value = b64; document.getElementById('news-thumb-${loop}-${idx}').src = b64; })">
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex:1;">
                   <label>リンク先ページID</label>
                   <input type="text" value="${item.target || ''}" onchange="updateNewsField(${loop}, ${idx}, 'target', this.value)">
                 </div>
@@ -785,6 +834,19 @@
       renderLinkEditor();
     }
 
+    // 📁 画像ファイルアップロード共通ハンドラ (Base64高速変換)
+    function handleImageFileUpload(event, callback) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Url = e.target.result;
+        callback(base64Url);
+      };
+      reader.readAsDataURL(file);
+    }
+
     // ④ メタ情報エディタ (概要・順路・調査資料)
     function renderMetaEditor() {
       // 1. 概要ファイル一覧
@@ -806,15 +868,24 @@
                     <input type="number" min="1" max="3" value="${f.unlockLoop || 1}" onchange="workingDb.metaApp.overviewFiles[${idx}].unlockLoop = parseInt(this.value)">
                   </div>
                 </div>
-                <div class="form-row" style="margin-top:8px;">
-                  <div>
-                    <label>画像URL</label>
-                    <input type="text" value="${f.image}" onchange="workingDb.metaApp.overviewFiles[${idx}].image = this.value">
+                <div class="form-group" style="margin-top:8px;">
+                  <label>画像（URL入力またはPCからファイル選択）</label>
+                  <div class="img-upload-field-group">
+                    <div class="img-upload-thumb">
+                      <img src="${f.image || 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=300'}" id="overview-thumb-${idx}">
+                    </div>
+                    <div class="img-upload-inputs">
+                      <input type="text" value="${f.image}" id="overview-img-input-${idx}" onchange="workingDb.metaApp.overviewFiles[${idx}].image = this.value; document.getElementById('overview-thumb-${idx}').src = this.value;">
+                      <label class="btn btn-outline" style="padding:6px 10px; font-size:12px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px; margin:0;">
+                        <i data-lucide="upload"></i> ファイル選択
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageFileUpload(event, (b64) => { workingDb.metaApp.overviewFiles[${idx}].image = b64; document.getElementById('overview-img-input-${idx}').value = b64; document.getElementById('overview-thumb-${idx}').src = b64; })">
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label>説明文 (ツールチップ)</label>
-                    <input type="text" value="${f.desc || ''}" onchange="workingDb.metaApp.overviewFiles[${idx}].desc = this.value">
-                  </div>
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                  <label>説明文 (ツールチップ)</label>
+                  <input type="text" value="${f.desc || ''}" onchange="workingDb.metaApp.overviewFiles[${idx}].desc = this.value">
                 </div>
                 <div style="margin-top:8px; text-align:right;">
                   <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteOverviewFile(${idx})"><i data-lucide="trash-2"></i> 削除</button>
@@ -837,10 +908,21 @@
               <div class="chat-msg-body">
                 <div style="font-weight:800; font-size:13px; margin-bottom:8px; color:var(--primary);">🗺️ 周回 ${loopNum} 用マップ設定</div>
                 <div class="form-group">
-                  <label>マップ画像URL</label>
-                  <input type="text" value="${r.image}" onchange="if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].image = this.value">
+                  <label>マップ画像（URL入力またはPCからファイル選択）</label>
+                  <div class="img-upload-field-group">
+                    <div class="img-upload-thumb">
+                      <img src="${r.image || 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=300'}" id="route-thumb-${loopNum}">
+                    </div>
+                    <div class="img-upload-inputs">
+                      <input type="text" value="${r.image}" id="route-img-input-${loopNum}" onchange="if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].image = this.value; document.getElementById('route-thumb-${loopNum}').src = this.value;">
+                      <label class="btn btn-outline" style="padding:6px 10px; font-size:12px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px; margin:0;">
+                        <i data-lucide="upload"></i> ファイル選択
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageFileUpload(event, (b64) => { if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].image = b64; document.getElementById('route-img-input-${loopNum}').value = b64; document.getElementById('route-thumb-${loopNum}').src = b64; })">
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-top:8px;">
                   <label>調査指示・メモテキスト</label>
                   <textarea rows="2" onchange="if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].note = this.value">${r.note || ''}</textarea>
                 </div>
@@ -865,18 +947,23 @@
                     <input type="text" value="${item.qrKey || item.id}" onchange="workingDb.metaApp.evidenceItems[${idx}].qrKey = this.value">
                   </div>
                   <div>
-                    <label>画像URL</label>
-                    <input type="text" value="${item.image}" onchange="workingDb.metaApp.evidenceItems[${idx}].image = this.value">
+                    <label>アイテム名</label>
+                    <input type="text" value="${item.names ? (item.names[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].names) workingDb.metaApp.evidenceItems[${idx}].names={}; workingDb.metaApp.evidenceItems[${idx}].names[1] = this.value; workingDb.metaApp.evidenceItems[${idx}].names[2] = this.value; workingDb.metaApp.evidenceItems[${idx}].names[3] = this.value;">
                   </div>
                 </div>
-                <div class="form-row" style="margin-top:8px;">
-                  <div>
-                    <label>アイテム名 (1周目)</label>
-                    <input type="text" value="${item.names ? (item.names[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].names) workingDb.metaApp.evidenceItems[${idx}].names={}; workingDb.metaApp.evidenceItems[${idx}].names[1] = this.value">
-                  </div>
-                  <div>
-                    <label>アイテム名 (2周目以降)</label>
-                    <input type="text" value="${item.names ? (item.names[2] || item.names[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].names) workingDb.metaApp.evidenceItems[${idx}].names={}; workingDb.metaApp.evidenceItems[${idx}].names[2] = this.value; workingDb.metaApp.evidenceItems[${idx}].names[3] = this.value;">
+                <div class="form-group" style="margin-top:8px;">
+                  <label>資料画像（URL入力またはPCからファイル選択）</label>
+                  <div class="img-upload-field-group">
+                    <div class="img-upload-thumb">
+                      <img src="${item.image || 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=300'}" id="evidence-thumb-${idx}">
+                    </div>
+                    <div class="img-upload-inputs">
+                      <input type="text" value="${item.image}" id="evidence-img-input-${idx}" onchange="workingDb.metaApp.evidenceItems[${idx}].image = this.value; document.getElementById('evidence-thumb-${idx}').src = this.value;">
+                      <label class="btn btn-outline" style="padding:6px 10px; font-size:12px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px; margin:0;">
+                        <i data-lucide="upload"></i> ファイル選択
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageFileUpload(event, (b64) => { workingDb.metaApp.evidenceItems[${idx}].image = b64; document.getElementById('evidence-img-input-${idx}').value = b64; document.getElementById('evidence-thumb-${idx}').src = b64; })">
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group" style="margin-top:8px;">
