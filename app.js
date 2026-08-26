@@ -2769,7 +2769,7 @@ function makePhoneCall() {
   const overlay = document.getElementById('phone-calling-overlay');
   document.getElementById('phone-calling-number').innerText = dialNum;
   document.getElementById('phone-calling-status').innerText = "発信中...";
-  document.getElementById('phone-audio-subtitles').innerText = "プルルル…… プルルル……";
+  document.getElementById('phone-audio-subtitles').innerText = "プー…… プー……";
   overlay.style.display = 'flex';
 
   playSystemSound("ringback");
@@ -3064,36 +3064,24 @@ function playSystemSound(type) {
       });
 
     } else if (type === "ringback") {
-      // 📞 日本の電話呼出音（400Hz + 16Hz 振幅変調「プルルルルル……」）
+      // 📞 電話呼出音「プーーー……」（澄んだ400Hz発信音）
       const dur = 1.0;
-      const carrier = ctx.createOscillator();
-      const mod = ctx.createOscillator();
-      const modGain = ctx.createGain();
-      const masterGain = ctx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-      carrier.type = "sine";
-      carrier.frequency.setValueAtTime(400, now);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(400, now);
 
-      mod.type = "sine";
-      mod.frequency.setValueAtTime(16, now); // 16Hz 変調
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.65, now + 0.02);
+      gain.gain.setValueAtTime(0.65, now + dur - 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
-      // 振幅変調器
-      modGain.gain.setValueAtTime(0.5, now);
-      mod.connect(modGain.gain);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-      // マスター音量エンベロープ
-      masterGain.gain.setValueAtTime(0.01, now);
-      masterGain.gain.linearRampToValueAtTime(0.65, now + 0.03);
-      masterGain.gain.setValueAtTime(0.65, now + dur - 0.04);
-      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-      carrier.connect(masterGain);
-      masterGain.connect(ctx.destination);
-
-      carrier.start(now);
-      mod.start(now);
-      carrier.stop(now + dur + 0.02);
-      mod.stop(now + dur + 0.02);
+      osc.start(now);
+      osc.stop(now + dur + 0.01);
 
     } else if (type === "success" || type === "notif") {
       // 🔔 Apple純正ライクな美しい2和音通知サウンド（ハッキリ心地よいチャイム）
