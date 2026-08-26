@@ -482,22 +482,32 @@
         </div>
       </div>
 
-      <!-- ④ メタ情報 ＆ あらすじ -->
+      <!-- ④ メタ情報 ＆ あらすじ (概要・順路・調査資料) -->
       <div class="editor-section" id="sec-meta">
         <div class="editor-card">
           <div class="editor-card-header">
-            <div class="editor-card-title"><i data-lucide="archive" style="color:var(--primary);"></i> メタアプリ「26__0094」あらすじ・QR機密データ</div>
+            <div class="editor-card-title"><i data-lucide="folder" style="color:var(--primary);"></i> ① 概要タブ：ファイル一覧 (overviewFiles)</div>
+            <button class="btn btn-primary" onclick="addOverviewFileTemplate()"><i data-lucide="plus"></i> ファイル追加</button>
           </div>
-          
-          <div class="form-group">
-            <label>基本探索ルール説明文</label>
-            <textarea id="meta-rules-input" rows="3"></textarea>
-          </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">概要タブ（エクスプローラー風一覧）に並ぶ画像ファイル名と説明文です。</p>
+          <div id="meta-overview-editor-container"></div>
+        </div>
 
-          <div class="form-group">
-            <label>QRスキャン入手ヒント定義 (JSON)</label>
-            <textarea id="meta-hints-json-input" rows="6" style="font-family:monospace; font-size:12px;"></textarea>
+        <div class="editor-card" style="margin-top:16px;">
+          <div class="editor-card-header">
+            <div class="editor-card-title"><i data-lucide="map" style="color:var(--primary);"></i> ② 順路タブ：調査順路マップ (routeMaps)</div>
           </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">周回ごとに切り替わる順路マップの画像URLと指示テキストです。</p>
+          <div id="meta-route-editor-container"></div>
+        </div>
+
+        <div class="editor-card" style="margin-top:16px;">
+          <div class="editor-card-header">
+            <div class="editor-card-title"><i data-lucide="archive" style="color:var(--primary);"></i> ③ 調査資料タブ：アイテム一覧 (evidenceItems)</div>
+            <button class="btn btn-primary" onclick="addEvidenceItemTemplate()"><i data-lucide="plus"></i> アイテム追加</button>
+          </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">QRスキャンや探索で入手するカード資料の名称・画像・説明文です。</p>
+          <div id="meta-evidence-editor-container"></div>
         </div>
       </div>
 
@@ -775,12 +785,154 @@
       renderLinkEditor();
     }
 
-    // ④ メタ情報エディタ
+    // ④ メタ情報エディタ (概要・順路・調査資料)
     function renderMetaEditor() {
-      const rulesEl = document.getElementById('meta-rules-input');
-      const hintsEl = document.getElementById('meta-hints-json-input');
-      if (rulesEl) rulesEl.value = workingDb.metaApp.rules || "";
-      if (hintsEl) hintsEl.value = JSON.stringify(workingDb.metaApp.qrHints, null, 2);
+      // 1. 概要ファイル一覧
+      const overviewContainer = document.getElementById('meta-overview-editor-container');
+      if (overviewContainer) {
+        overviewContainer.innerHTML = "";
+        const files = workingDb.metaApp.overviewFiles || [];
+        files.forEach((f, idx) => {
+          overviewContainer.innerHTML += `
+            <div class="chat-msg-item">
+              <div class="chat-msg-body">
+                <div class="form-row">
+                  <div>
+                    <label>ファイル名 (拡張子含む)</label>
+                    <input type="text" value="${f.fileName}" onchange="workingDb.metaApp.overviewFiles[${idx}].fileName = this.value">
+                  </div>
+                  <div>
+                    <label>解放周回 (1, 2, 3)</label>
+                    <input type="number" min="1" max="3" value="${f.unlockLoop || 1}" onchange="workingDb.metaApp.overviewFiles[${idx}].unlockLoop = parseInt(this.value)">
+                  </div>
+                </div>
+                <div class="form-row" style="margin-top:8px;">
+                  <div>
+                    <label>画像URL</label>
+                    <input type="text" value="${f.image}" onchange="workingDb.metaApp.overviewFiles[${idx}].image = this.value">
+                  </div>
+                  <div>
+                    <label>説明文 (ツールチップ)</label>
+                    <input type="text" value="${f.desc || ''}" onchange="workingDb.metaApp.overviewFiles[${idx}].desc = this.value">
+                  </div>
+                </div>
+                <div style="margin-top:8px; text-align:right;">
+                  <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteOverviewFile(${idx})"><i data-lucide="trash-2"></i> 削除</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // 2. 順路マップ
+      const routeContainer = document.getElementById('meta-route-editor-container');
+      if (routeContainer) {
+        routeContainer.innerHTML = "";
+        const routes = workingDb.metaApp.routeMaps || {};
+        [1, 2, 3].forEach(loopNum => {
+          const r = routes[loopNum] || { title: "調査順路マップ", image: "", note: "" };
+          routeContainer.innerHTML += `
+            <div class="chat-msg-item">
+              <div class="chat-msg-body">
+                <div style="font-weight:800; font-size:13px; margin-bottom:8px; color:var(--primary);">🗺️ 周回 ${loopNum} 用マップ設定</div>
+                <div class="form-group">
+                  <label>マップ画像URL</label>
+                  <input type="text" value="${r.image}" onchange="if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].image = this.value">
+                </div>
+                <div class="form-group">
+                  <label>調査指示・メモテキスト</label>
+                  <textarea rows="2" onchange="if(!workingDb.metaApp.routeMaps) workingDb.metaApp.routeMaps={}; if(!workingDb.metaApp.routeMaps[${loopNum}]) workingDb.metaApp.routeMaps[${loopNum}]={}; workingDb.metaApp.routeMaps[${loopNum}].note = this.value">${r.note || ''}</textarea>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // 3. 調査資料アイテム
+      const evidenceContainer = document.getElementById('meta-evidence-editor-container');
+      if (evidenceContainer) {
+        evidenceContainer.innerHTML = "";
+        const items = workingDb.metaApp.evidenceItems || [];
+        items.forEach((item, idx) => {
+          evidenceContainer.innerHTML += `
+            <div class="chat-msg-item">
+              <div class="chat-msg-body">
+                <div class="form-row">
+                  <div>
+                    <label>アイテムID / QRキー</label>
+                    <input type="text" value="${item.qrKey || item.id}" onchange="workingDb.metaApp.evidenceItems[${idx}].qrKey = this.value">
+                  </div>
+                  <div>
+                    <label>画像URL</label>
+                    <input type="text" value="${item.image}" onchange="workingDb.metaApp.evidenceItems[${idx}].image = this.value">
+                  </div>
+                </div>
+                <div class="form-row" style="margin-top:8px;">
+                  <div>
+                    <label>アイテム名 (1周目)</label>
+                    <input type="text" value="${item.names ? (item.names[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].names) workingDb.metaApp.evidenceItems[${idx}].names={}; workingDb.metaApp.evidenceItems[${idx}].names[1] = this.value">
+                  </div>
+                  <div>
+                    <label>アイテム名 (2周目以降)</label>
+                    <input type="text" value="${item.names ? (item.names[2] || item.names[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].names) workingDb.metaApp.evidenceItems[${idx}].names={}; workingDb.metaApp.evidenceItems[${idx}].names[2] = this.value; workingDb.metaApp.evidenceItems[${idx}].names[3] = this.value;">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                  <label>簡易説明文 (shortDesc)</label>
+                  <input type="text" value="${item.shortDescs ? (item.shortDescs[1] || '') : ''}" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].shortDescs) workingDb.metaApp.evidenceItems[${idx}].shortDescs={}; workingDb.metaApp.evidenceItems[${idx}].shortDescs[1] = this.value">
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                  <label>詳細調書・文書テキスト (detailDesc)</label>
+                  <textarea rows="3" onchange="if(!workingDb.metaApp.evidenceItems[${idx}].detailDescs) workingDb.metaApp.evidenceItems[${idx}].detailDescs={}; workingDb.metaApp.evidenceItems[${idx}].detailDescs[1] = this.value">${item.detailDescs ? (item.detailDescs[1] || '') : ''}</textarea>
+                </div>
+                <div style="margin-top:8px; text-align:right;">
+                  <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteEvidenceItem(${idx})"><i data-lucide="trash-2"></i> 削除</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function addOverviewFileTemplate() {
+      if (!workingDb.metaApp.overviewFiles) workingDb.metaApp.overviewFiles = [];
+      workingDb.metaApp.overviewFiles.push({
+        id: "overview_new_" + Date.now(),
+        unlockLoop: 1,
+        fileName: "新しい資料.png",
+        title: "新しい資料",
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200",
+        desc: "調査資料の説明文"
+      });
+      renderMetaEditor();
+    }
+
+    function deleteOverviewFile(idx) {
+      workingDb.metaApp.overviewFiles.splice(idx, 1);
+      renderMetaEditor();
+    }
+
+    function addEvidenceItemTemplate() {
+      if (!workingDb.metaApp.evidenceItems) workingDb.metaApp.evidenceItems = [];
+      workingDb.metaApp.evidenceItems.push({
+        id: "item_new_" + Date.now(),
+        qrKey: "QR_ITEM_NEW",
+        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=800",
+        names: { 1: "新しいアイテム証拠", 2: "新しいアイテム証拠", 3: "新しいアイテム証拠" },
+        shortDescs: { 1: "探索で見つかった証拠資料。" },
+        detailDescs: { 1: "詳細な記録文書。" }
+      });
+      renderMetaEditor();
+    }
+
+    function deleteEvidenceItem(idx) {
+      workingDb.metaApp.evidenceItems.splice(idx, 1);
+      renderMetaEditor();
     }
 
     // ⑤ manabaエディタ
