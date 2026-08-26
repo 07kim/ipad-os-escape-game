@@ -365,18 +365,19 @@ function executeRemoteAdminCommand(cmd) {
   // ⑦ 演者トリガーによるリアルタイムLINKメッセージ配信
   if (cmd.action === 'actor_message' || type === 'actor_message') {
     const actor = cmd.actor || p.actor;
+    const triggerId = cmd.triggerId || p.triggerId || "";
     const text = cmd.text || p.text;
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
     const msgTime = cmd.time || p.time || getFormattedFakeTime();
 
     if (text) {
-      addActorMessageToLinkChat(actor, text, msgTime);
+      addActorMessageToLinkChat(actor, text, msgTime, triggerId);
 
       // J（陣内）からの送信でF（深澤）の自動返信が指定されている場合
       if (autoReplySender && autoReplyText) {
         setTimeout(() => {
-          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime());
+          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime(), triggerId ? triggerId + "_autoreply" : "");
         }, 1500);
       }
     }
@@ -385,7 +386,7 @@ function executeRemoteAdminCommand(cmd) {
 }
 
 // 🎭 演者メッセージをLINKチャットへリアルタイム注入（全体連絡グループ）
-function addActorMessageToLinkChat(senderCode, text, timeStr) {
+function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   const actorMap = {
     'J': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
     'G': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
@@ -422,6 +423,19 @@ function addActorMessageToLinkChat(senderCode, text, timeStr) {
   // 現在LINKアプリを開いている場合は即時再描画
   if (gameState.activeApp === 'link') {
     openLinkChat('committee_group');
+  }
+
+  // 演者ツールへ「LINK反映完了（ACK）」を通知
+  if (triggerId) {
+    const cleanId = triggerId.replace('_autoreply', '');
+    localStorage.setItem(`actor_ack_${cleanId}`, String(Date.now()));
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('escape_game_channel');
+        bc.postMessage({ type: 'actor_message_ack', triggerId: cleanId, timestamp: Date.now() });
+      } catch(e) {}
+    }
+    console.log(`✅ 演者トリガー [${cleanId}] のLINK反映ACKを送信しました`);
   }
 }
 

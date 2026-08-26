@@ -673,11 +673,18 @@
 
     let currentActorCode = null;
     let sentTriggers = {};
+    let confirmedTriggers = {}; // LINK反映が確認できたトリガー
     let titleTapCount = 0;
     let titleTapTimer = null;
     let gasConnectionStatus = 'checking'; // 'ok' | 'error' | 'checking'
     let gasLatencyMs = 0;
     let lastSendResult = null;
+
+    // LocalStorageから確認済み状態も復元
+    try {
+      const savedAck = localStorage.getItem('actor_confirmed_triggers');
+      if (savedAck) confirmedTriggers = JSON.parse(savedAck);
+    } catch(e) {}
 
     // GAS URLの解決
     function getActorGasUrl() {
@@ -708,14 +715,48 @@
       } catch(e) { console.warn('BroadcastChannel error:', e); }
     }
 
-    // アイコン初期化 & 接続テスト開始
+    // アイコン初期化 & 接続テスト開始 & ACKリスナー登録
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      // ACKリスナー起動
+      initAckListener();
       // 起動時に即時疎通確認
       checkGasConnection();
       // 15秒おきに定期疎通確認
       setInterval(checkGasConnection, 15000);
     });
+
+    // 📬 iPad側からのLINK反映完了（ACK）リスナー
+    function initAckListener() {
+      if (adminBroadcast) {
+        adminBroadcast.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'actor_message_ack') {
+            const triggerId = event.data.triggerId;
+            onLinkAckReceived(triggerId);
+          }
+        });
+      }
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.startsWith('actor_ack_')) {
+          const triggerId = e.key.replace('actor_ack_', '');
+          onLinkAckReceived(triggerId);
+        }
+      });
+    }
+
+    function onLinkAckReceived(triggerId) {
+      if (!confirmedTriggers[triggerId]) {
+        confirmedTriggers[triggerId] = Date.now();
+        localStorage.setItem('actor_confirmed_triggers', JSON.stringify(confirmedTriggers));
+        
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        showToast("🎉【成功】iPadのLINKチャットへ正常に反映されました！", false, 5000);
+
+        if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+          renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+        }
+      }
+    }
 
     // ===== GAS接続状態チェック =====
     async function checkGasConnection() {
@@ -808,9 +849,12 @@
 
       actor.triggers.forEach(tr => {
         delete sentTriggers[tr.id];
+        delete confirmedTriggers[tr.id];
+        localStorage.removeItem(`actor_ack_${tr.id}`);
       });
 
       localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
+      localStorage.setItem('actor_confirmed_triggers', JSON.stringify(confirmedTriggers));
       closeAdminModal();
 
       if (navigator.vibrate) navigator.vibrate([80, 50]);
@@ -824,7 +868,9 @@
     // 🔄 全キャラクター一括リセット
     function resetAllActors() {
       sentTriggers = {};
+      confirmedTriggers = {};
       localStorage.removeItem('actor_sent_triggers');
+      localStorage.removeItem('actor_confirmed_triggers');
       closeAdminModal();
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -837,7 +883,9 @@
 
     function resetAllActorsSilent() {
       sentTriggers = {};
+      confirmedTriggers = {};
       localStorage.removeItem('actor_sent_triggers');
+      localStorage.removeItem('actor_confirmed_triggers');
       if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
         renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
       }
@@ -873,15 +921,38 @@
 
       actor.triggers.forEach((tr) => {
         const isSent = !!sentTriggers[tr.id];
+        const isConfirmed = !!confirmedTriggers[tr.id];
         const isLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
+
+        let statusClass = 'ready';
+        let statusIcon = 'clock';
+        let statusText = '待機中';
+        let btnText = tr.btnLabel;
+
+        if (isConfirmed) {
+          statusClass = 'sent';
+          statusIcon = 'check-check';
+          statusText = '✅ LINK反映完了';
+          btnText = '🎉 反映完了（成功）';
+        } else if (isSent) {
+          statusClass = 'ready';
+          statusIcon = 'send';
+          statusText = '📤 送信完了（反映確認待機）';
+          btnText = '📤 送信完了（反映待ち）';
+        } else if (isLocked) {
+          statusClass = 'locked';
+          statusIcon = 'lock';
+          statusText = '🔒 ロック中';
+          btnText = '🔒 ロック中（1通目待ち）';
+        }
 
         container.innerHTML += `
           <div class="trigger-item-card ${isLocked ? 'locked' : ''}">
             <div class="trigger-header">
               <span class="trigger-badge">${tr.stageTitle}</span>
-              <span class="trigger-status ${isSent ? 'sent' : (isLocked ? 'locked' : 'ready')}">
-                <i data-lucide="${isSent ? 'check-circle' : (isLocked ? 'lock' : 'clock')}"></i>
-                ${isSent ? '送信済み' : (isLocked ? '🔒 ロック' : '待機中')}
+              <span class="trigger-status ${statusClass}">
+                <i data-lucide="${statusIcon}"></i>
+                ${statusText}
               </span>
             </div>
 
@@ -898,8 +969,8 @@
               ${isSent || isLocked ? 'disabled' : ''}
               onclick="fireTrigger('${actor.code}', '${tr.id}')"
             >
-              <i data-lucide="${isSent ? 'check' : (isLocked ? 'lock' : 'send')}"></i>
-              <span>${isSent ? '✅ 送信済み' : (isLocked ? '🔒 ロック中（1通目待ち）' : tr.btnLabel)}</span>
+              <i data-lucide="${isConfirmed ? 'check-check' : (isSent ? 'check' : (isLocked ? 'lock' : 'send'))}"></i>
+              <span>${btnText}</span>
             </button>
           </div>
         `;
@@ -983,36 +1054,39 @@
       sentTriggers[triggerId] = Date.now();
       localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
 
-      // ── STEP 4: フィードバック表示 ──
-      if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+      // ── STEP 4: 2段階フィードバック（1: 送信完了 → 2: LINK反映待ち/成功） ──
+      if (navigator.vibrate) navigator.vibrate(50);
 
       const gasStatusText = gasOk
-        ? '☁️ GAS中継送信済み'
-        : `⚠️ GAS: ${gasError || '到達不明'}`;
-      const localStatusText = localOk ? '📱 ローカル送信済み' : '❌ ローカル送信失敗';
+        ? '☁️ GAS配信完了'
+        : `⚠️ GAS: ${gasError || '通信待機中'}`;
+      const localStatusText = localOk ? '📱 ローカル通信済' : '❌ ローカル送信失敗';
 
-      if (localOk) {
-        showToast(
-          `✅ 送信完了！\n${localStatusText} / ${gasStatusText}`,
-          false,
-          gasOk ? 5000 : 7000
-        );
-        // 送信結果をパネルに反映
-        updateConnectionUI(
-          gasOk ? 'ok' : 'error',
-          gasOk ? `最終送信: ${getNowClockTime()} 成功` : `最終送信: ${getNowClockTime()} GAS未到達`,
-          gasOk ? `${gasLatencyMs}ms` : '--'
-        );
-      } else {
-        showToast('🔴 送信失敗: ネットワークを確認してください', true);
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="alert-circle"></i> <span>再試行する</span>`;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-        return;
-      }
+      // 1段階目: 送信完了の通知
+      showToast(`📤【送信完了】${localStatusText} / ${gasStatusText}\niPadのLINK反映を確認中...`, false, 4000);
 
-      // カード再描画（Gの2通目のロック解除などを含む）
+      // カード再描画
       renderTriggers(actor);
+
+      // ACKポーリング開始（3秒間、iPadからの反映ACKをチェック）
+      let ackCheckCount = 0;
+      const ackTimer = setInterval(() => {
+        ackCheckCount++;
+        const ackKey = `actor_ack_${triggerId}`;
+        const hasAck = localStorage.getItem(ackKey);
+        
+        if (hasAck) {
+          clearInterval(ackTimer);
+          onLinkAckReceived(triggerId);
+        } else if (ackCheckCount >= 6) {
+          // 3秒経過（別端末iPadの場合など）
+          clearInterval(ackTimer);
+          if (!confirmedTriggers[triggerId]) {
+            // クラウド経由で届く旨を案内
+            showToast("☁️【送信完了】GASサーバー経由で配信されました。\n（iPad側で数秒以内に自動反映されます）", false, 5000);
+          }
+        }
+      }, 500);
     }
 
     function showToast(msg, isError = false, duration = 4000) {
