@@ -915,6 +915,7 @@ function closeAllWindowsSilent() {
   if (toast) toast.style.display = 'none';
 
   closeHacking();
+  endPhoneCall(true);
   stopAllCameraStreams();
 }
 
@@ -2722,6 +2723,17 @@ function clearPhoneKey() {
   if (display) display.innerText = "";
 }
 
+let phoneCallTimers = [];
+
+function clearAllPhoneTimers() {
+  phoneCallTimers.forEach(id => clearTimeout(id));
+  phoneCallTimers = [];
+  if (phoneCallAudioTimer) {
+    clearTimeout(phoneCallAudioTimer);
+    phoneCallAudioTimer = null;
+  }
+}
+
 function makePhoneCall() {
   if (!gameState.phoneInput) {
     showIpadModal("電話", "電話番号を入力してください。");
@@ -2738,6 +2750,8 @@ function makePhoneCall() {
     return;
   }
 
+  clearAllPhoneTimers();
+
   const overlay = document.getElementById('phone-calling-overlay');
   document.getElementById('phone-calling-number').innerText = dialNum;
   document.getElementById('phone-calling-status').innerText = "発信中...";
@@ -2745,17 +2759,23 @@ function makePhoneCall() {
   overlay.style.display = 'flex';
 
   playSystemSound("ringback");
-  // 1.5秒後に2回目の「プルルルルル……」
-  setTimeout(() => {
-    if (overlay && overlay.style.display !== 'none') {
+  
+  // 1.4秒後に2回目の「プルルルルル……」
+  const timer1 = setTimeout(() => {
+    const ov = document.getElementById('phone-calling-overlay');
+    if (ov && ov.style.display !== 'none') {
       playSystemSound("ringback");
     }
   }, 1400);
+  phoneCallTimers.push(timer1);
 
   logWriteToGAS("PHONE_CALL_ATTEMPT", `発信試行: ${dialNum}`);
 
   // 3.0秒後に音声ガイダンスアナウンスへ移行
   phoneCallAudioTimer = setTimeout(() => {
+    const ov = document.getElementById('phone-calling-overlay');
+    if (!ov || ov.style.display === 'none') return;
+
     document.getElementById('phone-calling-status').innerText = "ガイダンス応答";
     const guidanceText = "おかけになった電話番号は、現在使われておりません。または時間線の不整合により接続できません。番号をお確かめになって、もう一度お掛け直しください。";
     document.getElementById('phone-audio-subtitles').innerText = `「${guidanceText}」`;
@@ -2763,36 +2783,42 @@ function makePhoneCall() {
     // Web Speech API で音声合成アナウンス（日本語女性トーン）
     speakGuidanceAudio(guidanceText);
 
-    // 6.5秒後に自動切断
-    setTimeout(() => {
-      endPhoneCall();
+    // 6.5秒後に自動切断（無音で安全に終了）
+    const timer2 = setTimeout(() => {
+      endPhoneCall(true);
     }, 6500);
+    phoneCallTimers.push(timer2);
   }, 3000);
+  phoneCallTimers.push(phoneCallAudioTimer);
 }
 
 function speakGuidanceAudio(text) {
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ja-JP';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.1;
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
   }
 }
 
-function endPhoneCall() {
-  if (phoneCallAudioTimer) {
-    clearTimeout(phoneCallAudioTimer);
-    phoneCallAudioTimer = null;
-  }
+function endPhoneCall(isSilent = false) {
+  clearAllPhoneTimers();
+  
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
   }
+
   const overlay = document.getElementById('phone-calling-overlay');
   if (overlay) overlay.style.display = 'none';
   clearPhoneKey();
-  playSystemSound("error");
+
+  // 切断時の不快なエラー音（ブー音）は鳴らさない
 }
 
 // 端末完全再読み込み（リロード）
