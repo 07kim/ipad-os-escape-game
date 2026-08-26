@@ -184,8 +184,12 @@ function fetchLatestDataFromSpreadsheet() {
           if (json.data.browser && json.data.browser.searchResults) {
             window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
           }
-          if (json.data.linkApp && json.data.linkApp.chats) {
-            window.GAME_DATABASE.linkApp.chats = json.data.linkApp.chats;
+          // linkAppはdata.jsと演者トリガーで一元管理するため、GASによる古いチャット上書きを防止
+          if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
+            // 初期状態の保護
+            if (!window.GAME_DATABASE.linkApp || !window.GAME_DATABASE.linkApp.chats) {
+              window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
+            }
           }
           if (json.data.mailApp) {
             window.GAME_DATABASE.mailApp = json.data.mailApp;
