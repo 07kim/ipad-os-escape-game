@@ -50,7 +50,11 @@ function loadGameDatabase() {
       // スキーマの整合性を検証
       if (parsed && parsed.browser && parsed.linkApp && parsed.manaba && parsed.metaApp) {
         window.GAME_DATABASE = parsed;
-        console.log("Loaded game database from LocalStorage cache.");
+        // ⚠️ LINKのトーク・連絡先は常にdata.jsの最新定義で上書き（古いキャッシュが混入しないよう）
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
+          window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
+        }
+        console.log("Loaded game database from LocalStorage cache (linkApp refreshed from data.js).");
         return;
       }
       console.warn("Cache data is missing core properties. Falling back to data.js.");

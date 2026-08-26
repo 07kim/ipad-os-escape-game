@@ -852,3 +852,9 @@ window.GAME_DATABASE = {
     ]
   }
 };
+
+// ⚠️ LINK定義をINITIAL_GAME_DATABASEとしてapp.jsから参照可能にする
+// （LocalStorageキャッシュが古い場合でも、常にdata.jsの最新定義が使われる）
+window.INITIAL_GAME_DATABASE = {
+  linkApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.linkApp))
+};
