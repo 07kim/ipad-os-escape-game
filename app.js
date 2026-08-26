@@ -50,11 +50,16 @@ function loadGameDatabase() {
       // スキーマの整合性を検証
       if (parsed && parsed.browser && parsed.linkApp && parsed.manaba && parsed.metaApp) {
         window.GAME_DATABASE = parsed;
-        // ⚠️ LINKのトーク・連絡先は常にdata.jsの最新定義で上書き（古いキャッシュが混入しないよう）
-        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
-          window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
+        // ⚠️ LINK・メールの定義は常にdata.jsの最新定義で上書き（古いキャッシュが混入しないよう）
+        if (window.INITIAL_GAME_DATABASE) {
+          if (window.INITIAL_GAME_DATABASE.linkApp) {
+            window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
+          }
+          if (window.INITIAL_GAME_DATABASE.mailApp) {
+            window.GAME_DATABASE.mailApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.mailApp));
+          }
         }
-        console.log("Loaded game database from LocalStorage cache (linkApp refreshed from data.js).");
+        console.log("Loaded game database from LocalStorage cache (linkApp & mailApp refreshed from data.js).");
         return;
       }
       console.warn("Cache data is missing core properties. Falling back to data.js.");
@@ -187,15 +192,14 @@ function fetchLatestDataFromSpreadsheet() {
           if (json.data.browser && json.data.browser.searchResults) {
             window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
           }
-          // linkAppはdata.jsと演者トリガーで一元管理するため、GASによる古いチャット上書きを防止
-          if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
-            // 初期状態の保護
-            if (!window.GAME_DATABASE.linkApp || !window.GAME_DATABASE.linkApp.chats) {
+          // linkApp & mailAppはdata.jsで一元管理するため、GASによる古いデータ上書きを防止
+          if (window.INITIAL_GAME_DATABASE) {
+            if (window.INITIAL_GAME_DATABASE.linkApp && (!window.GAME_DATABASE.linkApp || !window.GAME_DATABASE.linkApp.chats)) {
               window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
             }
-          }
-          if (json.data.mailApp) {
-            window.GAME_DATABASE.mailApp = json.data.mailApp;
+            if (window.INITIAL_GAME_DATABASE.mailApp) {
+              window.GAME_DATABASE.mailApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.mailApp));
+            }
           }
           if (json.data.lockNotifications) {
             window.GAME_DATABASE.lockNotifications = json.data.lockNotifications;
@@ -2914,8 +2918,8 @@ function openMail(mailId) {
   if (mail) {
     document.getElementById('mail-body-header').innerHTML = `
       <div class="mail-body-title">${mail.subject || mail.title}</div>
-      <div style="font-size:12px; color:var(--text-muted);">
-        差出人: <strong>${mail.sender}</strong> &lt;学内通信サーバー&gt;<br>
+      <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">
+        差出人: <strong>${mail.sender}</strong><br>
         日付: ${mail.date}
       </div>
     `;
