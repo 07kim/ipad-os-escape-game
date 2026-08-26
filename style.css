@@ -522,6 +522,32 @@ body {
   overflow-y: auto;
 }
 
+.meta-panel {
+  display: none;
+}
+.meta-panel.active {
+  display: block;
+}
+
+.meta-panel h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: var(--system-blue);
+}
+
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.panel-subtext {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
 .explorer-address-bar {
   display: flex;
   align-items: center;
