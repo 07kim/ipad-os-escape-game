@@ -78,7 +78,54 @@
       background: #ecfdf5;
       color: #059669;
       border: 1px solid #a7f3d0;
+      transition: all 0.3s ease;
     }
+    .sync-badge.checking {
+      background: #fffbeb;
+      color: #d97706;
+      border-color: #fde68a;
+    }
+    .sync-badge.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    /* 接続状態パネル */
+    .connection-panel {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+    }
+    .connection-panel-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+    }
+    .connection-panel-row strong {
+      color: var(--text);
+    }
+    .conn-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      flex-shrink: 0;
+    }
+    .conn-dot.ok { background: #10b981; }
+    .conn-dot.checking {
+      background: #f59e0b;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    .conn-dot.error { background: #ef4444; }
 
     /* ① 演者選択画面 */
     #view-select-actor {
@@ -411,6 +458,10 @@
       from { transform: translateY(-30px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
 
     /* スピナー */
     .spinner {
@@ -433,10 +484,19 @@
     <div class="app-title" id="app-title-btn" onclick="handleTitleClick()">
       <i data-lucide="radio"></i> ACTOR TRIGGER
     </div>
-    <div class="sync-badge" id="sync-status-badge">
-      <i data-lucide="wifi"></i> 接続中
+    <div class="sync-badge checking" id="sync-status-badge">
+      <i data-lucide="loader"></i> 確認中
     </div>
   </header>
+
+  <!-- 接続状態パネル -->
+  <div class="connection-panel" id="connection-panel">
+    <div class="connection-panel-row">
+      <span><span class="conn-dot checking" id="conn-dot"></span><strong id="conn-label">接続確認中...</strong></span>
+      <span id="conn-latency">--ms</span>
+    </div>
+    <div class="connection-panel-row" id="conn-detail" style="color:#94a3b8; font-size:10px;">GASサーバーに接続テスト中です</div>
+  </div>
 
   <!-- トースト通知 -->
   <div id="toast-banner">
@@ -615,6 +675,19 @@
     let sentTriggers = {};
     let titleTapCount = 0;
     let titleTapTimer = null;
+    let gasConnectionStatus = 'checking'; // 'ok' | 'error' | 'checking'
+    let gasLatencyMs = 0;
+    let lastSendResult = null;
+
+    // GAS URLの解決
+    function getActorGasUrl() {
+      const fromStorage = (localStorage.getItem('gas_url') || '').trim();
+      if (fromStorage) return fromStorage;
+      if (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) {
+        return window.GAME_DATABASE.system.gasUrl.trim();
+      }
+      return 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
+    }
 
     // LocalStorageから送信済み状態を復元
     try {
@@ -622,21 +695,84 @@
       if (saved) sentTriggers = JSON.parse(saved);
     } catch(e) {}
 
-    // BroadcastChannel通信
+    // BroadcastChannel通信（actor.html → iPad app.js へのローカル送信）
     let adminBroadcast = null;
     if (typeof BroadcastChannel !== 'undefined') {
-      adminBroadcast = new BroadcastChannel('escape_game_channel');
-      adminBroadcast.onmessage = (event) => {
-        if (event.data && (event.data.type === 'master_reset' || event.data.type === 'reset_actor_triggers')) {
-          resetAllActorsSilent();
-        }
-      };
+      try {
+        adminBroadcast = new BroadcastChannel('escape_game_channel');
+        adminBroadcast.onmessage = (event) => {
+          if (event.data && (event.data.type === 'master_reset' || event.data.type === 'reset_actor_triggers')) {
+            resetAllActorsSilent();
+          }
+        };
+      } catch(e) { console.warn('BroadcastChannel error:', e); }
     }
 
-    // アイコン初期化
+    // アイコン初期化 & 接続テスト開始
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      // 起動時に即時疎通確認
+      checkGasConnection();
+      // 15秒おきに定期疎通確認
+      setInterval(checkGasConnection, 15000);
     });
+
+    // ===== GAS接続状態チェック =====
+    async function checkGasConnection() {
+      updateConnectionUI('checking', '確認中...', '--');
+      const gasUrl = getActorGasUrl();
+      if (!gasUrl) {
+        updateConnectionUI('error', 'GAS URL未設定', '--');
+        return;
+      }
+      const start = Date.now();
+      try {
+        const testUrl = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
+        const res = await fetch(testUrl, { signal: AbortSignal.timeout(8000) });
+        const latency = Date.now() - start;
+        if (res.ok) {
+          gasConnectionStatus = 'ok';
+          gasLatencyMs = latency;
+          updateConnectionUI('ok', `GAS接続正常`, `${latency}ms`);
+        } else {
+          gasConnectionStatus = 'error';
+          updateConnectionUI('error', `接続エラー HTTP ${res.status}`, `${latency}ms`);
+        }
+      } catch(e) {
+        const latency = Date.now() - start;
+        gasConnectionStatus = 'error';
+        updateConnectionUI('error', `接続失敗: ${e.message || 'タイムアウト'}`, `${latency}ms`);
+      }
+    }
+
+    function updateConnectionUI(status, label, latency) {
+      const dot = document.getElementById('conn-dot');
+      const connLabel = document.getElementById('conn-label');
+      const connLatency = document.getElementById('conn-latency');
+      const connDetail = document.getElementById('conn-detail');
+      const badge = document.getElementById('sync-status-badge');
+
+      if (dot) { dot.className = `conn-dot ${status}`; }
+      if (connLabel) connLabel.textContent = label;
+      if (connLatency) connLatency.textContent = latency;
+
+      if (badge) {
+        if (status === 'ok') {
+          badge.className = 'sync-badge';
+          badge.innerHTML = '<i data-lucide="wifi"></i> 接続OK';
+          if (connDetail) connDetail.textContent = `GASサーバー正常稼働中 (${latency})`;
+        } else if (status === 'checking') {
+          badge.className = 'sync-badge checking';
+          badge.innerHTML = '<i data-lucide="loader"></i> 確認中';
+          if (connDetail) connDetail.textContent = 'GASサーバーに接続テスト中...';
+        } else {
+          badge.className = 'sync-badge error';
+          badge.innerHTML = '<i data-lucide="wifi-off"></i> 切断';
+          if (connDetail) connDetail.textContent = `⚠️ GAS接続失敗 — ローカル送信のみ有効`;
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
 
     // 🔄 タイトル連打検知（5回タップで管理モード表示）
     function handleTitleClick() {
@@ -781,7 +917,7 @@
 
       // 依存ロックチェック
       if (tr.dependsOn && !sentTriggers[tr.dependsOn]) {
-        showToast("⚠️ 先に1通目を送信してください", true);
+        showToast('⚠️ 先に1通目を送信してください', true);
         return;
       }
 
@@ -796,8 +932,8 @@
       if (navigator.vibrate) navigator.vibrate(50);
 
       const commandPayload = {
-        action: "actor_message",
-        id: "ACTOR_" + triggerId + "_" + Date.now(),
+        action: 'actor_message',
+        id: 'ACTOR_' + triggerId + '_' + Date.now(),
         actor: actorCode,
         triggerId: triggerId,
         text: tr.text,
@@ -807,47 +943,79 @@
         timestamp: Date.now()
       };
 
+      let localOk = false;
+      let gasOk = false;
+      let gasError = '';
+
+      // ── STEP 1: ローカル送信（BroadcastChannel + localStorage） ──
       try {
-        // 1. ローカルBroadcastChannel送信
         if (adminBroadcast) {
-          adminBroadcast.postMessage({
-            type: "actor_message",
-            payload: commandPayload
-          });
+          adminBroadcast.postMessage({ type: 'actor_message', payload: commandPayload });
+          localOk = true;
         }
         localStorage.setItem('latest_actor_command', JSON.stringify(commandPayload));
-        localStorage.setItem('latest_actor_command_time', Date.now());
+        localStorage.setItem('latest_actor_command_time', String(Date.now()));
+        localOk = true;
+      } catch(e) {
+        console.warn('ローカル送信エラー:', e);
+      }
 
-        // 2. Google Apps Script (GAS) クラウド中継送信
-        const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
-        if (gasUrl) {
-          const sendUrl = gasUrl.includes('?') 
+      // ── STEP 2: GASクラウド中継（no-cors のため成功/失敗は判定できないが送信自体を試みる） ──
+      const gasUrl = getActorGasUrl();
+      if (gasUrl) {
+        try {
+          const sendUrl = gasUrl.includes('?')
             ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`
             : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`;
           
-          fetch(sendUrl, { mode: 'no-cors' }).catch(e => console.warn("GAS relay error:", e));
+          // no-corsのためHTTPステータスは取れないが、fetch自体が成功すればGASに到達している
+          await fetch(sendUrl, { mode: 'no-cors' });
+          gasOk = true;
+        } catch(e) {
+          gasError = e.message || 'ネットワークエラー';
+          console.warn('GAS中継エラー:', e);
         }
+      } else {
+        gasError = 'GAS URL未設定';
+      }
 
-        // 送信済みフラグ記録（連打防止）
-        sentTriggers[triggerId] = Date.now();
-        localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
+      // ── STEP 3: 送信済みフラグ記録 ──
+      sentTriggers[triggerId] = Date.now();
+      localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
 
-        // 成功フィードバック
-        if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
-        showToast("✅ 送信完了！全iPadへ配信されました", false);
+      // ── STEP 4: フィードバック表示 ──
+      if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
 
-        // カード再描画（Gの2通目のロック解除などを含む）
-        renderTriggers(actor);
+      const gasStatusText = gasOk
+        ? '☁️ GAS中継送信済み'
+        : `⚠️ GAS: ${gasError || '到達不明'}`;
+      const localStatusText = localOk ? '📱 ローカル送信済み' : '❌ ローカル送信失敗';
 
-      } catch (err) {
-        console.error("Trigger failed:", err);
+      if (localOk) {
+        showToast(
+          `✅ 送信完了！\n${localStatusText} / ${gasStatusText}`,
+          false,
+          gasOk ? 5000 : 7000
+        );
+        // 送信結果をパネルに反映
+        updateConnectionUI(
+          gasOk ? 'ok' : 'error',
+          gasOk ? `最終送信: ${getNowClockTime()} 成功` : `最終送信: ${getNowClockTime()} GAS未到達`,
+          gasOk ? `${gasLatencyMs}ms` : '--'
+        );
+      } else {
+        showToast('🔴 送信失敗: ネットワークを確認してください', true);
         btn.disabled = false;
         btn.innerHTML = `<i data-lucide="alert-circle"></i> <span>再試行する</span>`;
-        showToast("🔴 送信失敗: ネットワークを確認してください", true);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
       }
+
+      // カード再描画（Gの2通目のロック解除などを含む）
+      renderTriggers(actor);
     }
 
-    function showToast(msg, isError = false) {
+    function showToast(msg, isError = false, duration = 4000) {
       const toast = document.getElementById('toast-banner');
       const icon = document.getElementById('toast-icon');
       const textEl = document.getElementById('toast-msg');
@@ -861,7 +1029,7 @@
       toast.style.display = 'flex';
       setTimeout(() => {
         toast.style.display = 'none';
-      }, 3500);
+      }, duration);
     }
 
     function getNowClockTime() {

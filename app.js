@@ -92,8 +92,47 @@ window.addEventListener('DOMContentLoaded', () => {
     // 操作制限の適用
     applyOperationalRestrictions();
 
-    // LocalStorage変更イベント購読（運営画面からのリアルタイム変更をキャッチ）
+    // LocalStorage変更イベント購読（運営画面＋演者ツールからのリアルタイム変更をキャッチ）
     window.addEventListener('storage', handleStorageEvent);
+
+    // 🎭 BroadcastChannelリスナー（同一ブラウザ内のactor.htmlからの即時受信）
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const actorChannel = new BroadcastChannel('escape_game_channel');
+        actorChannel.onmessage = (event) => {
+          if (!event.data) return;
+          const { type, payload } = event.data;
+          if (type === 'actor_message' && payload) {
+            console.log('🎭 BroadcastChannel経由で演者メッセージを受信:', payload);
+            executeRemoteAdminCommand(payload);
+          } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
+            // リセット指示はBroadcastChannel経由でも対応
+          }
+        };
+        console.log('✅ BroadcastChannelリスナーを起動しました (escape_game_channel)');
+      } catch(e) {
+        console.warn('BroadcastChannel初期化エラー:', e);
+      }
+    }
+
+    // 🎭 localStorage ポーリング（別端末からの演者コマンドをGAS経由で受信できない場合のフォールバック）
+    let _lastActorCmdTime = parseInt(localStorage.getItem('latest_actor_command_time') || '0');
+    setInterval(() => {
+      const savedTime = parseInt(localStorage.getItem('latest_actor_command_time') || '0');
+      if (savedTime > _lastActorCmdTime) {
+        _lastActorCmdTime = savedTime;
+        try {
+          const raw = localStorage.getItem('latest_actor_command');
+          if (raw) {
+            const cmd = JSON.parse(raw);
+            if (cmd && cmd.action === 'actor_message') {
+              console.log('🎭 localStorage ポーリング経由で演者コマンドを検出:', cmd);
+              executeRemoteAdminCommand(cmd);
+            }
+          }
+        } catch(e) { console.warn('actor command parse error:', e); }
+      }
+    }, 1000);
 
     // ロック解除ボタンのイベント登録
     const unlockBtn = document.getElementById('swipe-to-unlock-btn');
@@ -614,6 +653,18 @@ function handleStorageEvent(e) {
       openApp(gameState.activeApp);
     }
     console.log("Hot-reloaded game data and UI.");
+  } else if (e.key === 'latest_actor_command') {
+    // 🎭 演者ツールからのコマンド（同一ブラウザのStorageイベント）
+    try {
+      const raw = e.newValue;
+      if (raw) {
+        const cmd = JSON.parse(raw);
+        if (cmd && cmd.action === 'actor_message') {
+          console.log('🎭 StorageEvent経由で演者コマンドを検出:', cmd);
+          executeRemoteAdminCommand(cmd);
+        }
+      }
+    } catch(err) { console.warn('actor storage event parse error:', err); }
   }
 }
 
