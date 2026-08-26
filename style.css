@@ -128,21 +128,31 @@ body {
 }
 
 .battery-icon {
-  width: 20px;
-  height: 10px;
-  border: 1px solid #000;
-  border-radius: 2px;
+  width: 22px;
+  height: 11px;
+  border: 1px solid #1e293b;
+  border-radius: 3px;
   position: relative;
-  background-color: var(--system-green);
+  padding: 1px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+}
+.battery-level {
+  height: 100%;
+  border-radius: 1.5px;
+  background-color: #1e293b;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 .battery-icon::after {
   content: '';
   position: absolute;
   right: -3px;
-  top: 2px;
+  top: 2.5px;
   width: 2px;
   height: 4px;
-  background-color: #000;
+  border-radius: 0 1px 1px 0;
+  background-color: #1e293b;
 }
 
 /* --- ロック画面 --- */

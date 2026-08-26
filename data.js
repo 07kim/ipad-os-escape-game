@@ -10,11 +10,11 @@ window.GAME_DATABASE = {
     teamId: "チームA",
     deviceOwner: "26__0094 調査端末",
     spec: {
-      os: "iPadOS 120.4 (Build 26A994)",
-      processor: "Quantum A30 Bionic (128 Cores)",
-      ram: "2.0 TB Unified Memory",
-      storage: "500 TB Super-Optane",
-      serial: "SF2126-LOOP-0094"
+      os: "iPadOS",
+      processor: "Apple Silicon",
+      ram: "8 GB",
+      storage: "128 GB",
+      serial: "DMPXG087Q1GC"
     }
   },
 

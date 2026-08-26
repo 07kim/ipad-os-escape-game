@@ -102,6 +102,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
 
+    // 🔋 実機バッテリー連動の開始
+    initBatterySync();
+
     // スプレッドシート（Google Sheets / GAS）から10秒おきに自動同期（リロード不要）
     startAutoSpreadsheetSync();
 
@@ -641,12 +644,12 @@ function startFakeClock() {
     const lockClock = document.getElementById('lock-clock');
     if (lockClock) lockClock.innerText = clockStr;
 
-    // 日付表示 (ロック画面)
+    // 日付表示 (ロック画面 - 年号を伏せて現代/未来を不特定化)
     const month = fakeCurrent.getMonth() + 1;
     const day = fakeCurrent.getDate();
     const dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"][fakeCurrent.getDay()];
     const lockDate = document.getElementById('lock-date');
-    if (lockDate) lockDate.innerText = `2126年 ${month}月${day}日 ${dayOfWeek}曜日`;
+    if (lockDate) lockDate.innerText = `${month}月${day}日 ${dayOfWeek}曜日`;
     
     // manabaのヘッダー日付 (時間割に合わせた日付表記)
     const mDateEl = document.getElementById('manaba-header-date');
@@ -657,6 +660,49 @@ function startFakeClock() {
 
   updateClock();
   setInterval(updateClock, 1000);
+}
+
+// --- 🔋 実機バッテリー連動ロジック (Battery Status API) ---
+function initBatterySync() {
+  function updateBatteryUI(level, charging) {
+    const pct = Math.round(level * 100);
+    const textEl = document.getElementById('sb-battery-text');
+    const levelEl = document.getElementById('sb-battery-level');
+    const iconEl = document.getElementById('sb-battery-icon');
+
+    if (textEl) {
+      textEl.innerText = `${pct}%`;
+    }
+    if (levelEl) {
+      levelEl.style.width = `${Math.max(8, pct)}%`;
+      if (pct <= 20) {
+        levelEl.style.background = '#ef4444'; // 赤色（低残量）
+      } else if (charging) {
+        levelEl.style.background = '#10b981'; // 緑色（充電中）
+      } else {
+        levelEl.style.background = '#1e293b'; // 通常
+      }
+    }
+  }
+
+  if (navigator.getBattery) {
+    navigator.getBattery().then(battery => {
+      updateBatteryUI(battery.level, battery.charging);
+
+      battery.addEventListener('levelchange', () => {
+        updateBatteryUI(battery.level, battery.charging);
+      });
+      battery.addEventListener('chargingchange', () => {
+        updateBatteryUI(battery.level, battery.charging);
+      });
+    }).catch(err => {
+      console.warn("Battery API available but error:", err);
+      updateBatteryUI(0.92, false);
+    });
+  } else {
+    // iOS Safari等でBattery API非対応の場合の自然なフォールバック
+    updateBatteryUI(0.88, false);
+  }
 }
 
 // --- 周回（ループ）の強制切り替え演出 ---
