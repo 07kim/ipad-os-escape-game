@@ -1925,6 +1925,11 @@ function handleBrowserSearch(e) {
   if (e.key === 'Enter') {
     const q = e.target.value.trim();
     if (q) {
+      // GoogleフォームURLが入力された場合は直接フォームを開く
+      if (q.includes('docs.google.com/forms') || q.includes('1FAIpQLSdXFpfSG')) {
+        openLinkInAppForm('form_mental_scan');
+        return;
+      }
       searchBrowserKeyword(q);
     }
   }
@@ -2379,36 +2384,37 @@ function openLinkInAppForm(formId) {
   }
 
   // フォームコンテンツの生成
-  const formData = (window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.form) || {
-    title: "2126年 メンタルヘルス・スキャン",
-    description: "学友会執行委員会 内部保管データ申請フォーム"
+  const formData = {
+    title: "部署業務の認知度",
+    description: "この回答は記録されます。"
   };
 
   bodyEl.innerHTML = `
     <div class="gform-container" style="max-width:680px; margin:0 auto; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
       <div class="gform-header" style="position:relative;">
         <div class="gform-header-bar"></div>
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <h1 style="font-size:22px; font-weight:700; color:#1e293b; margin:0 0 8px;">${formData.title}</h1>
-            <p style="font-size:13px; color:#64748b; margin:0;">${formData.description}</p>
-          </div>
-          <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;">
-            <i data-lucide="edit-3" style="width:14px; height:14px;"></i> ✏️ フォームを編集
-          </button>
+        <div>
+          <h1 style="font-size:22px; font-weight:700; color:#1e293b; margin:0 0 8px;">${formData.title}</h1>
+          <p style="font-size:13px; color:#64748b; margin:0;">${formData.description}</p>
         </div>
       </div>
       <div class="gform-card">
-        <label class="gform-label">申請者氏名 <span class="req">*</span></label>
+        <label class="gform-label">氏名 <span class="req">*</span></label>
         <input type="text" class="gform-input" id="inapp-form-name" placeholder="氏名を入力してください">
       </div>
       <div class="gform-card">
         <label class="gform-label">所属・学籍番号 <span class="req">*</span></label>
-        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="例: 学友会執行委員会 3年">
+        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="例: M25b1046">
       </div>
       <div class="gform-card">
-        <label class="gform-label">申請理由・目的 <span class="req">*</span></label>
-        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="閲覧・取得の目的を入力してください"></textarea>
+        <label class="gform-label">部署業務への理解度 <span class="req">*</span></label>
+        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="自由記述"></textarea>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding:0 4px;">
+        <button class="gform-clear-btn" type="button" onclick="clearInAppForm()">フォームをクリア</button>
+        <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;" title="フォームを編集">
+          <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
+        </button>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:0 4px;">
         <button class="btn btn-primary" onclick="submitInAppForm()" style="padding:10px 28px; font-size:14px; background:#7c3aed; border-color:#7c3aed;">送信</button>
@@ -2417,9 +2423,26 @@ function openLinkInAppForm(formId) {
     </div>
   `;
 
+  // スワイプで閉じる（右スワイプでLINKに戻る）
+  let startX = 0;
+  overlay.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  overlay.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (dx > 80) closeLinkInAppForm(); // 右スワイプ80px以上で閉じる
+  }, { passive: true });
+
   overlay.style.display = 'flex';
   if (typeof lucide !== 'undefined') lucide.createIcons();
   logWriteToGAS("LINK_INAPP_FORM_OPEN", "LINE風アプリ内オーバーレイでフォームを開きました。");
+}
+
+function clearInAppForm() {
+  const nameEl = document.getElementById('inapp-form-name');
+  const deptEl = document.getElementById('inapp-form-dept');
+  const reasonEl = document.getElementById('inapp-form-reason');
+  if (nameEl) nameEl.value = '';
+  if (deptEl) deptEl.value = '';
+  if (reasonEl) reasonEl.value = '';
 }
 
 function closeLinkInAppForm() {
@@ -2434,15 +2457,52 @@ function refreshLinkInAppForm() {
 
 function submitInAppForm() {
   const nameEl = document.getElementById('inapp-form-name');
+  const deptEl = document.getElementById('inapp-form-dept');
+  const reasonEl = document.getElementById('inapp-form-reason');
   const name = nameEl ? nameEl.value.trim() : '';
+  const dept = deptEl ? deptEl.value.trim() : '';
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+
   if (!name) {
-    alert("必須項目（申請者氏名）を入力してください。");
+    alert("必須項目（氏名）を入力してください。");
     return;
   }
 
-  showPushNotification("送信完了", "回答を記録しました。", "check-circle");
+  // GASへ回答データを送信（スプレッドシート反映）
+  const gasUrl = getResolvedGasUrl();
+  if (gasUrl) {
+    const payload = {
+      action: 'submit_form',
+      formTitle: '部署業務の認知度',
+      name: name,
+      dept: dept,
+      reason: reason,
+      timestamp: new Date().toISOString()
+    };
+    fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'no-cors'
+    }).catch(e => console.warn('フォーム送信GAS error:', e));
+  }
+
+  // 送信完了画面に切り替え
+  const bodyEl = document.getElementById('link-inapp-form-body');
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:16px; padding:40px 24px; text-align:center;">
+        <div style="width:64px; height:64px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;">✓</div>
+        <h2 style="font-size:20px; font-weight:700; color:#1e293b; margin:0;">回答を記録しました</h2>
+        <p style="font-size:14px; color:#64748b; margin:0;">別の回答を送信</p>
+        <button onclick="openLinkInAppForm('form_mental_scan')" style="margin-top:8px; padding:10px 24px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">別の回答を送信</button>
+      </div>
+    `;
+  }
+
   playSystemSound("success");
-  closeLinkInAppForm();
+  showPushNotification("送信完了", "回答を記録しました。", "check-circle");
+  logWriteToGAS("FORM_SUBMITTED", `フォーム送信: ${name} / ${dept}`);
 }
 
 // ==========================================================================

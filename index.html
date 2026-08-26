@@ -545,7 +545,9 @@
         <!-- 📱 LINK専用 アプリ内フォームオーバーレイ (LINE風 スルッと上に乗るシート) -->
         <div class="link-inapp-overlay" id="link-inapp-form-overlay" style="display:none;">
           <div class="inapp-browser-header">
-            <button class="inapp-close-btn" onclick="closeLinkInAppForm()"><i data-lucide="x"></i></button>
+            <button class="inapp-close-btn" onclick="closeLinkInAppForm()" style="display:flex; align-items:center; gap:4px; font-size:13px; font-weight:600; color:#0284c7; background:none; border:none; padding:4px 8px; cursor:pointer;">
+              <i data-lucide="chevron-left" style="width:18px; height:18px;"></i> LINK
+            </button>
             <div class="inapp-title-box">
               <span class="inapp-site-name">Google フォーム</span>
               <span class="inapp-site-url">docs.google.com</span>
@@ -567,14 +569,9 @@
           <div class="gform-header" style="position:relative;">
             <button onclick="closeHacking()" class="btn-icon" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;" title="閉じる"><i data-lucide="x" style="width:16px; height:16px;"></i></button>
             <div class="gform-header-bar"></div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div>
-                <h1 id="gform-title">2126年 メンタルヘルス・スキャン</h1>
-                <p id="gform-desc">学友会執行委員会 内部保管データ申請フォーム</p>
-              </div>
-              <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                <i data-lucide="edit-3" style="width:14px; height:14px;"></i> ✏️ フォームを編集
-              </button>
+            <div>
+              <h1 id="gform-title">部署業務の認知度</h1>
+              <p id="gform-desc">この回答は記録されます。</p>
             </div>
           </div>
           <div class="gform-card">
@@ -589,7 +586,7 @@
             <button class="gform-submit-btn" onclick="submitGForm()">送信</button>
             <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input').forEach(i => i.value='')">フォームをクリア</button>
           </div>
-          <!-- Googleフォーム公式風 編集ペンマーク（右下フローティングアクションボタン） -->
+          <!-- Googleフォーム公式風 編集ペンマーク（フォームをクリアの下） -->
           <button class="gform-edit-fab" id="gform-edit-fab" onclick="openHackingEditor()" title="このフォームを編集">
             <i data-lucide="edit-3"></i>
           </button>

@@ -669,13 +669,13 @@ window.GAME_DATABASE = {
       "committee_group": [
         { 
           sender: "fukasawa", 
-          text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。フォームへ回答をお願いします。\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
-          time: "9/1",
+          text: "【リマインド】\n解散の\n見た人から回答していただけますと幸いです。\nよろしくお願いいたします。\nhttps://docs.google.com/forms/d/e/1FAIpQLSdXFpfSG-_MGeEeG93qxvv3w05Kn0r1nFUc9SjUxPA-Jsx0Nw/viewform?usp=dialog", 
+          time: "9:03",
           ogpCard: {
-            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
-            title: "2126年 メンタルヘルス・スキャン",
-            desc: "学友会執行委員会 内部名簿・意見収集フォーム",
-            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
+            url: "https://docs.google.com/forms/d/e/1FAIpQLSdXFpfSG-_MGeEeG93qxvv3w05Kn0r1nFUc9SjUxPA-Jsx0Nw/viewform?usp=dialog",
+            title: "部署業務の認知度",
+            desc: "お使いのブラウザで JavaScript が有効になっていないため、このファイルは開けません。",
+            image: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=600",
             formId: "form_mental_scan"
           }
         }
