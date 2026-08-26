@@ -647,18 +647,13 @@ window.GAME_DATABASE = {
   // --- メッセージアプリ 「LINK」用コンテンツ ---
   linkApp: {
     // 友達一覧 (1〜2周目の初期状態)
+    // 連絡先一覧（全体連絡グループ一本化）
     contacts: [
-      { id: "jinnai", name: "陣内 樹", icon: "laptop", role: "企画3年 / PC持ち主", desc: "お前ら、例の実験データを早く回収しろ。" },
-      { id: "fukasawa", name: "深澤 文哉", icon: "shield", role: "広報 / まとめ役", desc: "ちょっとこれ見て…何かおかしくない？" },
-      { id: "inukai", name: "犬飼 (執行部実務)", icon: "zap", role: "側近", desc: "委員長の指示に従ってください。" },
-      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "事務連絡：明日の会議室の変更について" }
+      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】メンタルヘルス・スキャン..." }
     ],
-    // 3周目の不気味な変化後
+    // 3周目の変化後（同一グループ）
     contactsLoop3: [
-      { id: "jinnai", name: "陣内（監視対象）", icon: "eye", role: "企画3年", desc: "……逃げろ……" },
-      { id: "fukasawa", name: "深澤（接続切断）", icon: "alert-triangle", role: "広報", desc: "メッセージを送信できません。" },
-      { id: "inukai", name: "犬飼 (U.Z.W.統制局)", icon: "zap", role: "統制官", desc: "あなたの位置情報は特定されています。" },
-      { id: "committee_group", name: "【閉鎖】学友会執行委員会", icon: "x-circle", isGroup: true, desc: "この組織は35年前に解散されました。" }
+      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】メンタルヘルス・スキャン..." }
     ],
 
     // マイQRコード情報
@@ -669,63 +664,13 @@ window.GAME_DATABASE = {
       desc: "QRコードやリンクを使って、友だち追加しましょう。"
     },
 
-    // トーク履歴データ（周回による厳密なメッセージ制御 ＆ URL＋LINE風OGPカード）
+    // トーク履歴データ（初期状態は9/1のリマインドフォーム1通のみ）
     chats: {
-      "jinnai": [
-        { sender: "jinnai", text: "ごめん！パソコン研修室1に置きっぱなしにしちゃった！", time: "10:10", maxLoop: 1 },
-        { sender: "jinnai", text: "パスワードは『JNNITMNR』だから開いて確認してみて！", time: "10:11", maxLoop: 1 },
-        { sender: "jinnai", text: "おい、端末の準備はいいか？", time: "10:05", minLoop: 2, maxLoop: 2 },
-        { sender: "jinnai", text: "今回のループで絶対に安藤のデータを手に入れるぞ。", time: "10:06", minLoop: 2, maxLoop: 2 },
-        { sender: "jinnai", text: "もし失敗したら、また時間が巻き戻るだけだ。焦るな。", time: "10:08", minLoop: 2, maxLoop: 2 },
-        { sender: "jinnai", text: "ごめん！パソコン研修室1に置きっぱなしにしちゃった！パスワードは『JNNITMNR』ね！", time: "10:10", minLoop: 2, maxLoop: 2 },
-        { sender: "jinnai", text: "……逃げろ……あいつらが来る……！", time: "09:02", minLoop: 3 }
-      ],
-      "fukasawa": [
-        { sender: "fukasawa", text: "大ホールの施錠連絡忘れてただろ。ちゃんと施錠してから部屋出てくれよな。", time: "09:30", maxLoop: 1 },
-        { 
-          sender: "fukasawa", 
-          text: "あと、執行部の内部アンケートにまだ未回答なら、ここから回答お願い！\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
-          time: "09:32",
-          ogpCard: {
-            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
-            title: "2126年 メンタルヘルス・スキャン（意見収集）",
-            desc: "学友会執行委員会 内部名簿・健康管理アンケート",
-            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
-            formId: "form_mental_scan"
-          }
-        },
-        { sender: "fukasawa", text: "陣内先輩、最近ちょっとおかしいよね…？", time: "09:40", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "私、執行部の裏のデータベースから怪しいURLを見つけたの。", time: "09:41", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "これ、学生名簿とか予算が入ってるみたいなんだけど、アクセスに権限が必要で…", time: "09:42", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "URL送るから、ハッキングの得意なあなたの方で中身を見られない？", time: "09:43", minLoop: 2, maxLoop: 2 },
-        { 
-          sender: "fukasawa", 
-          text: "リンク送るね：\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
-          time: "09:44", 
-          minLoop: 2, 
-          maxLoop: 2,
-          ogpCard: {
-            url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
-            title: "2126年 メンタルヘルス・スキャン（内部名簿）",
-            desc: "学友会執行委員会 内部名簿・予算管理（※編集権限から侵入可能）",
-            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
-            formId: "form_mental_scan"
-          }
-        }
-      ],
-      "inukai": [
-        { sender: "inukai", text: "調査の進捗はどうですか？", time: "08:00", maxLoop: 1 },
-        { sender: "inukai", text: "余計な詮索はしないことです。あなたたちの仕事は資料の整理のみです。", time: "08:02", maxLoop: 1 },
-        { sender: "inukai", text: "委員長の指示に従ってください。データの漏洩には十分注意すること。", time: "08:50", minLoop: 2, maxLoop: 2 },
-        { sender: "inukai", text: "鵜沢向希様。あなたの持つスマートフォン内の過去データは重大な証拠です。直ちに引き渡しに応じなさい。", time: "09:50", minLoop: 3 }
-      ],
       "committee_group": [
-        { sender: "jinnai", text: "明日の会議は13時に研修室2集合な。", time: "昨日", maxLoop: 1 },
-        { sender: "fukasawa", text: "了解しました。安藤先生の講義資料も持参しますね。", time: "昨日", maxLoop: 1 },
         { 
           sender: "fukasawa", 
-          text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
-          time: "昨日",
+          text: "【リマインド】会内メンタルヘルス・スキャンの提出期限は本日中です。フォームへ回答をお願いします。\nhttps://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform", 
+          time: "9/1",
           ogpCard: {
             url: "https://docs.google.com/forms/d/e/1FAIpQLSf_CIT_mental_scan_2126/viewform",
             title: "2126年 メンタルヘルス・スキャン",
@@ -733,10 +678,7 @@ window.GAME_DATABASE = {
             image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600",
             formId: "form_mental_scan"
           }
-        },
-        { sender: "inukai", text: "委員長も同席されます。遅れないように。", time: "昨日", maxLoop: 2 },
-        { sender: "jinnai", text: "明日の会議は13時にSyzen社のラボ前集合な。", time: "昨日", minLoop: 2, maxLoop: 2 },
-        { sender: "fukasawa", text: "了解しました。安藤先生の資料も持っていきますね。", time: "昨日", minLoop: 2, maxLoop: 2 }
+        }
       ]
     },
 

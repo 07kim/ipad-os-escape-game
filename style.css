@@ -1980,9 +1980,58 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
+/* グループチャット行レイアウト（アイコン＋名前＋吹き出し） */
+.chat-message-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  width: 100%;
+}
+.chat-message-row.incoming {
+  justify-content: flex-start;
+}
+.chat-message-row.outgoing {
+  justify-content: flex-end;
+}
+
+.chat-sender-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+.chat-sender-avatar.avatar-j { background: #0284c7; }
+.chat-sender-avatar.avatar-f { background: #10b981; }
+.chat-sender-avatar.avatar-g { background: #ec4899; }
+.chat-sender-avatar.avatar-h { background: #8b5cf6; }
+.chat-sender-avatar.avatar-inukai { background: #ef4444; }
+.chat-sender-avatar.avatar-default { background: #64748b; }
+
+.chat-message-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.chat-sender-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+  margin-left: 2px;
+}
+
 /* メッセージ吹き出し */
 .message-bubble {
-  max-width: 68%;
+  max-width: 100%;
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 14px;

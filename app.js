@@ -16,7 +16,7 @@ let gameState = {
   clockSetTime: Date.now(), // 設定されたタイミングの現実タイムスタンプ
   unlockedHints: [],
   manabaUser: null,
-  addedFriends: ["jinnai", "fukasawa", "committee_group"], // 初期友達
+  addedFriends: ["committee_group"], // 初期友達（全体連絡グループのみ）
   activeApp: null,
   activeMetaTab: "overview",
   activeManabaTab: "mypage",
@@ -330,7 +330,7 @@ function executeRemoteAdminCommand(cmd) {
   }
 }
 
-// 🎭 演者メッセージをLINKチャットへリアルタイム注入
+// 🎭 演者メッセージをLINKチャットへリアルタイム注入（全体連絡グループ）
 function addActorMessageToLinkChat(senderCode, text, timeStr) {
   const actorMap = {
     'J': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
@@ -342,21 +342,17 @@ function addActorMessageToLinkChat(senderCode, text, timeStr) {
   };
 
   const senderInfo = actorMap[senderCode] || { id: senderCode, name: senderCode, icon: '💬' };
-  const targetRooms = ['fukasawa', 'jinnai', 'group'];
+  const targetRoom = 'committee_group';
 
   if (!window.GAME_DATABASE.linkApp) window.GAME_DATABASE.linkApp = { chats: {} };
   if (!window.GAME_DATABASE.linkApp.chats) window.GAME_DATABASE.linkApp.chats = {};
+  if (!window.GAME_DATABASE.linkApp.chats[targetRoom]) window.GAME_DATABASE.linkApp.chats[targetRoom] = [];
 
-  // 全体連絡・関係者トークルームへメッセージを追加
-  targetRooms.forEach(roomId => {
-    if (!window.GAME_DATABASE.linkApp.chats[roomId]) {
-      window.GAME_DATABASE.linkApp.chats[roomId] = [];
-    }
-    window.GAME_DATABASE.linkApp.chats[roomId].push({
-      sender: senderInfo.id,
-      text: text,
-      time: timeStr || getFormattedFakeTime()
-    });
+  // 全体連絡グループへメッセージを追加
+  window.GAME_DATABASE.linkApp.chats[targetRoom].push({
+    sender: senderInfo.id,
+    text: text,
+    time: timeStr || getFormattedFakeTime()
   });
 
   // 未読バッジ加算 ＆ 通知音 ＆ バナー
@@ -371,11 +367,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr) {
 
   // 現在LINKアプリを開いている場合は即時再描画
   if (gameState.activeApp === 'link') {
-    if (gameState.activeChatContact) {
-      openLinkChat(gameState.activeChatContact);
-    } else {
-      renderLinkChatList();
-    }
+    openLinkChat('committee_group');
   }
 }
 
@@ -962,6 +954,7 @@ function openApp(appId) {
       goBrowserHome();
     } else if (appId === 'link-app') {
       renderLinkChatList();
+      openLinkChat('committee_group');
     } else if (appId === 'manaba-app') {
       initManabaApp();
     } else if (appId === 'mail-app') {
@@ -2135,9 +2128,18 @@ function openLinkChat(contactId) {
     return true;
   });
   
+  const SENDER_METAS = {
+    "jinnai": { name: "陣内 樹", avatar: "J", avatarClass: "avatar-j" },
+    "fukasawa": { name: "深澤 文哉", avatar: "F", avatarClass: "avatar-f" },
+    "sotozono": { name: "外園 胡春", avatar: "G", avatarClass: "avatar-g" },
+    "higa": { name: "比嘉 俊希", avatar: "H", avatarClass: "avatar-h" },
+    "inukai": { name: "犬飼 玲", avatar: "犬", avatarClass: "avatar-inukai" },
+    "morino": { name: "森野 航", avatar: "森", avatarClass: "avatar-default" }
+  };
+
   filteredMessages.forEach(msg => {
     const isMe = msg.sender === "me" || msg.sender === "yada";
-    const bubbleClass = isMe ? "outgoing" : "incoming";
+    const meta = SENDER_METAS[msg.sender] || { name: msg.sender || "メンバー", avatar: (msg.sender || "M")[0].toUpperCase(), avatarClass: "avatar-default" };
     
     // URLの自動リンク化 ＆ OGPカード自動生成
     let formattedText = msg.text || '';
@@ -2184,13 +2186,33 @@ function openLinkChat(contactId) {
       `;
     }
 
-    messageArea.innerHTML += `
-      <div class="message-bubble ${bubbleClass}">
-        ${formattedText}
-        ${ogpHtml}
-        <span class="message-time">${msg.time}</span>
-      </div>
-    `;
+    if (isMe) {
+      messageArea.innerHTML += `
+        <div class="chat-message-row outgoing">
+          <div class="chat-message-content">
+            <div class="message-bubble outgoing">
+              ${formattedText}
+              ${ogpHtml}
+              <span class="message-time">${msg.time}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      messageArea.innerHTML += `
+        <div class="chat-message-row incoming">
+          <div class="chat-sender-avatar ${meta.avatarClass}">${meta.avatar}</div>
+          <div class="chat-message-content">
+            <div class="chat-sender-name">${meta.name}</div>
+            <div class="message-bubble incoming">
+              ${formattedText}
+              ${ogpHtml}
+              <span class="message-time">${msg.time}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   });
 
   // 3周目の不気味演出
