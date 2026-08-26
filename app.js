@@ -904,7 +904,18 @@ function closeAllWindowsSilent() {
   document.querySelectorAll('.app-window').forEach(win => {
     win.classList.remove('active');
   });
+  
+  // すべてのモーダル・スキャナー・オーバーレイを確実に非表示化
+  document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.style.display = 'none';
+  });
+  const inappForm = document.getElementById('link-inapp-form-overlay');
+  if (inappForm) inappForm.style.display = 'none';
+  const toast = document.getElementById('meta-evidence-toast');
+  if (toast) toast.style.display = 'none';
+
   closeHacking();
+  stopAllCameraStreams();
 }
 
 // --- 全画面アラート（運営指示） ---
@@ -1067,40 +1078,40 @@ function switchMetaTab(tabId) {
   }
 }
 
-// 📁 【概要】タブ描画: 周回ごとに解放 (1周目:2枚 / 2周目:4枚 / 3周目:6枚)
+// 📁 【概要】タブ描画: エクスプローラー風ファイル管理ビュー
 function renderMetaOverview() {
   const container = document.getElementById('meta-overview-grid');
-  const indicator = document.getElementById('overview-loop-indicator');
+  const countEl = document.getElementById('overview-file-count');
   if (!container) return;
 
   const currentLoop = Number(gameState.loop) || 1;
   const maxVisible = currentLoop === 1 ? 2 : (currentLoop === 2 ? 4 : 6);
 
-  if (indicator) {
-    indicator.innerText = `${currentLoop}周目 (${maxVisible}件解放中)`;
-  }
-
   const allFiles = window.GAME_DATABASE.metaApp.overviewFiles || [];
   const visibleFiles = allFiles.slice(0, maxVisible);
 
+  if (countEl) {
+    countEl.innerText = `${visibleFiles.length} items`;
+  }
+
   container.innerHTML = visibleFiles.map((file, idx) => `
-    <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')">
+    <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
       <div class="finder-thumb-wrapper">
-        <img src="${file.image}" class="finder-thumb-img" alt="${file.title}" loading="lazy">
+        <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
       </div>
       <div class="finder-file-name">${file.fileName}</div>
-      <div class="finder-file-desc">${file.desc || ''}</div>
+      <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
     </div>
   `).join('');
 
   if (window.lucide) lucide.createIcons();
 }
 
-// 🗺️ 【順路】タブ描画: 周回連動マップ1枚最大表示 (アスペクト比維持)
+// 🗺️ 【順路】タブ描画: マップ1枚最大表示 (アスペクト比維持)
 function renderMetaRoute() {
   const currentLoop = Number(gameState.loop) || 1;
   const routeData = (window.GAME_DATABASE.metaApp.routeMaps && window.GAME_DATABASE.metaApp.routeMaps[currentLoop]) || {
-    title: `${currentLoop}周目 調査順路マップ`,
+    title: "調査順路マップ",
     image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
     note: "指定の調査エリアを探索せよ。"
   };
@@ -1109,10 +1120,10 @@ function renderMetaRoute() {
   const imgEl = document.getElementById('meta-route-img');
   const noteEl = document.getElementById('meta-route-note');
 
-  if (titleEl) titleEl.innerText = `🗺️ ${routeData.title}`;
+  if (titleEl) titleEl.innerText = `🗺️ 調査順路マップ`;
   if (imgEl) {
     imgEl.src = routeData.image;
-    imgEl.alt = routeData.title;
+    imgEl.alt = "調査順路マップ";
   }
   if (noteEl) noteEl.innerText = routeData.note;
 
@@ -1129,6 +1140,7 @@ function openMetaLightbox(imgUrl, title) {
   img.src = imgUrl;
   if (titleEl) titleEl.innerText = title || "プレビュー";
   modal.style.display = 'flex';
+  logWriteToGAS("META_LIGHTBOX_OPEN", `プレビュー拡大: ${title || imgUrl}`);
 }
 
 function closeMetaLightbox() {

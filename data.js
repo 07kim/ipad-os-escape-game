@@ -97,19 +97,19 @@ window.GAME_DATABASE = {
     routeMaps: {
       1: {
         loop: 1,
-        title: "1周目：大ホール ＆ 研修室1〜3 調査順路",
+        title: "大ホール ＆ 研修室1〜3 調査順路",
         image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
         note: "大ホールを出発し、研修室3・PCルームを探索せよ。"
       },
       2: {
         loop: 2,
-        title: "2周目：未来資料保管庫 ＆ 役員室 調査順路",
+        title: "未来資料保管庫 ＆ 役員室 調査順路",
         image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600",
         note: "研修室4の未来資料と鵜沢の足取りを追跡せよ。"
       },
       3: {
         loop: 3,
-        title: "3周目：U.Z.W.本社タワー ＆ 最終脱出ルート",
+        title: "U.Z.W.本社タワー ＆ 最終脱出ルート",
         image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600",
         note: "セキュリティを突破し、最上階タイムマシンへ到達せよ。"
       }

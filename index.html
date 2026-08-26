@@ -233,13 +233,13 @@
           </div>
           <!-- コンテンツ表示エリア -->
           <div class="meta-content">
-            <!-- 1. 概要 (Finder風ファイル一覧) -->
+            <!-- 1. 概要 (エクスプローラー風 ファイル管理ビュー) -->
             <div class="meta-panel active" id="meta-panel-overview">
-              <div class="panel-header-row">
-                <h2>📁 概要資料フォルダ</h2>
-                <span class="loop-badge" id="overview-loop-indicator">1周目 (2件解放中)</span>
+              <div class="explorer-address-bar">
+                <i data-lucide="hard-drive"></i>
+                <span class="explorer-path">PC &gt; 内部ストレージ &gt; 概要資料</span>
+                <span class="explorer-file-count" id="overview-file-count">0 items</span>
               </div>
-              <p class="panel-subtext">タップするとファイルを画面全体でプレビューできます。</p>
               <div class="finder-grid" id="meta-overview-grid">
                 <!-- JSで動的レンダリング -->
               </div>
@@ -248,13 +248,13 @@
             <!-- 2. 順路 (アスペクト比維持 1枚最大表示マップ) -->
             <div class="meta-panel" id="meta-panel-route">
               <div class="panel-header-row">
-                <h2 id="meta-route-title">🗺️ 1周目 調査順路マップ</h2>
-                <span class="tap-zoom-hint"><i data-lucide="zoom-in"></i> タップで全画面拡大</span>
+                <h2 id="meta-route-title">🗺️ 調査順路マップ</h2>
+                <span class="tap-zoom-hint"><i data-lucide="zoom-in"></i> タップで拡大</span>
               </div>
               <div class="route-map-container" onclick="openMetaLightbox(document.getElementById('meta-route-img').src, document.getElementById('meta-route-title').innerText)">
                 <img id="meta-route-img" class="route-fit-img" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600" alt="順路マップ">
               </div>
-              <div class="route-note-box" id="meta-route-note">大ホールを出発し、研修室3・PCルームを探索せよ。</div>
+              <div class="route-note-box" id="meta-route-note">指定の調査エリアを探索せよ。</div>
             </div>
 
             <!-- 3. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
