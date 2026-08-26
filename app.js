@@ -3031,21 +3031,6 @@ function generateWavDataUri(type) {
 }
 
 function playSystemSound(type) {
-  // 1. HTML5 <audio> エレメントでの直接再生（Safariの最も確実な再生方式）
-  try {
-    const audioEl = document.getElementById('master-system-audio');
-    if (audioEl) {
-      audioEl.src = generateWavDataUri(type);
-      audioEl.volume = 1.0;
-      audioEl.play().catch(e => {
-        console.warn("HTML5 audio playback error:", e);
-      });
-    }
-  } catch (err) {
-    console.warn("Audio Element fallback error:", err);
-  }
-
-  // 2. Web Audio API での同時シンセサイズ再生（ハイブリッドバックアップ）
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -3053,43 +3038,133 @@ function playSystemSound(type) {
       ctx.resume().catch(() => {});
     }
 
+    const now = ctx.currentTime;
+
     if (type === "beep" || type === "dtmf") {
+      // 🎹 短いキータッチ・プッシュ音（クリックノイズのないクリアな正弦波）
       const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(type === "dtmf" ? 697 : 800, ctx.currentTime);
-      osc.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(type === "dtmf" ? 697 : 800, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+
     } else if (type === "success" || type === "notif") {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
-      osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08);
-      osc1.connect(ctx.destination);
-      osc2.connect(ctx.destination);
-      osc1.start();
-      osc1.stop(ctx.currentTime + 0.08);
-      osc2.start(ctx.currentTime + 0.08);
-      osc2.stop(ctx.currentTime + 0.3);
-    } else if (type === "error" || type === "alarm") {
-      const osc = ctx.createOscillator();
-      osc.type = type === "alarm" ? "sawtooth" : "square";
-      osc.frequency.setValueAtTime(type === "alarm" ? 440 : 150, ctx.currentTime);
-      if (type === "alarm") {
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.4);
-      }
-      osc.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + (type === "alarm" ? 0.6 : 0.25));
-    } else if (type === "fanfare") {
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, i) => {
+      // 🔔 Apple純正ライクな美しい2和音通知サウンド（上品なチャイム）
+      const notes = [
+        { freq: 587.33, start: 0.00, dur: 0.22, vol: 0.4 },  // D5
+        { freq: 880.00, start: 0.07, dur: 0.35, vol: 0.45 }  // A5
+      ];
+      notes.forEach(n => {
         const osc = ctx.createOscillator();
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
-        osc.connect(ctx.destination);
-        osc.start(ctx.currentTime + i * 0.12);
-        osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(n.freq, now + n.start);
+
+        const t0 = now + n.start;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(n.vol, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + n.dur + 0.02);
       });
+
+    } else if (type === "fanfare") {
+      // 🎺 輝かしいクリアなファンファーレ（4音アルペジオ＋豊かな余韻）
+      const chordNotes = [
+        { freq: 523.25, start: 0.00, dur: 0.35, vol: 0.35 },  // C5
+        { freq: 659.25, start: 0.10, dur: 0.35, vol: 0.35 },  // E5
+        { freq: 783.99, start: 0.20, dur: 0.45, vol: 0.40 },  // G5
+        { freq: 1046.50, start: 0.32, dur: 0.65, vol: 0.50 }  // C6 (ロングトーン)
+      ];
+      chordNotes.forEach(n => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle"; // 丸みと輝きのあるトライアングル波
+        osc.frequency.setValueAtTime(n.freq, now + n.start);
+
+        const t0 = now + n.start;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(n.vol, t0 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + n.dur + 0.02);
+      });
+
+    } else if (type === "hangup") {
+      // 📞 リアルな受話器切断音（カチッ・コトッという2段階フック音）
+      const clicks = [
+        { freq: 1400, start: 0.00, dur: 0.03, vol: 0.35 },
+        { freq: 350, start: 0.03, dur: 0.14, vol: 0.45 }
+      ];
+      clicks.forEach(c => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(c.freq, now + c.start);
+
+        const t0 = now + c.start;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(c.vol, t0 + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + c.dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + c.dur + 0.02);
+      });
+
+    } else if (type === "error" || type === "alarm") {
+      // ⚠️ 警告・エラー音（スムーズなフェード付き警告音）
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type === "alarm" ? "sawtooth" : "square";
+      
+      const dur = type === "alarm" ? 0.55 : 0.22;
+      osc.frequency.setValueAtTime(type === "alarm" ? 440 : 180, now);
+      if (type === "alarm") {
+        osc.frequency.exponentialRampToValueAtTime(880, now + dur * 0.7);
+      }
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + dur + 0.02);
+
+    } else if (type === "distortion") {
+      // ⚡ 時空歪曲グリッチノイズ（周波数スライド＋マイクロフェード）
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.4);
+      osc.frequency.exponentialRampToValueAtTime(120, now + 0.85);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.95);
     }
   } catch (e) {
     console.warn("Audio Context playback error:", e);
