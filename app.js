@@ -307,6 +307,76 @@ function executeRemoteAdminCommand(cmd) {
     }, 800);
     return;
   }
+
+  // ⑦ 演者トリガーによるリアルタイムLINKメッセージ配信
+  if (cmd.action === 'actor_message' || type === 'actor_message') {
+    const actor = cmd.actor || p.actor;
+    const text = cmd.text || p.text;
+    const autoReplySender = cmd.autoReplySender || p.autoReplySender;
+    const autoReplyText = cmd.autoReplyText || p.autoReplyText;
+    const msgTime = cmd.time || p.time || getFormattedFakeTime();
+
+    if (text) {
+      addActorMessageToLinkChat(actor, text, msgTime);
+
+      // J（陣内）からの送信でF（深澤）の自動返信が指定されている場合
+      if (autoReplySender && autoReplyText) {
+        setTimeout(() => {
+          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime());
+        }, 1500);
+      }
+    }
+    return;
+  }
+}
+
+// 🎭 演者メッセージをLINKチャットへリアルタイム注入
+function addActorMessageToLinkChat(senderCode, text, timeStr) {
+  const actorMap = {
+    'J': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
+    'G': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
+    'H': { id: 'higa', name: '比嘉 俊希', icon: 'H' },
+    'F': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
+    'fukasawa': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
+    'jinnai': { id: 'jinnai', name: '陣内 樹', icon: 'J' }
+  };
+
+  const senderInfo = actorMap[senderCode] || { id: senderCode, name: senderCode, icon: '💬' };
+  const targetRooms = ['fukasawa', 'jinnai', 'group'];
+
+  if (!window.GAME_DATABASE.linkApp) window.GAME_DATABASE.linkApp = { chats: {} };
+  if (!window.GAME_DATABASE.linkApp.chats) window.GAME_DATABASE.linkApp.chats = {};
+
+  // 全体連絡・関係者トークルームへメッセージを追加
+  targetRooms.forEach(roomId => {
+    if (!window.GAME_DATABASE.linkApp.chats[roomId]) {
+      window.GAME_DATABASE.linkApp.chats[roomId] = [];
+    }
+    window.GAME_DATABASE.linkApp.chats[roomId].push({
+      sender: senderInfo.id,
+      text: text,
+      time: timeStr || getFormattedFakeTime()
+    });
+  });
+
+  // 未読バッジ加算 ＆ 通知音 ＆ バナー
+  const badge = document.getElementById('dock-link-badge');
+  if (badge) {
+    badge.style.display = 'flex';
+    badge.innerText = String((parseInt(badge.innerText || '0') || 0) + 1);
+  }
+
+  playSystemSound("notif");
+  showPushNotification(`LINK: ${senderInfo.name}`, text, "message-square");
+
+  // 現在LINKアプリを開いている場合は即時再描画
+  if (gameState.activeApp === 'link') {
+    if (gameState.activeChatContact) {
+      openLinkChat(gameState.activeChatContact);
+    } else {
+      renderLinkChatList();
+    }
+  }
 }
 
 // 自分の進捗ステータスをGASへ送信（GET+POST ハイブリッド送信：100%確実通信）

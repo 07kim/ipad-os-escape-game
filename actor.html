@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>演者トリガーコンソール - 26__0094</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #007aff;
+      --primary-hover: #0056b3;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    /* ヘッダー */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 16px;
+    }
+
+    .app-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .sync-badge.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    /* ① 演者選択画面 */
+    #view-select-actor {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .actor-select-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .actor-select-card:active {
+      transform: scale(0.98);
+      border-color: var(--primary);
+      background: #253349;
+    }
+
+    .actor-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .actor-avatar.j { background: #0284c7; }
+    .actor-avatar.g { background: #ec4899; }
+    .actor-avatar.h { background: #8b5cf6; }
+
+    .actor-card-info {
+      flex: 1;
+    }
+    .actor-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .actor-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ② 演者トリガー操作画面 */
+    #view-actor-control {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .current-actor-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .switch-actor-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* トリガーボタングループ */
+    .trigger-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .trigger-item-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .trigger-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .trigger-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #334155;
+      color: #94a3b8;
+    }
+
+    .trigger-status {
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trigger-status.ready { color: #38bdf8; }
+    .trigger-status.sent { color: var(--success); }
+
+    .msg-preview-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      border-left: 3.5px solid var(--primary);
+    }
+
+    .auto-reply-box {
+      font-size: 11.5px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 巨大アクションボタン */
+    .send-trigger-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 900;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #007aff, #0056b3);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+      transition: all 0.15s ease;
+    }
+    .send-trigger-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+    }
+    .send-trigger-btn.disabled,
+    .send-trigger-btn:disabled {
+      background: #334155 !important;
+      color: #64748b !important;
+      box-shadow: none !important;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* トースト通知 */
+    #toast-banner {
+      position: fixed;
+      top: 20px;
+      left: 16px;
+      right: 16px;
+      padding: 14px 18px;
+      background: var(--success);
+      color: #fff;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      z-index: 1000;
+      animation: slideDown 0.25s ease-out;
+    }
+    #toast-banner.error {
+      background: var(--danger);
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* スピナー */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="app-title">
+      <i data-lucide="radio"></i> ACTOR TRIGGER
+    </div>
+    <div class="sync-badge" id="sync-status-badge">
+      <i data-lucide="wifi"></i> 接続中
+    </div>
+  </header>
+
+  <!-- トースト通知 -->
+  <div id="toast-banner">
+    <i data-lucide="check-circle" id="toast-icon"></i>
+    <span id="toast-msg">送信完了！全iPadへ配信されました</span>
+  </div>
+
+  <!-- ① 演者選択画面 -->
+  <div id="view-select-actor">
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">あなたの担当キャラクターを選択してください：</div>
+    
+    <div class="actor-select-card" onclick="selectActor('J')">
+      <div class="actor-avatar j">J</div>
+      <div class="actor-card-info">
+        <div class="actor-name">陣内 樹（J）</div>
+        <div class="actor-sub">全周回：大ホール施錠連絡 ＆ F自動返信</div>
+      </div>
+      <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
+    </div>
+
+    <div class="actor-select-card" onclick="selectActor('G')">
+      <div class="actor-avatar g">G</div>
+      <div class="actor-card-info">
+        <div class="actor-name">外園 胡春（G）</div>
+        <div class="actor-sub">1周目：森野捜索 ＆ タイムワープ報告（計2通）</div>
+      </div>
+      <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
+    </div>
+
+    <div class="actor-select-card" onclick="selectActor('H')">
+      <div class="actor-avatar h">H</div>
+      <div class="actor-card-info">
+        <div class="actor-name">比嘉 俊希（H）</div>
+        <div class="actor-sub">2周目・3周目：タイムワープ報告 ＆ U.Z.W.情報（計2通）</div>
+      </div>
+      <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
+    </div>
+  </div>
+
+  <!-- ② 演者トリガー操作画面 -->
+  <div id="view-actor-control">
+    <div class="current-actor-bar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="actor-avatar" id="current-actor-avatar" style="width:28px; height:28px; font-size:13px;">J</div>
+        <div style="font-weight:800; font-size:14px;" id="current-actor-name">陣内 樹（J）</div>
+      </div>
+      <button class="switch-actor-btn" onclick="backToActorSelect()">切替</button>
+    </div>
+
+    <div class="trigger-list" id="trigger-buttons-container"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    // 演者メッセージ定義
+    const ACTOR_SCRIPTS = {
+      J: {
+        code: "J",
+        name: "陣内 樹（J）",
+        avatarClass: "j",
+        triggers: [
+          {
+            id: "j_exit_hall",
+            stageTitle: "1周目〜3周目共通（各周回1回）",
+            btnLabel: "【送信】大ホール施錠連絡",
+            text: "大ホール退出しました。施錠お願いします。遅れてすみません。",
+            autoReply: "F（深澤 文哉）から「おけ」と自動返信されます",
+            autoReplySender: "fukasawa",
+            autoReplyText: "おけ"
+          }
+        ]
+      },
+      G: {
+        code: "G",
+        name: "外園 胡春（G）",
+        avatarClass: "g",
+        triggers: [
+          {
+            id: "g_search_morino",
+            stageTitle: "1周目：タイミング①",
+            btnLabel: "【送信①】森野の捜索連絡",
+            text: "森野見た人いませんか？"
+          },
+          {
+            id: "g_timewarp_alert",
+            stageTitle: "1周目：タイミング②",
+            btnLabel: "【送信②】タイムワープの自覚報告",
+            text: "タイムワープしてます！"
+          }
+        ]
+      },
+      H: {
+        code: "H",
+        name: "比嘉 俊希（H）",
+        avatarClass: "h",
+        triggers: [
+          {
+            id: "h_timewarp_loop2",
+            stageTitle: "2周目：タイミング",
+            btnLabel: "【2周目送信】タイムワープ報告",
+            text: "タイムワープしてます。"
+          },
+          {
+            id: "h_uzw_info_loop3",
+            stageTitle: "3周目：タイミング",
+            btnLabel: "【3周目送信】U.Z.W.情報共有",
+            text: "「U.Z.W.」の情報"
+          }
+        ]
+      }
+    };
+
+    let selectedActorKey = localStorage.getItem('actor_current_key') || null;
+    let sentTriggers = JSON.parse(localStorage.getItem('actor_sent_triggers') || '{}');
+
+    // 通信チャンネル（ローカル同一ブラウザ用）
+    const adminBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('escape_game_admin_channel') : null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (selectedActorKey && ACTOR_SCRIPTS[selectedActorKey]) {
+        showActorControl(selectedActorKey);
+      } else {
+        backToActorSelect();
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    function selectActor(key) {
+      selectedActorKey = key;
+      localStorage.setItem('actor_current_key', key);
+      showActorControl(key);
+    }
+
+    function backToActorSelect() {
+      selectedActorKey = null;
+      localStorage.removeItem('actor_current_key');
+      document.getElementById('view-select-actor').style.display = 'flex';
+      document.getElementById('view-actor-control').style.display = 'none';
+    }
+
+    function showActorControl(key) {
+      const actor = ACTOR_SCRIPTS[key];
+      if (!actor) return;
+
+      document.getElementById('view-select-actor').style.display = 'none';
+      document.getElementById('view-actor-control').style.display = 'flex';
+
+      const avatarEl = document.getElementById('current-actor-avatar');
+      avatarEl.className = `actor-avatar ${actor.avatarClass}`;
+      avatarEl.innerText = actor.code;
+      document.getElementById('current-actor-name').innerText = actor.name;
+
+      renderTriggers(actor);
+    }
+
+    function renderTriggers(actor) {
+      const container = document.getElementById('trigger-buttons-container');
+      container.innerHTML = "";
+
+      actor.triggers.forEach((tr, idx) => {
+        const isSent = !!sentTriggers[tr.id];
+
+        container.innerHTML += `
+          <div class="trigger-item-card">
+            <div class="trigger-header">
+              <span class="trigger-badge">${tr.stageTitle}</span>
+              <span class="trigger-status ${isSent ? 'sent' : 'ready'}">
+                <i data-lucide="${isSent ? 'check-circle' : 'radio'}"></i>
+                ${isSent ? '送信完了' : '待機中'}
+              </span>
+            </div>
+
+            <div class="msg-preview-box">
+              「${tr.text}」
+            </div>
+
+            ${tr.autoReply ? `
+              <div class="auto-reply-box">
+                <i data-lucide="corner-down-right" style="width:14px; height:14px;"></i>
+                <span>${tr.autoReply}</span>
+              </div>
+            ` : ''}
+
+            <button 
+              class="send-trigger-btn ${isSent ? 'disabled' : ''}" 
+              id="btn-${tr.id}"
+              ${isSent ? 'disabled' : ''}
+              onclick="fireTrigger('${actor.code}', '${tr.id}', '${encodeURIComponent(tr.text)}', '${tr.autoReplySender || ''}', '${encodeURIComponent(tr.autoReplyText || '')}')"
+            >
+              <i data-lucide="${isSent ? 'check' : 'send'}"></i>
+              <span>${isSent ? '✅ 送信済み' : tr.btnLabel}</span>
+            </button>
+          </div>
+        `;
+      });
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // 🚀 トリガー送信実行
+    async function fireTrigger(actorCode, triggerId, encodedText, autoReplySender, encodedReplyText) {
+      const btn = document.getElementById(`btn-${triggerId}`);
+      if (!btn || btn.disabled) return;
+
+      const text = decodeURIComponent(encodedText);
+      const replyText = encodedReplyText ? decodeURIComponent(encodedReplyText) : null;
+
+      // 送信中スピナー表示
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner"></div> <span>送信中...</span>`;
+
+      // スマホのバイブレーションフィードバック
+      if (navigator.vibrate) navigator.vibrate(50);
+
+      const commandPayload = {
+        action: "actor_message",
+        id: "ACTOR_" + triggerId + "_" + Date.now(),
+        actor: actorCode,
+        triggerId: triggerId,
+        text: text,
+        autoReplySender: autoReplySender,
+        autoReplyText: replyText,
+        time: getNowClockTime(),
+        timestamp: Date.now()
+      };
+
+      try {
+        // 1. ローカルBroadcastChannel送信
+        if (adminBroadcast) {
+          adminBroadcast.postMessage({
+            type: "actor_message",
+            payload: commandPayload
+          });
+        }
+        localStorage.setItem('latest_actor_command', JSON.stringify(commandPayload));
+        localStorage.setItem('latest_actor_command_time', Date.now());
+
+        // 2. Google Apps Script (GAS) クラウド送信（全iPadへ遠隔中継）
+        const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+        if (gasUrl) {
+          const sendUrl = gasUrl.includes('?') 
+            ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`
+            : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`;
+          
+          fetch(sendUrl, { mode: 'no-cors' }).catch(e => console.warn("GAS relay error:", e));
+        }
+
+        // 送信済みフラグ記録（連打防止）
+        sentTriggers[triggerId] = Date.now();
+        localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
+
+        // 成功フィードバック
+        if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+        showToast("✅ 送信完了！全iPadへ配信されました", false);
+
+        // ボタンを「送信済み」に変更
+        btn.innerHTML = `<i data-lucide="check"></i> <span>✅ 送信済み</span>`;
+        btn.classList.add('disabled');
+
+        // カード再描画
+        const actor = ACTOR_SCRIPTS[selectedActorKey];
+        if (actor) renderTriggers(actor);
+
+      } catch (err) {
+        console.error("Trigger failed:", err);
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="alert-circle"></i> <span>再試行する</span>`;
+        showToast("🔴 送信失敗: ネットワークを確認してください", true);
+      }
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast-banner');
+      const icon = document.getElementById('toast-icon');
+      const textEl = document.getElementById('toast-msg');
+      if (!toast) return;
+
+      textEl.innerText = msg;
+      toast.className = isError ? 'error' : '';
+      if (icon) icon.setAttribute('data-lucide', isError ? 'alert-triangle' : 'check-circle');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    function getNowClockTime() {
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+  </script>
+</body>
+</html>
