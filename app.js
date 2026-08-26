@@ -2769,7 +2769,7 @@ function makePhoneCall() {
   const overlay = document.getElementById('phone-calling-overlay');
   document.getElementById('phone-calling-number').innerText = dialNum;
   document.getElementById('phone-calling-status').innerText = "発信中...";
-  document.getElementById('phone-audio-subtitles').innerText = "プー…… プー……";
+  document.getElementById('phone-audio-subtitles').innerText = "プルルル…… プルルル……";
   overlay.style.display = 'flex';
 
   playSystemSound("ringback");
@@ -3064,24 +3064,23 @@ function playSystemSound(type) {
       });
 
     } else if (type === "ringback") {
-      // 📞 電話呼出音「プーーー……」（澄んだ400Hz発信音）
+      // 📞 電話呼出音「プルルルルル……」（400Hz + 16Hz 振幅変調音）
       const dur = 1.0;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(400, now);
-
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.65, now + 0.02);
-      gain.gain.setValueAtTime(0.65, now + dur - 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + dur + 0.01);
+      const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        const t = i / ctx.sampleRate;
+        const carrier = Math.sin(2 * Math.PI * 400 * t);
+        const mod = 0.5 + 0.5 * Math.sin(2 * Math.PI * 16 * t);
+        let env = 1.0;
+        if (t < 0.02) env = t / 0.02;
+        if (t > 0.96) env = (1.0 - t) / 0.04;
+        data[i] = carrier * mod * env * 0.75;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(now);
 
     } else if (type === "success" || type === "notif") {
       // 🔔 Apple純正ライクな美しい2和音通知サウンド（ハッキリ心地よいチャイム）
