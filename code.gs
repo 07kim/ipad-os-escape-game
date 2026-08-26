@@ -326,8 +326,8 @@ function recordAdminCommand(ss, command) {
   var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
   
   var target = (command && command.target) ? command.target : "ALL";
-  var type = (command && command.type) ? command.type : "alert";
-  var msg = (command && (command.message || command.alertMsg || command.name)) ? (command.message || command.alertMsg || command.name) : "";
+  var type = (command && (command.type || command.action)) ? (command.type || command.action) : "alert";
+  var msg = (command && (command.text || command.message || command.alertMsg || command.name)) ? (command.text || command.message || command.alertMsg || command.name) : "";
   var params = JSON.stringify(command || {});
 
   sheet.appendRow([cmdId, nowStr, target, type, msg, params]);

@@ -1003,6 +1003,8 @@
       if (navigator.vibrate) navigator.vibrate(50);
 
       const commandPayload = {
+        type: 'actor_message',
+        target: 'ALL',
         action: 'actor_message',
         id: 'ACTOR_' + triggerId + '_' + Date.now(),
         actor: actorCode,

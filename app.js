@@ -363,7 +363,8 @@ function executeRemoteAdminCommand(cmd) {
   }
 
   // ⑦ 演者トリガーによるリアルタイムLINKメッセージ配信
-  if (cmd.action === 'actor_message' || type === 'actor_message') {
+  const isActorMsg = (cmd.action === 'actor_message' || type === 'actor_message' || p.action === 'actor_message' || p.type === 'actor_message' || (p.text && p.actor));
+  if (isActorMsg) {
     const actor = cmd.actor || p.actor;
     const triggerId = cmd.triggerId || p.triggerId || "";
     const text = cmd.text || p.text;
@@ -393,7 +394,9 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     'H': { id: 'higa', name: '比嘉 俊希', icon: 'H' },
     'F': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
     'fukasawa': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
-    'jinnai': { id: 'jinnai', name: '陣内 樹', icon: 'J' }
+    'jinnai': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
+    'sotozono': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
+    'higa': { id: 'higa', name: '比嘉 俊希', icon: 'H' }
   };
 
   const senderInfo = actorMap[senderCode] || { id: senderCode, name: senderCode, icon: '💬' };
@@ -403,12 +406,26 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   if (!window.GAME_DATABASE.linkApp.chats) window.GAME_DATABASE.linkApp.chats = {};
   if (!window.GAME_DATABASE.linkApp.chats[targetRoom]) window.GAME_DATABASE.linkApp.chats[targetRoom] = [];
 
+  // メッセージの重複登録を防止（同一タイムスタンプまたは同一テキスト）
+  const existingList = window.GAME_DATABASE.linkApp.chats[targetRoom];
+  const isDuplicate = existingList.some(m => m.sender === senderInfo.id && m.text === text && (Date.now() - (m._addedAt || 0) < 5000));
+  if (isDuplicate) {
+    console.log(`⚠️ 重複演者メッセージのためスキップ: ${senderInfo.name}「${text}」`);
+    return;
+  }
+
   // 全体連絡グループへメッセージを追加
   window.GAME_DATABASE.linkApp.chats[targetRoom].push({
     sender: senderInfo.id,
     text: text,
-    time: timeStr || getFormattedFakeTime()
+    time: timeStr || getFormattedFakeTime(),
+    _addedAt: Date.now()
   });
+
+  // LocalStorageキャッシュを最新データで保存
+  try {
+    localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
+  } catch(e) {}
 
   // 未読バッジ加算 ＆ 通知音 ＆ バナー
   const badge = document.getElementById('dock-link-badge');
@@ -420,9 +437,15 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   playSystemSound("notif");
   showPushNotification(`LINK: ${senderInfo.name}`, text, "message-square");
 
-  // 現在LINKアプリを開いている場合は即時再描画
+  // LINKアプリが開いている場合は即時再描画 ＆ スクロール
   if (gameState.activeApp === 'link') {
     openLinkChat('committee_group');
+    const msgContainer = document.getElementById('link-messages-container');
+    if (msgContainer) {
+      setTimeout(() => {
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+      }, 50);
+    }
   }
 
   // 演者ツールへ「LINK反映完了（ACK）」を通知
