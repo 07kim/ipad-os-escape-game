@@ -2426,7 +2426,7 @@ body {
   height: 20px;
 }
 
-/* 📱 LINK専用 アプリ内フォームオーバーレイ */
+/* 📱 LINK専用 アプリ内フォームオーバーレイ (LINE風 スライドアップ) */
 .link-inapp-overlay {
   position: absolute;
   top: 0;
@@ -2434,7 +2434,7 @@ body {
   right: 0;
   bottom: 0;
   background: #ffffff;
-  z-index: 500;
+  z-index: 800;
   display: flex;
   flex-direction: column;
   animation: slideUpOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1);

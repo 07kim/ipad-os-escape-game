@@ -2054,16 +2054,18 @@ function openLinkChat(contactId) {
     const isMe = msg.sender === "me" || msg.sender === "yada";
     const bubbleClass = isMe ? "outgoing" : "incoming";
     
-    // URLの自動リンク化
+    // URLの自動リンク化 ＆ OGPカード自動生成
     let formattedText = msg.text || '';
+    let ogpHtml = '';
     const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = formattedText.match(urlRegex);
+
     formattedText = formattedText.replace(urlRegex, (url) => {
-      return `<a href="javascript:void(0)" onclick="openLinkInAppForm()" style="color:#0284c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
+      return `<a href="javascript:void(0)" onclick="openLinkInAppForm()" style="color:#0284c7; text-decoration:underline; word-break:break-all; font-weight:500;">${url}</a>`;
     });
     formattedText = formattedText.replace(/\n/g, '<br>');
 
     // LINE風 OGPカードHTML
-    let ogpHtml = '';
     if (msg.ogpCard) {
       const ogp = msg.ogpCard;
       ogpHtml = `
@@ -2072,6 +2074,25 @@ function openLinkChat(contactId) {
           <div class="line-ogp-body">
             <div class="line-ogp-title">${ogp.title}</div>
             <div class="line-ogp-desc">${ogp.desc}</div>
+            <div class="line-ogp-url"><i data-lucide="globe" style="width:10px; height:10px;"></i> docs.google.com</div>
+          </div>
+        </div>
+      `;
+    } else if (urls && urls.length > 0) {
+      const firstUrl = urls[0];
+      const isGForm = firstUrl.includes('google.com/forms');
+      const ogpTitle = isGForm ? "2126年 メンタルヘルス・スキャン" : "共有リンク";
+      const ogpDesc = isGForm ? "学友会執行委員会 内部保管データ申請フォーム" : firstUrl;
+      const ogpImg = isGForm 
+        ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600" 
+        : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600";
+
+      ogpHtml = `
+        <div class="line-ogp-card" onclick="openLinkInAppForm()">
+          <img src="${ogpImg}" class="line-ogp-thumb" alt="${ogpTitle}" loading="lazy">
+          <div class="line-ogp-body">
+            <div class="line-ogp-title">${ogpTitle}</div>
+            <div class="line-ogp-desc">${ogpDesc}</div>
             <div class="line-ogp-url"><i data-lucide="globe" style="width:10px; height:10px;"></i> docs.google.com</div>
           </div>
         </div>
