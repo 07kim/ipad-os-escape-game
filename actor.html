@@ -293,6 +293,89 @@
       color: #dc2626;
     }
 
+    /* 管理モードモーダル */
+    .admin-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 2000;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .admin-modal-card {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 380px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: popUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .admin-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #0f172a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 12px;
+    }
+    .admin-modal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .admin-reset-item-btn {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .admin-reset-item-btn:active {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: scale(0.98);
+    }
+    .admin-reset-item-btn.all {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+    .admin-reset-item-btn.all:active {
+      background: #fee2e2;
+    }
+    .admin-modal-close-btn {
+      margin-top: 4px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .admin-modal-close-btn:active {
+      background: #e2e8f0;
+    }
+
     /* トースト通知 */
     #toast-banner {
       position: fixed;
@@ -309,13 +392,21 @@
       align-items: center;
       gap: 8px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-      z-index: 1000;
+      z-index: 3000;
       animation: slideDown 0.25s ease-out;
     }
     #toast-banner.error {
       background: var(--danger);
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes popUp {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
     @keyframes slideDown {
       from { transform: translateY(-30px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -337,7 +428,7 @@
 </head>
 <body>
 
-  <!-- ヘッダー（タイトル連打でリセット） -->
+  <!-- ヘッダー（タイトル連打で管理モード） -->
   <header>
     <div class="app-title" id="app-title-btn" onclick="handleTitleClick()">
       <i data-lucide="radio"></i> ACTOR TRIGGER
@@ -351,6 +442,56 @@
   <div id="toast-banner">
     <i data-lucide="check-circle" id="toast-icon"></i>
     <span id="toast-msg">送信完了！全iPadへ配信されました</span>
+  </div>
+
+  <!-- 🔧 管理モード・選択リセットモーダル -->
+  <div class="admin-modal-overlay" id="admin-modal-overlay" onclick="closeAdminModal()">
+    <div class="admin-modal-card" onclick="event.stopPropagation()">
+      <div class="admin-modal-header">
+        <i data-lucide="sliders" style="color:var(--primary); width:18px; height:18px;"></i>
+        <span>演者管理メニュー（リセット選択）</span>
+      </div>
+
+      <div style="font-size:12px; color:var(--text-muted);">
+        リセットしたいキャラクターを選択してください：
+      </div>
+
+      <div class="admin-modal-list">
+        <button class="admin-reset-item-btn" onclick="resetSpecificActor('J')">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="actor-avatar j" style="width:24px; height:24px; font-size:11px;">J</div>
+            <span>陣内 樹（J）のみリセット</span>
+          </div>
+          <i data-lucide="rotate-ccw" style="width:14px; height:14px; color:#64748b;"></i>
+        </button>
+
+        <button class="admin-reset-item-btn" onclick="resetSpecificActor('G')">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="actor-avatar g" style="width:24px; height:24px; font-size:11px;">G</div>
+            <span>外園 胡春（G）のみリセット</span>
+          </div>
+          <i data-lucide="rotate-ccw" style="width:14px; height:14px; color:#64748b;"></i>
+        </button>
+
+        <button class="admin-reset-item-btn" onclick="resetSpecificActor('H')">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="actor-avatar h" style="width:24px; height:24px; font-size:11px;">H</div>
+            <span>比嘉 俊希（H）のみリセット</span>
+          </div>
+          <i data-lucide="rotate-ccw" style="width:14px; height:14px; color:#64748b;"></i>
+        </button>
+
+        <button class="admin-reset-item-btn all" onclick="resetAllActors()">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i data-lucide="alert-triangle" style="width:16px; height:16px;"></i>
+            <span>全キャラクター（J/G/H）一括リセット</span>
+          </div>
+          <i data-lucide="trash-2" style="width:14px; height:14px;"></i>
+        </button>
+      </div>
+
+      <button class="admin-modal-close-btn" onclick="closeAdminModal()">キャンセル</button>
+    </div>
   </div>
 
   <!-- ① 演者選択画面 -->
@@ -385,8 +526,8 @@
     </div>
 
     <div class="reset-control-box">
-      <button class="reset-btn" onclick="resetAllActorTriggers()">
-        <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> 送信状態をリセット
+      <button class="reset-btn" onclick="openAdminModal()">
+        <i data-lucide="sliders" style="width:14px; height:14px;"></i> 管理メニュー（リセット選択）
       </button>
     </div>
   </div>
@@ -404,8 +545,8 @@
     <div class="trigger-list" id="trigger-buttons-container"></div>
 
     <div class="reset-control-box">
-      <button class="reset-btn" onclick="resetAllActorTriggers()">
-        <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> 送信状態をリセット
+      <button class="reset-btn" onclick="openAdminModal()">
+        <i data-lucide="sliders" style="width:14px; height:14px;"></i> 管理メニュー（リセット選択）
       </button>
     </div>
   </div>
@@ -487,7 +628,7 @@
       adminBroadcast = new BroadcastChannel('escape_game_channel');
       adminBroadcast.onmessage = (event) => {
         if (event.data && (event.data.type === 'master_reset' || event.data.type === 'reset_actor_triggers')) {
-          resetAllActorTriggersSilent();
+          resetAllActorsSilent();
         }
       };
     }
@@ -497,7 +638,7 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
-    // 🔄 タイトル連打検知（5回タップでリセット）
+    // 🔄 タイトル連打検知（5回タップで管理モード表示）
     function handleTitleClick() {
       titleTapCount++;
       clearTimeout(titleTapTimer);
@@ -507,22 +648,58 @@
 
       if (titleTapCount >= 5) {
         titleTapCount = 0;
-        resetAllActorTriggers();
+        openAdminModal();
       }
     }
 
-    // 🔄 送信状態のリセット実行
-    function resetAllActorTriggers() {
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    // 🔧 管理モードモーダル
+    function openAdminModal() {
+      const modal = document.getElementById('admin-modal-overlay');
+      if (modal) modal.style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function closeAdminModal() {
+      const modal = document.getElementById('admin-modal-overlay');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // 🔄 特定のキャラクターのみリセット
+    function resetSpecificActor(code) {
+      const actor = ACTOR_SCRIPTS[code];
+      if (!actor) return;
+
+      actor.triggers.forEach(tr => {
+        delete sentTriggers[tr.id];
+      });
+
+      localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
+      closeAdminModal();
+
+      if (navigator.vibrate) navigator.vibrate([80, 50]);
+      showToast(`🔄 ${actor.name} の送信状態をリセットしました`, false);
+
+      if (currentActorCode === code && ACTOR_SCRIPTS[currentActorCode]) {
+        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      }
+    }
+
+    // 🔄 全キャラクター一括リセット
+    function resetAllActors() {
       sentTriggers = {};
       localStorage.removeItem('actor_sent_triggers');
-      showToast("🔄 送信状態をリセットしました", false);
+      closeAdminModal();
+
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      showToast("🔄 全キャラクターの送信状態をリセットしました", false);
+
       if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
         renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
       }
     }
 
-    function resetAllActorTriggersSilent() {
+    function resetAllActorsSilent() {
       sentTriggers = {};
       localStorage.removeItem('actor_sent_triggers');
       if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
