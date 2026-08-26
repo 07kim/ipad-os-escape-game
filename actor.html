@@ -9,16 +9,16 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #007aff;
-      --primary-hover: #0056b3;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --text: #0f172a;
+      --text-muted: #64748b;
     }
 
     * {
@@ -58,6 +58,13 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+    .app-title:active {
+      background: #e0f2fe;
     }
 
     .sync-badge {
@@ -68,9 +75,9 @@
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 12px;
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
     }
 
     /* ① 演者選択画面 */
@@ -83,19 +90,20 @@
 
     .actor-select-card {
       background: var(--card-bg);
-      border: 2px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
       border-radius: 16px;
       padding: 18px;
       display: flex;
       align-items: center;
       gap: 14px;
       cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       transition: all 0.15s ease;
     }
     .actor-select-card:active {
       transform: scale(0.98);
       border-color: var(--primary);
-      background: #253349;
+      background: #f0f9ff;
     }
 
     .actor-avatar {
@@ -110,6 +118,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .actor-avatar.j { background: #0284c7; }
     .actor-avatar.g { background: #ec4899; }
@@ -121,7 +130,7 @@
     .actor-name {
       font-size: 17px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
     }
     .actor-sub {
       font-size: 12px;
@@ -145,17 +154,21 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     }
 
     .switch-actor-btn {
-      background: transparent;
+      background: #f1f5f9;
       border: 1px solid var(--card-border);
       color: var(--text-muted);
-      padding: 4px 10px;
+      padding: 6px 12px;
       border-radius: 8px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+    }
+    .switch-actor-btn:active {
+      background: #e2e8f0;
     }
 
     /* トリガーボタングループ */
@@ -168,18 +181,19 @@
 
     .trigger-item-card {
       background: var(--card-bg);
-      border: 2px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
       border-radius: 18px;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
       transition: all 0.2s ease;
     }
     .trigger-item-card.locked {
-      opacity: 0.55;
-      background: #151f30;
-      border-color: #243044;
+      opacity: 0.6;
+      background: #f1f5f9;
+      border-color: #cbd5e1;
     }
 
     .trigger-header {
@@ -193,8 +207,8 @@
       font-weight: 800;
       padding: 4px 10px;
       border-radius: 6px;
-      background: #334155;
-      color: #94a3b8;
+      background: #e2e8f0;
+      color: #475569;
     }
 
     .trigger-status {
@@ -204,16 +218,20 @@
       align-items: center;
       gap: 4px;
     }
-    .trigger-status.ready { color: #38bdf8; }
+    .trigger-status.ready { color: #0284c7; }
     .trigger-status.sent { color: var(--success); }
     .trigger-status.locked { color: var(--warning); }
 
     .lock-hint-text {
       font-size: 11px;
-      color: var(--warning);
+      color: #b45309;
       display: flex;
       align-items: center;
       gap: 4px;
+      background: #fffbeb;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #fde68a;
     }
 
     /* 巨大アクションボタン */
@@ -224,27 +242,55 @@
       font-weight: 900;
       border-radius: 14px;
       border: none;
-      background: linear-gradient(135deg, #007aff, #0056b3);
+      background: linear-gradient(135deg, #0284c7, #0369a1);
       color: #fff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
       transition: all 0.15s ease;
     }
     .send-trigger-btn:active {
       transform: scale(0.98);
-      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
     }
     .send-trigger-btn.disabled,
     .send-trigger-btn:disabled {
-      background: #334155 !important;
-      color: #64748b !important;
+      background: #e2e8f0 !important;
+      color: #94a3b8 !important;
       box-shadow: none !important;
       cursor: not-allowed;
       transform: none !important;
+    }
+
+    /* フッターリセット枠 */
+    .reset-control-box {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--card-border);
+      display: flex;
+      justify-content: center;
+    }
+    .reset-btn {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .reset-btn:active {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #dc2626;
     }
 
     /* トースト通知 */
@@ -262,7 +308,7 @@
       display: none;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       z-index: 1000;
       animation: slideDown 0.25s ease-out;
     }
@@ -291,9 +337,9 @@
 </head>
 <body>
 
-  <!-- ヘッダー -->
+  <!-- ヘッダー（タイトル連打でリセット） -->
   <header>
-    <div class="app-title">
+    <div class="app-title" id="app-title-btn" onclick="handleTitleClick()">
       <i data-lucide="radio"></i> ACTOR TRIGGER
     </div>
     <div class="sync-badge" id="sync-status-badge">
@@ -337,6 +383,12 @@
       </div>
       <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
     </div>
+
+    <div class="reset-control-box">
+      <button class="reset-btn" onclick="resetAllActorTriggers()">
+        <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> 送信状態をリセット
+      </button>
+    </div>
   </div>
 
   <!-- ② 演者トリガー操作画面 -->
@@ -350,6 +402,12 @@
     </div>
 
     <div class="trigger-list" id="trigger-buttons-container"></div>
+
+    <div class="reset-control-box">
+      <button class="reset-btn" onclick="resetAllActorTriggers()">
+        <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> 送信状態をリセット
+      </button>
+    </div>
   </div>
 
   <script src="data.js"></script>
@@ -398,62 +456,84 @@
         triggers: [
           {
             id: "h_timewarp_loop2",
-            stageTitle: "2周目：タイミング",
-            btnLabel: "【2周目送信】タイムワープ報告",
+            stageTitle: "2周目：タイミング①",
+            btnLabel: "【送信①】2周目タイムワープ報告",
             text: "タイムワープしてます。"
           },
           {
-            id: "h_uzw_info_loop3",
-            stageTitle: "3周目：タイミング",
-            btnLabel: "【3周目送信】U.Z.W.情報共有",
+            id: "h_loop3_uzw_info",
+            stageTitle: "3周目：タイミング②",
+            btnLabel: "【送信②】「U.Z.W.」の情報共有",
             text: "「U.Z.W.」の情報"
           }
         ]
       }
     };
 
-    let selectedActorKey = localStorage.getItem('actor_current_key') || null;
-    let sentTriggers = JSON.parse(localStorage.getItem('actor_sent_triggers') || '{}');
+    let currentActorCode = null;
+    let sentTriggers = {};
+    let titleTapCount = 0;
+    let titleTapTimer = null;
 
-    // 通信チャンネル（ローカル同一ブラウザ用）
-    const adminBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('escape_game_admin_channel') : null;
-    if (adminBroadcast) {
-      adminBroadcast.onmessage = (e) => {
-        if (e.data && (e.data.type === 'master_reset' || e.data.type === 'reset_actor_triggers')) {
-          sentTriggers = {};
-          localStorage.removeItem('actor_sent_triggers');
-          if (selectedActorKey && ACTOR_SCRIPTS[selectedActorKey]) {
-            renderTriggers(ACTOR_SCRIPTS[selectedActorKey]);
-          }
-          showToast("🔄 公演リセットに伴い、送信履歴が初期化されました", false);
+    // LocalStorageから送信済み状態を復元
+    try {
+      const saved = localStorage.getItem('actor_sent_triggers');
+      if (saved) sentTriggers = JSON.parse(saved);
+    } catch(e) {}
+
+    // BroadcastChannel通信
+    let adminBroadcast = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      adminBroadcast = new BroadcastChannel('escape_game_channel');
+      adminBroadcast.onmessage = (event) => {
+        if (event.data && (event.data.type === 'master_reset' || event.data.type === 'reset_actor_triggers')) {
+          resetAllActorTriggersSilent();
         }
       };
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      if (selectedActorKey && ACTOR_SCRIPTS[selectedActorKey]) {
-        showActorControl(selectedActorKey);
-      } else {
-        backToActorSelect();
-      }
+    // アイコン初期化
+    window.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
-    function selectActor(key) {
-      selectedActorKey = key;
-      localStorage.setItem('actor_current_key', key);
-      showActorControl(key);
+    // 🔄 タイトル連打検知（5回タップでリセット）
+    function handleTitleClick() {
+      titleTapCount++;
+      clearTimeout(titleTapTimer);
+      titleTapTimer = setTimeout(() => {
+        titleTapCount = 0;
+      }, 2000);
+
+      if (titleTapCount >= 5) {
+        titleTapCount = 0;
+        resetAllActorTriggers();
+      }
     }
 
-    function backToActorSelect() {
-      selectedActorKey = null;
-      localStorage.removeItem('actor_current_key');
-      document.getElementById('view-select-actor').style.display = 'flex';
-      document.getElementById('view-actor-control').style.display = 'none';
+    // 🔄 送信状態のリセット実行
+    function resetAllActorTriggers() {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      sentTriggers = {};
+      localStorage.removeItem('actor_sent_triggers');
+      showToast("🔄 送信状態をリセットしました", false);
+      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      }
     }
 
-    function showActorControl(key) {
-      const actor = ACTOR_SCRIPTS[key];
+    function resetAllActorTriggersSilent() {
+      sentTriggers = {};
+      localStorage.removeItem('actor_sent_triggers');
+      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      }
+    }
+
+    // 演者選択
+    function selectActor(code) {
+      currentActorCode = code;
+      const actor = ACTOR_SCRIPTS[code];
       if (!actor) return;
 
       document.getElementById('view-select-actor').style.display = 'none';
@@ -467,6 +547,13 @@
       renderTriggers(actor);
     }
 
+    function backToActorSelect() {
+      document.getElementById('view-actor-control').style.display = 'none';
+      document.getElementById('view-select-actor').style.display = 'flex';
+      currentActorCode = null;
+    }
+
+    // トリガーリストの描画
     function renderTriggers(actor) {
       const container = document.getElementById('trigger-buttons-container');
       container.innerHTML = "";
@@ -475,27 +562,13 @@
         const isSent = !!sentTriggers[tr.id];
         const isLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
 
-        let statusText = "待機中";
-        let statusClass = "ready";
-        let statusIcon = "radio";
-
-        if (isSent) {
-          statusText = "送信完了";
-          statusClass = "sent";
-          statusIcon = "check-circle";
-        } else if (isLocked) {
-          statusText = "ロック中（1通目送信待ち）";
-          statusClass = "locked";
-          statusIcon = "lock";
-        }
-
         container.innerHTML += `
           <div class="trigger-item-card ${isLocked ? 'locked' : ''}">
             <div class="trigger-header">
               <span class="trigger-badge">${tr.stageTitle}</span>
-              <span class="trigger-status ${statusClass}">
-                <i data-lucide="${statusIcon}"></i>
-                ${statusText}
+              <span class="trigger-status ${isSent ? 'sent' : (isLocked ? 'locked' : 'ready')}">
+                <i data-lucide="${isSent ? 'check-circle' : (isLocked ? 'lock' : 'clock')}"></i>
+                ${isSent ? '送信済み' : (isLocked ? '🔒 ロック' : '待機中')}
               </span>
             </div>
 
