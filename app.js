@@ -541,6 +541,20 @@ function handleStorageEvent(e) {
 }
 
 // --- 嘘の時計ロジック ---
+function getFormattedFakeTime() {
+  try {
+    const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
+    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T10:00:00');
+    const fakeCurrent = new Date(startMs + elapsed);
+    const hh = String(fakeCurrent.getHours()).padStart(2, '0');
+    const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  } catch (e) {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+}
+
 function startFakeClock() {
   function updateClock() {
     const elapsed = Date.now() - gameState.clockSetTime;
