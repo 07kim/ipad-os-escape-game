@@ -2343,9 +2343,13 @@ function openLinkChat(contactId) {
           <div class="chat-message-content">
             <div class="message-bubble outgoing">
               ${formattedText}
-              ${ogpHtml}
               <span class="message-time">${msg.time}</span>
             </div>
+            ${ogpHtml ? `
+              <div class="message-bubble outgoing line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none; margin-top:4px;">
+                ${ogpHtml}
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
@@ -2357,9 +2361,13 @@ function openLinkChat(contactId) {
             <div class="chat-sender-name">${meta.name}</div>
             <div class="message-bubble incoming">
               ${formattedText}
-              ${ogpHtml}
               <span class="message-time">${msg.time}</span>
             </div>
+            ${ogpHtml ? `
+              <div class="message-bubble incoming line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none; margin-top:4px;">
+                ${ogpHtml}
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
