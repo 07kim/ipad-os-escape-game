@@ -5191,10 +5191,69 @@ body {
   border-radius: 50%;
   width: 14px;
   height: 14px;
-  display: inline-flex;
+/* サムネイルビュー・リストビュー スタイル */
+.portal-courses-list-view {
+  margin-top: 10px;
+}
+
+.portal-courses-thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.official-thumb-card {
+  border: 1px solid #d4d4d4;
+  border-radius: 4px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+
+.official-thumb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.thumb-card-header {
+  background: linear-gradient(to bottom, #88be28 0%, #6da114 100%);
+  padding: 8px 10px;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  margin-left: 2px;
+}
+
+.thumb-card-code {
+  font-size: 10px;
+  font-family: monospace;
+  opacity: 0.9;
+}
+
+.thumb-card-body {
+  padding: 10px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.thumb-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0272c1;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.thumb-card-meta {
+  font-size: 11px;
+  color: #555555;
 }
 
 /* 3. 個別指導案内ボックス */

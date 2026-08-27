@@ -1192,14 +1192,14 @@
                     <select class="portal-dropdown"><option>すべての年度</option><option selected>2026年度</option></select>
                   </div>
                   <div class="course-view-tabs">
-                    <button class="view-tab">サムネイル</button>
-                    <button class="view-tab">リスト</button>
-                    <button class="view-tab active">曜日</button>
+                    <button class="view-tab" id="view-tab-thumb" onclick="switchCourseViewMode('thumbnail')">サムネイル</button>
+                    <button class="view-tab" id="view-tab-list" onclick="switchCourseViewMode('list')">リスト</button>
+                    <button class="view-tab active" id="view-tab-week" onclick="switchCourseViewMode('timetable')">曜日</button>
                   </div>
                 </div>
 
-                <!-- 曜日時間割テーブル (月〜土 / 1〜7限 + 他) -->
-                <div class="portal-timetable-container">
+                <!-- 1. 曜日時間割ビュー (デフォルト) -->
+                <div class="portal-timetable-container" id="manaba-view-timetable">
                   <table class="official-timetable-grid">
                     <thead>
                       <tr>
@@ -1216,24 +1216,46 @@
                       <!-- JSで動的レンダリング -->
                     </tbody>
                   </table>
+
+                  <!-- 「その他の曜日」テーブル -->
+                  <div class="portal-other-courses-section">
+                    <h4 class="other-courses-title">その他の曜日</h4>
+                    <table class="official-other-courses-table">
+                      <thead>
+                        <tr>
+                          <th style="width:52%;">コース名</th>
+                          <th style="width:10%;">年度</th>
+                          <th style="width:18%;">開講情報</th>
+                          <th style="width:20%;">担当教員</th>
+                        </tr>
+                      </thead>
+                      <tbody id="manaba-official-other-courses-body">
+                        <!-- JSで動的レンダリング -->
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
-                <!-- 「その他の曜日」テーブル -->
-                <div class="portal-other-courses-section">
-                  <h4 class="other-courses-title">その他の曜日</h4>
+                <!-- 2. リスト表示ビュー -->
+                <div class="portal-courses-list-view" id="manaba-view-list" style="display:none;">
                   <table class="official-other-courses-table">
                     <thead>
                       <tr>
-                        <th style="width:52%;">コース名</th>
-                        <th style="width:10%;">年度</th>
-                        <th style="width:18%;">開講情報</th>
+                        <th style="width:48%;">コース名</th>
+                        <th style="width:12%;">年度</th>
+                        <th style="width:20%;">開講情報</th>
                         <th style="width:20%;">担当教員</th>
                       </tr>
                     </thead>
-                    <tbody id="manaba-official-other-courses-body">
+                    <tbody id="manaba-official-courses-list-body">
                       <!-- JSで動的レンダリング -->
                     </tbody>
                   </table>
+                </div>
+
+                <!-- 3. サムネイル表示ビュー -->
+                <div class="portal-courses-thumb-grid" id="manaba-view-thumbnail" style="display:none;">
+                  <!-- JSで動的レンダリング -->
                 </div>
 
               </div>
@@ -1253,7 +1275,7 @@
                   <div class="sidebar-sub-section">
                     <div class="sidebar-sub-title">◆ 未提出課題</div>
                     <div class="sidebar-link-row">
-                      <a href="#" class="sidebar-action-link">➔ 未提出課題一覧</a>
+                      <a href="javascript:void(0);" onclick="showPushNotification('課題一覧', '未提出課題: 【期末成果レポート】変調周波数の検証レポート (締切: 8/28 23:55)', 'alert-circle')" class="sidebar-action-link">➔ 未提出課題一覧</a>
                     </div>
                   </div>
                   <!-- 提出記録 -->
@@ -1261,7 +1283,7 @@
                     <div class="sidebar-sub-title">◆ 提出記録</div>
                     <p class="sidebar-empty-msg">最近の提出記録はありません</p>
                     <div class="sidebar-link-row">
-                      <a href="#" class="sidebar-action-link">➔ すべて表示</a>
+                      <a href="javascript:void(0);" onclick="showPushNotification('提出記録', '過去に提出されたレポートの履歴はありません。', 'file-check')" class="sidebar-action-link">➔ すべて表示</a>
                     </div>
                   </div>
                 </div>
@@ -1305,15 +1327,17 @@
             <!-- コース内メニューバー（立体ボタンの横並び） -->
             <div class="official-course-menubar">
               <div class="course-menu-buttons-left">
-                <button class="course-menu-btn">小テスト</button>
-                <button class="course-menu-btn">アンケート</button>
-                <button class="course-menu-btn has-badge">レポート <span class="menu-unread-badge">1</span></button>
-                <button class="course-menu-btn">プロジェクト</button>
-                <button class="course-menu-btn">成 績</button>
+                <button class="course-menu-btn" onclick="showPushNotification('小テスト', '現在実施中の小テストはありません。', 'file-question')">小テスト</button>
+                <button class="course-menu-btn" onclick="showPushNotification('アンケート', '回答が必要なアンケートはありません。', 'check-square')">アンケート</button>
+                <button class="course-menu-btn has-badge" onclick="showPushNotification('レポート', '未提出レポート: 【期末成果レポート】変調周波数の検証レポート (締切: 8/28)', 'file-text')">
+                  レポート <span class="menu-unread-badge">1</span>
+                </button>
+                <button class="course-menu-btn" onclick="showPushNotification('プロジェクト', '参加中のプロジェクトはありません。', 'briefcase')">プロジェクト</button>
+                <button class="course-menu-btn" onclick="showPushNotification('成 績', '成績発表期間外です（9月上旬公開予定）', 'award')">成 績</button>
               </div>
               <div class="course-menu-buttons-right">
-                <button class="course-menu-btn icon-btn">💬 掲示板</button>
-                <button class="course-menu-btn icon-btn active-green">📖 コースコンテンツ</button>
+                <button class="course-menu-btn icon-btn" onclick="showPushNotification('掲示板', '掲示板に新しい投稿はありません。', 'message-square')">💬 掲示板</button>
+                <button class="course-menu-btn icon-btn active-green" onclick="openManabaCoursePageView(0)">📖 コースコンテンツ</button>
               </div>
             </div>
 

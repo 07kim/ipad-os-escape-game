@@ -2960,6 +2960,156 @@ function handleManabaLogout() {
 
 const logoutManaba = handleManabaLogout;
 
+function switchCourseViewMode(mode) {
+  const timetableContainer = document.getElementById('manaba-view-timetable');
+  const listContainer = document.getElementById('manaba-view-list');
+  const thumbContainer = document.getElementById('manaba-view-thumbnail');
+
+  const tabThumb = document.getElementById('view-tab-thumb');
+  const tabList = document.getElementById('view-tab-list');
+  const tabWeek = document.getElementById('view-tab-week');
+
+  [tabThumb, tabList, tabWeek].forEach(t => t && t.classList.remove('active'));
+  [timetableContainer, listContainer, thumbContainer].forEach(c => c && (c.style.display = 'none'));
+
+  if (mode === 'thumbnail') {
+    if (tabThumb) tabThumb.classList.add('active');
+    if (thumbContainer) thumbContainer.style.display = 'grid';
+  } else if (mode === 'list') {
+    if (tabList) tabList.classList.add('active');
+    if (listContainer) listContainer.style.display = 'block';
+  } else {
+    if (tabWeek) tabWeek.classList.add('active');
+    if (timetableContainer) timetableContainer.style.display = 'block';
+  }
+}
+
+function renderManabaPortal() {
+  const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser] || {
+    name: "学生",
+    department: "一般教養課程",
+    studentId: "U24c3040",
+    timetable: {},
+    courses: []
+  };
+
+  // 1. ユーザー名・所属表示
+  const userNameEl = document.getElementById('portal-username-disp');
+  const userIdEl = document.getElementById('portal-userid-disp');
+  if (userNameEl) userNameEl.innerText = user.name;
+  if (userIdEl) userIdEl.innerText = user.studentId || gameState.manabaUser;
+
+  // 2. 曜日時間割（月〜土 1〜7限 + 他）のレンダリング
+  const timetableBody = document.getElementById('manaba-official-timetable-body');
+  if (timetableBody) {
+    timetableBody.innerHTML = "";
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    
+    for (let period = 1; period <= 7; period++) {
+      let rowHtml = `<tr><td class="col-period">${period}</td>`;
+      days.forEach(day => {
+        const periodIdx = period - 1;
+        const courseName = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
+        if (courseName) {
+          const matchedCourse = (user.courses && user.courses.find(c => c.name === courseName)) || { id: 'c_quantum', name: courseName };
+          rowHtml += `
+            <td class="has-course" onclick="openManabaCourse('${matchedCourse.id}')" title="${courseName}">
+              <a href="javascript:void(0);" class="timetable-course-link">${courseName}</a>
+            </td>
+          `;
+        } else {
+          rowHtml += `<td class="empty-cell"></td>`;
+        }
+      });
+      rowHtml += `</tr>`;
+      timetableBody.innerHTML += rowHtml;
+    }
+
+    // 「他」限目
+    let extraRowHtml = `<tr><td class="col-period">他</td>`;
+    days.forEach(day => {
+      const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][7]) || "";
+      if (extraCourse) {
+        extraRowHtml += `
+          <td class="has-course" onclick="openManabaCourse('c_quantum')">
+            <a href="javascript:void(0);" class="timetable-course-link">${extraCourse}</a>
+          </td>
+        `;
+      } else {
+        extraRowHtml += `<td class="empty-cell"></td>`;
+      }
+    });
+    extraRowHtml += `</tr>`;
+    timetableBody.innerHTML += extraRowHtml;
+  }
+
+  // 3. 「その他の曜日」テーブルのレンダリング
+  const otherBody = document.getElementById('manaba-official-other-courses-body');
+  if (otherBody) {
+    otherBody.innerHTML = "";
+    const courses = user.courses || [];
+    if (courses.length === 0) {
+      otherBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding:12px;">その他の曜日のコースはありません。</td></tr>`;
+    } else {
+      courses.forEach(c => {
+        otherBody.innerHTML += `
+          <tr onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
+            <td><a href="javascript:void(0);" class="other-course-name">${c.name}</a></td>
+            <td>2026</td>
+            <td>${c.term || '2026 前期'}</td>
+            <td>${c.teacher || '担当教員'}</td>
+          </tr>
+        `;
+      });
+    }
+  }
+
+  // 4. リストビューのレンダリング
+  const listBody = document.getElementById('manaba-official-courses-list-body');
+  if (listBody) {
+    listBody.innerHTML = "";
+    const courses = user.courses && user.courses.length > 0 ? user.courses : [
+      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "2026 前期 月曜 2限" }
+    ];
+    courses.forEach(c => {
+      listBody.innerHTML += `
+        <tr onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
+          <td><a href="javascript:void(0);" class="other-course-name">${c.name}</a></td>
+          <td>2026</td>
+          <td>${c.term || '2026 前期'}</td>
+          <td>${c.teacher || '神崎 恭介'}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // 5. サムネイルビューのレンダリング
+  const thumbGrid = document.getElementById('manaba-view-thumbnail');
+  if (thumbGrid) {
+    thumbGrid.innerHTML = "";
+    const courses = user.courses && user.courses.length > 0 ? user.courses : [
+      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "2026 前期 月曜 2限" }
+    ];
+    courses.forEach(c => {
+      thumbGrid.innerHTML += `
+        <div class="official-thumb-card" onclick="openManabaCourse('${c.id}')">
+          <div class="thumb-card-header">
+            <span class="thumb-card-code">24QM3011</span>
+            <span style="font-size:11px;">📖</span>
+          </div>
+          <div class="thumb-card-body">
+            <div class="thumb-card-title">${c.name}</div>
+            <div class="thumb-card-meta">
+              <div>担当: ${c.teacher || '神崎 恭介'}</div>
+              <div>${c.term || '2026 前期'}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+}
+
 function switchManabaTab(tabId) {
   gameState.activeManabaTab = tabId;
   const navTabs = document.querySelectorAll('.portal-nav-tabs .nav-tab');
