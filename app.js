@@ -5159,6 +5159,9 @@ async function attemptSwap(r1, c1, r2, c2) {
 
   playBubbleSwapSound();
 
+  const b1 = puzzleState.board[r1][c1];
+  const b2 = puzzleState.board[r2][c2];
+
   // 1. スワップ対象のDOMバブルを取得
   const bubble1 = document.getElementById(`bubble-${r1}-${c1}`);
   const bubble2 = document.getElementById(`bubble-${r2}-${c2}`);
@@ -5178,12 +5181,58 @@ async function attemptSwap(r1, c1, r2, c2) {
 
   await sleep(210);
 
+  // 🌈 レインボーとのスワップ判定（スワップ相手の色を一網打尽）
+  if (b1 && b2 && (b1.special === 'rainbow' || b2.special === 'rainbow')) {
+    const otherCell = b1.special === 'rainbow' ? b2 : b1;
+    const targetColor = otherCell.color;
+
+    // 仮想ボードでスワップ実行
+    const temp = puzzleState.board[r1][c1];
+    puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
+    puzzleState.board[r2][c2] = temp;
+
+    renderPuzzleBoard();
+    puzzleState.moves--;
+    document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
+    puzzleState.combo = 0;
+
+    spawnPrismFlash();
+    playPrismSound();
+
+    // ターゲット色の全セル＋レインボーセルを消去
+    const matchedCoords = new Set();
+    matchedCoords.add(`${r1},${c1}`);
+    matchedCoords.add(`${r2},${c2}`);
+    for (let r = 0; r < PUZZLE_ROWS; r++) {
+      for (let c = 0; c < PUZZLE_COLS; c++) {
+        const b = puzzleState.board[r][c];
+        if (b && (b.color === targetColor || b.special === 'rainbow')) {
+          matchedCoords.add(`${r},${c}`);
+        }
+      }
+    }
+    expandSpecialsRecursive(matchedCoords);
+
+    const initialMatchResult = {
+      matches: Array.from(matchedCoords).map(str => {
+        const [r, c] = str.split(',').map(Number);
+        return { r, c };
+      }),
+      newSpecials: []
+    };
+
+    await processMatches(initialMatchResult);
+    puzzleState.isProcessing = false;
+    if (puzzleState.moves <= 0) setTimeout(showPuzzleResult, 600);
+    return;
+  }
+
   // 2. 仮想ボードでスワップ
   const temp = puzzleState.board[r1][c1];
   puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
   puzzleState.board[r2][c2] = temp;
 
-  // 特殊バブル同士のスワップまたは通常マッチ判定
+  // 特殊バブル同士のスワップまたは通常マッチ判定（特殊バブルも自分の色で通常バブルと同色マッチ可能）
   const matchResult = findMatchesWithSpecials();
 
   if (matchResult.matches.length > 0) {

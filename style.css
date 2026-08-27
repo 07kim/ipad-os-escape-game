@@ -8116,11 +8116,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* 💥 特殊バブル：ラインボム（超高圧エレクトリック・レーザー球） */
+/* 💥 特殊バブル：ラインボム（元のジュエル色を保ち、電撃ネオンリングと稲妻⚡を帯電） */
 .puzzle-bubble.special-line {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #38bdf8 35%, #0284c7 70%, #0c4a6e 100%) !important;
-  box-shadow: 0 0 16px rgba(14, 165, 233, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2px #38bdf8 !important;
-  border: 1.5px solid #ffffff !important;
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2.5px #facc15 !important;
   animation: electricPulse 1.2s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-line::before {
@@ -8134,11 +8132,9 @@ body {
   z-index: 5;
 }
 
-/* 💣 特殊バブル：エリアボム（燃えるマグマ・ビッグボム球） */
+/* 💣 特殊バブル：エリアボム（元のジュエル色を保ち、燃える炎リングとボム💣を帯びる） */
 .puzzle-bubble.special-bomb {
-  background: radial-gradient(circle at 30% 30%, #fef08a 0%, #f97316 35%, #dc2626 70%, #450a0a 100%) !important;
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.95), inset 0 2px 4px #ffffff, 0 0 0 2px #ef4444 !important;
-  border: 1.5px solid #fef08a !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.95), inset 0 2px 4px #ffffff, 0 0 0 2.5px #ef4444 !important;
   animation: bombPulse 0.9s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-bomb::before {
@@ -8152,10 +8148,10 @@ body {
   z-index: 5;
 }
 
-/* 🌈 特殊バブル：レインボー（7色プリズム・ホログラム球） */
+/* 🌈 特殊バブル：レインボー（万能無色・7色プリズム球） */
 .puzzle-bubble.special-rainbow {
   background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f43f5e 20%, #fbbf24 40%, #10b981 60%, #38bdf8 80%, #a855f7 100%) !important;
-  box-shadow: 0 0 20px rgba(236, 72, 153, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2px #ec4899 !important;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2.5px #ec4899 !important;
   border: 1.5px solid #ffffff !important;
   animation: rainbowSpin 2.5s linear infinite;
 }
@@ -8173,12 +8169,12 @@ body {
 
 @keyframes electricPulse {
   0% { transform: scale(1.0); filter: brightness(1.0); }
-  100% { transform: scale(1.08); filter: brightness(1.25); }
+  100% { transform: scale(1.06); filter: brightness(1.2); }
 }
 
 @keyframes bombPulse {
   0% { transform: scale(1.0); box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), inset 0 2px 4px #ffffff; }
-  100% { transform: scale(1.10); box-shadow: 0 0 24px rgba(249, 115, 22, 1), inset 0 2px 4px #ffffff; }
+  100% { transform: scale(1.08); box-shadow: 0 0 22px rgba(249, 115, 22, 1), inset 0 2px 4px #ffffff; }
 }
 
 /* 選択状態 */
@@ -8257,6 +8253,12 @@ body {
     transform: translate(-50%, -85%) scale(1.0);
     opacity: 1;
   }
+  100% {
+    transform: translate(-50%, -120%) scale(0.85);
+    opacity: 0;
+  }
+}
+
 /* 💥 爆発スクリーンシェイク */
 .puzzle-shake-light {
   animation: screenShakeLight 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
@@ -8371,6 +8373,8 @@ body {
 @keyframes prismScreenFlash {
   0% { opacity: 0; transform: scale(0.8); }
   25% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
   100% { opacity: 0; transform: scale(1.2); }
 }
 
