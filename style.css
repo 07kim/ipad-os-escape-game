@@ -4105,18 +4105,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 4px;
 }
 
 .official-manaba-logo-img {
-  max-width: 96%;
-  max-height: 85%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
 /* [上段中央] 公式ログインフォーム */
 .cell-login-form {
-  padding: 12px 14px;
+  padding: 10px 14px;
   flex-direction: column;
 }
 
@@ -4125,7 +4125,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .official-login-title {
@@ -4135,22 +4135,24 @@ body {
   font-size: 15px;
   font-weight: 800;
   color: #5c9a00;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .official-form-row {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  position: relative;
 }
 
 .official-form-row label {
-  width: 65px;
+  min-width: 65px;
   font-size: 12px;
-  color: #333333;
-  font-weight: 600;
+  color: #222222;
+  font-weight: 700;
   text-align: right;
   margin-right: 8px;
+  white-space: nowrap; /* 2行改行を完全に防止 */
 }
 
 .official-input {
@@ -4171,7 +4173,7 @@ body {
 .official-form-btn-row {
   display: flex;
   justify-content: flex-end;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .official-login-btn {
@@ -4211,7 +4213,7 @@ body {
 
 /* [下段左] システムニュース */
 .cell-news {
-  padding: 10px;
+  padding: 8px 10px;
   overflow: hidden;
 }
 
@@ -4225,7 +4227,7 @@ body {
 }
 
 .official-news-item {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .news-date {
@@ -4245,6 +4247,7 @@ body {
 .cell-campus-photo {
   border: none;
   padding: 0;
+  overflow: hidden;
 }
 
 .campus-photo-wrapper {
@@ -4308,28 +4311,31 @@ body {
 /* 🔐 iPadOS公式スタイル キーチェーン自動入力ポップアップ */
 .ios-keychain-popup {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
-  right: 0;
-  z-index: 100;
-  margin-top: 6px;
-  background: rgba(255, 255, 255, 0.96);
+  z-index: 1000;
+  width: max-content;
+  min-width: 255px;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  padding: 10px 14px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), 0 3px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 13px;
+  padding: 8px 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
   cursor: pointer;
   animation: keychainPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: transform 0.1s, background-color 0.15s;
+  transition: transform 0.1s, background-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
 }
 
 .ios-keychain-popup:hover {
-  background: rgba(248, 250, 252, 0.98);
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .ios-keychain-popup:active {
@@ -4339,7 +4345,7 @@ body {
 @keyframes keychainPopIn {
   0% {
     opacity: 0;
-    transform: translateY(-8px) scale(0.96);
+    transform: translateY(-6px) scale(0.97);
   }
   100% {
     opacity: 1;
@@ -4351,6 +4357,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
 }
 
 .keychain-icon-wrap {
@@ -4362,12 +4369,14 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 5px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
 }
 
 .keychain-text-group {
   display: flex;
   flex-direction: column;
   text-align: left;
+  white-space: nowrap;
 }
 
 .keychain-title {
@@ -4375,6 +4384,7 @@ body {
   font-weight: 700;
   color: #1e293b;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .keychain-account {
@@ -4382,16 +4392,19 @@ body {
   color: #64748b;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 .keychain-badge {
   background: #007aff;
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 14px;
   box-shadow: 0 2px 4px rgba(0, 122, 255, 0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .autofilled-field {
