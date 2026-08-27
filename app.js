@@ -12,8 +12,9 @@ window.onerror = function(message, source, lineno, colno, error) {
 let gameState = {
   loop: 1,
   teamId: "チームA",
-  clockStartISO: "2126-08-22T10:00:00",
+  clockStartISO: "2126-08-22T09:04:00",
   clockSetTime: Date.now(), // 設定されたタイミングの現実タイムスタンプ
+  timerRunning: false, // スタートするまでは時が進まない
   unlockedHints: [],
   manabaUser: null,
   addedFriends: ["committee_group"], // 初期友達（全体連絡グループのみ）
@@ -674,8 +675,9 @@ function applyOperationalRestrictions() {
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
   gameState.teamId = localStorage.getItem('team_id') || 'チームA';
-  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2126-08-22T10:00:00';
+  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2126-08-22T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
+  gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
   
   try {
     gameState.unlockedHints = JSON.parse(localStorage.getItem('unlocked_hints') || '[]');
@@ -787,22 +789,21 @@ function handleStorageEvent(e) {
 // --- 嘘の時計ロジック ---
 function getFormattedFakeTime() {
   try {
-    const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T10:00:00');
+    const elapsed = gameState.timerRunning ? (Date.now() - (gameState.clockSetTime || Date.now())) : 0;
+    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T09:04:00');
     const fakeCurrent = new Date(startMs + elapsed);
     const hh = String(fakeCurrent.getHours()).padStart(2, '0');
     const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
   } catch (e) {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    return '09:04';
   }
 }
 
 function startFakeClock() {
   function updateClock() {
-    const elapsed = Date.now() - gameState.clockSetTime;
-    const startMs = Date.parse(gameState.clockStartISO);
+    const elapsed = gameState.timerRunning ? (Date.now() - gameState.clockSetTime) : 0;
+    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T09:04:00');
     const fakeCurrent = new Date(startMs + elapsed);
 
     const hh = String(fakeCurrent.getHours()).padStart(2, '0');
@@ -1204,6 +1205,14 @@ function unlockScreen() {
     lockScreen.classList.add('hidden');
     playSystemSound("notif");
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
+
+    // 🚀 ロック解除でゲーム開始（時間が進み始める）
+    if (!gameState.timerRunning) {
+      gameState.timerRunning = true;
+      gameState.clockSetTime = Date.now();
+      localStorage.setItem('game_timer_running', 'true');
+      localStorage.setItem('fake_clock_set_time', gameState.clockSetTime.toString());
+    }
   }
 }
 
