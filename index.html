@@ -210,6 +210,13 @@
             <span class="app-name">プチプチ</span>
           </div>
 
+          <div class="app-icon-wrapper" id="icon-compass-app" onclick="openApp('compass-app')">
+            <div class="app-icon app-compass-icon">
+              <i data-lucide="compass"></i>
+            </div>
+            <span class="app-name">コンパス</span>
+          </div>
+
         </div>
 
         <!-- 下部ドック (Dock) -->
@@ -2221,6 +2228,55 @@
         <div class="bubble-app-body">
           <div class="bubble-grid-container" id="bubble-grid-container">
             <!-- JSで動的生成 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑫ コンパス（Compass）アプリ -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-compass-app">
+        <div class="app-window-header" style="background:#000000; border-bottom:1px solid rgba(255,255,255,0.1); color:#ffffff;">
+          <span class="window-title" style="color:#ffffff;"><i data-lucide="compass" style="width:16px; height:16px; vertical-align:middle; margin-right:4px; color:#ffffff;"></i> コンパス</span>
+          <button class="window-close-btn" onclick="closeApp('compass-app')" style="background:rgba(255,255,255,0.15); color:#ffffff;">✕</button>
+        </div>
+        <div class="compass-app-body" onclick="toggleCompassTargetLock()">
+          <div class="compass-main-container">
+            <!-- ダイヤル文字盤 -->
+            <div class="compass-dial-wrap" id="compass-dial-wrap">
+              <div class="compass-dial" id="compass-dial">
+                <!-- SVG目盛り盤 -->
+                <svg viewBox="0 0 320 320" class="compass-svg-dial">
+                  <circle cx="160" cy="160" r="148" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                  <!-- 主要方角文字 -->
+                  <text x="160" y="34" class="compass-label-n">N</text>
+                  <text x="294" y="166" class="compass-label">E</text>
+                  <text x="160" y="298" class="compass-label">S</text>
+                  <text x="26" y="166" class="compass-label">W</text>
+                  <!-- 30度ごとの目盛り -->
+                  <g class="compass-ticks" id="compass-ticks-group"></g>
+                </svg>
+                <!-- 偏差ターゲットゾーン（ロック時表示） -->
+                <div class="compass-target-zone" id="compass-target-zone"></div>
+              </div>
+              <!-- 中央十字レティクル＆水平器 -->
+              <div class="compass-reticle">
+                <div class="reticle-cross h"></div>
+                <div class="reticle-cross v"></div>
+                <div class="reticle-level-dot" id="reticle-level-dot"></div>
+              </div>
+            </div>
+
+            <!-- 方位＆角度表示 -->
+            <div class="compass-readout-section">
+              <div class="compass-degree-line">
+                <span class="compass-degree-val" id="compass-degree-val">0°</span>
+                <span class="compass-dir-val" id="compass-dir-val">北</span>
+              </div>
+              <div class="compass-location-text">千葉県 東金市</div>
+              <div class="compass-coords-text">35°33'36" N 140°21'48" E</div>
+              <div class="compass-elevation-text">標高 12m</div>
+            </div>
           </div>
         </div>
       </div>

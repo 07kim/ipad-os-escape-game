@@ -1236,6 +1236,8 @@ function openApp(appId) {
       updateCalcDisplay();
     } else if (appId === 'bubble-app') {
       initBubbleWrap();
+    } else if (appId === 'compass-app') {
+      initCompassApp();
     }
     
     logWriteToGAS("APP_OPEN", `アプリを開きました: ${appId}`);
@@ -4903,14 +4905,190 @@ function playBubblePopSound() {
   } catch(e) {}
 }
 
-// 初期化時にフラグ（enableBubbleWrap）を判定してアイコン表示制御
+// 初期化時にフラグ（enableBubbleWrap / enableCompass）を判定してアイコン表示制御
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
-    const isEnabled = !(window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.features && window.GAME_DATABASE.system.features.enableBubbleWrap === false);
+    const isBubbleEnabled = !(window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.features && window.GAME_DATABASE.system.features.enableBubbleWrap === false);
     const bubbleIcon = document.getElementById('icon-bubble-app');
     if (bubbleIcon) {
-      bubbleIcon.style.display = isEnabled ? 'flex' : 'none';
+      bubbleIcon.style.display = isBubbleEnabled ? 'flex' : 'none';
+    }
+
+    const isCompassEnabled = !(window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.features && window.GAME_DATABASE.system.features.enableCompass === false);
+    const compassIcon = document.getElementById('icon-compass-app');
+    if (compassIcon) {
+      compassIcon.style.display = isCompassEnabled ? 'flex' : 'none';
     }
   }, 100);
 });
+
+// ==========================================================================
+// ⑫ Apple純正 iPadOS「コンパス（Compass）」エンジン完全再現
+// ==========================================================================
+let compassInitialized = false;
+let currentCompassHeading = 0;
+let lockedCompassHeading = null;
+
+function initCompassApp() {
+  const ticksGroup = document.getElementById('compass-ticks-group');
+  if (ticksGroup && ticksGroup.children.length === 0) {
+    // 30度ごとの長短目盛りを生成
+    for (let deg = 0; deg < 360; deg += 3) {
+      const rad = (deg - 90) * (Math.PI / 180);
+      const isMajor = (deg % 30 === 0);
+      const isMedium = (deg % 15 === 0);
+      const len = isMajor ? 14 : (isMedium ? 9 : 5);
+      const rOuter = 148;
+      const rInner = rOuter - len;
+
+      const x1 = 160 + rOuter * Math.cos(rad);
+      const y1 = 160 + rOuter * Math.sin(rad);
+      const x2 = 160 + rInner * Math.cos(rad);
+      const y2 = 160 + rInner * Math.sin(rad);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('class', isMajor ? 'compass-tick major' : 'compass-tick');
+      ticksGroup.appendChild(line);
+    }
+  }
+
+  if (!compassInitialized) {
+    compassInitialized = true;
+    startCompassOrientationListener();
+  }
+
+  updateCompassUI(currentCompassHeading, 0, 0);
+}
+
+function startCompassOrientationListener() {
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    // iOS 13+ でのセンサー権限リクエスト
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('deviceorientation', handleCompassOrientation, true);
+        }
+      }).catch(() => {});
+    } else {
+      window.addEventListener('deviceorientation', handleCompassOrientation, true);
+    }
+  }
+
+  // PC・非センサー環境でのドラッグ/スワイプ回転フォールバック
+  let isDragging = false;
+  let startX = 0;
+  const dialWrap = document.getElementById('compass-dial-wrap');
+  if (dialWrap && !dialWrap._dragBound) {
+    dialWrap._dragBound = true;
+    dialWrap.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      currentCompassHeading = (currentCompassHeading - dx * 0.5 + 360) % 360;
+      startX = e.clientX;
+      updateCompassUI(currentCompassHeading, 0, 0);
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // タッチスワイプ対応
+    dialWrap.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length === 1) {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+      }
+    }, { passive: true });
+    dialWrap.addEventListener('touchmove', (e) => {
+      if (!isDragging || !e.touches || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - startX;
+      currentCompassHeading = (currentCompassHeading - dx * 0.5 + 360) % 360;
+      startX = e.touches[0].clientX;
+      updateCompassUI(currentCompassHeading, 0, 0);
+    }, { passive: true });
+    dialWrap.addEventListener('touchend', () => { isDragging = false; });
+  }
+}
+
+function handleCompassOrientation(e) {
+  let heading = 0;
+  if (e.webkitCompassHeading !== undefined) {
+    // iOS Safari (北=0, 時計回り)
+    heading = e.webkitCompassHeading;
+  } else if (e.alpha !== null) {
+    // Android / 標準
+    heading = 360 - e.alpha;
+  }
+
+  const pitch = e.beta || 0;
+  const roll = e.gamma || 0;
+
+  currentCompassHeading = Math.round(heading);
+  updateCompassUI(currentCompassHeading, pitch, roll);
+}
+
+function getCompassDirectionName(deg) {
+  const dirs = [
+    { name: "北", min: 337.5, max: 360 },
+    { name: "北", min: 0, max: 22.5 },
+    { name: "北東", min: 22.5, max: 67.5 },
+    { name: "東", min: 67.5, max: 112.5 },
+    { name: "南東", min: 112.5, max: 157.5 },
+    { name: "南", min: 157.5, max: 202.5 },
+    { name: "南西", min: 202.5, max: 247.5 },
+    { name: "西", min: 247.5, max: 292.5 },
+    { name: "北西", min: 292.5, max: 337.5 }
+  ];
+  for (const d of dirs) {
+    if (deg >= d.min && deg < d.max) return d.name;
+  }
+  return "北";
+}
+
+function updateCompassUI(deg, pitch, roll) {
+  const dial = document.getElementById('compass-dial');
+  const degVal = document.getElementById('compass-degree-val');
+  const dirVal = document.getElementById('compass-dir-val');
+  const levelDot = document.getElementById('reticle-level-dot');
+
+  if (dial) {
+    dial.style.transform = `rotate(${-deg}deg)`;
+  }
+  if (degVal) {
+    degVal.innerText = `${Math.round(deg)}°`;
+  }
+  if (dirVal) {
+    dirVal.innerText = getCompassDirectionName(deg);
+  }
+
+  // 水平器ドットの移動（pitch/roll制限）
+  if (levelDot) {
+    const clampPitch = Math.max(-16, Math.min(16, pitch));
+    const clampRoll = Math.max(-16, Math.min(16, roll));
+    levelDot.style.transform = `translate(${clampRoll}px, ${clampPitch}px)`;
+  }
+
+  // ロック時のターゲットゾーン更新
+  const targetZone = document.getElementById('compass-target-zone');
+  if (targetZone && lockedCompassHeading !== null) {
+    targetZone.style.display = 'block';
+  } else if (targetZone) {
+    targetZone.style.display = 'none';
+  }
+}
+
+function toggleCompassTargetLock() {
+  playSystemSound("dtmf");
+  if (lockedCompassHeading === null) {
+    lockedCompassHeading = currentCompassHeading;
+  } else {
+    lockedCompassHeading = null;
+  }
+  updateCompassUI(currentCompassHeading, 0, 0);
+}
 

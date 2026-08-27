@@ -10,7 +10,8 @@ window.GAME_DATABASE = {
     teamId: "チームA",
     deviceOwner: "26__0094 調査端末",
     features: {
-      enableBubbleWrap: true // 🔘 無限プチプチアプリのON/OFF（falseにすると非表示になります）
+      enableBubbleWrap: true, // 🔘 無限プチプチアプリのON/OFF（falseで非表示）
+      enableCompass: true     // 🧭 コンパスアプリのON/OFF（falseで非表示）
     },
     spec: {
       os: "iPadOS",
