@@ -794,19 +794,9 @@
           </div>
         </div>
 
-        <!-- 個別遠隔操作アクション -->
-        <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
-          <i data-lucide="sliders" style="width:13px; height:13px; color:var(--primary);"></i> この端末への個別遠隔指示
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:16px;">
-          <button class="nav-btn" onclick="sendIndividualLoop(1)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#f0f9ff; border-color:#bae6fd; color:#0369a1; font-weight:700;">🌀 1周目に変更</button>
-          <button class="nav-btn" onclick="sendIndividualLoop(2)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#fff7ed; border-color:#fed7aa; color:#c2410c; font-weight:700;">🌀 2周目に変更</button>
-          <button class="nav-btn" onclick="sendIndividualLoop(3)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#fef2f2; border-color:#fecaca; color:#b91c1c; font-weight:700;">🌀 3周目に変更</button>
-        </div>
-
-        <!-- 個別アラート送信フォーム -->
+        <!-- 個別アラート・ヒント送信フォーム -->
         <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
-          <i data-lucide="message-square" style="width:13px; height:13px; color:var(--danger);"></i> この端末だけに緊急メッセージ割込表示
+          <i data-lucide="message-square" style="width:13px; height:13px; color:var(--primary);"></i> この端末だけに個別指示・ヒントを送信（画面割込）
         </div>
         <div style="display:flex; gap:6px;">
           <input type="text" id="dev-modal-msg-input" placeholder="例: 【ヒント】ブラウザのニュースを確認してください" style="flex:1; padding:8px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border-color);">
@@ -1637,23 +1627,6 @@
       const overlay = document.getElementById('device-modal-overlay');
       if (overlay) overlay.style.display = 'none';
       currentSelectedDeviceId = null;
-    }
-
-    // 個別端末の周回変更
-    function sendIndividualLoop(targetLoop) {
-      if (!currentSelectedDeviceId) return;
-      const deviceId = currentSelectedDeviceId;
-      sendCloudAdminCommand({
-        id: "DEV_LOOP_" + deviceId + "_" + Date.now(),
-        type: "preset",
-        name: `個別周回移行 (${deviceId} ➔ ${targetLoop}周目)`,
-        params: {
-          targetDevice: deviceId,
-          loop: targetLoop,
-          timestamp: Date.now()
-        }
-      }, `🌀 ${deviceId} を【${targetLoop}周目】に変更しました！`);
-      closeDeviceModal();
     }
 
     // 個別端末への緊急メッセージ送信
