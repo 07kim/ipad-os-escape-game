@@ -8116,22 +8116,51 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* 💥 特殊バブル：ラインボム */
+/* 💥 特殊バブル：ラインボム（十字レーザー） */
+.puzzle-bubble.special-line {
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.7), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+}
 .puzzle-bubble.special-line::before {
   content: '⚡';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
+  font-size: 16px;
   filter: drop-shadow(0 0 4px #ffffff);
+  animation: pulse 0.7s infinite alternate;
+}
+
+/* 💣 特殊バブル：エリアボム（周囲3x3大爆発） */
+.puzzle-bubble.special-bomb {
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.75), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+}
+.puzzle-bubble.special-bomb::before {
+  content: '💣';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px #ffffff);
+  animation: bounce 0.8s infinite alternate;
 }
 
 /* 🌈 特殊バブル：レインボー */
 .puzzle-bubble.special-rainbow {
   background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f43f5e 25%, #eab308 50%, #10b981 75%, #06b6d4 100%) !important;
-  box-shadow: 0 0 16px rgba(236, 72, 153, 0.6), inset 0 2px 4px #fff !important;
+  box-shadow: 0 0 18px rgba(236, 72, 153, 0.75), inset 0 2px 4px #fff !important;
   animation: rainbowSpin 3s linear infinite;
+}
+.puzzle-bubble.special-rainbow::before {
+  content: '★';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15px;
+  color: #ffffff;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 
 /* 選択状態 */

@@ -5006,10 +5006,20 @@ function setupBubbleInteraction(el, r, c) {
   });
 }
 
-// セル選択＆タップスワップ処理
+// セル選択＆タップスワップ／特殊バブル即時起爆
 function handleCellClick(r, c) {
   if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
+  const cellData = puzzleState.board[r][c];
+  if (!cellData) return;
 
+  // 💥 特殊バブル（ボム・レーザー・レインボー）をタップした場合は即時起爆！
+  if (cellData.special && cellData.special !== 'none') {
+    puzzleState.selectedCell = null;
+    detonateSpecialBubble(r, c);
+    return;
+  }
+
+  // 通常バブルの選択＆タップスワップ
   if (!puzzleState.selectedCell) {
     puzzleState.selectedCell = { r, c };
     playBubblePopSound(480, 0.06);
@@ -5030,6 +5040,62 @@ function handleCellClick(r, c) {
       playBubblePopSound(480, 0.06);
       renderPuzzleBoard();
     }
+  }
+}
+
+// 💥 特殊バブルのタップ起爆処理
+async function detonateSpecialBubble(r, c) {
+  if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
+  puzzleState.isProcessing = true;
+
+  const targetBubble = puzzleState.board[r][c];
+  if (!targetBubble) {
+    puzzleState.isProcessing = false;
+    return;
+  }
+
+  puzzleState.moves--;
+  document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
+  puzzleState.combo = 0;
+
+  // 起爆範囲を収集
+  const blastCoords = new Set();
+  blastCoords.add(`${r},${c}`);
+  expandSpecialsRecursive(blastCoords);
+
+  const matchedList = Array.from(blastCoords).map(k => {
+    const [row, col] = k.split(',').map(Number);
+    return { r: row, c: col };
+  });
+
+  // 音響＆スコア
+  playBubbleMatchSound(1);
+  const points = matchedList.length * 150;
+  addPuzzleScore(points);
+  spawnBoardComboPopup(matchedList, 1, points);
+
+  // 破裂アニメーション
+  matchedList.forEach(m => {
+    const bubbleEl = document.getElementById(`bubble-${m.r}-${m.c}`);
+    if (bubbleEl) bubbleEl.classList.add('popping');
+    puzzleState.board[m.r][m.c] = null;
+  });
+
+  await sleep(220);
+
+  // 重力落下＆新バブル補充
+  applyGravityAndRefill();
+  renderPuzzleBoard();
+
+  await sleep(250);
+
+  // 起爆後の連鎖マッチ処理
+  await processMatches();
+
+  puzzleState.isProcessing = false;
+
+  if (puzzleState.moves <= 0) {
+    setTimeout(showPuzzleResult, 600);
   }
 }
 
@@ -5064,16 +5130,16 @@ async function attemptSwap(r1, c1, r2, c2) {
   puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
   puzzleState.board[r2][c2] = temp;
 
-  // 3. マッチ判定
-  const matches = findMatches();
+  // 特殊バブル同士のスワップまたは通常マッチ判定
+  const matchResult = findMatchesWithSpecials();
 
-  if (matches.length > 0) {
+  if (matchResult.matches.length > 0) {
     // マッチ成立！
     renderPuzzleBoard();
     puzzleState.moves--;
     document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
     puzzleState.combo = 0;
-    await processMatches();
+    await processMatches(matchResult);
   } else {
     // マッチ失敗：シュッと元の位置に戻るロールバックアニメーション
     if (bubble1 && bubble2) {
@@ -5098,10 +5164,10 @@ async function attemptSwap(r1, c1, r2, c2) {
   }
 }
 
-// 縦横3個以上のマッチ検出
-function findMatches() {
+// 縦横3個以上のマッチ検出 ＆ 4個以上での特殊バブル生成判定
+function findMatchesWithSpecials() {
   const matchedCoords = new Set();
-  const matchGroups = [];
+  const newSpecials = []; // { r, c, color, special }
 
   // 横方向チェック
   for (let r = 0; r < PUZZLE_ROWS; r++) {
@@ -5109,18 +5175,25 @@ function findMatches() {
     for (let c = 0; c < PUZZLE_COLS; c++) {
       const checkNext = (c < PUZZLE_COLS - 1) && 
         puzzleState.board[r][c] && puzzleState.board[r][c + 1] &&
-        (puzzleState.board[r][c].color === puzzleState.board[r][c + 1].color || puzzleState.board[r][c].special === 'rainbow' || puzzleState.board[r][c + 1].special === 'rainbow');
+        (puzzleState.board[r][c].color === puzzleState.board[r][c + 1].color);
 
       if (checkNext) {
         matchLen++;
       } else {
         if (matchLen >= 3) {
-          const group = [];
+          const coords = [];
           for (let i = 0; i < matchLen; i++) {
             matchedCoords.add(`${r},${c - i}`);
-            group.push({ r, c: c - i });
+            coords.push({ r, c: c - i });
           }
-          matchGroups.push(group);
+          // 4個以上同時消し ➔ 特殊バブル誕生！
+          if (matchLen === 4) {
+            const mid = coords[1];
+            newSpecials.push({ r: mid.r, c: mid.c, color: puzzleState.board[mid.r][mid.c].color, special: 'line' });
+          } else if (matchLen >= 5) {
+            const mid = coords[2];
+            newSpecials.push({ r: mid.r, c: mid.c, color: puzzleState.board[mid.r][mid.c].color, special: 'rainbow' });
+          }
         }
         matchLen = 1;
       }
@@ -5133,50 +5206,138 @@ function findMatches() {
     for (let r = 0; r < PUZZLE_ROWS; r++) {
       const checkNext = (r < PUZZLE_ROWS - 1) && 
         puzzleState.board[r][c] && puzzleState.board[r + 1][c] &&
-        (puzzleState.board[r][c].color === puzzleState.board[r + 1][c].color || puzzleState.board[r][c].special === 'rainbow' || puzzleState.board[r + 1][c].special === 'rainbow');
+        (puzzleState.board[r][c].color === puzzleState.board[r + 1][c].color);
 
       if (checkNext) {
         matchLen++;
       } else {
         if (matchLen >= 3) {
-          const group = [];
+          const coords = [];
           for (let i = 0; i < matchLen; i++) {
             matchedCoords.add(`${r - i},${c}`);
-            group.push({ r: r - i, c });
+            coords.push({ r: r - i, c });
           }
-          matchGroups.push(group);
+          // 4個以上同時消し ➔ 特殊バブル誕生！
+          if (matchLen === 4) {
+            const mid = coords[1];
+            newSpecials.push({ r: mid.r, c: mid.c, color: puzzleState.board[mid.r][mid.c].color, special: 'bomb' });
+          } else if (matchLen >= 5) {
+            const mid = coords[2];
+            newSpecials.push({ r: mid.r, c: mid.c, color: puzzleState.board[mid.r][mid.c].color, special: 'rainbow' });
+          }
         }
         matchLen = 1;
       }
     }
   }
 
-  return Array.from(matchedCoords).map(str => {
-    const [r, c] = str.split(',').map(Number);
-    return { r, c };
-  });
+  // 誘爆処理：マッチしたセルの中に特殊バブルがあれば、その効果範囲も巻き込み爆発！
+  expandSpecialsRecursive(matchedCoords);
+
+  return {
+    matches: Array.from(matchedCoords).map(str => {
+      const [r, c] = str.split(',').map(Number);
+      return { r, c };
+    }),
+    newSpecials: newSpecials
+  };
+}
+
+// 誘爆連鎖（特殊バブルの効果範囲を再帰的に拡張）
+function expandSpecialsRecursive(matchedSet) {
+  let addedNew = true;
+  const processed = new Set();
+
+  while (addedNew) {
+    addedNew = false;
+    const currentKeys = Array.from(matchedSet);
+
+    for (const key of currentKeys) {
+      if (processed.has(key)) continue;
+      processed.add(key);
+
+      const [r, c] = key.split(',').map(Number);
+      const bubble = puzzleState.board[r][c];
+      if (!bubble || bubble.special === 'none') continue;
+
+      if (bubble.special === 'line') {
+        // ⚡ 十字レーザー（行全体 + 列全体）
+        for (let col = 0; col < PUZZLE_COLS; col++) {
+          const k = `${r},${col}`;
+          if (!matchedSet.has(k)) { matchedSet.add(k); addedNew = true; }
+        }
+        for (let row = 0; row < PUZZLE_ROWS; row++) {
+          const k = `${row},${c}`;
+          if (!matchedSet.has(k)) { matchedSet.add(k); addedNew = true; }
+        }
+      } else if (bubble.special === 'bomb') {
+        // 💣 周囲3x3（9マス大爆発）
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < PUZZLE_ROWS && nc >= 0 && nc < PUZZLE_COLS) {
+              const k = `${nr},${nc}`;
+              if (!matchedSet.has(k)) { matchedSet.add(k); addedNew = true; }
+            }
+          }
+        }
+      } else if (bubble.special === 'rainbow') {
+        // 🌈 レインボー（画面上の最多色のバブルを全消去）
+        const colorCounts = {};
+        for (let row = 0; row < PUZZLE_ROWS; row++) {
+          for (let col = 0; col < PUZZLE_COLS; col++) {
+            const b = puzzleState.board[row][col];
+            if (b) colorCounts[b.color] = (colorCounts[b.color] || 0) + 1;
+          }
+        }
+        let targetColor = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a])[0] || 'pink';
+        for (let row = 0; row < PUZZLE_ROWS; row++) {
+          for (let col = 0; col < PUZZLE_COLS; col++) {
+            const b = puzzleState.board[row][col];
+            if (b && b.color === targetColor) {
+              const k = `${row},${col}`;
+              if (!matchedSet.has(k)) { matchedSet.add(k); addedNew = true; }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 // 連鎖処理ループ
-async function processMatches() {
-  let matches = findMatches();
-  while (matches.length > 0) {
+async function processMatches(initialMatchResult = null) {
+  let matchResult = initialMatchResult || findMatchesWithSpecials();
+
+  while (matchResult.matches.length > 0) {
     puzzleState.combo++;
     showComboBadge(puzzleState.combo);
     playBubbleMatchSound(puzzleState.combo);
+
+    const matches = matchResult.matches;
+    const newSpecials = matchResult.newSpecials;
 
     // スコア加算
     const points = matches.length * 100 * puzzleState.combo;
     addPuzzleScore(points);
 
-    // 🌟 消去場所の近くに「2 COMBO!」等のフローティングポップアップを出現
+    // 🌟 消去場所の近くにフローティングポップアップ出現
     spawnBoardComboPopup(matches, puzzleState.combo, points);
 
     // 破裂アニメーション
     matches.forEach(m => {
-      const cell = document.querySelector(`.puzzle-cell[data-row="${m.r}"][data-col="${m.c}"] .puzzle-bubble`);
-      if (cell) cell.classList.add('popping');
+      const bubbleEl = document.getElementById(`bubble-${m.r}-${m.c}`);
+      if (bubbleEl) bubbleEl.classList.add('popping');
       puzzleState.board[m.r][m.c] = null;
+    });
+
+    // 4個以上消しで生成された特殊バブルを配置
+    newSpecials.forEach(sp => {
+      puzzleState.board[sp.r][sp.c] = {
+        color: sp.color,
+        special: sp.special,
+        id: `b_${sp.r}_${sp.c}_${Date.now()}`
+      };
     });
 
     await sleep(220);
@@ -5186,7 +5347,7 @@ async function processMatches() {
     renderPuzzleBoard();
 
     await sleep(250);
-    matches = findMatches();
+    matchResult = findMatchesWithSpecials();
   }
 
   setTimeout(hideComboBadge, 1200);
