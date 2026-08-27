@@ -210,53 +210,77 @@
     /* チーム進行状況モニタリングカードグリッド */
     .team-monitor-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+      gap: 8px;
     }
 
     .team-monitor-card {
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 12px;
-      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .team-monitor-card:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+    .team-monitor-card.logged-in {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    .team-monitor-card.active-device {
+      border-color: #38bdf8;
+      background: #f0f9ff;
     }
 
     .team-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding-bottom: 4px;
     }
 
     .team-id-badge {
-      font-size: 13px;
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
       font-weight: 800;
-      color: var(--primary);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .team-loop-tag {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      background: #e0f2fe;
-      color: #0369a1;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
       border-radius: 4px;
+      white-space: nowrap;
     }
 
-    .team-stat-row {
+    .team-user-row {
       font-size: 11px;
-      color: #475569;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .team-sub-row {
+      font-size: 10px;
+      color: #64748b;
       display: flex;
       justify-content: space-between;
-    }
-
-    .team-stat-val {
-      font-weight: 700;
-      color: #0f172a;
+      align-items: center;
     }
 
     /* アラート送信フォーム */
@@ -354,22 +378,31 @@
     .top-timer-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .timer-section-divider {
       width: 1px;
-      height: 24px;
+      height: 26px;
       background: rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
     }
     .timer-badge-chip {
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 8px;
-      padding: 5px 12px;
+      padding: 5px 10px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .timer-badge-chip.total-chip {
+      width: 140px;
+    }
+    .timer-badge-chip.loop-chip {
+      width: 136px;
     }
     .timer-chip-label {
       font-size: 11px;
@@ -380,15 +413,17 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .timer-chip-digits {
       font-family: 'Orbitron', 'SF Mono', Monaco, monospace;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum";
       display: inline-block;
-      min-width: 58px;
+      width: 58px;
       text-align: center;
       letter-spacing: 1px;
+      flex-shrink: 0;
     }
     .timer-chip-digits.total {
       font-size: 17px;
@@ -404,48 +439,54 @@
       display: flex;
       gap: 6px;
       align-items: center;
+      flex-shrink: 0;
     }
     .top-lap-pill {
-      background: rgba(30, 41, 59, 0.6);
+      background: rgba(30, 41, 59, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 4px 6px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+      width: 106px;
+      flex-shrink: 0;
       font-size: 11px;
       transition: all 0.2s ease;
     }
     .top-lap-pill.active {
-      background: rgba(56, 189, 248, 0.18);
+      background: rgba(56, 189, 248, 0.2);
       border-color: #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
     }
     .lap-name {
       font-weight: 800;
       color: #cbd5e1;
       font-size: 10px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .lap-val {
       font-family: 'Orbitron', monospace;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum";
       display: inline-block;
-      min-width: 44px;
+      width: 44px;
       text-align: center;
       font-size: 12px;
       font-weight: 700;
       color: #ffffff;
+      flex-shrink: 0;
     }
     .lap-tag {
       font-size: 9px;
       font-weight: 700;
-      padding: 1px 5px;
+      padding: 1px 4px;
       border-radius: 4px;
       background: rgba(0, 0, 0, 0.35);
       color: #94a3b8;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .top-lap-pill.active .lap-tag {
       background: #0284c7;
@@ -463,6 +504,7 @@
       gap: 5px;
       transition: all 0.2s;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .timer-ctrl-btn:hover {
       opacity: 0.9;
@@ -494,13 +536,13 @@
     <!-- 左側：タイマー（トータル ＆ 現在周回 ＆ 1~3周目ラップ ＆ 操作ボタン） -->
     <div class="top-timer-group">
       <!-- 1. トータル公演時間 -->
-      <div class="timer-badge-chip" title="公演開始からのトータル経過時間">
+      <div class="timer-badge-chip total-chip" title="公演開始からのトータル経過時間">
         <span class="timer-chip-label"><i data-lucide="clock" style="width:12px; height:12px; color:#38bdf8;"></i> トータル</span>
         <span class="timer-chip-digits total" id="timer-total-digits">00:00</span>
       </div>
 
       <!-- 2. カレント周回経過時間 -->
-      <div class="timer-badge-chip" title="現在の周回に入ってからの経過時間">
+      <div class="timer-badge-chip loop-chip" title="現在の周回に入ってからの経過時間">
         <span class="timer-chip-label"><i data-lucide="repeat" style="width:12px; height:12px; color:#4ade80;"></i> <span id="timer-current-loop-name">1周目</span></span>
         <span class="timer-chip-digits loop" id="timer-loop-digits">00:00</span>
       </div>
@@ -718,17 +760,37 @@
       if (adminTimerState.isRunning) {
         pauseAdminTimer();
       } else {
-        // 未計測状態（00:00）からのスタートの場合、iPadの一括リセット＆1周目セットを確認・実行
-        const isFreshStart = (adminTimerState.totalElapsedBeforePause === 0 && !adminTimerState.totalStartTime);
-        if (isFreshStart) {
-          const ok = confirm("🚀【公演スタート】\n全30台のiPad端末を一括初期化（1周目・ロック画面・データクリア）してタイマーを開始しますか？");
-          if (!ok) return;
-          
-          // 🚨 全30台を一括リセット ＆ 1周目セット
-          triggerInitialMasterResetForShow();
-        }
+        const ok = confirm("🚀【公演ゲームスタート】\n全30台のiPad端末を一括初期化（1周目・ロック画面・データクリア）し、タイマーを 00:00 からリセット開始しますか？");
+        if (!ok) return;
+        
+        // 🔄 既存タイマーを00:00に完全リセット
+        resetAdminTimerSilent();
+
+        // 🚨 全30台を一括リセット ＆ 1周目セット
+        triggerInitialMasterResetForShow();
+
+        // ⏱️ タイマースタート
         startAdminTimer();
       }
+    }
+
+    // サイレントタイマー初期化（00:00へリセット）
+    function resetAdminTimerSilent() {
+      if (adminTimerInterval) clearInterval(adminTimerInterval);
+      adminTimerState = {
+        isRunning: false,
+        totalStartTime: null,
+        totalElapsedBeforePause: 0,
+        currentLoop: 1,
+        loopStartTime: null,
+        loopElapsedBeforePause: 0,
+        loopLaps: {
+          1: { status: 'active', durationMs: 0 },
+          2: { status: 'waiting', durationMs: 0 },
+          3: { status: 'waiting', durationMs: 0 }
+        }
+      };
+      saveAdminTimerState();
     }
 
     // 🚀 公演開始時のiPad一括初期化（1周目セット）
@@ -1350,30 +1412,30 @@
 
       filtered.forEach(d => {
         const loopColors = {
-          1: { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd' },
-          2: { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa' },
-          3: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' }
+          1: { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd', name: '1周目' },
+          2: { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa', name: '2周目' },
+          3: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca', name: '3周目' }
         };
         const color = loopColors[d.loop] || loopColors[1];
         const isLogged = isDeviceLoggedIn(d);
+        const activeClass = isLogged ? 'logged-in' : (d.isActive ? 'active-device' : '');
 
         container.innerHTML += `
-          <div class="team-monitor-card" style="${isLogged ? 'border-color:#10b981; background:#f0fdf4;' : (d.isActive ? 'border-color:var(--primary); background:#f0f9ff;' : '')}">
+          <div class="team-monitor-card ${activeClass}">
             <div class="team-card-header">
-              <span class="team-id-badge" title="${d.name}">${d.name}</span>
-              <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${d.loop}周目</span>
+              <span class="team-id-badge">
+                <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${d.isActive ? '#22c55e' : '#cbd5e1'};"></span>
+                ${d.name}
+              </span>
+              <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${color.name}</span>
             </div>
-            <div class="team-stat-row">
-              <span>manaba:</span>
-              <span class="team-stat-val" style="font-size:10px; color:${isLogged ? '#059669; font-weight:700;' : '#64748b;'}">${d.manaba}</span>
+            <div class="team-user-row" title="${d.manaba}">
+              <span style="font-size:11px;">${isLogged ? '👤' : '🔒'}</span>
+              <span style="color:${isLogged ? '#047857' : '#94a3b8'}; font-weight:${isLogged ? '700' : '500'};">${d.manaba}</span>
             </div>
-            <div class="team-stat-row">
-              <span>入手情報:</span>
-              <span class="team-stat-val">${d.hints} 件</span>
-            </div>
-            <div class="team-stat-row" style="font-size:10px; color:#94a3b8; margin-top:2px;">
-              <span>最終同期:</span>
-              <span>${d.lastSeen}</span>
+            <div class="team-sub-row">
+              <span>💡 情報: <strong>${d.hints}</strong></span>
+              <span style="color:#94a3b8; font-size:9px;">${d.lastSeen}</span>
             </div>
           </div>
         `;
