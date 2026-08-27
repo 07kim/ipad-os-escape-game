@@ -2969,15 +2969,16 @@ body {
   margin-top: 4px;
 }
 
-/* 🟣 Google Forms公式 完全準拠 編集画面（ヘッダー ＆ タブ ＆ 回答サマリー） */
+/* 🟣 Google Forms公式 完全準拠 編集画面（ヘッダー ＆ 縦積みカードレイアウト） */
 .gform-editor-container {
   width: 100%;
-  max-width: 770px;
-  margin: 0 auto 60px;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  background-color: #ede7f6; /* Googleフォーム公式の薄紫背景 */
   font-family: Roboto, "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .gform-editor-header-bar {
@@ -2987,21 +2988,20 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: 0 1px 2px rgba(60,64,67,0.1);
-  margin-bottom: 12px;
-  border-radius: 8px;
+  width: 100%;
 }
 
 .gform-editor-nav-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 10px 20px;
 }
 
 .editor-left-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .editor-back-btn, .editor-close-btn, .editor-icon-btn {
@@ -3056,7 +3056,7 @@ body {
   background-color: #673ab7;
   color: #ffffff;
   border: none;
-  padding: 8px 22px;
+  padding: 8px 24px;
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
@@ -3127,12 +3127,160 @@ body {
   color: #ffffff;
 }
 
-/* 回答タブ サマリー */
+/* メインボディ (幅640px 中央揃え) */
+.gform-editor-main-body {
+  width: 100%;
+  max-width: 640px;
+  margin: 16px auto 60px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+/* パネル（質問 / 回答 / 設定）: 縦積み強制 */
+.editor-panel-content {
+  display: flex;
+  flex-direction: column; /* 縦積みを強制 */
+  gap: 12px;
+  width: 100%;
+}
+
+/* 質問タブ タイトルカード */
+.editor-header-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  overflow: hidden;
+  padding: 0 0 20px;
+}
+
+.editor-form-title {
+  font-size: 32px;
+  font-weight: 400;
+  color: #202124;
+  padding: 22px 24px 8px 24px;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.editor-form-desc {
+  font-size: 14px;
+  padding: 0 24px;
+  color: #202124;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 質問編集カード */
+.editor-question-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-left: 6px solid transparent;
+  transition: border-left-color 0.2s;
+}
+
+.editor-question-card.active-edit-card {
+  border-left-color: #4285f4; /* 選択中カードの青色バー */
+}
+
+.editor-q-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.editor-q-title-input {
+  flex: 1;
+  font-size: 16px;
+  color: #202124;
+  background: #f8f9fa;
+  border: none;
+  border-bottom: 1px solid #70757a;
+  padding: 12px 14px;
+  border-radius: 4px 4px 0 0;
+  outline: none;
+}
+
+.editor-q-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #202124;
+  cursor: pointer;
+}
+
+.editor-q-preview-field {
+  padding: 0 4px;
+}
+
+.editor-q-bottom-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.q-tools-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.q-tool-btn {
+  background: none;
+  border: none;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.q-tool-btn:hover {
+  background: #f1f3f4;
+  color: #202124;
+}
+.q-tool-btn i {
+  width: 18px;
+  height: 18px;
+}
+
+.q-tool-divider {
+  width: 1px;
+  height: 24px;
+  background: #dadce0;
+  margin: 0 4px;
+}
+
+/* 回答サマリーカード */
+.editor-responses-summary-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  padding: 24px 24px 0;
+}
+
 .responses-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -3158,7 +3306,7 @@ body {
   background: #ffffff;
   border: 1px solid #dadce0;
   border-radius: 4px;
-  padding: 7px 14px;
+  padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
   color: #137333;
@@ -3179,7 +3327,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 12px;
+  padding-left: 14px;
   border-left: 1px solid #dadce0;
 }
 
@@ -3192,38 +3340,45 @@ body {
 
 .responses-sub-nav {
   display: flex;
-  gap: 8px;
+  gap: 16px;
   border-bottom: 1px solid #dadce0;
-  padding-bottom: 8px;
-  margin-top: 8px;
 }
 
 .responses-sub-tab {
   background: none;
   border: none;
-  font-size: 13px;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
   font-weight: 500;
   color: #5f6368;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 10px 14px;
   cursor: pointer;
 }
 .responses-sub-tab.active {
-  background: #f1f3f4;
-  color: #202124;
+  color: #673ab7;
+  border-bottom-color: #673ab7;
   font-weight: 600;
 }
 
 /* 質問ごとの集計カード */
 .response-detail-card {
-  margin-top: 12px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .response-card-title-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   border-bottom: 1px solid #f1f3f4;
   padding-bottom: 8px;
 }
@@ -3250,7 +3405,7 @@ body {
   background: #f8f9fa;
   border: 1px solid #dadce0;
   border-radius: 6px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: 13.5px;
   color: #202124;
   line-height: 1.5;

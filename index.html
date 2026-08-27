@@ -598,7 +598,7 @@
             <div class="gform-editor-nav-top">
               <div class="editor-left-brand">
                 <button class="editor-back-btn" onclick="openHackingForm()" title="フォーム表示へ戻る"><i data-lucide="arrow-left"></i></button>
-                <svg class="gform-official-icon" viewBox="0 0 24 24" width="24" height="24" style="fill:#7248b9;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <svg class="gform-official-icon" viewBox="0 0 24 24" width="26" height="26" style="fill:#7248b9;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                 <div class="editor-title-container">
                   <span class="editor-form-name" id="editor-file-title">部署業務の認知度</span>
                   <div class="editor-doc-actions">
@@ -618,133 +618,187 @@
             </div>
             <!-- 公式中央タブ（質問 / 回答 / 設定） -->
             <div class="gform-editor-main-tabs">
-              <button class="gform-tab-item" id="editor-tab-questions-btn" onclick="switchEditorTab('questions')">質問</button>
-              <button class="gform-tab-item active" id="editor-tab-responses-btn" onclick="switchEditorTab('responses')">
+              <button class="gform-tab-item active" id="editor-tab-questions-btn" onclick="switchEditorTab('questions')">質問</button>
+              <button class="gform-tab-item" id="editor-tab-responses-btn" onclick="switchEditorTab('responses')">
                 回答 <span class="gform-tab-count" id="editor-responses-count">3</span>
               </button>
               <button class="gform-tab-item" id="editor-tab-settings-btn" onclick="switchEditorTab('settings')">設定</button>
             </div>
           </div>
 
-          <!-- ① 質問タブ -->
-          <div class="editor-panel-content" id="editor-panel-questions" style="display:none;">
-            <div class="gform-card editor-header-card">
-              <div class="gform-header-bar"></div>
-              <h2 class="editor-form-title">部署業務の認知度</h2>
-              <p class="editor-form-desc">学友会執行委員会 内部保管データ申請フォーム（※管理者編集画面）</p>
-            </div>
-            <div class="gform-card editor-question-card">
-              <div class="editor-q-header">
-                <span class="editor-q-title">氏名</span>
-                <span class="editor-q-type">記述式 (テキスト)</span>
+          <!-- エディタ本体メインエリア (幅640pxの中央縦積みカラム) -->
+          <div class="gform-editor-main-body">
+            <!-- ① 質問タブ -->
+            <div class="editor-panel-content" id="editor-panel-questions" style="display:flex;">
+              <div class="editor-header-card">
+                <div class="gform-header-bar"></div>
+                <h1 class="editor-form-title">部署業務の認知度</h1>
+                <p class="editor-form-desc">学友会執行委員会 内部保管データ申請フォーム（※管理者編集画面）</p>
               </div>
-              <input type="text" class="gform-input" disabled value="回答者の記述テキスト">
-            </div>
-            <div class="gform-card editor-question-card">
-              <div class="editor-q-header">
-                <span class="editor-q-title">所属・学籍番号</span>
-                <span class="editor-q-type">記述式 (テキスト)</span>
-              </div>
-              <input type="text" class="gform-input" disabled value="例: M25b1046">
-            </div>
-            <div class="gform-card editor-question-card">
-              <div class="editor-q-header">
-                <span class="editor-q-title">部署業務への理解度・意見</span>
-                <span class="editor-q-type">段落 (長文テキスト)</span>
-              </div>
-              <textarea class="gform-textarea" disabled style="height:60px;">回答者の詳細テキスト</textarea>
-            </div>
-          </div>
 
-          <!-- ② 回答タブ (Google Forms公式集計画面 ＆ Sheets連携) -->
-          <div class="editor-panel-content" id="editor-panel-responses" style="display:flex;">
-            <!-- 回答サマリーカード -->
-            <div class="gform-card editor-responses-summary-card">
-              <div class="responses-summary-header">
-                <div class="responses-count-wrapper">
-                  <h2 class="responses-total-num">3 件の回答</h2>
+              <!-- 質問1 編集カード -->
+              <div class="editor-question-card active-edit-card">
+                <div class="editor-q-top-row">
+                  <input type="text" class="editor-q-title-input" value="氏名" readonly>
+                  <div class="editor-q-type-badge">
+                    <i data-lucide="align-left" style="width:14px; height:14px; color:#5f6368;"></i>
+                    <span>記述式</span>
+                  </div>
                 </div>
-                <div class="responses-header-right-tools">
-                  <!-- 📊 公式Google Sheets連携ボタン -->
-                  <button class="btn-sheets-official" onclick="openGSpreadsheet(event)" title="スプレッドシートで回答を表示">
-                    <svg viewBox="0 0 24 24" width="20" height="20" style="fill:#0f9d58;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H6v-2h3v2zm0-4H6v-2h3v2zm0-4H6V7h3v2zm9 8h-7v-2h7v2zm0-4h-7v-2h7v2zm0-4h-7V7h7v2z"/></svg>
-                    <span>スプレッドシートで表示</span>
-                  </button>
-                  <div class="responses-accept-toggle">
-                    <span style="font-size:13px; color:#202124;">回答を受付中</span>
+                <div class="editor-q-preview-field">
+                  <input type="text" class="gform-input" disabled value="記述式テキスト">
+                </div>
+                <div class="editor-q-bottom-tools">
+                  <div class="q-tools-left"></div>
+                  <div class="q-tools-right">
+                    <button class="q-tool-btn" title="コピーを作成"><i data-lucide="copy"></i></button>
+                    <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
+                    <div class="q-tool-divider"></div>
+                    <span style="font-size:12px; color:#5f6368;">必須</span>
                     <input type="checkbox" checked disabled class="gform-switch-input">
                   </div>
                 </div>
               </div>
 
-              <!-- サブタブ (概要 / 質問 / 個別) -->
-              <div class="responses-sub-nav">
-                <button class="responses-sub-tab active">概要</button>
-                <button class="responses-sub-tab">質問</button>
-                <button class="responses-sub-tab">個別</button>
-              </div>
-            </div>
-
-            <!-- 質問1 集計カード -->
-            <div class="gform-card response-detail-card">
-              <div class="response-card-title-row">
-                <h3>氏名</h3>
-                <span class="response-card-count">3 件の回答</span>
-              </div>
-              <div class="response-answers-list">
-                <div class="response-answer-item">陣内 樹</div>
-                <div class="response-answer-item">深澤 文哉</div>
-                <div class="response-answer-item">犬飼 玲</div>
-              </div>
-            </div>
-
-            <!-- 質問2 集計カード -->
-            <div class="gform-card response-detail-card">
-              <div class="response-card-title-row">
-                <h3>所属・学籍番号</h3>
-                <span class="response-card-count">3 件の回答</span>
-              </div>
-              <div class="response-answers-list">
-                <div class="response-answer-item">J-098（安藤研究室）</div>
-                <div class="response-answer-item">F-042（執行委員会）</div>
-                <div class="response-answer-item">I-012（学内保安統制局）</div>
-              </div>
-            </div>
-
-            <!-- 質問3 集計カード -->
-            <div class="gform-card response-detail-card">
-              <div class="response-card-title-row">
-                <h3>部署業務への理解度・意見</h3>
-                <span class="response-card-count">3 件の回答</span>
-              </div>
-              <div class="response-answers-list">
-                <div class="response-answer-item">
-                  <div class="response-item-header"><strong>陣内 樹:</strong></div>
-                  安藤教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
+              <!-- 質問2 編集カード -->
+              <div class="editor-question-card">
+                <div class="editor-q-top-row">
+                  <input type="text" class="editor-q-title-input" value="所属・学籍番号" readonly>
+                  <div class="editor-q-type-badge">
+                    <i data-lucide="align-left" style="width:14px; height:14px; color:#5f6368;"></i>
+                    <span>記述式</span>
+                  </div>
                 </div>
-                <div class="response-answer-item">
-                  <div class="response-item-header"><strong>深澤 文哉:</strong></div>
-                  学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
+                <div class="editor-q-preview-field">
+                  <input type="text" class="gform-input" disabled value="例: M25b1046">
                 </div>
-                <div class="response-answer-item">
-                  <div class="response-item-header"><strong>犬飼 玲:</strong></div>
-                  【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
+                <div class="editor-q-bottom-tools">
+                  <div class="q-tools-left"></div>
+                  <div class="q-tools-right">
+                    <button class="q-tool-btn" title="コピーを作成"><i data-lucide="copy"></i></button>
+                    <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
+                    <div class="q-tool-divider"></div>
+                    <span style="font-size:12px; color:#5f6368;">必須</span>
+                    <input type="checkbox" checked disabled class="gform-switch-input">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 質問3 編集カード -->
+              <div class="editor-question-card">
+                <div class="editor-q-top-row">
+                  <input type="text" class="editor-q-title-input" value="部署業務への理解度・意見" readonly>
+                  <div class="editor-q-type-badge">
+                    <i data-lucide="align-justify" style="width:14px; height:14px; color:#5f6368;"></i>
+                    <span>段落</span>
+                  </div>
+                </div>
+                <div class="editor-q-preview-field">
+                  <textarea class="gform-textarea" disabled style="height:48px;">長文回答テキスト</textarea>
+                </div>
+                <div class="editor-q-bottom-tools">
+                  <div class="q-tools-left"></div>
+                  <div class="q-tools-right">
+                    <button class="q-tool-btn" title="コピーを作成"><i data-lucide="copy"></i></button>
+                    <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
+                    <div class="q-tool-divider"></div>
+                    <span style="font-size:12px; color:#5f6368;">必須</span>
+                    <input type="checkbox" checked disabled class="gform-switch-input">
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- ③ 設定タブ -->
-          <div class="editor-panel-content" id="editor-panel-settings" style="display:none;">
-            <div class="gform-card">
-              <h3 style="font-size:16px; margin:0 0 10px; color:#202124;">フォームの設定</h3>
-              <p style="font-size:13px; color:#5f6368; margin:0 0 16px;">回答の収集、表示、デフォルト設定を管理します。</p>
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #dadce0;">
-                <div>
-                  <strong style="font-size:14px; color:#202124;">メールアドレスを収集する</strong>
-                  <div style="font-size:12px; color:#70757a;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
+            <!-- ② 回答タブ (Google Forms公式集計画面 ＆ Sheets連携) -->
+            <div class="editor-panel-content" id="editor-panel-responses" style="display:none;">
+              <!-- 回答サマリーカード -->
+              <div class="editor-responses-summary-card">
+                <div class="responses-summary-header">
+                  <div class="responses-count-wrapper">
+                    <h2 class="responses-total-num">3 件の回答</h2>
+                  </div>
+                  <div class="responses-header-right-tools">
+                    <!-- 📊 公式Google Sheets連携ボタン -->
+                    <button class="btn-sheets-official" onclick="openGSpreadsheet(event)" title="スプレッドシートで回答を表示">
+                      <svg viewBox="0 0 24 24" width="20" height="20" style="fill:#0f9d58;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H6v-2h3v2zm0-4H6v-2h3v2zm0-4H6V7h3v2zm9 8h-7v-2h7v2zm0-4h-7v-2h7v2zm0-4h-7V7h7v2z"/></svg>
+                      <span>スプレッドシートで表示</span>
+                    </button>
+                    <div class="responses-accept-toggle">
+                      <span style="font-size:13px; color:#202124;">回答を受付中</span>
+                      <input type="checkbox" checked disabled class="gform-switch-input">
+                    </div>
+                  </div>
                 </div>
-                <input type="checkbox" checked disabled>
+
+                <!-- サブタブ (概要 / 質問 / 個別) -->
+                <div class="responses-sub-nav">
+                  <button class="responses-sub-tab active">概要</button>
+                  <button class="responses-sub-tab">質問</button>
+                  <button class="responses-sub-tab">個別</button>
+                </div>
+              </div>
+
+              <!-- 質問1 集計カード -->
+              <div class="response-detail-card">
+                <div class="response-card-title-row">
+                  <h3>氏名</h3>
+                  <span class="response-card-count">3 件の回答</span>
+                </div>
+                <div class="response-answers-list">
+                  <div class="response-answer-item">陣内 樹</div>
+                  <div class="response-answer-item">深澤 文哉</div>
+                  <div class="response-answer-item">犬飼 玲</div>
+                </div>
+              </div>
+
+              <!-- 質問2 集計カード -->
+              <div class="response-detail-card">
+                <div class="response-card-title-row">
+                  <h3>所属・学籍番号</h3>
+                  <span class="response-card-count">3 件の回答</span>
+                </div>
+                <div class="response-answers-list">
+                  <div class="response-answer-item">J-098（安藤研究室）</div>
+                  <div class="response-answer-item">F-042（執行委員会）</div>
+                  <div class="response-answer-item">I-012（学内保安統制局）</div>
+                </div>
+              </div>
+
+              <!-- 質問3 集計カード -->
+              <div class="response-detail-card">
+                <div class="response-card-title-row">
+                  <h3>部署業務への理解度・意見</h3>
+                  <span class="response-card-count">3 件の回答</span>
+                </div>
+                <div class="response-answers-list">
+                  <div class="response-answer-item">
+                    <div class="response-item-header"><strong>陣内 樹:</strong></div>
+                    安藤教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
+                  </div>
+                  <div class="response-answer-item">
+                    <div class="response-item-header"><strong>深澤 文哉:</strong></div>
+                    学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
+                  </div>
+                  <div class="response-answer-item">
+                    <div class="response-item-header"><strong>犬飼 玲:</strong></div>
+                    【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ③ 設定タブ -->
+            <div class="editor-panel-content" id="editor-panel-settings" style="display:none;">
+              <div class="editor-header-card" style="border-top:none;">
+                <h3 style="font-size:16px; margin:0 0 10px; color:#202124;">フォームの設定</h3>
+                <p style="font-size:13px; color:#5f6368; margin:0 0 16px;">回答の収集、表示、デフォルト設定を管理します。</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #dadce0;">
+                  <div>
+                    <strong style="font-size:14px; color:#202124;">メールアドレスを収集する</strong>
+                    <div style="font-size:12px; color:#70757a;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
+                  </div>
+                  <input type="checkbox" checked disabled>
+                </div>
               </div>
             </div>
           </div>
