@@ -1359,67 +1359,146 @@
               <a href="javascript:void(0);" class="sublink-item">📄 提出記録</a>
             </div>
 
-            <!-- コースメインコンテンツ（2カラム ＋ 下段1カラム） -->
+            <!-- コースメインコンテンツ（2カラム構成：左72% / 右28%） -->
             <div class="official-course-main-body">
-              
-              <!-- 上段 2カラム (ニュース & スレッド) -->
-              <div class="course-top-two-cols">
-                <!-- 左：コースニュース -->
-                <div class="course-card-box col-half">
-                  <div class="course-card-box-header">
-                    <div class="card-header-title">
-                      <span class="header-icon-dots">∴</span>
-                      <h3>コースニュース</h3>
+              <div class="course-top-layout-columns">
+                
+                <!-- [左カラム 72%] コースニュース & コンテンツ（更新順） -->
+                <div class="course-top-left-col">
+                  
+                  <!-- 1. コースニュース ブロック -->
+                  <div class="course-card-box">
+                    <div class="course-card-box-header">
+                      <div class="card-header-title">
+                        <span class="header-icon-dots">∴</span>
+                        <h3>コースニュース</h3>
+                      </div>
+                    </div>
+                    <div class="course-card-box-body">
+                      <table class="course-news-official-table" id="manaba-course-news-table">
+                        <!-- JSで動的生成 -->
+                      </table>
+                      <div class="card-box-footer-link">
+                        <a href="javascript:void(0);">➔ コースニュース一覧</a>
+                      </div>
                     </div>
                   </div>
-                  <div class="course-card-box-body">
-                    <table class="course-news-official-table" id="manaba-course-news-table">
-                      <!-- JSで動的生成 -->
-                    </table>
-                    <div class="card-box-footer-link">
-                      <a href="javascript:void(0);">➔ コースニュース一覧</a>
+
+                  <!-- 2. コンテンツ（更新順） ブロック -->
+                  <div class="course-card-box" style="margin-top:14px;">
+                    <div class="course-card-box-header flex-between">
+                      <div class="card-header-title">
+                        <span class="header-icon-book">📖</span>
+                        <h3>コースコンテンツ（全13回 講義資料）</h3>
+                      </div>
+                      <a href="javascript:void(0);" onclick="openManabaCoursePageView(0)" class="view-all-materials-link">➔ 全資料を開く</a>
+                    </div>
+                    <div class="course-card-box-body">
+                      <div class="course-contents-card-grid" id="manaba-materials-card-grid">
+                        <!-- JSで動的生成（授業資料カードをタップでPDFプレビュー！） -->
+                      </div>
+                      <div class="card-box-footer-link">
+                        <a href="javascript:void(0);" onclick="openManabaCoursePageView(0)">➔ コンテンツ一覧（目次ビュー）</a>
+                      </div>
                     </div>
                   </div>
+
+                  <!-- 3. スレッド（更新順） ブロック -->
+                  <div class="course-card-box" style="margin-top:14px;">
+                    <div class="course-card-box-header flex-between">
+                      <div class="card-header-title">
+                        <span class="header-icon-chat">💬</span>
+                        <h3>スレッド（ディスカッション）</h3>
+                      </div>
+                      <button class="btn-create-thread" onclick="showPushNotification('掲示板', '学生による新規スレッド作成は現在制限されています。', 'lock')">スレッド作成</button>
+                    </div>
+                    <div class="course-card-box-body">
+                      <div class="thread-empty-state">
+                        現在ディスカッション中のスレッドはありません。
+                      </div>
+                      <div class="card-box-footer-link">
+                        <a href="javascript:void(0);">➔ スレッド一覧</a>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
 
-                <!-- 右：スレッド -->
-                <div class="course-card-box col-half">
-                  <div class="course-card-box-header flex-between">
-                    <div class="card-header-title">
-                      <span class="header-icon-chat">💬</span>
-                      <h3>スレッド（更新順）</h3>
+                <!-- [右カラム 28%] コース情報・教員・個別指導サイドバー -->
+                <div class="course-top-right-col">
+                  
+                  <!-- コース情報ボックス -->
+                  <div class="sidebar-box-wrapper">
+                    <div class="sidebar-box-header">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="#5c9a00">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                      </svg>
+                      <h3>コース情報</h3>
                     </div>
-                    <button class="btn-create-thread">スレッド作成</button>
+                    <div class="sidebar-box-content">
+                      <div class="course-info-row">
+                        <span class="info-label">開講期:</span>
+                        <span class="info-val">2026年度 前期</span>
+                      </div>
+                      <div class="course-info-row">
+                        <span class="info-label">講義室:</span>
+                        <span class="info-val">新習志野校舎 6号館301</span>
+                      </div>
+                      <div class="course-info-row">
+                        <span class="info-label">単位数:</span>
+                        <span class="info-val">2.0 単位</span>
+                      </div>
+                      <div class="course-info-row">
+                        <span class="info-label">科目区分:</span>
+                        <span class="info-val">専門発展科目</span>
+                      </div>
+                      <div class="sidebar-link-row" style="margin-top:10px;">
+                        <a href="javascript:void(0);" onclick="showPushNotification('シラバス', 'シラバス：応用量子力学（達成目標・到達度評価基準・授業計画を閲覧中）', 'file-text')" class="sidebar-action-link">➔ シラバスを閲覧</a>
+                      </div>
+                    </div>
                   </div>
-                  <div class="course-card-box-body">
-                    <div class="thread-empty-state">
-                      スレッドはありません。
+
+                  <!-- 担当教員・TAボックス -->
+                  <div class="sidebar-box-wrapper" style="margin-top:12px;">
+                    <div class="sidebar-box-header">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="#5c9a00">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                      <h3>担当教員 / TA</h3>
                     </div>
-                    <div class="card-box-footer-link">
-                      <a href="javascript:void(0);">➔ スレッド一覧</a>
+                    <div class="sidebar-box-content">
+                      <div class="teacher-profile-card">
+                        <div class="teacher-avatar">神</div>
+                        <div class="teacher-details">
+                          <div class="teacher-p-name">神崎 恭介 教授</div>
+                          <div class="teacher-p-dept">工学部 応用量子力学科</div>
+                          <div class="teacher-p-room">研究室: 1号館12階 1210</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  <!-- 個別指導コレクションボックス -->
+                  <div class="sidebar-box-wrapper" style="margin-top:12px;">
+                    <div class="sidebar-box-header">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="#5c9a00">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                      </svg>
+                      <h3>個別指導</h3>
+                    </div>
+                    <div class="sidebar-box-content">
+                      <p style="font-size:11px; color:#555; line-height:1.5; margin:0 0 8px 0;">
+                        教員への質問・相談・レポート保留相談はこちらから送信してください。
+                      </p>
+                      <div class="sidebar-link-row">
+                        <a href="javascript:void(0);" onclick="showPushNotification('個別指導', '個別指導コレクション（神崎教授との非公開スレッド: 未読0件）', 'message-circle')" class="sidebar-action-link">➔ 個別指導を開く</a>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
+
               </div>
-
-              <!-- 下段 全幅 (コンテンツ更新順) -->
-              <div class="course-card-box full-width" style="margin-top:14px;">
-                <div class="course-card-box-header">
-                  <div class="card-header-title">
-                    <span class="header-icon-book">📖</span>
-                    <h3>コンテンツ（更新順）</h3>
-                  </div>
-                </div>
-                <div class="course-card-box-body">
-                  <div class="course-contents-card-grid" id="manaba-materials-card-grid">
-                    <!-- JSで動的生成（授業資料カードをタップでPDFプレビュー！） -->
-                  </div>
-                  <div class="card-box-footer-link">
-                    <a href="javascript:void(0);">➔ コンテンツ一覧</a>
-                  </div>
-                </div>
-              </div>
-
             </div>
 
             <!-- 📰 コースニュース詳細本文画面（千葉工大 公式完全再現） -->
