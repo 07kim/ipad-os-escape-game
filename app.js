@@ -370,20 +370,53 @@ function executeRemoteAdminCommand(cmd) {
     const text = cmd.text || p.text;
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
-    const msgTime = cmd.time || p.time || getFormattedFakeTime();
+    const msgTime = formatChatTime(cmd.time || p.time || getFormattedFakeTime());
 
     if (text) {
       addActorMessageToLinkChat(actor, text, msgTime, triggerId);
 
       // J（陣内）からの送信でF（深澤）の自動返信が指定されている場合
+      // まず陣内のメッセージが画面に完全反映された後、2.5秒後に深澤が「おけ」と返信
       if (autoReplySender && autoReplyText) {
         setTimeout(() => {
-          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime(), triggerId ? triggerId + "_autoreply" : "");
-        }, 1500);
+          addActorMessageToLinkChat(autoReplySender, autoReplyText, formatChatTime(getFormattedFakeTime()), triggerId ? triggerId + "_autoreply" : "");
+        }, 2500);
       }
     }
     return;
   }
+}
+
+// 🕒 チャット時刻を常に「HH:mm」形式（例: 09:09）に正規化する関数
+function formatChatTime(rawTime) {
+  if (!rawTime) return getFormattedFakeTime();
+  const str = String(rawTime).trim();
+  
+  // すでに "09:09" や "15:38" 形式の場合
+  if (/^\d{1,2}:\d{2}$/.test(str)) {
+    const parts = str.split(':');
+    return `${parts[0].padStart(2, '0')}:${parts[1]}`;
+  }
+
+  // ISO 8601 文字列 (例: 2026-08-27T15:38:23.000Z) の場合
+  if (str.includes('T') || str.includes('-') || str.includes('Z')) {
+    try {
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+    } catch(e) {}
+  }
+
+  // 文字列中から "HH:mm" を抽出
+  const match = str.match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    return `${match[1].padStart(2, '0')}:${match[2]}`;
+  }
+
+  return getFormattedFakeTime();
 }
 
 // 🎭 演者メッセージをLINKチャットへリアルタイム注入（全体連絡グループ）
@@ -393,8 +426,8 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     'G': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
     'H': { id: 'higa', name: '比嘉 俊希', icon: 'H' },
     'F': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
-    'fukasawa': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
     'jinnai': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
+    'fukasawa': { id: 'fukasawa', name: '深澤 文哉', icon: 'F' },
     'sotozono': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
     'higa': { id: 'higa', name: '比嘉 俊希', icon: 'H' }
   };
@@ -414,11 +447,12 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     return;
   }
 
-  // 全体連絡グループへメッセージを追加
+  // 1. 全体連絡グループへメッセージを追加
+  const cleanTime = formatChatTime(timeStr);
   window.GAME_DATABASE.linkApp.chats[targetRoom].push({
     sender: senderInfo.id,
     text: text,
-    time: timeStr || getFormattedFakeTime(),
+    time: cleanTime,
     _addedAt: Date.now()
   });
 
@@ -427,26 +461,31 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
   } catch(e) {}
 
-  // 未読バッジ加算 ＆ 通知音 ＆ バナー
-  const badge = document.getElementById('dock-link-badge');
-  if (badge) {
-    badge.style.display = 'flex';
-    badge.innerText = String((parseInt(badge.innerText || '0') || 0) + 1);
-  }
-
-  playSystemSound("notif");
-  showPushNotification(`LINK: ${senderInfo.name}`, text, "message-square");
-
-  // LINKアプリが開いている場合は即時再描画 ＆ スクロール
+  // 2. LINKアプリが開いている場合は即座に画面へ描画 ＆ スクロール
   if (gameState.activeApp === 'link') {
     openLinkChat('committee_group');
     const msgContainer = document.getElementById('link-messages-container');
     if (msgContainer) {
-      setTimeout(() => {
-        msgContainer.scrollTop = msgContainer.scrollHeight;
-      }, 50);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
     }
   }
+
+  // 3. 【重要】LINK上で吹き出しが確実に作成・反映された直後に通知を発火させる
+  setTimeout(() => {
+    const badge = document.getElementById('dock-link-badge');
+    if (badge) {
+      badge.style.display = 'flex';
+      badge.innerText = String((parseInt(badge.innerText || '0') || 0) + 1);
+    }
+
+    playSystemSound("notif");
+    showPushNotification(`LINK: ${senderInfo.name}`, text, "message-square");
+
+    const msgContainer = document.getElementById('link-messages-container');
+    if (msgContainer) {
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+  }, 120);
 
   // 演者ツールへ「LINK反映完了（ACK）」を通知
   if (triggerId) {
@@ -2351,6 +2390,8 @@ function openLinkChat(contactId) {
       `;
     }
 
+    const displayTime = formatChatTime(msg.time);
+
     if (isMe) {
       messageArea.innerHTML += `
         <div class="chat-message-row outgoing">
@@ -2358,7 +2399,7 @@ function openLinkChat(contactId) {
             <div class="chat-bubble-wrapper">
               <div class="chat-meta-info">
                 <span class="chat-read-status">既読</span>
-                <span class="chat-time-str">${msg.time}</span>
+                <span class="chat-time-str">${displayTime}</span>
               </div>
               <div class="message-bubble outgoing">
                 ${formattedText}
@@ -2368,7 +2409,7 @@ function openLinkChat(contactId) {
               <div class="chat-bubble-wrapper" style="margin-top:4px;">
                 <div class="chat-meta-info">
                   <span class="chat-read-status">既読</span>
-                  <span class="chat-time-str">${msg.time}</span>
+                  <span class="chat-time-str">${displayTime}</span>
                 </div>
                 <div class="message-bubble outgoing line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none;">
                   ${ogpHtml}
@@ -2389,7 +2430,7 @@ function openLinkChat(contactId) {
                 ${formattedText}
               </div>
               <div class="chat-meta-info">
-                <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${msg.time}</span>
+                <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${displayTime}</span>
               </div>
             </div>
             ${ogpHtml ? `
@@ -2398,7 +2439,7 @@ function openLinkChat(contactId) {
                   ${ogpHtml}
                 </div>
                 <div class="chat-meta-info">
-                  <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${msg.time}</span>
+                  <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${displayTime}</span>
                 </div>
               </div>
             ` : ''}
