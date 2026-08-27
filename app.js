@@ -2232,6 +2232,7 @@ function backBrowserPage() {
 // ==========================================================================
 function renderLinkChatList() {
   const container = document.getElementById('link-chat-list');
+  if (!container) return;
   container.innerHTML = "";
 
   // 3周目の場合は不気味変化後の友達リストを使用
@@ -2244,12 +2245,20 @@ function renderLinkChatList() {
 
   visible.forEach(c => {
     const isActive = gameState.activeChatContact === c.id ? "active" : "";
+    const chats = window.GAME_DATABASE.linkApp.chats[c.id] || [];
+    const lastMsg = chats.filter(m => (!m.minLoop || gameState.loop >= m.minLoop) && (!m.maxLoop || gameState.loop <= m.maxLoop)).pop();
+    const lastTime = lastMsg ? lastMsg.time : "今日";
+    const lastPreview = lastMsg ? (lastMsg.text || c.desc) : c.desc;
+
     container.innerHTML += `
       <div class="link-chat-item ${isActive}" onclick="openLinkChat('${c.id}')">
         <div class="link-avatar">${c.icon}</div>
         <div class="link-item-info">
-          <div class="link-item-name">${c.name}</div>
-          <div class="link-item-preview">${c.desc}</div>
+          <div class="link-item-top-row">
+            <span class="link-item-name">${c.name}</span>
+            <span class="link-item-time">${lastTime}</span>
+          </div>
+          <div class="link-item-preview">${lastPreview}</div>
         </div>
       </div>
     `;
@@ -2266,7 +2275,12 @@ function openLinkChat(contactId) {
   
   const c = contactSource.find(item => item.id === contactId);
   const headerNameEl = document.getElementById('chat-contact-name');
+  const memberCountEl = document.getElementById('chat-member-count');
+  
   if (headerNameEl) headerNameEl.innerText = c ? c.name : "トークルーム";
+  if (memberCountEl) {
+    memberCountEl.innerText = (c && c.id === 'exec_group') ? "(5)" : "";
+  }
 
   const messageArea = document.getElementById('link-messages-container');
   if (!messageArea) return;

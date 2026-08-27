@@ -430,14 +430,23 @@
           <!-- トークルーム（右側） -->
           <div class="link-room">
             <div class="link-room-header" id="link-room-header">
-              <span class="contact-name" id="chat-contact-name">連絡先を選択</span>
+              <div class="link-header-left">
+                <span class="contact-name" id="chat-contact-name">連絡先を選択</span>
+                <span class="contact-member-count" id="chat-member-count"></span>
+              </div>
+              <div class="link-header-tools">
+                <button class="link-tool-icon-btn" onclick="showPushNotification('LINK通話', '現在、回線暗号化プロトコルの不一致により通話できません。', 'phone-off')" title="音声通話"><i data-lucide="phone"></i></button>
+                <button class="link-tool-icon-btn" onclick="showPushNotification('LINKビデオ', 'ビデオ通話機能はオフラインです。', 'video-off')" title="ビデオ通話"><i data-lucide="video"></i></button>
+                <button class="link-tool-icon-btn" onclick="showPushNotification('トーク設定', 'グループトーク設定（通知: オン / 暗号化: 有効）', 'menu')" title="メニュー"><i data-lucide="menu"></i></button>
+              </div>
             </div>
             <div class="link-messages" id="link-messages-container">
-              <div style="text-align:center; color:#8e8e93; font-size:12px; margin-top:40px;">
+              <div style="text-align:center; color:rgba(255,255,255,0.8); font-size:13px; margin-top:50px;">
                 左のリストから会話を選択してください
               </div>
             </div>
             <div class="link-input-bar">
+              <button class="link-tool-icon-btn" style="color:#64748b;" onclick="showPushNotification('LINK', '画像やファイルの送信は制限されています。', 'plus')" title="添付"><i data-lucide="plus"></i></button>
               <input type="text" id="link-input-text" placeholder="メッセージを入力..." onkeydown="handleLinkInputKey(event)">
               <button class="link-send-btn" onclick="sendCustomLinkMessage()"><i data-lucide="send"></i></button>
             </div>
