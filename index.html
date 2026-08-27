@@ -1676,6 +1676,162 @@
 
             </div>
 
+            <!-- 💼 マイポートフォリオ画面（千葉工大 manaba 公式完全再現） -->
+            <div class="official-portfolio-container" id="manaba-portfolio-view" style="display:none; padding:20px 24px; background:#ffffff;">
+              <!-- ユーザーヘッダー -->
+              <div class="userpage-top-card">
+                <div class="userpage-avatar-box">
+                  <svg viewBox="0 0 24 24" width="44" height="44" fill="#94a3b8">
+                    <circle cx="12" cy="8" r="4.5"/>
+                    <path d="M4 20c0-4 4-6.5 8-6.5s8 2.5 8 6.5v1H4v-1z"/>
+                  </svg>
+                </div>
+                <div class="userpage-info-group">
+                  <h3 class="userpage-name-title">
+                    <a href="javascript:void(0);" style="color:#1960ad; text-decoration:none;">矢田 逞さんのポートフォリオ</a>
+                  </h3>
+                  <div class="userpage-management-links">
+                    <a href="javascript:void(0);" onclick="showPushNotification('プロフィール', '学生番号: 25B1150ER / 所属: 先進工学部 応用量子情報工学科', 'user')">👤 プロフィール</a>
+                    <a href="javascript:void(0);" onclick="showPushNotification('オープンバッジ', '獲得済みオープンバッジ: 0件', 'award')">🏷️ オープンバッジ設定</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 大見出し -->
+              <h1 class="portfolio-main-heading" style="font-size:18px; font-weight:700; color:#1f2937; margin:20px 0 14px; display:flex; align-items:center; gap:8px;">
+                <span class="subtab-green-indicator" style="display:inline-block; width:5px; height:18px; background-color:#80aa00; border-radius:2px;"></span>
+                マイポートフォリオ
+              </h1>
+
+              <!-- 年度別コレクションリスト -->
+              <div class="collist-container">
+                <div class="collist-year-header">
+                  <h2>2026年度</h2>
+                  <span class="collyear-toggle-btn" onclick="togglePortfolioYear('year-2026')">切り替え ▲</span>
+                </div>
+
+                <div id="portfolio-year-2026" class="collist-year-body">
+                  
+                  <!-- 講義1: 応用量子力学 -->
+                  <div class="collist-course-item">
+                    <div class="collist-course-bar">
+                      <span class="collist-cname"><a href="javascript:void(0);" onclick="openManabaCourse('c_quantum')">応用量子力学</a></span>
+                      <span class="collist-cteacher">神崎 恭介</span>
+                      <span class="collist-cterm">前期 月曜 2限</span>
+                    </div>
+                    <div class="collist-course-table-wrap">
+                      <table class="collldatalist-table">
+                        <tbody>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);" onclick="showPushNotification('提出詳細', '【期末成果レポート】変調周波数の検証レポート: 受付中（締切: 8/28 23:55）', 'file-text')">【期末成果レポート】変調周波数の検証レポート:応用量子力学</a>
+                            </td>
+                            <td class="colldate-td">2026-08-20 19:18</td>
+                          </tr>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);" onclick="showPushNotification('提出詳細', '第11回 小テスト（時空トンネリング共振）: 採点完了 (100点)', 'check-circle')">第11回 小テスト（時空トンネリング共振）:応用量子力学</a>
+                            </td>
+                            <td class="colldate-td">2026-07-13 12:42</td>
+                          </tr>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);" onclick="showPushNotification('提出詳細', '第10回 課題演習（超伝導共振パラメータ解析）: 提出済', 'file-text')">第10回 課題演習:応用量子力学</a>
+                            </td>
+                            <td class="colldate-td">2026-06-28 21:30</td>
+                          </tr>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);" onclick="showPushNotification('提出詳細', '第5回 中間レポート（量子トンネル効果の基礎）: 提出済', 'file-text')">第5回 中間レポート:応用量子力学</a>
+                            </td>
+                            <td class="colldate-td">2026-05-18 10:15</td>
+                          </tr>
+                          <tr class="coll-action-row">
+                            <td colspan="2" class="colllink-right-td">
+                              <a href="javascript:void(0);" onclick="showPushNotification('個別指導', '個別指導コレクションを作成します', 'folder-plus')">➕ 個別指導コレクション追加</a>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- 講義2: 先端ロボティクス・知能制御 -->
+                  <div class="collist-course-item">
+                    <div class="collist-course-bar">
+                      <span class="collist-cname"><a href="javascript:void(0);">先端ロボティクス・知能制御</a></span>
+                      <span class="collist-cteacher">白石 健吾</span>
+                      <span class="collist-cterm">前期 火曜 3限</span>
+                    </div>
+                    <div class="collist-course-table-wrap">
+                      <table class="collldatalist-table">
+                        <tbody>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);">第8回 逆運動学シミュレーション課題:先端ロボティクス・知能制御</a>
+                            </td>
+                            <td class="colldate-td">2026-06-23 18:30</td>
+                          </tr>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);">第3回 センサフィードバック演習:先端ロボティクス・知能制御</a>
+                            </td>
+                            <td class="colldate-td">2026-05-12 11:20</td>
+                          </tr>
+                          <tr class="coll-action-row">
+                            <td colspan="2" class="colllink-right-td">
+                              <a href="javascript:void(0);" onclick="showPushNotification('成績', '成績一覧: 提出済み課題 3件', 'award')">📊 成績を開く [3 件]</a>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- 講義3: 情報システム安全工学 -->
+                  <div class="collist-course-item">
+                    <div class="collist-course-bar">
+                      <span class="collist-cname"><a href="javascript:void(0);">情報システム安全工学</a></span>
+                      <span class="collist-cteacher">橘 慎太郎</span>
+                      <span class="collist-cterm">前期 水曜 2限</span>
+                    </div>
+                    <div class="collist-course-table-wrap">
+                      <table class="collldatalist-table">
+                        <tbody>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);">第12回 暗号化プロトコル解析レポート:情報システム安全工学</a>
+                            </td>
+                            <td class="colldate-td">2026-07-15 14:20</td>
+                          </tr>
+                          <tr>
+                            <td class="colltitle-td">
+                              <span class="coll-icon">📝</span>
+                              <a href="javascript:void(0);">第7回 アクセス制御モデル演習:情報システム安全工学</a>
+                            </td>
+                            <td class="colldate-td">2026-06-10 16:45</td>
+                          </tr>
+                          <tr class="coll-action-row">
+                            <td colspan="2" class="colllink-right-td">
+                              <a href="javascript:void(0);" onclick="showPushNotification('成績', '成績一覧: 提出済み課題 6件', 'award')">📊 成績を開く [6 件]</a>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
             <!-- 右下のメモアイコン -->
             <div class="course-bottom-memo-btn-row">
               <button class="btn-course-memo">📝 メモ</button>

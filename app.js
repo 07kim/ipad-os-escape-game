@@ -3150,25 +3150,48 @@ function switchManabaTab(tabId) {
   navTabs.forEach(tab => tab.classList.remove('active'));
 
   const courseDetail = document.getElementById('manaba-course-detail-view');
+  const portfolioView = document.getElementById('manaba-portfolio-view');
   const mainCols = document.querySelector('.portal-main-columns');
   const subHeader = document.querySelector('.portal-sub-header');
   const alertBar = document.querySelector('.portal-alert-bar');
 
   if (tabId === 'mypage') {
     if (courseDetail) courseDetail.style.display = 'none';
+    if (portfolioView) portfolioView.style.display = 'none';
     if (mainCols) mainCols.style.display = 'flex';
     if (subHeader) subHeader.style.display = 'block';
     if (alertBar) alertBar.style.display = 'flex';
     if (navTabs[0]) navTabs[0].classList.add('active');
+    logWriteToGAS("MANABA_TAB", "マイページを開きました");
   } else if (tabId === 'courses') {
+    if (portfolioView) portfolioView.style.display = 'none';
     if (navTabs[1]) navTabs[1].classList.add('active');
     // すでにコースを開いていればそのまま、なければ第1講義を開く
     if (courseDetail && courseDetail.style.display !== 'block') {
       openManabaCourse();
     }
   } else if (tabId === 'portfolio') {
+    if (courseDetail) courseDetail.style.display = 'none';
+    if (mainCols) mainCols.style.display = 'none';
+    if (subHeader) subHeader.style.display = 'none';
+    if (alertBar) alertBar.style.display = 'none';
+    if (portfolioView) portfolioView.style.display = 'block';
     if (navTabs[2]) navTabs[2].classList.add('active');
-    showPushNotification("ポートフォリオ", "提出済みのコレクションはありません。", "folder");
+    logWriteToGAS("MANABA_TAB", "マイポートフォリオを開きました");
+  }
+}
+
+function togglePortfolioYear(yearId) {
+  const yearBody = document.getElementById('portfolio-year-2026');
+  const btn = document.querySelector('.collyear-toggle-btn');
+  if (yearBody) {
+    if (yearBody.style.display === 'none') {
+      yearBody.style.display = 'block';
+      if (btn) btn.innerText = '切り替え ▲';
+    } else {
+      yearBody.style.display = 'none';
+      if (btn) btn.innerText = '切り替え ▼';
+    }
   }
 }
 
@@ -3194,10 +3217,12 @@ function openManabaCourse(courseId) {
   const subHeader = document.querySelector('.portal-sub-header');
   const alertBar = document.querySelector('.portal-alert-bar');
   const courseDetail = document.getElementById('manaba-course-detail-view');
+  const portfolioView = document.getElementById('manaba-portfolio-view');
 
   if (mainCols) mainCols.style.display = 'none';
   if (subHeader) subHeader.style.display = 'none';
   if (alertBar) alertBar.style.display = 'none';
+  if (portfolioView) portfolioView.style.display = 'none';
   if (courseDetail) courseDetail.style.display = 'block';
 
   // ナビタブを「コース」にアクティブ化

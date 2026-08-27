@@ -5521,6 +5521,178 @@ body {
   border-radius: 2px;
 }
 
+/* 💼 4.2 マイポートフォリオ画面（千葉工大公式 完全準拠） */
+.official-portfolio-container {
+  background: #ffffff;
+}
+
+.userpage-top-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.userpage-avatar-box {
+  width: 52px;
+  height: 52px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userpage-name-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+}
+
+.userpage-management-links {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.userpage-management-links a {
+  color: #1960ad;
+  text-decoration: none;
+}
+.userpage-management-links a:hover {
+  text-decoration: underline;
+}
+
+/* 年度アコーディオン */
+.collist-container {
+  border: 1px solid #d4d4d4;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.collist-year-header {
+  background: linear-gradient(180deg, #edf7d2 0%, #d8ebb5 100%);
+  border-bottom: 1.5px solid #b2d280;
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collist-year-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2e5b0e;
+  margin: 0;
+}
+
+.collyear-toggle-btn {
+  font-size: 12px;
+  color: #2e5b0e;
+  background: #ffffff;
+  border: 1px solid #b2d280;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.collist-course-item {
+  border-bottom: 1px solid #e0e0e0;
+}
+.collist-course-item:last-of-type {
+  border-bottom: none;
+}
+
+.collist-course-bar {
+  background: #fbfdf9;
+  border-bottom: 1px solid #eef2e6;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.collist-cname {
+  font-size: 14px;
+  font-weight: 700;
+  flex: 1;
+}
+.collist-cname a {
+  color: #0272c1;
+  text-decoration: none;
+}
+.collist-cname a:hover {
+  text-decoration: underline;
+}
+
+.collist-cteacher {
+  font-size: 12px;
+  color: #276749;
+  font-weight: 600;
+  width: 100px;
+}
+
+.collist-cterm {
+  font-size: 12px;
+  color: #555555;
+  width: 120px;
+  text-align: right;
+}
+
+.collldatalist-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.collldatalist-table tr {
+  border-bottom: 1px dashed #e2e8f0;
+}
+.collldatalist-table tr:last-of-type {
+  border-bottom: none;
+}
+
+.colltitle-td {
+  padding: 8px 14px 8px 30px;
+  font-size: 13px;
+}
+.colltitle-td a {
+  color: #333333;
+  text-decoration: none;
+}
+.colltitle-td a:hover {
+  color: #0272c1;
+  text-decoration: underline;
+}
+
+.colldate-td {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #666666;
+  text-align: right;
+  width: 160px;
+}
+
+.coll-action-row {
+  background: #fafafa;
+}
+
+.colllink-right-td {
+  padding: 6px 14px;
+  text-align: right;
+  font-size: 12px;
+}
+.colllink-right-td a {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
 /* 5. コースメインコンテンツ */
 .official-course-main-body {
   padding: 0 18px 14px 18px;
