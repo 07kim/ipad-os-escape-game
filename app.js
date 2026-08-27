@@ -4253,6 +4253,7 @@ function triggerSettingsRestriction(itemName) {
 // 音響効果 ＆ ログ送信ユーティリティ（Safari完全対応 Web Audio シンセサイザー）
 // ==========================================================================
 let globalAudioCtx = null;
+const wavCache = {};
 
 function getAudioContext() {
   if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
@@ -4267,33 +4268,43 @@ function getAudioContext() {
   return globalAudioCtx;
 }
 
-// ユーザーの画面タッチ時に Safari の AudioContext ロックを一発解除
+// ユーザーの画面タッチ時に iPad / Safari の AudioContext ロックを一発解除
 function unlockSafariAudio() {
   const ctx = getAudioContext();
-  if (ctx) {
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    // 無音バッファを1回再生して確実にアンロック
-    try {
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+  try {
+    if (ctx) {
       const buffer = ctx.createBuffer(1, 1, 22050);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
-    } catch (e) {}
-  }
+    }
+  } catch (e) {}
+
+  // HTML5 Audio 側も確実にアンロック
+  try {
+    const dummy = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+    dummy.volume = 0.01;
+    dummy.play().then(() => {
+      dummy.pause();
+    }).catch(() => {});
+  } catch (e) {}
 }
 
-// 画面タッチ・クリックで自動アンロックを登録
-['touchstart', 'touchend', 'click', 'pointerdown'].forEach(evt => {
-  document.addEventListener(evt, unlockSafariAudio, { once: false, passive: true });
+// 画面タッチ・クリック・キー入力で自動アンロックを登録
+['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, unlockSafariAudio, { passive: true });
 });
 
-// WAV PCM Data-URI 生成エンジン（Safari完全互換）
+// WAV PCM Data-URI 生成エンジン（iPadOS / Safari完全互換）
 function generateWavDataUri(type) {
+  if (wavCache[type]) return wavCache[type];
+
   const sampleRate = 22050;
-  let duration = 0.25;
+  let duration = 0.20;
   let samples = [];
 
   if (type === "notif" || type === "success") {
@@ -4303,16 +4314,16 @@ function generateWavDataUri(type) {
       const t = i / sampleRate;
       let freq = t < 0.12 ? 587.33 : 880.00;
       let env = Math.exp(-t * 6);
-      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.7);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.75);
     }
   } else if (type === "alarm" || type === "error") {
-    duration = 0.75;
+    duration = 0.55;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
       let freq = type === "alarm" ? (440 + Math.sin(2 * Math.PI * 4 * t) * 220) : 180;
-      let env = type === "error" ? Math.exp(-t * 5) : 0.8;
-      samples.push((Math.sin(2 * Math.PI * freq * t) > 0 ? 0.7 : -0.7) * env);
+      let env = type === "error" ? Math.exp(-t * 5) : 0.85;
+      samples.push((Math.sin(2 * Math.PI * freq * t) > 0 ? 0.75 : -0.75) * env);
     }
   } else if (type === "fanfare") {
     duration = 0.85;
@@ -4323,7 +4334,7 @@ function generateWavDataUri(type) {
       const noteIdx = Math.min(3, Math.floor(t / 0.2));
       const freq = freqs[noteIdx];
       let env = Math.exp(-(t % 0.2) * 5);
-      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.8);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.85);
     }
   } else if (type === "distortion") {
     duration = 1.0;
@@ -4331,10 +4342,9 @@ function generateWavDataUri(type) {
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
       let freq = 120 + (t < 0.5 ? t * 1200 : (1.0 - t) * 1200);
-      samples.push((Math.sin(2 * Math.PI * freq * t) + Math.sin(4 * Math.PI * freq * t) * 0.4) * 0.7);
+      samples.push((Math.sin(2 * Math.PI * freq * t) + Math.sin(4 * Math.PI * freq * t) * 0.4) * 0.75);
     }
   } else if (type === "ringback") {
-    // 日本の電話呼出音（400Hz + 16Hz 振幅変調「プルルルルル……」）
     duration = 1.0;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
@@ -4344,36 +4354,34 @@ function generateWavDataUri(type) {
       let env = 1.0;
       if (t < 0.02) env = t / 0.02;
       if (t > 0.98) env = (1.0 - t) / 0.02;
-      samples.push(carrier * modulation * env * 0.75);
+      samples.push(carrier * modulation * env * 0.85);
     }
   } else if (type === "hangup") {
-    // 電話切断音「ガチャッ」（受話器フック音）
     duration = 0.22;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
       let sample = 0;
-      // 1回目のクリック (t = 0.00s)
       if (t < 0.04) {
         let env1 = Math.exp(-t * 100);
         sample += (Math.sin(2 * Math.PI * 1600 * t) * 0.4 + Math.sin(2 * Math.PI * 480 * t) * 0.6) * env1;
       }
-      // 2回目の重いフック音 (t = 0.035s)
       if (t >= 0.035 && t < 0.20) {
         let t2 = t - 0.035;
         let env2 = Math.exp(-t2 * 40);
         sample += (Math.sin(2 * Math.PI * 720 * t2) * 0.5 + Math.sin(2 * Math.PI * 240 * t2) * 0.8) * env2;
       }
-      samples.push(sample * 0.75);
+      samples.push(sample * 0.85);
     }
   } else {
-    // beep / dtmf
-    duration = 0.18;
+    // beep / dtmf / touch
+    duration = 0.12;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
-      let freq = type === "dtmf" ? 697 : 800;
-      samples.push(Math.sin(2 * Math.PI * freq * t) * 0.6);
+      let freq = type === "touch" ? 800 : (type === "dtmf" ? 697 : 800);
+      let env = Math.exp(-t * 12);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.85);
     }
   }
 
@@ -4392,12 +4400,12 @@ function generateWavDataUri(type) {
   writeString(8, 'WAVE');
   writeString(12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); // Byte rate
-  view.setUint16(32, 2, true); // Block align
-  view.setUint16(34, 16, true); // Bits per sample
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
   writeString(36, 'data');
   view.setUint32(40, numSamples * 2, true);
 
@@ -4411,175 +4419,160 @@ function generateWavDataUri(type) {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return 'data:audio/wav;base64,' + btoa(binary);
+  const uri = 'data:audio/wav;base64,' + btoa(binary);
+  wavCache[type] = uri;
+  return uri;
 }
 
+// 🔊 システム効果音再生（iPad / PC 完全両対応ハイブリッドエンジン）
 function playSystemSound(type) {
+  let playedWebAudio = false;
+
+  // 1. Web Audio API での再生
   try {
     const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      const now = ctx.currentTime;
 
-    const now = ctx.currentTime;
+      if (type === "beep" || type === "dtmf" || type === "touch") {
+        const f1 = type === "touch" ? 800 : 697;
+        const f2 = type === "touch" ? 1200 : 1209;
+        const dur = type === "touch" ? 0.08 : 0.12;
 
-    if (type === "beep" || type === "dtmf" || type === "touch") {
-      // 🎹 電話キーパッド・プッシュ音（ハッキリ歯切れのよいDTMFデュアルトーン）
-      const f1 = type === "touch" ? 800 : 697;
-      const f2 = type === "touch" ? 1200 : 1209;
-      const dur = type === "touch" ? 0.08 : 0.12;
+        [f1, f2].forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.45, now + 0.004);
+          gain.gain.setValueAtTime(0.40, now + dur - 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + dur + 0.01);
+        });
+        playedWebAudio = true;
 
-      [f1, f2].forEach(freq => {
+      } else if (type === "ringback") {
+        const dur = 1.0;
+        const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          const t = i / ctx.sampleRate;
+          const carrier = Math.sin(2 * Math.PI * 400 * t);
+          const mod = 0.5 + 0.5 * Math.sin(2 * Math.PI * 16 * t);
+          let env = 1.0;
+          if (t < 0.02) env = t / 0.02;
+          if (t > 0.96) env = (1.0 - t) / 0.04;
+          data[i] = carrier * mod * env * 0.75;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(now);
+        playedWebAudio = true;
+
+      } else if (type === "success" || type === "notif") {
+        const notes = [
+          { freq: 587.33, start: 0.00, dur: 0.20, vol: 0.70 },
+          { freq: 880.00, start: 0.06, dur: 0.40, vol: 0.80 }
+        ];
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(n.freq, now + n.start);
+          const t0 = now + n.start;
+          gain.gain.setValueAtTime(0.01, t0);
+          gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.006);
+          gain.gain.setValueAtTime(n.vol * 0.7, t0 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + n.dur + 0.02);
+        });
+        playedWebAudio = true;
+
+      } else if (type === "fanfare") {
+        const chordNotes = [
+          { freq: 523.25, start: 0.00, dur: 0.30, vol: 0.65 },
+          { freq: 659.25, start: 0.09, dur: 0.30, vol: 0.65 },
+          { freq: 783.99, start: 0.18, dur: 0.40, vol: 0.75 },
+          { freq: 1046.50, start: 0.28, dur: 0.75, vol: 0.85 }
+        ];
+        chordNotes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(n.freq, now + n.start);
+          const t0 = now + n.start;
+          gain.gain.setValueAtTime(0.01, t0);
+          gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.008);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + n.dur + 0.02);
+        });
+        playedWebAudio = true;
+
+      } else if (type === "hangup") {
+        const clicks = [
+          { freq: 1200, start: 0.00, dur: 0.035, vol: 0.75 },
+          { freq: 280, start: 0.025, dur: 0.16, vol: 0.85 }
+        ];
+        clicks.forEach(c => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(c.freq, now + c.start);
+          const t0 = now + c.start;
+          gain.gain.setValueAtTime(0.01, t0);
+          gain.gain.linearRampToValueAtTime(c.vol, t0 + 0.003);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + c.dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + c.dur + 0.02);
+        });
+        playedWebAudio = true;
+
+      } else if (type === "error" || type === "alarm") {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now);
-
+        osc.type = type === "alarm" ? "sawtooth" : "square";
+        const dur = type === "alarm" ? 0.55 : 0.20;
+        osc.frequency.setValueAtTime(type === "alarm" ? 440 : 180, now);
+        if (type === "alarm") {
+          osc.frequency.exponentialRampToValueAtTime(880, now + dur * 0.7);
+        }
         gain.gain.setValueAtTime(0.01, now);
-        gain.gain.linearRampToValueAtTime(0.45, now + 0.004); // 瞬時アタック
-        gain.gain.setValueAtTime(0.40, now + dur - 0.015);
+        gain.gain.linearRampToValueAtTime(0.65, now + 0.008);
+        gain.gain.setValueAtTime(0.50, now + dur * 0.5);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + dur + 0.01);
-      });
-
-    } else if (type === "ringback") {
-      // 📞 電話呼出音「プルルルルル……」（400Hz + 16Hz 振幅変調音）
-      const dur = 1.0;
-      const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) {
-        const t = i / ctx.sampleRate;
-        const carrier = Math.sin(2 * Math.PI * 400 * t);
-        const mod = 0.5 + 0.5 * Math.sin(2 * Math.PI * 16 * t);
-        let env = 1.0;
-        if (t < 0.02) env = t / 0.02;
-        if (t > 0.96) env = (1.0 - t) / 0.04;
-        data[i] = carrier * mod * env * 0.75;
+        osc.stop(now + dur + 0.02);
+        playedWebAudio = true;
       }
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(now);
-
-    } else if (type === "success" || type === "notif") {
-      // 🔔 Apple純正ライクな美しい2和音通知サウンド（ハッキリ心地よいチャイム）
-      const notes = [
-        { freq: 587.33, start: 0.00, dur: 0.20, vol: 0.70 },  // D5
-        { freq: 880.00, start: 0.06, dur: 0.40, vol: 0.80 }  // A5
-      ];
-      notes.forEach(n => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(n.freq, now + n.start);
-
-        const t0 = now + n.start;
-        gain.gain.setValueAtTime(0.01, t0);
-        gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.006); // 瞬時アタック
-        gain.gain.setValueAtTime(n.vol * 0.7, t0 + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t0);
-        osc.stop(t0 + n.dur + 0.02);
-      });
-
-    } else if (type === "fanfare") {
-      // 🎺 輝かしいファンファーレ（4音アルペジオ＋豊かなアタックとサステイン）
-      const chordNotes = [
-        { freq: 523.25, start: 0.00, dur: 0.30, vol: 0.65 },  // C5
-        { freq: 659.25, start: 0.09, dur: 0.30, vol: 0.65 },  // E5
-        { freq: 783.99, start: 0.18, dur: 0.40, vol: 0.75 },  // G5
-        { freq: 1046.50, start: 0.28, dur: 0.75, vol: 0.85 }  // C6 (主音)
-      ];
-      chordNotes.forEach(n => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(n.freq, now + n.start);
-
-        const t0 = now + n.start;
-        gain.gain.setValueAtTime(0.01, t0);
-        gain.gain.linearRampToValueAtTime(n.vol, t0 + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t0);
-        osc.stop(t0 + n.dur + 0.02);
-      });
-
-    } else if (type === "hangup") {
-      // 📞 リアルな受話器切断音（ガチャッという確かな手応えのフック音）
-      const clicks = [
-        { freq: 1200, start: 0.00, dur: 0.035, vol: 0.75 },
-        { freq: 280, start: 0.025, dur: 0.16, vol: 0.85 }
-      ];
-      clicks.forEach(c => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(c.freq, now + c.start);
-
-        const t0 = now + c.start;
-        gain.gain.setValueAtTime(0.01, t0);
-        gain.gain.linearRampToValueAtTime(c.vol, t0 + 0.003);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + c.dur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t0);
-        osc.stop(t0 + c.dur + 0.02);
-      });
-
-    } else if (type === "error" || type === "alarm") {
-      // ⚠️ 警告・エラー音（ハッキリとしたアタックと音圧）
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type === "alarm" ? "sawtooth" : "square";
-      
-      const dur = type === "alarm" ? 0.55 : 0.20;
-      osc.frequency.setValueAtTime(type === "alarm" ? 440 : 180, now);
-      if (type === "alarm") {
-        osc.frequency.exponentialRampToValueAtTime(880, now + dur * 0.7);
-      }
-
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.65, now + 0.008);
-      gain.gain.setValueAtTime(0.50, now + dur * 0.5);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + dur + 0.02);
-
-    } else if (type === "distortion") {
-      // ⚡ 時空歪曲グリッチノイズ（迫力ある周波数スライド）
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(900, now + 0.4);
-      osc.frequency.exponentialRampToValueAtTime(120, now + 0.85);
-
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.70, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.95);
     }
-  } catch (e) {
-    console.warn("Audio Context playback error:", e);
+  } catch (e) {}
+
+  // 2. iPadOS で Web Audio が無効化・ミュートされている場合の HTML5 Audio 連動再生
+  if (!playedWebAudio || (globalAudioCtx && globalAudioCtx.state === 'suspended')) {
+    try {
+      const uri = generateWavDataUri(type);
+      const snd = new Audio(uri);
+      snd.volume = 0.9;
+      snd.play().catch(() => {});
+    } catch (e) {}
   }
 }
 
