@@ -3299,39 +3299,142 @@ function openManabaCourse(courseId) {
   logWriteToGAS("MANABA_COURSE_OPEN", `manabaコース詳細を開きました: ${course.name}`);
 }
 
-function openManabaCourseNewsDetail(newsIndex) {
-  const newsList = gameState._currentCourseNewsList || [];
-  const course = gameState._currentCourseObj || {};
-  const item = newsList[newsIndex];
-  if (!item) return;
+function switchCourseSubTab(tabKey) {
+  // ボタンのアクティブ状態更新
+  const btnIds = ['top', 'query', 'survey', 'report', 'project', 'grade', 'bbs', 'page'];
+  btnIds.forEach(id => {
+    const btn = document.getElementById(`cmenu-btn-${id}`);
+    if (btn) {
+      btn.classList.remove('active-green');
+      if (id === tabKey) btn.classList.add('active-green');
+    }
+  });
 
-  const mainBody = document.querySelector('.official-course-main-body');
-  const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const mainCols = document.getElementById('course-top-main-columns');
+  const noticeBox = document.getElementById('course-top-notice-box');
+  const sublinksRow = document.getElementById('course-top-sublinks-row');
+  const subtabView = document.getElementById('course-subtab-view-container');
   const pageDetailView = document.getElementById('manaba-course-page-view');
-  const noticeBox = document.querySelector('.official-course-notice-box');
-  const sublinksRow = document.querySelector('.official-course-sublinks-row');
+  const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const titleTextEl = document.getElementById('course-subtab-title-text');
+  const bodyEl = document.getElementById('course-subtab-body');
 
-  if (mainBody) mainBody.style.display = 'none';
+  // 詳細画面は閉じる
   if (pageDetailView) pageDetailView.style.display = 'none';
+  if (newsDetailView) newsDetailView.style.display = 'none';
+
+  if (tabKey === 'top') {
+    if (mainCols) mainCols.style.display = 'block';
+    if (noticeBox) noticeBox.style.display = 'block';
+    if (sublinksRow) sublinksRow.style.display = 'flex';
+    if (subtabView) subtabView.style.display = 'none';
+    return;
+  }
+
+  if (tabKey === 'page') {
+    if (mainCols) mainCols.style.display = 'none';
+    if (noticeBox) noticeBox.style.display = 'none';
+    if (sublinksRow) sublinksRow.style.display = 'none';
+    if (subtabView) subtabView.style.display = 'none';
+    openManabaCoursePageView(0);
+    return;
+  }
+
+  // サブタブ一覧表示
+  if (mainCols) mainCols.style.display = 'none';
   if (noticeBox) noticeBox.style.display = 'none';
   if (sublinksRow) sublinksRow.style.display = 'none';
-  if (newsDetailView) newsDetailView.style.display = 'flex';
+  if (subtabView) subtabView.style.display = 'block';
 
-  const subjectEl = document.getElementById('news-detail-subject');
-  const dateEl = document.getElementById('news-detail-date');
-  const authorEl = document.getElementById('news-detail-author');
-  const contentEl = document.getElementById('news-detail-content');
-  const lastmodAuthorEl = document.getElementById('news-detail-lastmod-author');
-  const lastmodTimeEl = document.getElementById('news-detail-lastmod-time');
+  const TAB_DATA = {
+    query: {
+      title: "小テスト一覧",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            このコースには現在小テストはありません。
+          </p>
+        </div>
+      `
+    },
+    survey: {
+      title: "アンケート一覧",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            このコースには現在アンケートはありません。
+          </p>
+        </div>
+      `
+    },
+    report: {
+      title: "レポート一覧",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <table class="course-news-official-table" style="width:100%; border:1px solid #d4d4d4; background:#fff; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f4f4f4; border-bottom:1.5px solid #d4d4d4;">
+                <th style="padding:10px 14px; text-align:left; font-size:13px; color:#333;">タイトル</th>
+                <th style="padding:10px 14px; text-align:left; font-size:13px; color:#333; width:220px;">受付期間</th>
+                <th style="padding:10px 14px; text-align:center; font-size:13px; color:#333; width:90px;">状態</th>
+                <th style="padding:10px 14px; text-align:center; font-size:13px; color:#333; width:100px;">提出</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:12px 14px; font-size:13.5px;">
+                  <a href="javascript:void(0);" onclick="showPushNotification('レポート詳細', '【期末成果レポート】変調周波数の検証レポート：第11回資料に記載された基準周波数(119.43MHz)の導出検証を提出してください。', 'file-text')" style="color:#0272c1; font-weight:700; text-decoration:none;">
+                    【期末成果レポート】変調周波数の検証レポート
+                  </a>
+                </td>
+                <td style="padding:12px 14px; font-size:12px; color:#666;">2026/08/20 09:00 〜 2026/08/28 23:55</td>
+                <td style="padding:12px 14px; text-align:center;"><span style="color:#d97706; font-weight:700; font-size:12px; background:#fef3c7; padding:3px 8px; border-radius:4px;">未提出</span></td>
+                <td style="padding:12px 14px; text-align:center;">
+                  <button class="btn btn-secondary btn-sm" onclick="showPushNotification('レポート提出', '提出受付中：調査メモのデータをもとに提出してください。', 'upload')" style="font-size:12px; padding:3px 10px;">提出</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `
+    },
+    project: {
+      title: "プロジェクト一覧",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            参加中のプロジェクトはありません。
+          </p>
+        </div>
+      `
+    },
+    grade: {
+      title: "成績一覧",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            成績発表期間外です（2026年度前期成績は9月上旬公開予定）。
+          </p>
+        </div>
+      `
+    },
+    bbs: {
+      title: "掲示板",
+      html: `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            掲示板に投稿されたスレッドはありません。
+          </p>
+        </div>
+      `
+    }
+  };
 
-  if (subjectEl) subjectEl.innerText = item.title;
-  if (dateEl) dateEl.innerText = `${item.date} 12:03`;
-  if (authorEl) authorEl.innerText = course.teacher || "神崎 恭介";
-  if (contentEl) contentEl.innerText = item.content || `講義のアナウンスを参照してください。`;
-  if (lastmodAuthorEl) lastmodAuthorEl.innerText = course.teacher || "神崎 恭介";
-  if (lastmodTimeEl) lastmodTimeEl.innerText = `${item.date} 16:16`;
+  const currentTab = TAB_DATA[tabKey] || { title: "一覧", html: "" };
+  if (titleTextEl) titleTextEl.innerText = currentTab.title;
+  if (bodyEl) bodyEl.innerHTML = currentTab.html;
 
-  logWriteToGAS("MANABA_COURSE_NEWS_OPEN", `コースニュース閲覧: ${item.title}`);
+  logWriteToGAS("MANABA_SUBTAB_OPEN", `コースメニュータブ切り替え: ${currentTab.title}`);
 }
 
 function openManabaCoursePageView(pageIdx) {
@@ -3624,11 +3727,8 @@ function openMail(mailId) {
     }
 
     if (contentEl) {
-      contentEl.innerHTML = `
-        <div style="font-size:14.5px; line-height:1.8; color:#1f2937;">
-          ${mail.body}
-        </div>
-      `;
+      const sanitizedBody = (mail.body || "").trim().replace(/\n/g, "<br>");
+      contentEl.innerHTML = `<div class="mail-body-text-block">${sanitizedBody}</div>`;
     }
 
     if (typeof lucide !== 'undefined') lucide.createIcons();

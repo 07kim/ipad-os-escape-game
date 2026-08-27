@@ -2737,6 +2737,68 @@ body {
   font-weight: 600;
 }
 
+/* Google Forms 公式設定タブ スタイル */
+.gform-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.gform-setting-text {
+  flex: 1;
+  padding-right: 16px;
+}
+
+/* Material Design 風 トグルスイッチ */
+.gform-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.gform-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.gform-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #dadce0;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.gform-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.gform-switch input:checked + .gform-slider {
+  background-color: #673ab7;
+}
+
+.gform-switch input:checked + .gform-slider:before {
+  transform: translateX(20px);
+}
+
 /* LINK QRモーダル */
 .link-qr-modal {
   position: absolute;
@@ -5435,7 +5497,31 @@ body {
   text-decoration: underline;
 }
 
-/* 4. コースメインコンテンツ */
+/* 4. コースサブタブ一覧画面（アンケート一覧・レポート一覧など） */
+.course-subtab-view-container {
+  background: #ffffff;
+  flex: 1;
+}
+
+.course-subtab-main-heading {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subtab-green-indicator {
+  display: inline-block;
+  width: 5px;
+  height: 18px;
+  background-color: #80aa00;
+  border-radius: 2px;
+}
+
+/* 5. コースメインコンテンツ */
 .official-course-main-body {
   padding: 0 18px 14px 18px;
 }
@@ -6544,11 +6630,18 @@ body {
 }
 
 .mail-body-content {
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.8;
-  color: #27272a;
-  white-space: pre-wrap;
+  color: #1f2937;
+  padding: 10px 0;
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+}
+
+.mail-body-text-block {
+  margin: 0;
+  padding: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .mail-attachment-box {

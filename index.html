@@ -796,17 +796,56 @@
               </div>
             </div>
 
-            <!-- ③ 設定タブ -->
-            <div class="editor-panel-content" id="editor-panel-settings" style="display:none;">
-              <div class="editor-header-card" style="border-top:none;">
-                <h3 style="font-size:16px; margin:0 0 10px; color:#202124;">フォームの設定</h3>
-                <p style="font-size:13px; color:#5f6368; margin:0 0 16px;">回答の収集、表示、デフォルト設定を管理します。</p>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #dadce0;">
-                  <div>
-                    <strong style="font-size:14px; color:#202124;">メールアドレスを収集する</strong>
-                    <div style="font-size:12px; color:#70757a;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
+            <!-- ③ 設定タブ（Google Forms 公式マテリアルデザイン） -->
+            <div class="editor-panel-content" id="editor-panel-settings" style="display:none; max-width:640px; margin:0 auto;">
+              <div class="editor-header-card" style="border-top:none; border-radius:8px; padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.12);">
+                <div style="border-bottom:1px solid #e0e0e0; padding-bottom:16px; margin-bottom:16px;">
+                  <h3 style="font-size:18px; margin:0 0 6px; color:#202124; font-weight:600;">フォームの設定</h3>
+                  <p style="font-size:13px; color:#5f6368; margin:0;">回答の収集、表示、デフォルト設定を管理します。</p>
+                </div>
+
+                <div class="gform-setting-row">
+                  <div class="gform-setting-text">
+                    <strong style="font-size:14px; color:#202124; display:block; margin-bottom:3px;">メールアドレスを収集する</strong>
+                    <span style="font-size:12px; color:#5f6368;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</span>
                   </div>
-                  <input type="checkbox" checked disabled>
+                  <label class="gform-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="gform-slider"></span>
+                  </label>
+                </div>
+
+                <div class="gform-setting-row">
+                  <div class="gform-setting-text">
+                    <strong style="font-size:14px; color:#202124; display:block; margin-bottom:3px;">回答を 1 回に制限する</strong>
+                    <span style="font-size:12px; color:#5f6368;">回答者はログインを求められます</span>
+                  </div>
+                  <label class="gform-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="gform-slider"></span>
+                  </label>
+                </div>
+
+                <div class="gform-setting-row">
+                  <div class="gform-setting-text">
+                    <strong style="font-size:14px; color:#202124; display:block; margin-bottom:3px;">送信後の編集を許可する</strong>
+                    <span style="font-size:12px; color:#5f6368;">回答を送信した後でも修正可能にします</span>
+                  </div>
+                  <label class="gform-switch">
+                    <input type="checkbox" disabled>
+                    <span class="gform-slider"></span>
+                  </label>
+                </div>
+
+                <div class="gform-setting-row" style="border-bottom:none;">
+                  <div class="gform-setting-text">
+                    <strong style="font-size:14px; color:#202124; display:block; margin-bottom:3px;">要約グラフとテキストの回答を表示</strong>
+                    <span style="font-size:12px; color:#5f6368;">回答者が集計結果を閲覧できるようにします</span>
+                  </div>
+                  <label class="gform-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="gform-slider"></span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1336,40 +1375,53 @@
             <!-- コース内メニューバー（立体ボタンの横並び） -->
             <div class="official-course-menubar">
               <div class="course-menu-buttons-left">
-                <button class="course-menu-btn" onclick="showPushNotification('小テスト', '現在実施中の小テストはありません。', 'file-question')">小テスト</button>
-                <button class="course-menu-btn" onclick="showPushNotification('アンケート', '回答が必要なアンケートはありません。', 'check-square')">アンケート</button>
-                <button class="course-menu-btn has-badge" onclick="showPushNotification('レポート', '未提出レポート: 【期末成果レポート】変調周波数の検証レポート (締切: 8/28)', 'file-text')">
+                <button class="course-menu-btn" id="cmenu-btn-top" onclick="switchCourseSubTab('top')">コースTOP</button>
+                <button class="course-menu-btn" id="cmenu-btn-query" onclick="switchCourseSubTab('query')">小テスト</button>
+                <button class="course-menu-btn" id="cmenu-btn-survey" onclick="switchCourseSubTab('survey')">アンケート</button>
+                <button class="course-menu-btn has-badge" id="cmenu-btn-report" onclick="switchCourseSubTab('report')">
                   レポート <span class="menu-unread-badge">1</span>
                 </button>
-                <button class="course-menu-btn" onclick="showPushNotification('プロジェクト', '参加中のプロジェクトはありません。', 'briefcase')">プロジェクト</button>
-                <button class="course-menu-btn" onclick="showPushNotification('成 績', '成績発表期間外です（9月上旬公開予定）', 'award')">成 績</button>
+                <button class="course-menu-btn" id="cmenu-btn-project" onclick="switchCourseSubTab('project')">プロジェクト</button>
+                <button class="course-menu-btn" id="cmenu-btn-grade" onclick="switchCourseSubTab('grade')">成 績</button>
               </div>
               <div class="course-menu-buttons-right">
-                <button class="course-menu-btn icon-btn" onclick="showPushNotification('掲示板', '掲示板に新しい投稿はありません。', 'message-square')">💬 掲示板</button>
-                <button class="course-menu-btn icon-btn active-green" onclick="openManabaCoursePageView(0)">📖 コースコンテンツ</button>
+                <button class="course-menu-btn icon-btn" id="cmenu-btn-bbs" onclick="switchCourseSubTab('bbs')">💬 掲示板</button>
+                <button class="course-menu-btn icon-btn active-green" id="cmenu-btn-page" onclick="switchCourseSubTab('page')">📖 コースコンテンツ</button>
               </div>
             </div>
 
-            <!-- コース内個別指導案内ボックス -->
-            <div class="official-course-notice-box">
+            <!-- 📄 各種サブタブ一覧コンテナ（アンケート・レポート・小テスト・プロジェクト・成績・掲示板） -->
+            <div class="course-subtab-view-container" id="course-subtab-view-container" style="display:none; padding:18px 24px;">
+              <div class="contentbody-l">
+                <h1 class="course-subtab-main-heading" id="course-subtab-title">
+                  <span class="subtab-green-indicator"></span><span id="course-subtab-title-text">一覧</span>
+                </h1>
+                <div class="subtab-content-area" id="course-subtab-body" style="margin-top:16px;">
+                  <!-- JSで動的レンダリング -->
+                </div>
+              </div>
+            </div>
+
+            <!-- コース内個別指導案内ボックス（TOP表示時のみ） -->
+            <div class="official-course-notice-box" id="course-top-notice-box">
               <p class="notice-desc">
                 このコースでは、個別指導コレクションを利用して、担当教員に質問や相談をすることができます（他の履修生は閲覧できません）。
               </p>
               <div class="notice-links">
-                <a href="javascript:void(0);" class="notice-arrow-link">➔ 個別指導コレクションを作成する</a>
-                <a href="javascript:void(0);" class="notice-arrow-link">➔ 個別指導コレクション一覧</a>
+                <a href="javascript:void(0);" class="notice-arrow-link" onclick="showPushNotification('個別指導', '現在有効な個別指導コレクションはありません。', 'user-check')">➔ 個別指導コレクションを作成する</a>
+                <a href="javascript:void(0);" class="notice-arrow-link" onclick="showPushNotification('個別指導', '提出済みの個別指導コレクションはありません。', 'folder')">➔ 個別指導コレクション一覧</a>
               </div>
             </div>
 
             <!-- サブメニューリンク行（右寄せ） -->
-            <div class="official-course-sublinks-row">
-              <a href="javascript:void(0);" class="sublink-item">📝 ピアレビュー (未実施:0件)</a>
-              <a href="javascript:void(0);" class="sublink-item">👤 個別指導(コレクション)</a>
-              <a href="javascript:void(0);" class="sublink-item">📄 提出記録</a>
+            <div class="official-course-sublinks-row" id="course-top-sublinks-row">
+              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('ピアレビュー', '未実施のピアレビューはありません。', 'file-text')">📝 ピアレビュー (未実施:0件)</a>
+              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('個別指導', '個別指導コレクションはありません。', 'user')">👤 個別指導(コレクション)</a>
+              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('提出記録', '提出履歴: レポート1件受付中', 'clock')">📄 提出記録</a>
             </div>
 
             <!-- コースメインコンテンツ（2カラム構成：左72% / 右28%） -->
-            <div class="official-course-main-body">
+            <div class="official-course-main-body" id="course-top-main-columns">
               <div class="course-top-layout-columns">
                 
                 <!-- [左カラム 72%] コースニュース & コンテンツ（更新順） -->
