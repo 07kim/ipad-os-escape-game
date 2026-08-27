@@ -5574,6 +5574,283 @@ body {
   text-decoration: underline;
 }
 
+/* 📖 コースコンテンツ（授業資料・ページ閲覧）画面 完全再現スタイル */
+.official-course-page-container {
+  padding: 10px 18px 24px 18px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.course-page-subheader {
+  background: #f6faf0;
+  border: 1px solid #e0ecc8;
+  border-radius: 4px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-doc-icon {
+  width: 28px;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid #bbbbbb;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.doc-icon-lines {
+  width: 16px;
+  height: 2px;
+  background: #888888;
+  box-shadow: 0 4px 0 #888888, 0 8px 0 #888888;
+}
+
+.course-page-main-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.course-page-twocols-layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 20px;
+  align-items: start;
+}
+
+.course-page-left-main {
+  min-width: 0;
+}
+
+.page-title-heading-box {
+  border-left: 4px solid #84cc16;
+  padding-left: 10px;
+  border-bottom: 1px solid #84cc16;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+}
+
+.page-article-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0;
+}
+
+.page-limit-notice {
+  font-size: 11px;
+  color: #666666;
+  margin-bottom: 12px;
+}
+
+.course-page-body-content {
+  font-size: 13px;
+  color: #222222;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* スケジュールテーブル */
+.manaba-schedule-official-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin: 8px 0 16px 0;
+}
+
+.manaba-schedule-official-table th {
+  background: #404040;
+  color: #ffffff;
+  padding: 6px 8px;
+  border: 1px solid #000000;
+  text-align: center;
+  font-weight: 600;
+}
+
+.manaba-schedule-official-table td {
+  padding: 6px 8px;
+  border: 1px solid #000000;
+  vertical-align: middle;
+}
+
+.tag-online {
+  color: #0d5dff;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tag-report {
+  color: #dc2626;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 添付ファイルエリア */
+.content-section-heading {
+  background: #f4fbf0;
+  border-left: 3px solid #84cc16;
+  padding: 4px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  margin: 16px 0 8px 0;
+  color: #333333;
+}
+
+.official-attachment-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.attachment-file-title {
+  color: #0272c1;
+  font-weight: 600;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.btn-file-preview {
+  background: linear-gradient(to bottom, #ffffff 0%, #ededed 100%);
+  border: 1px solid #999999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: #333333;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-file-preview:hover {
+  background: #e0e0e0;
+}
+
+/* 下部ナビゲーション */
+.course-page-bottom-nav-row {
+  background: #eef7e6;
+  padding: 4px 10px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.nav-arrow-btn {
+  background: none;
+  border: none;
+  color: #0272c1;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.nav-arrow-btn:hover {
+  text-decoration: underline;
+}
+
+.nav-top-anchor {
+  color: #666666;
+  text-decoration: none;
+  font-size: 10px;
+}
+
+.course-page-version-row {
+  font-size: 11px;
+  color: #666666;
+  margin-bottom: 12px;
+}
+
+.course-page-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn-course-comment {
+  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
+  border: 1px solid #999999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  color: #333333;
+}
+
+/* 右カラム 目次サイドバー */
+.page-sidebar-box {
+  border: 1px solid #84cc16;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.page-sidebar-header {
+  background: #eaf5d8;
+  padding: 6px 10px;
+  font-weight: 700;
+  color: #2e6900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #cce29d;
+}
+
+.page-sidebar-header h4 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-sidebar-index-list {
+  list-style: none;
+  padding: 2px 0;
+  margin: 0;
+  font-size: 11px;
+}
+
+.page-sidebar-index-list li {
+  padding: 4px 10px;
+  border-bottom: 1px solid #f2f2f2;
+  cursor: pointer;
+  color: #0272c1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-sidebar-index-list li:hover {
+  background: #fafdf5;
+  text-decoration: underline;
+}
+
+.page-sidebar-index-list li.current {
+  background: #eef7e6;
+  font-weight: 700;
+  color: #111111;
+  text-decoration: none;
+}
+
 /* フッター */
 .portal-official-footer {
   margin-top: 20px;

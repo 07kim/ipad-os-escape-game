@@ -1437,6 +1437,81 @@
               </div>
             </div>
 
+            <!-- 📖 コースコンテンツ（授業資料・ページ閲覧）画面（千葉工大 公式完全再現） -->
+            <div class="official-course-page-container" id="manaba-course-page-view" style="display:none;">
+              
+              <!-- 1. コンテンツヘッダー（薄黄緑背景） -->
+              <div class="course-page-subheader">
+                <div class="course-page-header-left">
+                  <div class="page-doc-icon">
+                    <div class="doc-icon-lines"></div>
+                  </div>
+                  <h1 class="course-page-main-title">
+                    <a href="javascript:void(0);" onclick="backToCourseTop()" style="color:#1960ad; text-decoration:none;">授業資料</a>
+                  </h1>
+                </div>
+                <div class="course-page-header-right">
+                  <div class="contents-modtime">更新日時 : &nbsp; 2026-07-14 09:02</div>
+                </div>
+              </div>
+
+              <!-- 2. コンテンツメイン 2カラム（左: 本文 / 右: 授業資料目次） -->
+              <div class="course-page-twocols-layout">
+                
+                <!-- 左カラム: 本文コンテンツ -->
+                <div class="course-page-left-main">
+                  
+                  <!-- ページ大見出し（緑の左ボーダー ＋ 下線） -->
+                  <div class="page-title-heading-box">
+                    <h2 class="page-article-title" id="course-page-article-title">スケジュール</h2>
+                  </div>
+
+                  <div class="page-limit-notice" id="course-page-limit-notice" style="display:none;">
+                    公開期間: 2026-04-21 08:30:00 ～
+                  </div>
+
+                  <!-- 本文・テーブル・添付ファイルエリア -->
+                  <div class="course-page-body-content" id="course-page-dynamic-content">
+                    <!-- JSでスケジュール表または各回の資料・PDFリンクを動的生成 -->
+                  </div>
+
+                  <!-- 下部ナビゲーション（前へ/次へ ＋ ページトップへ） -->
+                  <div class="course-page-bottom-nav-row">
+                    <button class="nav-arrow-btn prev-btn" id="page-nav-prev" onclick="changeCoursePageRel(-1)">◀ 前のページ</button>
+                    <a href="javascript:void(0);" class="nav-top-anchor" onclick="document.getElementById('manaba-course-page-view').scrollIntoView({behavior:'smooth'})">▲ ページトップへ</a>
+                    <button class="nav-arrow-btn next-btn" id="page-nav-next" onclick="changeCoursePageRel(1)">次のページ ▶</button>
+                  </div>
+
+                  <!-- 著者・版数行 -->
+                  <div class="course-page-version-row" id="course-page-version-info">
+                    2026-04-14 05:24 - 安藤 昌也 - 1.2版
+                  </div>
+
+                  <!-- アクションボタン行 -->
+                  <div class="course-page-action-buttons">
+                    <button class="btn-course-memo">📝 メモ</button>
+                    <button class="btn-course-comment" onclick="showPushNotification('コメント機能', 'この授業のコメントスレッドを開きます', 'message-square')">💬 コメントを書く</button>
+                  </div>
+
+                </div>
+
+                <!-- 右カラム: 授業資料 目次サイドバー（緑枠） -->
+                <div class="course-page-right-sidebar">
+                  <div class="page-sidebar-box">
+                    <div class="page-sidebar-header">
+                      <span class="sidebar-header-icon">📖</span>
+                      <h4>授業資料</h4>
+                    </div>
+                    <ul class="page-sidebar-index-list" id="course-page-index-list">
+                      <!-- JSで第1回〜第13回＋スケジュールを動的生成 -->
+                    </ul>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
             <!-- 右下のメモアイコン -->
             <div class="course-bottom-memo-btn-row">
               <button class="btn-course-memo">📝 メモ</button>

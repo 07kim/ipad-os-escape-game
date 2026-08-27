@@ -3088,10 +3088,9 @@ function openManabaCourse(courseId) {
       </div>
     `;
 
-    // 2. 授業資料カード（タップでPDFビューア）
-    const mat = (course.materials && course.materials[0]) || { id: 1, title: "授業資料・配付プリント" };
+    // 2. 授業資料カード（タップで授業資料ページを開く）
     cardGrid.innerHTML += `
-      <div class="content-card-item" onclick="openPdfViewer('${cid}', ${mat.id})">
+      <div class="content-card-item" onclick="openManabaCoursePageView(0)">
         <div class="content-card-icon">
           <div class="card-icon-line"></div>
           <div class="card-icon-line"></div>
@@ -3103,6 +3102,12 @@ function openManabaCourse(courseId) {
         </div>
       </div>
     `;
+  }
+
+  // メニューバーの「📖 コースコンテンツ」ボタンにイベントバインド
+  const courseContentsBtn = document.querySelector('.course-menu-btn.active-green');
+  if (courseContentsBtn) {
+    courseContentsBtn.onclick = () => openManabaCoursePageView(0);
   }
 
   // コーストップ表示状態を初期化
@@ -3119,10 +3124,12 @@ function openManabaCourseNewsDetail(newsIndex) {
 
   const mainBody = document.querySelector('.official-course-main-body');
   const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const pageDetailView = document.getElementById('manaba-course-page-view');
   const noticeBox = document.querySelector('.official-course-notice-box');
   const sublinksRow = document.querySelector('.official-course-sublinks-row');
 
   if (mainBody) mainBody.style.display = 'none';
+  if (pageDetailView) pageDetailView.style.display = 'none';
   if (noticeBox) noticeBox.style.display = 'none';
   if (sublinksRow) sublinksRow.style.display = 'none';
   if (newsDetailView) newsDetailView.style.display = 'flex';
@@ -3144,13 +3151,198 @@ function openManabaCourseNewsDetail(newsIndex) {
   logWriteToGAS("MANABA_COURSE_NEWS_OPEN", `コースニュース閲覧: ${item.title}`);
 }
 
+// 📖 授業資料（ページ閲覧）
+const COURSE_PAGES_DATA = [
+  {
+    title: "スケジュール",
+    date: "2026-04-14 05:24",
+    ver: "1.2版",
+    type: "schedule"
+  },
+  {
+    title: "1. ガイダンス",
+    date: "2026-04-14 08:30",
+    ver: "1.0版",
+    file: "Guidance2026.pdf",
+    time: "2026-04-14 08:10:00"
+  },
+  {
+    title: "2. ユーザーを重視したデザインの歴史",
+    date: "2026-04-21 08:12",
+    ver: "1.3版",
+    file: "HCD26_2.pdf",
+    time: "2026-04-21 08:12:31",
+    slido: "https://app.sli.do/event/iXw9rfRxJ2UAZMUWwWviQ1",
+    bookFile: "教科書該当箇所.pdf",
+    video: "https://youtu.be/vN4U5FqrOdQ?si=WozhGRSKJfsuFxwP&t=978"
+  },
+  { title: "3. ユーザー体験とは ／ 人間中心設計", date: "2026-04-28 08:30", ver: "1.0版", file: "HCD26_3.pdf" },
+  { title: "4. 人間中心設計・利用文脈", date: "2026-05-12 08:30", ver: "1.0版", file: "HCD26_4.pdf" },
+  { title: "5. ユーザー評価とユーザビリティ（オンライン）", date: "2026-05-19 08:30", ver: "1.0版", file: "HCD26_5.pdf" },
+  { title: "6. ユーザビリティ評価法－①", date: "2026-05-26 08:30", ver: "1.0版", file: "HCD26_6.pdf" },
+  { title: "7. ユーザビリティ評価法－②（オンライン）", date: "2026-06-02 08:30", ver: "1.1版", file: "HCD26_7.pdf" },
+  { title: "8. ユーザー調査・分析", date: "2026-06-09 08:30", ver: "1.0版", file: "HCD26_8.pdf" },
+  { title: "9. ユーザー調査手法（オンライン）", date: "2026-06-16 08:30", ver: "1.0版", file: "HCD26_9.pdf" },
+  { title: "10. UXのモデル化と体験価値の探索", date: "2026-06-23 08:30", ver: "1.0版", file: "HCD26_10.pdf" },
+  {
+    title: "11. ユーザー分析手法－①ミニ演習",
+    date: "2026-06-30 08:30",
+    ver: "1.2版",
+    file: "quantum_dynamics_lec11.pdf",
+    isSpecial: true
+  },
+  { title: "12. ユーザー分析手法－②ミニ演習（オンライン）", date: "2026-07-07 08:30", ver: "1.1版", file: "HCD26_12.pdf" },
+  { title: "13. 試験とまとめ", date: "2026-07-14 08:30", ver: "1.0版", file: "ExamSummary.pdf" }
+];
+
+function openManabaCoursePageView(pageIdx) {
+  const pIdx = (pageIdx !== undefined && pageIdx >= 0 && pageIdx < COURSE_PAGES_DATA.length) ? pageIdx : 0;
+  gameState._currentCoursePageIdx = pIdx;
+
+  const mainBody = document.querySelector('.official-course-main-body');
+  const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const pageDetailView = document.getElementById('manaba-course-page-view');
+  const noticeBox = document.querySelector('.official-course-notice-box');
+  const sublinksRow = document.querySelector('.official-course-sublinks-row');
+
+  if (mainBody) mainBody.style.display = 'none';
+  if (newsDetailView) newsDetailView.style.display = 'none';
+  if (noticeBox) noticeBox.style.display = 'none';
+  if (sublinksRow) sublinksRow.style.display = 'none';
+  if (pageDetailView) pageDetailView.style.display = 'block';
+
+  const course = gameState._currentCourseObj || {};
+  const pageData = COURSE_PAGES_DATA[pIdx];
+
+  // タイトル・版数
+  const titleEl = document.getElementById('course-page-article-title');
+  const verEl = document.getElementById('course-page-version-info');
+  const limitEl = document.getElementById('course-page-limit-notice');
+
+  if (titleEl) titleEl.innerText = pageData.title;
+  if (verEl) verEl.innerText = `${pageData.date} - ${course.teacher || '安藤 昌也'} - ${pageData.ver}`;
+  
+  if (limitEl) {
+    if (pageData.type === 'schedule') {
+      limitEl.style.display = 'none';
+    } else {
+      limitEl.style.display = 'block';
+      limitEl.innerText = `公開期間: ${pageData.date}:00 ～`;
+    }
+  }
+
+  // 本文エリアのレンダリング
+  const contentBody = document.getElementById('course-page-dynamic-content');
+  if (contentBody) {
+    if (pageData.type === 'schedule') {
+      contentBody.innerHTML = `
+        <table class="manaba-schedule-official-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">回</th>
+              <th style="width:70px;">日</th>
+              <th>テーマ</th>
+              <th style="width:90px;">注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:center;">1</td><td style="text-align:center;">4月14日</td><td>ガイダンス</td><td></td></tr>
+            <tr><td style="text-align:center;">2</td><td style="text-align:center;">4月21日</td><td>ユーザーを重視したデザインの歴史（1.1, 1.2）</td><td></td></tr>
+            <tr><td style="text-align:center;">3</td><td style="text-align:center;">4月28日</td><td><span style="color:#0d5dff;">【基礎知識】</span> ユーザー体験とは（2.2） ／ 人間中心設計（2.5, 2.1）</td><td></td></tr>
+            <tr><td style="text-align:center;">4</td><td style="text-align:center;">5月12日</td><td>人間中心設計・利用文脈（2.3）</td><td></td></tr>
+            <tr><td style="text-align:center;">5</td><td style="text-align:center;">5月19日</td><td><span style="color:#0d5dff;">【ユーザー評価】</span> ユーザー評価とユーザビリティ（3.5.1, 3.6.1, 2.4）</td><td class="tag-online">オンライン</td></tr>
+            <tr><td style="text-align:center;">6</td><td style="text-align:center;">5月26日</td><td>ユーザビリティ評価法－①ミニ演習（2.4、4.10.1、4.9.2）</td><td></td></tr>
+            <tr>
+              <td style="text-align:center;" rowspan="2">7</td><td style="text-align:center;" rowspan="2">6月2日</td><td rowspan="2">ユーザビリティ評価法－②ミニ演習（4.9.2）</td><td class="tag-online">オンライン</td>
+            </tr>
+            <tr><td class="tag-report">成果レポート</td></tr>
+            <tr><td style="text-align:center;">8</td><td style="text-align:center;">6月9日</td><td><span style="color:#0d5dff;">【ユーザー調査・分析】</span> ユーザー調査・分析（3.1.1, 3.2.1）</td><td style="text-align:center; color:#555;">事前課題</td></tr>
+            <tr><td style="text-align:center;">9</td><td style="text-align:center;">6月16日</td><td>ユーザー調査手法（4.2.3）</td><td class="tag-online">オンライン</td></tr>
+            <tr><td style="text-align:center;">10</td><td style="text-align:center;">6月23日</td><td>UXのモデル化と体験価値の探索（3.2）</td><td></td></tr>
+            <tr><td style="text-align:center;">11</td><td style="text-align:center;">6月30日</td><td>ユーザー分析手法－①ミニ演習（4.4.3 / 高周波共鳴）</td><td></td></tr>
+            <tr>
+              <td style="text-align:center;" rowspan="2">12</td><td style="text-align:center;" rowspan="2">7月7日</td><td rowspan="2">ユーザー分析手法－②ミニ演習（4.4.3）</td><td class="tag-online">オンライン</td>
+            </tr>
+            <tr><td class="tag-report">成果レポート</td></tr>
+            <tr><td style="text-align:center;">13</td><td style="text-align:center;">7月14日</td><td>まとめとして「人間中心のAI」について、試験</td><td></td></tr>
+          </tbody>
+        </table>
+      `;
+    } else {
+      const fileName = pageData.file || "Lecture_Handout.pdf";
+      contentBody.innerHTML = `
+        <div class="content-section-heading">授業資料</div>
+        <div class="official-attachment-box">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">📄</span>
+            <a href="javascript:void(0);" onclick="openPdfViewer('${course.id || 'c_quantum'}', 1)" class="attachment-file-title">${fileName}</a>
+            <span style="font-size:10px; color:#777;">- ${pageData.time || pageData.date}</span>
+          </div>
+          <button class="btn-file-preview" onclick="openPdfViewer('${course.id || 'c_quantum'}', 1)">表示</button>
+        </div>
+
+        <div class="content-section-heading">sli.do</div>
+        <p style="margin:4px 0 16px 0;">
+          <a href="javascript:void(0);" onclick="showPushNotification('外部リンク', 'sli.doイベントを開きます', 'external-link')" style="color:#0272c1; font-weight:600;">https://app.sli.do/event/iXw9rfRxJ2UAZMUWwWviQ1</a>
+        </p>
+
+        <div class="content-section-heading">授業で使用する教科書の範囲（PDF）</div>
+        <p style="font-size:11px; color:#666; margin:4px 0 8px 0;">※出版前のチェック版ですので誤字などがあります。次回までに教科書を買ってください。</p>
+        <div class="official-attachment-box">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">📄</span>
+            <a href="javascript:void(0);" onclick="openPdfViewer('${course.id || 'c_quantum'}', 1)" class="attachment-file-title">教科書該当箇所.pdf</a>
+            <span style="font-size:10px; color:#777;">- 2025-04-14 23:02:55</span>
+          </div>
+          <button class="btn-file-preview" onclick="openPdfViewer('${course.id || 'c_quantum'}', 1)">表示</button>
+        </div>
+
+        <div class="content-section-heading">授業で説明した紹介動画</div>
+        <p style="margin:4px 0 16px 0;">
+          <a href="javascript:void(0);" onclick="showPushNotification('動画再生', 'YouTubeアーカイブを再生します', 'youtube')" style="color:#0272c1; font-weight:600;">https://youtu.be/vN4U5FqrOdQ?si=WozhGRSKJfsuFxwP&t=978</a>
+        </p>
+      `;
+    }
+  }
+
+  // 目次サイドバーのレンダリング
+  const sidebarUl = document.getElementById('course-page-index-list');
+  if (sidebarUl) {
+    sidebarUl.innerHTML = "";
+    COURSE_PAGES_DATA.forEach((item, idx) => {
+      const isCur = idx === pIdx;
+      sidebarUl.innerHTML += `
+        <li class="${isCur ? 'current' : ''}" onclick="openManabaCoursePageView(${idx})">
+          <span style="color:${isCur ? '#5c9a00' : '#0272c1'}; font-size:10px;">▶</span>
+          <span>${item.title}</span>
+        </li>
+      `;
+    });
+  }
+
+  // 前へ / 次へ ボタン制御
+  const prevBtn = document.getElementById('page-nav-prev');
+  const nextBtn = document.getElementById('page-nav-next');
+  if (prevBtn) prevBtn.style.visibility = pIdx > 0 ? 'visible' : 'hidden';
+  if (nextBtn) nextBtn.style.visibility = pIdx < COURSE_PAGES_DATA.length - 1 ? 'visible' : 'hidden';
+
+  logWriteToGAS("MANABA_COURSE_PAGE_OPEN", `授業資料閲覧: ${pageData.title}`);
+}
+
+function changeCoursePageRel(delta) {
+  const cur = gameState._currentCoursePageIdx || 0;
+  openManabaCoursePageView(cur + delta);
+}
+
 function backToCourseTop() {
   const mainBody = document.querySelector('.official-course-main-body');
   const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const pageDetailView = document.getElementById('manaba-course-page-view');
   const noticeBox = document.querySelector('.official-course-notice-box');
   const sublinksRow = document.querySelector('.official-course-sublinks-row');
 
   if (newsDetailView) newsDetailView.style.display = 'none';
+  if (pageDetailView) pageDetailView.style.display = 'none';
   if (mainBody) mainBody.style.display = 'block';
   if (noticeBox) noticeBox.style.display = 'block';
   if (sublinksRow) sublinksRow.style.display = 'flex';
