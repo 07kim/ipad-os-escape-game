@@ -91,6 +91,37 @@
       border-color: #fecaca;
     }
 
+    /* 周回バッジ */
+    .loop-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1.5px solid #bfdbfe;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.25s ease;
+    }
+    .loop-badge.loop-1 {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .loop-badge.loop-2 {
+      background: #fffbeb;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .loop-badge.loop-3 {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
     /* 接続状態パネル */
     .connection-panel {
       background: #f8fafc;
@@ -484,8 +515,13 @@
     <div class="app-title" id="app-title-btn" onclick="handleTitleClick()">
       <i data-lucide="radio"></i> ACTOR TRIGGER
     </div>
-    <div class="sync-badge checking" id="sync-status-badge">
-      <i data-lucide="loader"></i> 確認中
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="loop-badge loop-1" id="current-loop-badge">
+        <i data-lucide="refresh-cw" style="width:11px; height:11px;"></i> <span id="current-loop-text">1周目</span>
+      </div>
+      <div class="sync-badge checking" id="sync-status-badge">
+        <i data-lucide="loader"></i> 確認中
+      </div>
     </div>
   </header>
 
@@ -626,7 +662,8 @@
             btnLabel: "【送信】大ホール施錠連絡",
             text: "大ホール退出しました。施錠お願いします。遅れてすみません。",
             autoReplySender: "fukasawa",
-            autoReplyText: "おけ"
+            autoReplyText: "おけ",
+            allowedLoops: [1, 2, 3]
           }
         ]
       },
@@ -639,14 +676,16 @@
             id: "g_search_morino",
             stageTitle: "2周目：タイミング①",
             btnLabel: "【送信①】森野の捜索連絡",
-            text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。"
+            text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。",
+            allowedLoops: [2]
           },
           {
             id: "g_timewarp_alert",
             stageTitle: "2周目：タイミング②",
             btnLabel: "【送信②】タイムワープ報告",
             text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
-            dependsOn: "g_search_morino" // ①を送信するまでロック
+            dependsOn: "g_search_morino", // ①を送信するまでロック
+            allowedLoops: [2]
           }
         ]
       },
@@ -659,19 +698,22 @@
             id: "h_timewarp_loop2",
             stageTitle: "3周目：タイミング①",
             btnLabel: "【送信①】タイムワープ報告",
-            text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。"
+            text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
+            allowedLoops: [3]
           },
           {
             id: "h_loop3_uzw_info",
             stageTitle: "3周目：タイミング②",
             btnLabel: "【送信②】UZW・学友会情報",
-            text: "お疲れ様です。\nUZWに関する重要なお知らせとご協力のお願いです。\n①現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n\n②現在迷い込んでいる会員の1名が、前回のタイムワープの際に持って帰った資料が現因で、UZWの未来予知が成り立っているようです。現在その子にコンタクトを取っている状態です。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。"
+            text: "お疲れ様です。\nUZWに関する重要なお知らせとご協力のお願いです。\n①現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n\n②現在迷い込んでいる会員の1名が、前回のタイムワープの際に持って帰った資料が現因で、UZWの未来予知が成り立っているようです。現在その子にコンタクトを取っている状態です。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
+            allowedLoops: [3]
           }
         ]
       }
     };
 
     let currentActorCode = null;
+    let currentGlobalLoop = parseInt(localStorage.getItem('game_loop') || '1', 10);
     let sentTriggers = {};
     let confirmedTriggers = {}; // LINK反映が確認できたトリガー
     let titleTapCount = 0;
@@ -715,16 +757,64 @@
       } catch(e) { console.warn('BroadcastChannel error:', e); }
     }
 
-    // アイコン初期化 & 接続テスト開始 & ACKリスナー登録
+    // アイコン初期化 & 接続テスト開始 & ACKリスナー登録 & 周回同期リスナー
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      // 周回バッジ初期更新
+      updateLoopBadge(currentGlobalLoop);
       // ACKリスナー起動
       initAckListener();
+      // 周回同期リスナー起動
+      initLoopSyncListener();
       // 起動時に即時疎通確認
       checkGasConnection();
-      // 15秒おきに定期疎通確認
-      setInterval(checkGasConnection, 15000);
+      // 10秒おきに定期疎通確認 ＆ 周回同期
+      setInterval(checkGasConnection, 10000);
     });
+
+    // 🌀 周回表示の更新
+    function updateLoopBadge(loopNum) {
+      currentGlobalLoop = parseInt(loopNum || 1, 10);
+      localStorage.setItem('game_loop', String(currentGlobalLoop));
+      
+      const badge = document.getElementById('current-loop-badge');
+      const textEl = document.getElementById('current-loop-text');
+      if (badge && textEl) {
+        badge.className = `loop-badge loop-${currentGlobalLoop}`;
+        textEl.innerText = `${currentGlobalLoop}周目`;
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      // 現在開いている演者画面を再描画（ロック状態の即時更新）
+      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      }
+    }
+
+    // 🌀 運営・他タブからの周回変更を同期監視
+    function initLoopSyncListener() {
+      // 1. BroadcastChannel監視
+      if (adminBroadcast) {
+        adminBroadcast.addEventListener('message', (event) => {
+          if (!event.data) return;
+          const { type, payload } = event.data;
+          if (type === 'preset' && payload && payload.loop) {
+            console.log("🌀 BroadcastChannel経由で周回変更を検知:", payload.loop);
+            updateLoopBadge(payload.loop);
+          } else if (payload && payload.loop) {
+            updateLoopBadge(payload.loop);
+          }
+        });
+      }
+
+      // 2. StorageEvent監視
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'game_loop' && e.newValue) {
+          console.log("🌀 StorageEvent経由で周回変更を検知:", e.newValue);
+          updateLoopBadge(e.newValue);
+        }
+      });
+    }
 
     // 📬 iPad側からのLINK反映完了（ACK）リスナー
     function initAckListener() {
@@ -758,7 +848,7 @@
       }
     }
 
-    // ===== GAS接続状態チェック =====
+    // ===== GAS接続状態チェック ＆ 周回同期 =====
     async function checkGasConnection() {
       updateConnectionUI('checking', '確認中...', '--');
       const gasUrl = getActorGasUrl();
@@ -772,9 +862,23 @@
         const res = await fetch(testUrl, { signal: AbortSignal.timeout(8000) });
         const latency = Date.now() - start;
         if (res.ok) {
+          const json = await res.json();
           gasConnectionStatus = 'ok';
           gasLatencyMs = latency;
           updateConnectionUI('ok', `GAS接続正常`, `${latency}ms`);
+
+          // GASから最新コマンドや周回情報を受信して同期
+          if (json && json.data) {
+            if (json.data.latestCommand && json.data.latestCommand.params) {
+              const p = json.data.latestCommand.params;
+              if (p.loop !== undefined && p.loop !== null) {
+                updateLoopBadge(p.loop);
+              }
+            }
+            if (json.data.system && json.data.system.loop) {
+              updateLoopBadge(json.data.system.loop);
+            }
+          }
         } else {
           gasConnectionStatus = 'error';
           updateConnectionUI('error', `接続エラー HTTP ${res.status}`, `${latency}ms`);
@@ -922,32 +1026,46 @@
       actor.triggers.forEach((tr) => {
         const isSent = !!sentTriggers[tr.id];
         const isConfirmed = !!confirmedTriggers[tr.id];
-        const isLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
+        const isSequentialLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
+        
+        // 🔒 周回ロック判定（該当周回以外は発動不可）
+        const allowedLoops = tr.allowedLoops || [1, 2, 3];
+        const isLoopLocked = !allowedLoops.includes(currentGlobalLoop);
 
         let statusClass = 'ready';
         let statusIcon = 'clock';
         let statusText = '待機中';
         let btnText = tr.btnLabel;
+        let isBtnDisabled = false;
 
         if (isConfirmed) {
           statusClass = 'sent';
           statusIcon = 'check-check';
           statusText = '✅ LINK反映完了';
           btnText = '🎉 反映完了（成功）';
+          isBtnDisabled = true;
         } else if (isSent) {
           statusClass = 'ready';
           statusIcon = 'send';
           statusText = '📤 送信完了（反映確認待機）';
           btnText = '📤 送信完了（反映待ち）';
-        } else if (isLocked) {
+          isBtnDisabled = true;
+        } else if (isLoopLocked) {
           statusClass = 'locked';
           statusIcon = 'lock';
-          statusText = '🔒 ロック中';
+          statusText = `🔒 【${allowedLoops.join('・')}周目】限定（現在${currentGlobalLoop}周目）`;
+          btnText = `🔒 ${allowedLoops.join('・')}周目開始までロック`;
+          isBtnDisabled = true;
+        } else if (isSequentialLocked) {
+          statusClass = 'locked';
+          statusIcon = 'lock';
+          statusText = '🔒 1通目未送信';
           btnText = '🔒 ロック中（1通目待ち）';
+          isBtnDisabled = true;
         }
 
         container.innerHTML += `
-          <div class="trigger-item-card ${isLocked ? 'locked' : ''}">
+          <div class="trigger-item-card ${isLoopLocked || isSequentialLocked ? 'locked' : ''}">
             <div class="trigger-header">
               <span class="trigger-badge">${tr.stageTitle}</span>
               <span class="trigger-status ${statusClass}">
@@ -956,20 +1074,25 @@
               </span>
             </div>
 
-            ${isLocked ? `
+            ${isLoopLocked ? `
+              <div class="lock-hint-text" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
+                <i data-lucide="alert-circle" style="width:13px; height:13px;"></i>
+                <span>※ 現在は【${currentGlobalLoop}周目】のため送信できません（${allowedLoops.join('・')}周目に自動解除されます）</span>
+              </div>
+            ` : (isSequentialLocked ? `
               <div class="lock-hint-text">
                 <i data-lucide="info" style="width:13px; height:13px;"></i>
                 <span>※【送信①】を先に送信すると解除されます</span>
               </div>
-            ` : ''}
+            ` : '')}
 
             <button 
-              class="send-trigger-btn ${isSent || isLocked ? 'disabled' : ''}" 
+              class="send-trigger-btn ${isBtnDisabled ? 'disabled' : ''}" 
               id="btn-${tr.id}"
-              ${isSent || isLocked ? 'disabled' : ''}
+              ${isBtnDisabled ? 'disabled' : ''}
               onclick="fireTrigger('${actor.code}', '${tr.id}')"
             >
-              <i data-lucide="${isConfirmed ? 'check-check' : (isSent ? 'check' : (isLocked ? 'lock' : 'send'))}"></i>
+              <i data-lucide="${isConfirmed ? 'check-check' : (isSent ? 'check' : (isLoopLocked || isSequentialLocked ? 'lock' : 'send'))}"></i>
               <span>${btnText}</span>
             </button>
           </div>
@@ -986,7 +1109,14 @@
       const tr = actor.triggers.find(t => t.id === triggerId);
       if (!tr) return;
 
-      // 依存ロックチェック
+      // 🔒 周回ロックチェック
+      const allowedLoops = tr.allowedLoops || [1, 2, 3];
+      if (!allowedLoops.includes(currentGlobalLoop)) {
+        showToast(`⚠️ このトリガーは【${allowedLoops.join('・')}周目】のみ送信可能です（現在${currentGlobalLoop}周目）`, true);
+        return;
+      }
+
+      // 順序ロックチェック
       if (tr.dependsOn && !sentTriggers[tr.dependsOn]) {
         showToast('⚠️ 先に1通目を送信してください', true);
         return;
