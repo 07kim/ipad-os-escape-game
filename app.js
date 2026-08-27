@@ -2992,14 +2992,13 @@ function openManabaCourse(courseId) {
   const cid = courseId || "c_quantum";
   const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {
     name: "応用量子力学",
-    teacher: "安藤 昌也",
+    teacher: "神崎 恭介",
     term: "2026 前期 月曜 2限",
     room: "新習志野校舎6号館301",
-    code: "22179112",
+    code: "24QM3011",
     news: [
-      { date: "2026-08-20", title: "【成績保留者】成績保留の対応について" },
-      { date: "2026-07-10", title: "応用量子力学｜試験座席案内" },
-      { date: "2026-06-16", title: "第9回（6/16）配付資料と変調周波数レポートについて" }
+      { date: "2026-08-20", title: "【重要】第11回 時空トンネリング変調周波数に関する補足資料", content: "第11回の講義資料を公開しました。時空転移回路の基準変調周波数（119.43MHz）の導出式およびフェイルセーフ回路の安全要件を確認してください。" },
+      { date: "2026-08-15", title: "夏季集中実験室（東金地下ラボ）への立ち入りについて", content: "夏季期間中、東金地下研究棟への入室には指定の生体認証およびゲートキーパー認証が必要となります。" }
     ],
     materials: [
       { id: 1, title: "第11回 講義資料（高周波共鳴と量子変調）", file: "quantum_dynamics_lec11.pdf", content: "【応用量子力学 第11回講義ノート】\n\n時空転移回路における変調周波数特性:\n超伝導共振器の駆動には、特定の基準搬送波周波数との同期が必須となる。\n\n▶ 実験設定パラメータ:\n- 基準搬送波周波数: 119.43 MHz (重要)\n- 共振位相角: 0.00 rad\n\n※この周波数を量子変調器(Terminal)の周波数設定値として入力すること。" }
@@ -3143,9 +3142,9 @@ function openManabaCourseNewsDetail(newsIndex) {
 
   if (subjectEl) subjectEl.innerText = item.title;
   if (dateEl) dateEl.innerText = `${item.date} 12:03`;
-  if (authorEl) authorEl.innerText = course.teacher || "安藤 昌也";
-  if (contentEl) contentEl.innerText = item.content || `成績保留の学生は、各自の学番を確認し、対応をとってください。\n詳細については授業内でのアナウンスを参照してください。`;
-  if (lastmodAuthorEl) lastmodAuthorEl.innerText = course.teacher || "安藤 昌也";
+  if (authorEl) authorEl.innerText = course.teacher || "神崎 恭介";
+  if (contentEl) contentEl.innerText = item.content || `講義のアナウンスを参照してください。`;
+  if (lastmodAuthorEl) lastmodAuthorEl.innerText = course.teacher || "神崎 恭介";
   if (lastmodTimeEl) lastmodTimeEl.innerText = `${item.date} 16:16`;
 
   logWriteToGAS("MANABA_COURSE_NEWS_OPEN", `コースニュース閲覧: ${item.title}`);
