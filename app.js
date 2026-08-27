@@ -2537,43 +2537,68 @@ function openLinkInAppForm(formId) {
     return;
   }
 
-  // フォームコンテンツの生成
+  // Googleフォーム公式完全準拠UI
   const formData = {
     title: "部署業務の認知度",
-    description: "この回答は記録されます。"
+    description: "学友会執行委員会 内部保管データ申請フォーム\n※ 会の活動を左右する重要なフォームのため、必ず期限までに回答してください。"
   };
 
   bodyEl.innerHTML = `
-    <div class="gform-container" style="max-width:680px; margin:0 auto; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-      <div class="gform-header" style="position:relative;">
+    <div class="gform-container">
+      <!-- 1. 最上部ヘッダーカード -->
+      <div class="gform-header">
         <div class="gform-header-bar"></div>
         <div>
-          <h1 style="font-size:22px; font-weight:700; color:#1e293b; margin:0 0 8px;">${formData.title}</h1>
-          <p style="font-size:13px; color:#64748b; margin:0;">${formData.description}</p>
+          <h1>${formData.title}</h1>
+          <p>${formData.description.replace(/\n/g, '<br>')}</p>
         </div>
+        <div class="gform-account-bar">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="user-check" style="width:15px; height:15px; color:#1a73e8;"></i>
+            <span>学友会アカウント (<strong>cit_student@cit.ac.jp</strong>) で回答中</span>
+          </div>
+          <span style="font-size:11px; color:#1a73e8; cursor:pointer;">アカウントを切り替える</span>
+        </div>
+        <div class="gform-required-note">* 必須</div>
       </div>
+
+      <!-- 2. 質問1: 氏名 -->
       <div class="gform-card">
         <label class="gform-label">氏名 <span class="req">*</span></label>
-        <input type="text" class="gform-input" id="inapp-form-name" placeholder="氏名を入力してください">
+        <input type="text" class="gform-input" id="inapp-form-name" placeholder="回答を入力">
       </div>
+
+      <!-- 3. 質問2: 所属・学籍番号 -->
       <div class="gform-card">
         <label class="gform-label">所属・学籍番号 <span class="req">*</span></label>
-        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="例: M25b1046">
+        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="回答を入力（例: M25b1046）">
       </div>
+
+      <!-- 4. 質問3: 部署業務への理解度（段落記述） -->
       <div class="gform-card">
-        <label class="gform-label">部署業務への理解度 <span class="req">*</span></label>
-        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="自由記述"></textarea>
+        <label class="gform-label">部署業務への理解度・意見 <span class="req">*</span></label>
+        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="回答を入力"></textarea>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding:0 4px;">
+
+      <!-- 5. アクションボタン行 -->
+      <div class="gform-actions-row">
+        <button class="gform-submit-btn" type="button" onclick="submitInAppForm()">送信</button>
         <button class="gform-clear-btn" type="button" onclick="clearInAppForm()">フォームをクリア</button>
-        <button class="btn-subtle" onclick="openHackingEditor()" style="font-size:12px; padding:6px 12px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px;" title="フォームを編集">
-          <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
-        </button>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:0 4px;">
-        <button class="btn btn-primary" onclick="submitInAppForm()" style="padding:10px 28px; font-size:14px; background:#7c3aed; border-color:#7c3aed;">送信</button>
-        <span style="font-size:11px; color:#94a3b8;">Google フォームでパスワードを送信しないでください。</span>
+
+      <!-- 6. Google公式フッター注記 -->
+      <div class="gform-legal-footer">
+        <div>パスワードを Google フォームで送信しないでください。</div>
+        <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
+        <div class="gform-branding">
+          <span style="font-weight:700; color:#5f6368;">Google</span> フォーム
+        </div>
       </div>
+    </div>
+
+    <!-- Googleフォーム右下公式フローティング編集ペン -->
+    <div class="gform-edit-fab" onclick="openHackingEditor()" title="フォームを編集">
+      <i data-lucide="edit-2"></i>
     </div>
   `;
 
@@ -2641,15 +2666,27 @@ function submitInAppForm() {
     }).catch(e => console.warn('フォーム送信GAS error:', e));
   }
 
-  // 送信完了画面に切り替え
+  // 送信完了画面に切り替え（Google Forms公式仕様）
   const bodyEl = document.getElementById('link-inapp-form-body');
   if (bodyEl) {
     bodyEl.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:16px; padding:40px 24px; text-align:center;">
-        <div style="width:64px; height:64px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;">✓</div>
-        <h2 style="font-size:20px; font-weight:700; color:#1e293b; margin:0;">回答を記録しました</h2>
-        <p style="font-size:14px; color:#64748b; margin:0;">別の回答を送信</p>
-        <button onclick="openLinkInAppForm('form_mental_scan')" style="margin-top:8px; padding:10px 24px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">別の回答を送信</button>
+      <div class="gform-container">
+        <div class="gform-header">
+          <div class="gform-header-bar"></div>
+          <div>
+            <h1 style="font-size:28px;">部署業務の認知度</h1>
+            <p style="padding-bottom:24px;">回答を記録しました。</p>
+          </div>
+        </div>
+        <div style="margin-top:16px; padding:0 4px;">
+          <a href="javascript:void(0)" onclick="openLinkInAppForm('form_mental_scan')" style="color:#1a73e8; font-size:14px; text-decoration:underline;">別の回答を送信</a>
+        </div>
+        <div class="gform-legal-footer" style="margin-top:48px;">
+          <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
+          <div class="gform-branding">
+            <span style="font-weight:700; color:#5f6368;">Google</span> フォーム
+          </div>
+        </div>
       </div>
     `;
   }

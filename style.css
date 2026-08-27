@@ -2488,11 +2488,11 @@ body {
 /* 📱 LINK専用 アプリ内フォームオーバーレイ (LINE風 スライドアップ) */
 .link-inapp-overlay {
   position: absolute;
-  top: 0;
+  top: 24px; /* iPadOSステータスバー(24px)の直下から開始し被りを完全防止 */
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ffffff;
+  background: #ede7f6; /* Googleフォーム公式の薄紫背景 */
   z-index: 800;
   display: flex;
   flex-direction: column;
@@ -2505,31 +2505,34 @@ body {
 }
 
 .inapp-browser-header {
-  height: 52px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  height: 48px;
+  background: #ffffff;
+  border-bottom: 1px solid #dadce0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-shrink: 0;
 }
 
 .inapp-close-btn, .inapp-action-btn {
   background: none;
   border: none;
-  font-size: 18px;
-  color: #64748b;
+  font-size: 14px;
+  color: #5f6368;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 50%;
+  padding: 6px 10px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s ease;
 }
 
 .inapp-close-btn:hover, .inapp-action-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: #f1f3f4;
+  color: #202124;
 }
 
 .inapp-title-box {
@@ -2541,19 +2544,20 @@ body {
 .inapp-site-name {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: #202124;
 }
 
 .inapp-site-url {
-  font-size: 10px;
-  color: #94a3b8;
+  font-size: 11px;
+  color: #70757a;
 }
 
 .inapp-browser-content {
   flex: 1;
   overflow-y: auto;
-  background: #f1f5f9;
-  padding: 20px 16px 60px;
+  background: #ede7f6; /* Googleフォーム公式背景 */
+  padding: 16px 16px 60px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-form-card-badge {
@@ -2798,51 +2802,94 @@ body {
   overflow-y: auto;
 }
 
+/* 🟣 Googleフォーム公式 完全準拠スタイル */
 .gform-container {
   width: 100%;
   max-width: 640px;
-  margin: 20px auto;
+  margin: 12px auto 40px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 16px;
+  padding: 0 4px;
+  font-family: Roboto, "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .gform-header {
-  background-color: #fff;
+  background-color: #ffffff;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid var(--border-light);
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
 }
 
 .gform-header-bar {
   height: 10px;
-  background-color: #673ab7; /* フォーム紫 */
+  background-color: #673ab7; /* Google Forms公式紫 */
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 .gform-header h1 {
-  font-size: 24px;
-  font-weight: 500;
-  padding: 20px 24px 8px 24px;
+  font-size: 32px;
+  font-weight: 400;
+  color: #202124;
+  padding: 22px 24px 8px 24px;
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: 0;
 }
+
 .gform-header p {
+  font-size: 14px;
+  padding: 0 24px 16px 24px;
+  color: #202124;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.gform-account-bar {
+  border-top: 1px solid #dadce0;
+  padding: 12px 24px;
+  background: #f8f9fa;
   font-size: 13px;
-  padding: 0 24px 20px 24px;
-  color: #333;
+  color: #5f6368;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gform-account-bar strong {
+  color: #202124;
+}
+
+.gform-required-note {
+  padding: 8px 24px 12px;
+  font-size: 13px;
+  color: #d93025;
 }
 
 .gform-card {
-  background-color: #fff;
+  background-color: #ffffff;
   border-radius: 8px;
   padding: 24px;
-  border: 1px solid var(--border-light);
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .gform-label {
   display: block;
-  font-size: 14px;
-  margin-bottom: 12px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
+  color: #202124;
+  line-height: 1.3;
+}
+
+.gform-label .req {
+  color: #d93025;
+  margin-left: 2px;
 }
 
 .gform-input {
@@ -2851,19 +2898,75 @@ body {
   border-bottom: 1px solid #70757a;
   padding: 8px 0;
   font-size: 14px;
+  color: #202124;
   outline: none;
+  background: transparent;
+  transition: border-bottom-color 0.2s, border-bottom-width 0.1s;
 }
+
 .gform-input:focus {
   border-bottom-color: #673ab7;
   border-bottom-width: 2px;
 }
 
-.gform-footer {
+.gform-input::placeholder {
+  color: #80868b;
+  font-size: 14px;
+}
+
+.gform-textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #70757a;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #202124;
+  outline: none;
+  background: transparent;
+  resize: vertical;
+  min-height: 40px;
+  font-family: inherit;
+  transition: border-bottom-color 0.2s, border-bottom-width 0.1s;
+}
+
+.gform-textarea:focus {
+  border-bottom-color: #673ab7;
+  border-bottom-width: 2px;
+}
+
+.gform-textarea::placeholder {
+  color: #80868b;
+  font-size: 14px;
+}
+
+.gform-actions-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 14px;
-  margin-bottom: 24px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.gform-legal-footer {
+  margin-top: 28px;
+  text-align: center;
+  color: #70757a;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.gform-branding {
+  font-size: 16px;
+  color: #5f6368;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 /* 🟣 Googleフォーム公式風 編集画面 */
