@@ -4929,12 +4929,14 @@ function renderPuzzleBoard() {
       const cellData = puzzleState.board[r][c];
       const cellEl = document.createElement('div');
       cellEl.className = 'puzzle-cell';
+      cellEl.id = `cell-${r}-${c}`;
       cellEl.dataset.row = r;
       cellEl.dataset.col = c;
 
       if (cellData) {
         const bubbleEl = document.createElement('div');
         bubbleEl.className = `puzzle-bubble color-${cellData.color}`;
+        bubbleEl.id = `bubble-${r}-${c}`;
         if (cellData.special === 'line') bubbleEl.classList.add('special-line');
         if (cellData.special === 'rainbow') bubbleEl.classList.add('special-rainbow');
 
@@ -4942,11 +4944,8 @@ function renderPuzzleBoard() {
           bubbleEl.classList.add('selected');
         }
 
-        // タップ/クリックイベント
-        bubbleEl.onclick = () => handleCellClick(r, c);
-
-        // スワイプ/ドラッグ対応
-        setupBubbleSwipe(bubbleEl, r, c);
+        // スワイプ & タップ両対応リスナー
+        setupBubbleInteraction(bubbleEl, r, c);
 
         cellEl.appendChild(bubbleEl);
       }
@@ -4955,39 +4954,65 @@ function renderPuzzleBoard() {
   }
 }
 
-// スワイプ操作対応
-function setupBubbleSwipe(el, r, c) {
+// スワイプ（PointerEvents）＆タップ対応
+function setupBubbleInteraction(el, r, c) {
   let startX = 0, startY = 0;
-  el.addEventListener('touchstart', (e) => {
-    if (puzzleState.isProcessing) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-  }, { passive: true });
+  let isPointerDown = false;
+  let hasSwapped = false;
 
-  el.addEventListener('touchend', (e) => {
-    if (puzzleState.isProcessing || !startX) return;
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
-    startX = 0; startY = 0;
+  el.addEventListener('pointerdown', (e) => {
+    if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
+    isPointerDown = true;
+    hasSwapped = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch(err) {}
+  });
 
-    const threshold = 20;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > threshold && c < PUZZLE_COLS - 1) attemptSwap(r, c, r, c + 1);
-      else if (dx < -threshold && c > 0) attemptSwap(r, c, r, c - 1);
-    } else {
-      if (dy > threshold && r < PUZZLE_ROWS - 1) attemptSwap(r, c, r + 1, c);
-      else if (dy < -threshold && r > 0) attemptSwap(r, c, r - 1, c);
+  el.addEventListener('pointermove', (e) => {
+    if (!isPointerDown || hasSwapped || puzzleState.isProcessing) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // スワイプ閾値 (14px)
+    const threshold = 14;
+    if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+      hasSwapped = true;
+      isPointerDown = false;
+      puzzleState.selectedCell = null;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && c < PUZZLE_COLS - 1) attemptSwap(r, c, r, c + 1);
+        else if (dx < 0 && c > 0) attemptSwap(r, c, r, c - 1);
+      } else {
+        if (dy > 0 && r < PUZZLE_ROWS - 1) attemptSwap(r, c, r + 1, c);
+        else if (dy < 0 && r > 0) attemptSwap(r, c, r - 1, c);
+      }
     }
-  }, { passive: true });
+  });
+
+  el.addEventListener('pointerup', (e) => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    if (!hasSwapped) {
+      handleCellClick(r, c);
+    }
+  });
+
+  el.addEventListener('pointercancel', () => {
+    isPointerDown = false;
+  });
 }
 
-// セル選択＆スワップ処理
+// セル選択＆タップスワップ処理
 function handleCellClick(r, c) {
   if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
 
   if (!puzzleState.selectedCell) {
     puzzleState.selectedCell = { r, c };
-    playBubblePopSound(440, 0.08);
+    playBubblePopSound(480, 0.06);
     renderPuzzleBoard();
   } else {
     const sel = puzzleState.selectedCell;
@@ -4997,45 +5022,71 @@ function handleCellClick(r, c) {
       puzzleState.selectedCell = null;
       renderPuzzleBoard();
     } else if (isAdjacent) {
-      attemptSwap(sel.r, sel.c, r, c);
+      const fromR = sel.r, fromC = sel.c;
       puzzleState.selectedCell = null;
+      attemptSwap(fromR, fromC, r, c);
     } else {
       puzzleState.selectedCell = { r, c };
-      playBubblePopSound(440, 0.08);
+      playBubblePopSound(480, 0.06);
       renderPuzzleBoard();
     }
   }
 }
 
+// 滑らかなスライドアニメーション付きスワップ
 async function attemptSwap(r1, c1, r2, c2) {
   if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
   puzzleState.isProcessing = true;
 
   playBubbleSwapSound();
 
-  // スワップ実行
+  // 1. スワップ対象のDOMバブルを取得
+  const bubble1 = document.getElementById(`bubble-${r1}-${c1}`);
+  const bubble2 = document.getElementById(`bubble-${r2}-${c2}`);
+
+  const dRow = r2 - r1;
+  const dCol = c2 - c1;
+
+  if (bubble1 && bubble2) {
+    // 相手方向へスライド
+    bubble1.style.transition = 'transform 0.20s cubic-bezier(0.25, 1, 0.5, 1)';
+    bubble2.style.transition = 'transform 0.20s cubic-bezier(0.25, 1, 0.5, 1)';
+    bubble1.style.transform = `translate(${dCol * 100}%, ${dRow * 100}%)`;
+    bubble2.style.transform = `translate(${-dCol * 100}%, ${-dRow * 100}%)`;
+    bubble1.style.zIndex = '15';
+    bubble2.style.zIndex = '15';
+  }
+
+  await sleep(210);
+
+  // 2. 仮想ボードでスワップ
   const temp = puzzleState.board[r1][c1];
   puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
   puzzleState.board[r2][c2] = temp;
-  renderPuzzleBoard();
 
-  await sleep(150);
-
-  // マッチ判定
+  // 3. マッチ判定
   const matches = findMatches();
 
   if (matches.length > 0) {
-    // 有効な手
+    // マッチ成立！
+    renderPuzzleBoard();
     puzzleState.moves--;
     document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
     puzzleState.combo = 0;
     await processMatches();
   } else {
-    // マッチなし：元に戻す
+    // マッチ失敗：シュッと元の位置に戻るロールバックアニメーション
+    if (bubble1 && bubble2) {
+      bubble1.style.transform = 'translate(0, 0)';
+      bubble2.style.transform = 'translate(0, 0)';
+    }
+    playBubblePopSound(240, 0.12);
+    await sleep(210);
+
+    // 仮想ボードも元に戻す
     const rollback = puzzleState.board[r1][c1];
     puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
     puzzleState.board[r2][c2] = rollback;
-    playBubblePopSound(250, 0.15); // ミス音
     renderPuzzleBoard();
   }
 

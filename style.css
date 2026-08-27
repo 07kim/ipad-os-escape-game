@@ -8009,30 +8009,32 @@ body {
 .bubble-app-body {
   flex: 1;
   overflow: auto;
-  padding: 14px;
+  padding: 12px;
   background: radial-gradient(circle at 50% 20%, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  touch-action: manipulation;
 }
 
-/* パズルボード（8x8） */
+/* パズルボード（8x8）大画面対応 */
 .puzzle-board-container {
   width: 100%;
-  max-width: 440px;
+  max-width: min(600px, calc(100vh - 210px));
   aspect-ratio: 1 / 1;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(24px);
   border: 2px solid rgba(255, 255, 255, 0.95);
-  border-radius: 22px;
-  padding: 8px;
-  box-shadow: 0 16px 36px rgba(100, 116, 139, 0.16), 0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 2px #ffffff;
+  border-radius: 26px;
+  padding: 10px;
+  box-shadow: 0 20px 48px rgba(100, 116, 139, 0.18), 0 4px 12px rgba(0, 0, 0, 0.04), inset 0 1px 2px #ffffff;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
 }
 
 .puzzle-grid-board {
@@ -8041,7 +8043,8 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  gap: 5px;
+  gap: 6px;
+  touch-action: none;
 }
 
 .puzzle-cell {
@@ -8050,18 +8053,23 @@ body {
   justify-content: center;
   align-items: center;
   user-select: none;
+  touch-action: none;
 }
 
 /* 💎 ジュエル調光沢バブル（白背景に映える鮮やかなパステルジュエル） */
 .puzzle-bubble {
-  width: 90%;
-  height: 90%;
+  width: 92%;
+  height: 92%;
   border-radius: 50%;
-  cursor: pointer;
+  cursor: grab;
   position: relative;
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease, opacity 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1), filter 0.15s ease, opacity 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.puzzle-bubble:active {
+  cursor: grabbing;
 }
 
 .puzzle-bubble::after {
