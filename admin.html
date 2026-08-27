@@ -325,6 +325,67 @@
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { opacity: 0.9; }
 
+    /* 📱 端末詳細モーダル */
+    .device-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .device-modal-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid #cbd5e1;
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .device-modal-header {
+      background: #f8fafc;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .device-modal-body {
+      padding: 18px;
+    }
+    .dev-detail-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dev-detail-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+    .dev-detail-val {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
     /* トースト通知（トップ中央・超視認性バナー） */
     #admin-toast {
       position: fixed;
@@ -696,6 +757,63 @@
         <button class="btn btn-danger" style="background:#dc2626;" onclick="executeGlobalMasterReset()">
           <i data-lucide="trash-2"></i> 🚨 全30台を一斉に初期化リセット（本番前クリア）
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📱 端末詳細・進捗インサイトモーダル -->
+  <div class="device-modal-overlay" id="device-modal-overlay" onclick="closeDeviceModal()">
+    <div class="device-modal-card" onclick="event.stopPropagation()">
+      <div class="device-modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i data-lucide="tablet" style="color:var(--primary); width:20px; height:20px;"></i>
+          <span id="dev-modal-title" style="font-family:'Orbitron', monospace; font-size:16px; font-weight:800; color:#0f172a;">iPad-01 詳細情報</span>
+          <span id="dev-modal-loop-badge" class="team-loop-tag" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">1周目</span>
+        </div>
+        <button class="nav-btn" onclick="closeDeviceModal()" style="padding:4px 8px; border:none; background:#f1f5f9; cursor:pointer;"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="device-modal-body">
+        <!-- 進行状況ボックス -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+          <div class="dev-detail-box">
+            <span class="dev-detail-label">👤 manabaログイン</span>
+            <span class="dev-detail-val" id="dev-modal-manaba" style="color:#047857;">矢田 逞 (s25b1150er)</span>
+          </div>
+          <div class="dev-detail-box">
+            <span class="dev-detail-label">💡 入手情報・ヒント数</span>
+            <span class="dev-detail-val" id="dev-modal-hints">3 件</span>
+          </div>
+          <div class="dev-detail-box">
+            <span class="dev-detail-label">📡 通信ステータス</span>
+            <span class="dev-detail-val" id="dev-modal-status">🟢 稼働中 (最終: 09:14)</span>
+          </div>
+          <div class="dev-detail-box">
+            <span class="dev-detail-label">🏆 進行順位</span>
+            <span class="dev-detail-val" id="dev-modal-rank">1 位 (全30台中)</span>
+          </div>
+        </div>
+
+        <!-- 個別遠隔操作アクション -->
+        <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
+          <i data-lucide="sliders" style="width:13px; height:13px; color:var(--primary);"></i> この端末への個別遠隔指示
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:16px;">
+          <button class="nav-btn" onclick="sendIndividualLoop(1)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#f0f9ff; border-color:#bae6fd; color:#0369a1; font-weight:700;">🌀 1周目に変更</button>
+          <button class="nav-btn" onclick="sendIndividualLoop(2)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#fff7ed; border-color:#fed7aa; color:#c2410c; font-weight:700;">🌀 2周目に変更</button>
+          <button class="nav-btn" onclick="sendIndividualLoop(3)" style="font-size:11px; justify-content:center; padding:8px 4px; background:#fef2f2; border-color:#fecaca; color:#b91c1c; font-weight:700;">🌀 3周目に変更</button>
+        </div>
+
+        <!-- 個別アラート送信フォーム -->
+        <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+          <i data-lucide="message-square" style="width:13px; height:13px; color:var(--danger);"></i> この端末だけに緊急メッセージ割込表示
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="dev-modal-msg-input" placeholder="例: 【ヒント】ブラウザのニュースを確認してください" style="flex:1; padding:8px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border-color);">
+          <button class="nav-btn" onclick="sendIndividualAlert()" style="background:var(--primary); color:#fff; border:none; font-weight:700; padding:8px 14px; white-space:nowrap; cursor:pointer;">
+            <i data-lucide="send"></i> 送信
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1421,7 +1539,7 @@
         const activeClass = isLogged ? 'logged-in' : (d.isActive ? 'active-device' : '');
 
         container.innerHTML += `
-          <div class="team-monitor-card ${activeClass}">
+          <div class="team-monitor-card ${activeClass}" onclick="openDeviceDetailModal('${d.id}')" style="cursor:pointer;" title="クリックして ${d.name} の詳細・個別操作を開く">
             <div class="team-card-header">
               <span class="team-id-badge">
                 <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${d.isActive ? '#22c55e' : '#cbd5e1'};"></span>
@@ -1442,6 +1560,125 @@
       });
 
       renderRankingTable(devices);
+    }
+
+    // ===== 📱 端末詳細モーダル管理 =====
+    let currentSelectedDeviceId = null;
+
+    function openDeviceDetailModal(deviceId) {
+      currentSelectedDeviceId = deviceId;
+      const overlay = document.getElementById('device-modal-overlay');
+      if (!overlay) return;
+
+      // 該当デバイスデータの取得
+      const deviceMap = {};
+      for (let i = 1; i <= 30; i++) {
+        const padId = `iPad-${String(i).padStart(2, '0')}`;
+        deviceMap[padId] = {
+          id: padId,
+          name: padId,
+          loop: 1,
+          hints: 0,
+          manaba: "未ログイン",
+          lastSeen: "--:--",
+          isActive: false
+        };
+      }
+      latestDevicesData.forEach(d => {
+        if (deviceMap[d.id]) {
+          Object.assign(deviceMap[d.id], d);
+        } else {
+          deviceMap[d.id] = d;
+        }
+      });
+
+      const d = deviceMap[deviceId] || { id: deviceId, name: deviceId, loop: 1, hints: 0, manaba: "未ログイン", lastSeen: "--:--" };
+
+      // ランキング計算
+      const allDevs = Object.values(deviceMap);
+      allDevs.sort((a, b) => (b.loop * 100 + (b.hints || 0)) - (a.loop * 100 + (a.hints || 0)));
+      const rankIdx = allDevs.findIndex(item => item.id === deviceId);
+      const rankText = rankIdx >= 0 ? `${rankIdx + 1} 位 (全${allDevs.length}台中)` : "--";
+
+      // DOM反映
+      const titleEl = document.getElementById('dev-modal-title');
+      const loopBadge = document.getElementById('dev-modal-loop-badge');
+      const manabaEl = document.getElementById('dev-modal-manaba');
+      const hintsEl = document.getElementById('dev-modal-hints');
+      const statusEl = document.getElementById('dev-modal-status');
+      const rankEl = document.getElementById('dev-modal-rank');
+
+      if (titleEl) titleEl.innerText = `${d.name} 詳細情報`;
+      if (loopBadge) {
+        loopBadge.innerText = `${d.loop}周目`;
+        const loopStyles = {
+          1: { bg: '#e0f2fe', color: '#0369a1', border: '#bae6fd' },
+          2: { bg: '#ffedd5', color: '#c2410c', border: '#fed7aa' },
+          3: { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca' }
+        };
+        const s = loopStyles[d.loop] || loopStyles[1];
+        loopBadge.style.background = s.bg;
+        loopBadge.style.color = s.color;
+        loopBadge.style.borderColor = s.border;
+      }
+      if (manabaEl) {
+        manabaEl.innerText = d.manaba || "未ログイン";
+        manabaEl.style.color = (d.manaba && d.manaba !== "未ログイン" && d.manaba !== "-") ? "#047857" : "#94a3b8";
+      }
+      if (hintsEl) hintsEl.innerText = `${d.hints || 0} 件`;
+      if (statusEl) statusEl.innerText = d.isActive ? `🟢 稼働中 (最終: ${d.lastSeen})` : `⚪ 待機中 (最終: ${d.lastSeen})`;
+      if (rankEl) rankEl.innerText = rankText;
+
+      overlay.style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeDeviceModal() {
+      const overlay = document.getElementById('device-modal-overlay');
+      if (overlay) overlay.style.display = 'none';
+      currentSelectedDeviceId = null;
+    }
+
+    // 個別端末の周回変更
+    function sendIndividualLoop(targetLoop) {
+      if (!currentSelectedDeviceId) return;
+      const deviceId = currentSelectedDeviceId;
+      sendCloudAdminCommand({
+        id: "DEV_LOOP_" + deviceId + "_" + Date.now(),
+        type: "preset",
+        name: `個別周回移行 (${deviceId} ➔ ${targetLoop}周目)`,
+        params: {
+          targetDevice: deviceId,
+          loop: targetLoop,
+          timestamp: Date.now()
+        }
+      }, `🌀 ${deviceId} を【${targetLoop}周目】に変更しました！`);
+      closeDeviceModal();
+    }
+
+    // 個別端末への緊急メッセージ送信
+    function sendIndividualAlert() {
+      if (!currentSelectedDeviceId) return;
+      const input = document.getElementById('dev-modal-msg-input');
+      const msg = input ? input.value.trim() : "";
+      if (!msg) {
+        alert("送信メッセージを入力してください。");
+        return;
+      }
+      const deviceId = currentSelectedDeviceId;
+      sendCloudAdminCommand({
+        id: "DEV_ALERT_" + deviceId + "_" + Date.now(),
+        type: "alert",
+        name: `個別アラート (${deviceId})`,
+        params: {
+          targetDevice: deviceId,
+          alertMsg: msg,
+          sound: "alarm",
+          timestamp: Date.now()
+        }
+      }, `📢 ${deviceId} へ個別メッセージを送信完了しました！`);
+      if (input) input.value = "";
+      closeDeviceModal();
     }
 
     // --- 🏆 ランキングビュー切り替え ---
