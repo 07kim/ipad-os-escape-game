@@ -9,6 +9,9 @@ window.GAME_DATABASE = {
     gasUrl: "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec",
     teamId: "チームA",
     deviceOwner: "26__0094 調査端末",
+    features: {
+      enableBubbleWrap: true // 🔘 無限プチプチアプリのON/OFF（falseにすると非表示になります）
+    },
     spec: {
       os: "iPadOS",
       processor: "Apple Silicon",

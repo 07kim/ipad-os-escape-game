@@ -1234,6 +1234,8 @@ function openApp(appId) {
       renderMailList();
     } else if (appId === 'calc-app') {
       updateCalcDisplay();
+    } else if (appId === 'bubble-app') {
+      initBubbleWrap();
     }
     
     logWriteToGAS("APP_OPEN", `アプリを開きました: ${appId}`);
@@ -4813,5 +4815,102 @@ window.addEventListener('keydown', (e) => {
   } else if (e.key === '%') {
     calcInput('percent');
   }
+});
+
+// ==========================================================================
+// ⑪ 無限プチプチ（Bubble Wrap）エンジン（完全独立モジュール）
+// ==========================================================================
+let bubbleWrapInitialized = false;
+let poppedBubbleCount = 0;
+
+function initBubbleWrap() {
+  const container = document.getElementById('bubble-grid-container');
+  if (!container) return;
+
+  if (!bubbleWrapInitialized || container.children.length === 0) {
+    container.innerHTML = "";
+    // iPad画面に合わせて約72個のプチプチを生成
+    for (let i = 0; i < 72; i++) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble-item';
+      bubble.onclick = function() {
+        popBubble(this);
+      };
+      container.appendChild(bubble);
+    }
+    bubbleWrapInitialized = true;
+  }
+  updateBubbleCountDisplay();
+}
+
+function popBubble(el) {
+  if (el.classList.contains('popped')) return;
+
+  el.classList.add('popped');
+  poppedBubbleCount++;
+  updateBubbleCountDisplay();
+  playBubblePopSound();
+
+  if (navigator.vibrate) {
+    navigator.vibrate(20);
+  }
+}
+
+function resetAllBubbles() {
+  const container = document.getElementById('bubble-grid-container');
+  if (!container) return;
+
+  playSystemSound("notif");
+  container.querySelectorAll('.bubble-item').forEach(b => {
+    b.classList.remove('popped');
+  });
+  poppedBubbleCount = 0;
+  updateBubbleCountDisplay();
+}
+
+function updateBubbleCountDisplay() {
+  const countTag = document.getElementById('bubble-count-tag');
+  if (countTag) {
+    countTag.innerText = `潰した数: ${poppedBubbleCount}`;
+  }
+}
+
+// リアルな気泡破裂音（Web Audio APIによるシンセサイズ：外部ファイル依存ゼロ）
+function playBubblePopSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    // 高めの短いピッチダウン音（プチッ♪）
+    const baseFreq = 700 + Math.random() * 250;
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.045);
+
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.045);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+// 初期化時にフラグ（enableBubbleWrap）を判定してアイコン表示制御
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const isEnabled = !(window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.features && window.GAME_DATABASE.system.features.enableBubbleWrap === false);
+    const bubbleIcon = document.getElementById('icon-bubble-app');
+    if (bubbleIcon) {
+      bubbleIcon.style.display = isEnabled ? 'flex' : 'none';
+    }
+  }, 100);
 });
 

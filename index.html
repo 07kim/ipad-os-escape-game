@@ -203,6 +203,13 @@
             <span class="app-name">計算機</span>
           </div>
 
+          <div class="app-icon-wrapper" id="icon-bubble-app" onclick="openApp('bubble-app')">
+            <div class="app-icon app-bubble-icon">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <span class="app-name">プチプチ</span>
+          </div>
+
         </div>
 
         <!-- 下部ドック (Dock) -->
@@ -2191,6 +2198,29 @@
               <button class="calc-key btn-num" onclick="calcInput('dot')">.</button>
               <button class="calc-key btn-op btn-equals" onclick="calcInput('equals')">=</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------ -->
+      <!-- ⑪ 無限プチプチ（Bubble Wrap）アプリ -->
+      <!-- ------------------------------------------ -->
+      <div class="app-window" id="app-bubble-app">
+        <div class="app-window-header" style="background:#0f172a; border-bottom:1px solid rgba(255,255,255,0.1); color:#ffffff;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="window-title" style="color:#ffffff;"><i data-lucide="sparkles" style="width:16px; height:16px; vertical-align:middle; margin-right:4px; color:#ec4899;"></i> 無限プチプチ</span>
+            <span id="bubble-count-tag" style="font-size:11px; font-weight:700; background:rgba(236,72,153,0.2); color:#f472b6; padding:2px 8px; border-radius:12px; border:1px solid rgba(236,72,153,0.3);">潰した数: 0</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="nav-btn" onclick="resetAllBubbles()" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:6px; cursor:pointer;" title="すべてのプチプチを復活">
+              <i data-lucide="rotate-ccw"></i> 全復活
+            </button>
+            <button class="window-close-btn" onclick="closeApp('bubble-app')" style="background:rgba(255,255,255,0.15); color:#ffffff;">✕</button>
+          </div>
+        </div>
+        <div class="bubble-app-body">
+          <div class="bubble-grid-container" id="bubble-grid-container">
+            <!-- JSで動的生成 -->
           </div>
         </div>
       </div>
