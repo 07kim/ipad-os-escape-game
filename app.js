@@ -2963,7 +2963,7 @@ function renderManabaPortal() {
 
   const userEl = document.getElementById('manaba-user-display') || document.getElementById('manaba-user-name');
   if (userEl) {
-    userEl.innerText = `${user.name} (${user.studentId})`;
+    userEl.innerText = `${user.name} (${user.studentId || gameState.manabaUser}) / ${user.department || '学生'}`;
   }
 
   // 時間割描画
@@ -2974,81 +2974,139 @@ function renderManabaPortal() {
     for (let period = 0; period < 5; period++) {
       let rowHtml = `<tr><td class="timetable-period">${period + 1}限</td>`;
       days.forEach(day => {
-        const subject = (user.timetable && user.timetable[day]) ? user.timetable[day][period] : "空き";
-        const isTarget = subject && (subject.includes("21世紀会計史") || subject.includes("情報科学特論") || subject.includes("時間軸"));
-        const highlightStyle = isTarget ? "color:var(--manaba-green); font-weight:bold; cursor:pointer;" : "";
-        const clickAction = isTarget ? "onclick='openManabaCourse()'" : "";
-        rowHtml += `<td class="timetable-cell" style="${highlightStyle}" ${clickAction}>${subject || '空き'}</td>`;
+        const subject = (user.timetable && user.timetable[day]) ? user.timetable[day][period] : "";
+        if (subject) {
+          // 科目がある場合
+          const courseId = getCourseIdBySubjectName(subject);
+          rowHtml += `<td class="timetable-cell" style="color:var(--manaba-green); font-weight:600; cursor:pointer;" onclick="openManabaCourse('${courseId}')">${subject}</td>`;
+        } else {
+          rowHtml += `<td class="timetable-cell" style="color:#94a3b8;">空き</td>`;
+        }
       });
       rowHtml += "</tr>";
       tbody.innerHTML += rowHtml;
     }
   }
+
+  // コースタブ一覧の描画
+  const courseListEl = document.querySelector('.manaba-course-list');
+  if (courseListEl) {
+    courseListEl.innerHTML = "";
+    const userCourses = user.courses || [];
+    if (userCourses.length > 0) {
+      userCourses.forEach(c => {
+        courseListEl.innerHTML += `
+          <div class="manaba-course-card" onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
+            <h4>${c.name} (${c.term})</h4>
+            <p>担当教員: ${c.teacher} | 教室: ${c.room}</p>
+          </div>
+        `;
+      });
+    } else {
+      courseListEl.innerHTML = "<p style='padding:20px; color:#64748b;'>現在受講中のコースはありません。</p>";
+    }
+  }
 }
 
-function openManabaCourse() {
+function getCourseIdBySubjectName(name) {
+  if (!name) return "c_quantum";
+  if (name.includes("量子")) return "c_quantum";
+  if (name.includes("UI")) return "c_uiux";
+  if (name.includes("分散")) return "c_distributed";
+  if (name.includes("リテラシー")) return "c_literacy";
+  if (name.includes("暗号")) return "c_crypto";
+  if (name.includes("ネットワーク")) return "c_network";
+  if (name.includes("メディア")) return "c_media";
+  if (name.includes("認知")) return "c_cognitive";
+  return "c_quantum";
+}
+
+function openManabaCourse(courseId) {
   document.getElementById('manaba-panel-mypage').classList.remove('active');
   document.getElementById('manaba-panel-courses').classList.remove('active');
   document.getElementById('manaba-course-detail-view').style.display = 'block';
 
-  const course = window.GAME_DATABASE.manaba.courseDetail;
-  document.getElementById('manaba-course-title').innerText = course.name;
-  document.getElementById('manaba-course-teacher').innerText = course.teacher;
-  document.getElementById('manaba-course-term').innerText = course.term;
+  const cid = courseId || "c_quantum";
+  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || window.GAME_DATABASE.manaba.courses["c_quantum"];
+  
+  if (!course) return;
+
+  const titleEl = document.getElementById('manaba-course-title');
+  const teacherEl = document.getElementById('manaba-course-teacher');
+  const termEl = document.getElementById('manaba-course-term');
+
+  if (titleEl) titleEl.innerText = course.name;
+  if (teacherEl) teacherEl.innerText = course.teacher;
+  if (termEl) termEl.innerText = course.term;
 
   const newsList = document.getElementById('manaba-course-news-list');
-  newsList.innerHTML = "";
-  course.news.forEach(news => {
-    newsList.innerHTML += `<li><strong>${news.date}</strong><br>${news.title}</li>`;
-  });
+  if (newsList) {
+    newsList.innerHTML = "";
+    (course.news || []).forEach(news => {
+      newsList.innerHTML += `<li><strong>${news.date}</strong><br>${news.title}</li>`;
+    });
+  }
 
   const materialsList = document.getElementById('manaba-materials-list');
-  materialsList.innerHTML = "";
-  course.materials.forEach(mat => {
-    materialsList.innerHTML += `
-      <div class="course-material-item" onclick="openPdfViewer(${mat.id})">
-        <div>
-          <strong>${mat.title}</strong>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ファイル: ${mat.file}</div>
+  if (materialsList) {
+    materialsList.innerHTML = "";
+    (course.materials || []).forEach(mat => {
+      materialsList.innerHTML += `
+        <div class="course-material-item" onclick="openPdfViewer('${cid}', ${mat.id})" style="cursor:pointer;">
+          <div>
+            <strong>${mat.title}</strong>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ファイル: ${mat.file}</div>
+          </div>
+          <i data-lucide="file-text" style="width:18px; height:18px; color:var(--manaba-green);"></i>
         </div>
-        <i data-lucide="file-text" style="width:18px; height:18px; color:var(--manaba-green);"></i>
-      </div>
-    `;
-  });
+      `;
+    });
+  }
+
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
   
-  logWriteToGAS("MANABA_COURSE_OPEN", "manabaコース詳細を開きました。");
+  logWriteToGAS("MANABA_COURSE_OPEN", `manabaコース詳細を開きました: ${course.name}`);
 }
 
 function backToManabaPortal() {
   document.getElementById('manaba-course-detail-view').style.display = 'none';
-  switchManabaTab(gameState.activeManabaTab);
+  switchManabaTab(gameState.activeManabaTab || 'mypage');
 }
 
-function openPdfViewer(materialId) {
-  const course = window.GAME_DATABASE.manaba.courseDetail;
-  const mat = course.materials.find(m => m.id === materialId);
-  if (mat) {
-    document.getElementById('manaba-pdf-viewer').style.display = 'flex';
-    document.getElementById('pdf-filename').innerText = mat.file;
-    document.getElementById('pdf-viewer-body').innerHTML = `
-      <div style="border-bottom: 2px solid var(--manaba-green); padding-bottom:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;">
-        <div>
-          <h3 style="margin:0 0 4px 0;">千葉工業大学 講義配付資料</h3>
-          <strong>授業名: ${course.name} (第${mat.id}回)</strong>
+function openPdfViewer(courseId, materialId) {
+  const cid = courseId || "c_quantum";
+  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || window.GAME_DATABASE.manaba.courses["c_quantum"];
+  const mat = course && course.materials && course.materials.find(m => m.id === materialId);
+  if (!mat) return;
+
+  const pdfViewer = document.getElementById('manaba-pdf-viewer');
+  if (pdfViewer) {
+    pdfViewer.style.display = 'flex';
+    const filenameEl = document.getElementById('pdf-filename');
+    if (filenameEl) filenameEl.innerText = mat.file;
+    const bodyEl = document.getElementById('pdf-viewer-body');
+    if (bodyEl) {
+      bodyEl.innerHTML = `
+        <div style="border-bottom: 2px solid var(--manaba-green); padding-bottom:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 style="margin:0 0 4px 0;">千葉工業大学 講義配付資料</h3>
+            <strong>授業名: ${course.name} (第${mat.id}回)</strong>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mat.title}', '${mat.content.replace(/'/g, "\\'")}')"><i data-lucide="clipboard-copy"></i> メモに転記</button>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mat.title}', '${mat.content.replace(/'/g, "\\'")}')"><i data-lucide="clipboard-copy"></i> メモに転記</button>
-      </div>
-      <p style="font-size:14px; font-weight:700; color:#333; margin-bottom:10px;">${mat.title}</p>
-      <div style="background:#fafafa; border:1px solid #ddd; padding:15px; border-radius:6px; font-family:monospace; line-height:1.8; font-size:13px; color:#222;">
-        ${mat.content}
-      </div>
-    `;
+        <p style="font-size:14px; font-weight:700; color:#333; margin-bottom:10px;">${mat.title}</p>
+        <div style="background:#fafafa; border:1px solid #ddd; padding:15px; border-radius:6px; font-family:monospace; line-height:1.8; font-size:13px; color:#222;">
+          ${mat.content}
+        </div>
+      `;
+    }
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    logWriteToGAS("MANABA_PDF_VIEW", `授業資料PDF閲覧: ${mat.file}`);
+  } else {
+    showIpadModal(mat.title, `${mat.content}\n\n[添付ファイル: ${mat.file}]`);
   }
+  logWriteToGAS("MANABA_MATERIAL_OPEN", `講義資料閲覧: ${mat.title}`);
 }
 
 function clipTextToMemo(title, text) {
