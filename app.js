@@ -1092,14 +1092,18 @@ function closeIpadModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
-// --- ロック画面表示（カバーシート呼び出し） ---
+// --- ロック画面表示（カバーシート呼び出し：その下はホーム画面に戻す） ---
 function showLockScreen() {
   const lockScreen = document.getElementById('lock-screen');
   if (lockScreen) {
+    // 🏠 ロック画面の背面にあるアプリ・ウィンドウ・モーダルをすべて閉じ、ホーム画面状態に戻す
+    closeAllWindowsSilent();
+    gameState.activeApp = null;
+
     lockScreen.classList.remove('hidden');
     renderLockNotifications();
     playSystemSound("dtmf");
-    logWriteToGAS("LOCK_TRIGGERED", "ロック画面が表示されました。");
+    logWriteToGAS("LOCK_TRIGGERED", "ロック画面が表示されました（背景をホーム画面に初期化）");
   }
 }
 
