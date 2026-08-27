@@ -4105,82 +4105,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px;
 }
 
-.manaba-logo-composition {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.manaba-brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.brand-manaba {
-  font-size: 38px;
-  font-weight: 800;
-  color: #74b800;
-  letter-spacing: -1px;
-  line-height: 1;
-  font-family: "VAG Rounded", "Arial Rounded MT Bold", sans-serif;
-}
-
-.brand-course {
-  font-size: 20px;
-  font-weight: 600;
-  color: #00a0e9;
-  text-align: right;
-  margin-top: -2px;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-}
-
-.manaba-four-leaves {
-  position: relative;
-  width: 55px;
-  height: 55px;
-}
-
-.leaf {
-  position: absolute;
-  border-radius: 50% 0 50% 50%;
-}
-
-.leaf-1 {
-  width: 28px;
-  height: 28px;
-  background: #74b800;
-  top: 0;
-  left: 6px;
-  transform: rotate(-15deg);
-}
-
-.leaf-2 {
-  width: 24px;
-  height: 24px;
-  background: #90d200;
-  bottom: 4px;
-  left: 0;
-  transform: rotate(-75deg);
-}
-
-.leaf-3 {
-  width: 26px;
-  height: 26px;
-  background: #00a0e9;
-  top: 14px;
-  right: 0;
-  transform: rotate(45deg);
-}
-
-.leaf-4 {
-  width: 14px;
-  height: 14px;
-  background: #50c0f0;
-  bottom: 0;
-  right: 12px;
-  transform: rotate(105deg);
+.official-manaba-logo-img {
+  max-width: 96%;
+  max-height: 85%;
+  object-fit: contain;
 }
 
 /* [上段中央] 公式ログインフォーム */
@@ -4266,26 +4197,16 @@ body {
 /* [上段右] うさぎイラスト */
 .cell-rabbit {
   border: none;
-  background: #ebf5e0;
-  position: relative;
-  align-items: flex-end;
+  background: transparent;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.rabbit-cityscape {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="%23c8e6c9"><rect x="10" y="40" width="15" height="60"/><rect x="30" y="50" width="20" height="50"/><path d="M12 40 L12 0 L15 0 L15 40 Z"/><rect x="140" y="30" width="20" height="70"/><rect x="165" y="45" width="25" height="55"/></svg>') repeat-x bottom;
-  opacity: 0.6;
-}
-
-.chiba-rabbit-art {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 2px;
+.official-rabbit-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* [下段左] システムニュース */
