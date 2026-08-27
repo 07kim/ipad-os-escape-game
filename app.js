@@ -2962,159 +2962,139 @@ const logoutManaba = handleManabaLogout;
 
 function switchManabaTab(tabId) {
   gameState.activeManabaTab = tabId;
-  document.querySelectorAll('.manaba-nav-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.manaba-panel').forEach(panel => panel.classList.remove('active'));
+  const navTabs = document.querySelectorAll('.portal-nav-tabs .nav-tab');
+  navTabs.forEach(tab => tab.classList.remove('active'));
 
-  const activeBtn = Array.from(document.querySelectorAll('.manaba-nav-btn')).find(b => {
-    const oc = b.getAttribute('onclick');
-    return oc && oc.includes(tabId);
-  });
-  if (activeBtn) activeBtn.classList.add('active');
+  const courseDetail = document.getElementById('manaba-course-detail-view');
+  const mainCols = document.querySelector('.portal-main-columns');
+  const subHeader = document.querySelector('.portal-sub-header');
+  const alertBar = document.querySelector('.portal-alert-bar');
 
-  const panel = document.getElementById(`manaba-panel-${tabId}`);
-  if (panel) panel.classList.add('active');
+  if (tabId === 'mypage') {
+    if (courseDetail) courseDetail.style.display = 'none';
+    if (mainCols) mainCols.style.display = 'flex';
+    if (subHeader) subHeader.style.display = 'block';
+    if (alertBar) alertBar.style.display = 'flex';
+    if (navTabs[0]) navTabs[0].classList.add('active');
+  } else if (tabId === 'courses') {
+    if (navTabs[1]) navTabs[1].classList.add('active');
+    // すでにコースを開いていればそのまま、なければ第1講義を開く
+    if (courseDetail && courseDetail.style.display !== 'block') {
+      openManabaCourse();
+    }
+  } else if (tabId === 'portfolio') {
+    if (navTabs[2]) navTabs[2].classList.add('active');
+    showPushNotification("ポートフォリオ", "提出済みのコレクションはありません。", "folder");
+  }
 }
 
-function renderManabaPortal() {
-  const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser];
-  if (!user) return;
+function openManabaCourse(courseId) {
+  const cid = courseId || "c_quantum";
+  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {
+    name: "応用量子力学",
+    teacher: "安藤 昌也",
+    term: "2026 前期 月曜 2限",
+    room: "新習志野校舎6号館301",
+    code: "22179112",
+    news: [
+      { date: "2026-08-20", title: "【成績保留者】成績保留の対応について" },
+      { date: "2026-07-10", title: "応用量子力学｜試験座席案内" },
+      { date: "2026-06-16", title: "第9回（6/16）配付資料と変調周波数レポートについて" }
+    ],
+    materials: [
+      { id: 1, title: "第11回 講義資料（高周波共鳴と量子変調）", file: "quantum_dynamics_lec11.pdf", content: "【応用量子力学 第11回講義ノート】\n\n時空転移回路における変調周波数特性:\n超伝導共振器の駆動には、特定の基準搬送波周波数との同期が必須となる。\n\n▶ 実験設定パラメータ:\n- 基準搬送波周波数: 119.43 MHz (重要)\n- 共振位相角: 0.00 rad\n\n※この周波数を量子変調器(Terminal)の周波数設定値として入力すること。" }
+    ]
+  };
 
-  const headerNameEl = document.getElementById('manaba-user-display-name');
-  const welcomeNameEl = document.getElementById('manaba-portal-welcome-name');
-  if (headerNameEl) {
-    headerNameEl.innerText = `${user.name}`;
-  }
-  if (welcomeNameEl) {
-    welcomeNameEl.innerText = `${user.name}さんのマイページ`;
-  }
+  // 表示切り替え
+  const mainCols = document.querySelector('.portal-main-columns');
+  const subHeader = document.querySelector('.portal-sub-header');
+  const alertBar = document.querySelector('.portal-alert-bar');
+  const courseDetail = document.getElementById('manaba-course-detail-view');
 
-  // 1. 公式曜日時間割テーブル (月〜土 / 1〜7限 + 他)
-  const tbody = document.getElementById('manaba-official-timetable-body');
-  if (tbody) {
-    tbody.innerHTML = "";
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const periodLabels = ["1", "2", "3", "4", "5", "6", "7", "他"];
+  if (mainCols) mainCols.style.display = 'none';
+  if (subHeader) subHeader.style.display = 'none';
+  if (alertBar) alertBar.style.display = 'none';
+  if (courseDetail) courseDetail.style.display = 'block';
 
-    periodLabels.forEach((label, pIdx) => {
-      let rowHtml = `<tr><td class="period-num">${label}</td>`;
-      days.forEach(day => {
-        const subject = (user.timetable && user.timetable[day]) ? (user.timetable[day][pIdx] || "") : "";
-        if (subject) {
-          const courseId = getCourseIdBySubjectName(subject);
-          rowHtml += `
-            <td class="course-cell has-course" onclick="openManabaCourse('${courseId}')">
-              <div class="timetable-course-item">
-                <a href="javascript:void(0);" title="${subject}">${subject}</a>
-                <div class="timetable-course-icons">
-                  <span>📢</span><span>✏️</span><span>📊</span><span>💬</span>
-                </div>
-              </div>
-            </td>
-          `;
-        } else {
-          rowHtml += `<td class="course-cell"></td>`;
-        }
-      });
-      rowHtml += "</tr>";
-      tbody.innerHTML += rowHtml;
-    });
-  }
+  // ナビタブを「コース」にアクティブ化
+  const navTabs = document.querySelectorAll('.portal-nav-tabs .nav-tab');
+  navTabs.forEach(tab => tab.classList.remove('active'));
+  if (navTabs[1]) navTabs[1].classList.add('active');
 
-  // 2. 「その他の曜日」テーブル
-  const otherTbody = document.getElementById('manaba-official-other-courses-body');
-  if (otherTbody) {
-    otherTbody.innerHTML = "";
-    const userCourses = user.courses || [];
-    const baseOtherCourses = [
-      { name: `2026${user.department || '工学科'}3年生`, year: "2026", term: "", teacher: "" },
-      { name: "学生サポートセンター(数,物,化,英)", year: "", term: "", teacher: "" },
-      { name: "外国語単位認定申請", year: "", term: "", teacher: "" },
-      { name: "図書館コース", year: "", term: "", teacher: "図書館" }
+  // メタデータ反映
+  const titleEl = document.getElementById('manaba-course-title');
+  const codeEl = document.getElementById('manaba-course-code');
+  const teacherEl = document.getElementById('manaba-course-teacher');
+  const termEl = document.getElementById('manaba-course-term-full');
+
+  if (titleEl) titleEl.innerText = course.name;
+  if (codeEl) codeEl.innerText = course.code || "22179112";
+  if (teacherEl) teacherEl.innerText = course.teacher;
+  if (termEl) termEl.innerText = course.term || "2026 前期 月曜 2限";
+
+  // コースニュース テーブル生成
+  const newsTable = document.getElementById('manaba-course-news-table');
+  if (newsTable) {
+    newsTable.innerHTML = "";
+    const newsList = course.news && course.news.length > 0 ? course.news : [
+      { date: "2026-08-20", title: `【成績保留者】${course.name} 成績保留の対応について` },
+      { date: "2026-07-10", title: `${course.name}｜期末試験のお知らせ` },
+      { date: "2026-06-16", title: `${course.name}｜配付資料を公開しました` }
     ];
 
-    const displayCourses = [...userCourses, ...baseOtherCourses];
-
-    displayCourses.forEach(c => {
-      const cid = c.id || getCourseIdBySubjectName(c.name);
-      otherTbody.innerHTML += `
-        <tr onclick="openManabaCourse('${cid}')" style="cursor:pointer;">
-          <td>
-            <a href="javascript:void(0);">★ ${c.name}</a>
-          </td>
-          <td style="text-align:center;">${c.year || '2026'}</td>
-          <td>${c.term || '通年'}</td>
-          <td>${c.teacher || '担当教員'}</td>
+    newsList.forEach(item => {
+      newsTable.innerHTML += `
+        <tr>
+          <td><a href="javascript:void(0);">◆ ${item.title}</a></td>
+          <td class="news-td-date">${item.date}</td>
         </tr>
       `;
     });
   }
-}
 
-function getCourseIdBySubjectName(name) {
-  if (!name) return "c_quantum";
-  if (name.includes("量子")) return "c_quantum";
-  if (name.includes("UI") || name.includes("UX")) return "c_uiux";
-  if (name.includes("分散")) return "c_distributed";
-  if (name.includes("リテラシー")) return "c_literacy";
-  if (name.includes("暗号")) return "c_crypto";
-  if (name.includes("ネットワーク")) return "c_network";
-  if (name.includes("デザイン")) return "c_design";
-  if (name.includes("認知") || name.includes("メディア")) return "c_media";
-  return "c_quantum";
-}
-
-function openManabaCourse(courseId) {
-  document.getElementById('manaba-panel-mypage').classList.remove('active');
-  document.getElementById('manaba-panel-courses').classList.remove('active');
-  document.getElementById('manaba-course-detail-view').style.display = 'block';
-
-  const cid = courseId || "c_quantum";
-  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || window.GAME_DATABASE.manaba.courses["c_quantum"];
-  
-  if (!course) return;
-
-  const titleEl = document.getElementById('manaba-course-title');
-  const teacherEl = document.getElementById('manaba-course-teacher');
-  const termEl = document.getElementById('manaba-course-term');
-
-  if (titleEl) titleEl.innerText = course.name;
-  if (teacherEl) teacherEl.innerText = course.teacher;
-  if (termEl) termEl.innerText = course.term;
-
-  const newsList = document.getElementById('manaba-course-news-list');
-  if (newsList) {
-    newsList.innerHTML = "";
-    (course.news || []).forEach(news => {
-      newsList.innerHTML += `<li><strong>${news.date}</strong><br>${news.title}</li>`;
-    });
-  }
-
-  const materialsList = document.getElementById('manaba-materials-list');
-  if (materialsList) {
-    materialsList.innerHTML = "";
-    (course.materials || []).forEach(mat => {
-      materialsList.innerHTML += `
-        <div class="course-material-item" onclick="openPdfViewer('${cid}', ${mat.id})" style="cursor:pointer;">
-          <div>
-            <strong>${mat.title}</strong>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ファイル: ${mat.file}</div>
-          </div>
-          <i data-lucide="file-text" style="width:18px; height:18px; color:var(--manaba-green);"></i>
+  // コンテンツカード（更新順）生成
+  const cardGrid = document.getElementById('manaba-materials-card-grid');
+  if (cardGrid) {
+    cardGrid.innerHTML = "";
+    
+    // 1. 授業動画カード
+    cardGrid.innerHTML += `
+      <div class="content-card-item" onclick="showPushNotification('授業動画', '動画アーカイブを再生します', 'video')">
+        <div class="content-card-icon">
+          <div class="card-icon-line"></div>
+          <div class="card-icon-line"></div>
+          <div class="card-icon-line"></div>
         </div>
-      `;
-    });
+        <div class="content-card-info">
+          <span class="content-card-title">授業動画</span>
+          <span class="content-card-date">2026-07-14 12:56</span>
+        </div>
+      </div>
+    `;
+
+    // 2. 授業資料カード（タップでPDFビューア）
+    const mat = (course.materials && course.materials[0]) || { id: 1, title: "授業資料・配付プリント" };
+    cardGrid.innerHTML += `
+      <div class="content-card-item" onclick="openPdfViewer('${cid}', ${mat.id})">
+        <div class="content-card-icon">
+          <div class="card-icon-line"></div>
+          <div class="card-icon-line"></div>
+          <div class="card-icon-line"></div>
+        </div>
+        <div class="content-card-info">
+          <span class="content-card-title">授業資料</span>
+          <span class="content-card-date">2026-07-14 09:02</span>
+        </div>
+      </div>
+    `;
   }
 
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
-  
   logWriteToGAS("MANABA_COURSE_OPEN", `manabaコース詳細を開きました: ${course.name}`);
 }
 
 function backToManabaPortal() {
-  document.getElementById('manaba-course-detail-view').style.display = 'none';
-  switchManabaTab(gameState.activeManabaTab || 'mypage');
+  switchManabaTab('mypage');
 }
 
 function openPdfViewer(courseId, materialId) {

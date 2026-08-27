@@ -1270,39 +1270,139 @@
 
           </div>
 
-          <!-- コース詳細画面（モーダル／スライドビュー） -->
+          <!-- 🎓 コース詳細画面（千葉工大 公式完全再現） -->
           <div class="manaba-course-detail-official" id="manaba-course-detail-view" style="display:none;">
-            <div class="official-course-header-banner">
-              <button onclick="backToManabaPortal()" class="course-back-official-btn">← マイページに戻る</button>
-              <div class="official-course-meta">
-                <h2 id="manaba-course-title">応用量子力学</h2>
-                <div class="course-sub-info">
-                  担当教員: <span id="manaba-course-teacher">安藤 昌也</span> ｜ 開講: <span id="manaba-course-term">2026 前期 月曜 2限</span> ｜ 教室: <span id="manaba-course-room">新習志野校舎6号館301</span>
+            
+            <!-- コースヘッダー（グレー背景） -->
+            <div class="official-course-pageheader">
+              <div class="course-header-left-group">
+                <!-- 講義アイコン (緑丸) -->
+                <div class="course-icon-badge">
+                  <svg viewBox="0 0 50 50" width="46" height="46">
+                    <circle cx="25" cy="25" r="23" fill="none" stroke="#22c55e" stroke-width="2.2"/>
+                    <path d="M16 20 C 16 32, 24 34, 24 20" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round"/>
+                    <path d="M26 20 L 34 30 M 34 20 L 26 30" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="course-title-block">
+                  <div class="course-code-str" id="manaba-course-code">22179112</div>
+                  <h2 class="course-main-name">
+                    <a href="javascript:void(0);" id="manaba-course-title">人間中心設計</a>
+                  </h2>
+                </div>
+              </div>
+
+              <div class="course-header-right-group">
+                <div class="course-teacher-line">
+                  担当教員: <span class="teacher-name-bold" id="manaba-course-teacher">安藤 昌也</span>
+                </div>
+                <div class="course-term-line" id="manaba-course-term-full">
+                  2026 前期 火曜 1限
                 </div>
               </div>
             </div>
 
-            <div class="official-course-content-grid">
-              <!-- コースニュース -->
-              <div class="official-course-news-box">
-                <div class="box-title-bar">
-                  <h3>コースニュース</h3>
-                </div>
-                <ul class="course-news-items" id="manaba-course-news-list">
-                  <!-- JSで動的表示 -->
-                </ul>
+            <!-- コース内メニューバー（立体ボタンの横並び） -->
+            <div class="official-course-menubar">
+              <div class="course-menu-buttons-left">
+                <button class="course-menu-btn">小テスト</button>
+                <button class="course-menu-btn">アンケート</button>
+                <button class="course-menu-btn has-badge">レポート <span class="menu-unread-badge">1</span></button>
+                <button class="course-menu-btn">プロジェクト</button>
+                <button class="course-menu-btn">成 績</button>
               </div>
-
-              <!-- 授業資料リスト -->
-              <div class="official-course-materials-box">
-                <div class="box-title-bar">
-                  <h3>授業資料・配布コンテンツ</h3>
-                </div>
-                <div class="course-materials-items" id="manaba-materials-list">
-                  <!-- JSで動的表示（第11回資料にタイムマシン起動ヒント等） -->
-                </div>
+              <div class="course-menu-buttons-right">
+                <button class="course-menu-btn icon-btn">💬 掲示板</button>
+                <button class="course-menu-btn icon-btn active-green">📖 コースコンテンツ</button>
               </div>
             </div>
+
+            <!-- コース内個別指導案内ボックス -->
+            <div class="official-course-notice-box">
+              <p class="notice-desc">
+                このコースでは、個別指導コレクションを利用して、担当教員に質問や相談をすることができます（他の履修生は閲覧できません）。
+              </p>
+              <div class="notice-links">
+                <a href="javascript:void(0);" class="notice-arrow-link">➔ 個別指導コレクションを作成する</a>
+                <a href="javascript:void(0);" class="notice-arrow-link">➔ 個別指導コレクション一覧</a>
+              </div>
+            </div>
+
+            <!-- サブメニューリンク行（右寄せ） -->
+            <div class="official-course-sublinks-row">
+              <a href="javascript:void(0);" class="sublink-item">📝 ピアレビュー (未実施:0件)</a>
+              <a href="javascript:void(0);" class="sublink-item">👤 個別指導(コレクション)</a>
+              <a href="javascript:void(0);" class="sublink-item">📄 提出記録</a>
+            </div>
+
+            <!-- コースメインコンテンツ（2カラム ＋ 下段1カラム） -->
+            <div class="official-course-main-body">
+              
+              <!-- 上段 2カラム (ニュース & スレッド) -->
+              <div class="course-top-two-cols">
+                <!-- 左：コースニュース -->
+                <div class="course-card-box col-half">
+                  <div class="course-card-box-header">
+                    <div class="card-header-title">
+                      <span class="header-icon-dots">∴</span>
+                      <h3>コースニュース</h3>
+                    </div>
+                  </div>
+                  <div class="course-card-box-body">
+                    <table class="course-news-official-table" id="manaba-course-news-table">
+                      <!-- JSで動的生成 -->
+                    </table>
+                    <div class="card-box-footer-link">
+                      <a href="javascript:void(0);">➔ コースニュース一覧</a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 右：スレッド -->
+                <div class="course-card-box col-half">
+                  <div class="course-card-box-header flex-between">
+                    <div class="card-header-title">
+                      <span class="header-icon-chat">💬</span>
+                      <h3>スレッド（更新順）</h3>
+                    </div>
+                    <button class="btn-create-thread">スレッド作成</button>
+                  </div>
+                  <div class="course-card-box-body">
+                    <div class="thread-empty-state">
+                      スレッドはありません。
+                    </div>
+                    <div class="card-box-footer-link">
+                      <a href="javascript:void(0);">➔ スレッド一覧</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 下段 全幅 (コンテンツ更新順) -->
+              <div class="course-card-box full-width" style="margin-top:14px;">
+                <div class="course-card-box-header">
+                  <div class="card-header-title">
+                    <span class="header-icon-book">📖</span>
+                    <h3>コンテンツ（更新順）</h3>
+                  </div>
+                </div>
+                <div class="course-card-box-body">
+                  <div class="course-contents-card-grid" id="manaba-materials-card-grid">
+                    <!-- JSで動的生成（授業資料カードをタップでPDFプレビュー！） -->
+                  </div>
+                  <div class="card-box-footer-link">
+                    <a href="javascript:void(0);">➔ コンテンツ一覧</a>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 右下のメモアイコン -->
+            <div class="course-bottom-memo-btn-row">
+              <button class="btn-course-memo">📝 メモ</button>
+            </div>
+
           </div>
 
           <!-- PDF / 講義資料ビューアー -->

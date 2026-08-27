@@ -5057,97 +5057,402 @@ body {
   border: 1px solid #999999;
   border-radius: 4px;
   font-size: 12px;
-  font-weight: 600;
-  color: #333333;
-  padding: 4px 12px;
-  cursor: pointer;
+/* ---------------------------------------------------- */
+/* 🎓 公式 manaba コース（授業）詳細画面 完全再現スタイル */
+/* ---------------------------------------------------- */
+
+.manaba-course-detail-official {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
-.official-course-meta h2 {
+/* 1. コースヘッダー（グレー背景） */
+.official-course-pageheader {
+  background: #efefef;
+  border-bottom: 1px solid #d4d4d4;
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-header-left-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-icon-badge {
+  width: 48px;
+  height: 48px;
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-code-str {
+  font-size: 11px;
+  color: #666666;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.course-main-name {
+  margin: 0;
+}
+
+.course-main-name a {
   font-size: 16px;
   font-weight: 700;
-  color: #5c9a00;
-  margin: 0 0 4px 0;
+  color: #0272c1;
+  text-decoration: none;
 }
 
-.course-sub-info {
+.course-main-name a:hover {
+  text-decoration: underline;
+}
+
+.course-header-right-group {
+  text-align: right;
+}
+
+.course-teacher-line {
+  font-size: 12px;
+  color: #333333;
+  margin-bottom: 2px;
+}
+
+.teacher-name-bold {
+  font-weight: 700;
+  color: #111111;
+}
+
+.course-term-line {
   font-size: 11px;
   color: #666666;
 }
 
-.official-course-content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 16px;
+/* 2. コース内メニューバー（立体ボタンの横並び） */
+.official-course-menubar {
+  background: #f7f7f7;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 5px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.official-course-news-box, .official-course-materials-box {
-  border: 1px solid #cce29d;
-  border-radius: 4px;
-  background: #fafdf5;
-  overflow: hidden;
-}
-
-.box-title-bar {
-  background: #dcebc0;
-  padding: 6px 12px;
-  border-bottom: 1px solid #a3c960;
-}
-
-.box-title-bar h3 {
-  font-size: 12px;
-  font-weight: 700;
-  color: #333333;
-  margin: 0;
-}
-
-.course-news-items {
-  list-style: none;
-  padding: 8px 12px;
-  margin: 0;
-}
-
-.course-news-items li {
-  padding: 6px 0;
-  border-bottom: 1px dashed #dcdcdc;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.course-materials-items {
-  padding: 8px 12px;
-}
-
-.material-item-card {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 8px 10px;
-  margin-bottom: 8px;
+.course-menu-buttons-left, .course-menu-buttons-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 4px;
 }
 
-.material-item-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #0272c1;
+.course-menu-btn {
+  background: linear-gradient(to bottom, #ffffff 0%, #f4f4f4 40%, #e2e2e2 95%, #ffffff);
+  border: 1px solid #999999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
   cursor: pointer;
+  color: #323232;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.material-item-title:hover {
+.course-menu-btn:hover {
+  background: #e6e6e6;
+}
+
+.course-menu-btn.active-green {
+  background: linear-gradient(to bottom, #a0cc2a 0%, #7da617 100%);
+  color: #ffffff;
+  border-color: #648a0a;
+}
+
+.menu-unread-badge {
+  background: #e65100;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+}
+
+/* 3. 個別指導案内ボックス */
+.official-course-notice-box {
+  background: #fbfbfb;
+  border: 1px solid #d4d4d4;
+  border-radius: 3px;
+  padding: 8px 14px;
+  margin: 10px 18px 4px 18px;
+  font-size: 11px;
+  color: #333333;
+}
+
+.notice-desc {
+  margin: 0 0 4px 0;
+  color: #444444;
+}
+
+.notice-links {
+  display: flex;
+  gap: 14px;
+}
+
+.notice-arrow-link {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.notice-arrow-link:hover {
   text-decoration: underline;
 }
 
-.material-item-date {
-  font-size: 10px;
-  color: #888888;
+/* サブリンク行（右寄せ） */
+.official-course-sublinks-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 4px 18px 8px 18px;
 }
 
-/* フッター */
-.portal-official-footer {
-  margin-top: 20px;
+.sublink-item {
+  font-size: 11px;
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sublink-item:hover {
+  text-decoration: underline;
+}
+
+/* 4. コースメインコンテンツ */
+.official-course-main-body {
+  padding: 0 18px 14px 18px;
+}
+
+.course-top-two-cols {
+  display: flex;
+  gap: 14px;
+}
+
+.col-half {
+  flex: 1;
+  min-width: 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.course-card-box {
+  border: 1px solid #84cc16;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.course-card-box-header {
+  background: linear-gradient(to right, #7fb000 0%, #9ec91d 100%);
+  padding: 5px 10px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.course-card-box-header.flex-between {
+  justify-content: space-between;
+}
+
+.card-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-header-title h3 {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.btn-create-thread {
+  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
+  border: 1px solid #666666;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: #333333;
+}
+
+.course-card-box-body {
+  padding: 8px 10px;
+}
+
+/* コースニュース テーブル */
+.course-news-official-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.course-news-official-table tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.course-news-official-table td {
+  padding: 5px 4px;
+}
+
+.course-news-official-table a {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.course-news-official-table a:hover {
+  text-decoration: underline;
+}
+
+.news-td-date {
+  text-align: right;
+  color: #555555;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.card-box-footer-link {
+  text-align: right;
+  margin-top: 6px;
+  padding-top: 4px;
+}
+
+.card-box-footer-link a {
+  font-size: 11px;
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.card-box-footer-link a:hover {
+  text-decoration: underline;
+}
+
+/* スレッド未作成状態 */
+.thread-empty-state {
+  padding: 16px 8px;
+  font-size: 11px;
+  color: #666666;
+}
+
+/* コンテンツカード（更新順） */
+.course-contents-card-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 4px 0 8px 0;
+}
+
+.content-card-item {
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 220px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.content-card-item:hover {
+  border-color: #84cc16;
+  background: #fafdf5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(132, 204, 22, 0.2);
+}
+
+.content-card-icon {
+  width: 34px;
+  height: 38px;
+  background: #f4f4f4;
+  border: 1px solid #bbbbbb;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+}
+
+.card-icon-line {
+  width: 22px;
+  height: 2px;
+  background: #999999;
+}
+
+.content-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.content-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0272c1;
+  margin-bottom: 2px;
+}
+
+.content-card-date {
+  font-size: 10px;
+  color: #666666;
+}
+
+/* メモボタン */
+.course-bottom-memo-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 18px 10px 18px;
+}
+
+.btn-course-memo {
+  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
+  border: 1px solid #999999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #444444;
+  padding: 2px 8px;
+  cursor: pointer;
+}
   border-top: 1px solid #e0e0e0;
   padding: 10px 18px;
   display: flex;
