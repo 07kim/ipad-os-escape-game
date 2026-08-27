@@ -5174,6 +5174,12 @@ body {
   border: 1px solid #999999;
   border-radius: 4px;
   font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  color: #333333;
+}
+
 /* ---------------------------------------------------- */
 /* 🎓 公式 manaba コース（授業）詳細画面 完全再現スタイル */
 /* ---------------------------------------------------- */
@@ -5308,6 +5314,11 @@ body {
   border-radius: 50%;
   width: 14px;
   height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* サムネイルビュー・リストビュー スタイル */
 .portal-courses-list-view {
   margin-top: 10px;
