@@ -688,8 +688,47 @@
       if (adminTimerState.isRunning) {
         pauseAdminTimer();
       } else {
+        // 未計測状態（00:00）からのスタートの場合、iPadの一括リセット＆1周目セットを確認・実行
+        const isFreshStart = (adminTimerState.totalElapsedBeforePause === 0 && !adminTimerState.totalStartTime);
+        if (isFreshStart) {
+          const ok = confirm("🚀【公演スタート】\n全30台のiPad端末を一括初期化（1周目・ロック画面・データクリア）してタイマーを開始しますか？");
+          if (!ok) return;
+          
+          // 🚨 全30台を一括リセット ＆ 1周目セット
+          triggerInitialMasterResetForShow();
+        }
         startAdminTimer();
       }
+    }
+
+    // 🚀 公演開始時のiPad一括初期化（1周目セット）
+    function triggerInitialMasterResetForShow() {
+      sendCloudAdminCommand({
+        id: "START_RESET_" + Date.now(),
+        type: "master_reset",
+        name: "公演開始一括リセット（1周目セット）",
+        params: {
+          loop: 1,
+          timestamp: Date.now()
+        }
+      }, "🚀 全30台のiPadを一斉初期化し、1周目にセットしました！");
+
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (gasUrl) {
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
+      }
+
+      // 演者ツールへも周回リセットシグナルを送信
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'master_reset', payload: { loop: 1 } });
+        } catch(e) {}
+      }
+
+      // ローカルモニタリングデータ初期化
+      latestDevicesData = [];
+      renderMonitoringCards();
     }
 
     function startAdminTimer() {
@@ -701,7 +740,7 @@
       startTimerInterval();
       updateTimerButtonsUI(true);
       saveAdminTimerState();
-      showToast("⏱️ 公演タイマーを開始しました！");
+      showToast("⏱️ 公演タイマーを開始しました！（1周目進行中）");
     }
 
     function pauseAdminTimer() {
