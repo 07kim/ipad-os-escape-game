@@ -4107,9 +4107,12 @@ function pressPhoneKey(key) {
 }
 
 function clearPhoneKey() {
-  gameState.phoneInput = "";
-  const display = document.getElementById('phone-display');
-  if (display) display.innerText = "";
+  if (gameState.phoneInput && gameState.phoneInput.length > 0) {
+    gameState.phoneInput = gameState.phoneInput.slice(0, -1);
+    const display = document.getElementById('phone-display');
+    if (display) display.innerText = gameState.phoneInput;
+    playSystemSound("dtmf");
+  }
 }
 
 let phoneCallTimers = [];
