@@ -1029,25 +1029,6 @@
       }
     }
 
-    // 🔄 個別トリガーを未送信に戻す
-    function resetSingleTrigger(triggerId) {
-      const key = getTrigKey(triggerId);
-      delete sentTriggers[key];
-      delete confirmedTriggers[key];
-      delete sentTriggers[triggerId];
-      delete confirmedTriggers[triggerId];
-      localStorage.removeItem(`actor_ack_${triggerId}`);
-      localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
-      localStorage.setItem('actor_confirmed_triggers', JSON.stringify(confirmedTriggers));
-
-      if (navigator.vibrate) navigator.vibrate(40);
-      showToast("🔄 送信状態を「未送信」に戻しました", false, 3000);
-
-      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
-        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
-      }
-    }
-
     // 演者選択
     function selectActor(code) {
       currentActorCode = code;
@@ -1150,14 +1131,6 @@
               <i data-lucide="${isConfirmed ? 'check-check' : (isSent ? 'check' : (isLoopLocked || isSequentialLocked ? 'lock' : 'send'))}"></i>
               <span>${btnText}</span>
             </button>
-
-            ${(isSent || isConfirmed) ? `
-              <div style="text-align:right; margin-top:8px;">
-                <button onclick="resetSingleTrigger('${tr.id}')" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; text-decoration:underline; display:inline-flex; align-items:center; gap:4px; padding:4px 8px;">
-                  <i data-lucide="rotate-ccw" style="width:12px; height:12px;"></i> 未送信に戻す
-                </button>
-              </div>
-            ` : ''}
           </div>
         `;
       });
