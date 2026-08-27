@@ -5169,6 +5169,9 @@ async function processMatches() {
     const points = matches.length * 100 * puzzleState.combo;
     addPuzzleScore(points);
 
+    // 🌟 消去場所の近くに「2 COMBO!」等のフローティングポップアップを出現
+    spawnBoardComboPopup(matches, puzzleState.combo, points);
+
     // 破裂アニメーション
     matches.forEach(m => {
       const cell = document.querySelector(`.puzzle-cell[data-row="${m.r}"][data-col="${m.c}"] .puzzle-bubble`);
@@ -5187,6 +5190,62 @@ async function processMatches() {
   }
 
   setTimeout(hideComboBadge, 1200);
+}
+
+// 🌟 消去場所の近くにフワッと浮かぶコンボバッジを生成
+function spawnBoardComboPopup(matches, combo, points) {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container || !matches || matches.length === 0) return;
+
+  // 消去されたバブル群の中心座標（行・列）を算出
+  let sumR = 0, sumC = 0;
+  matches.forEach(m => {
+    sumR += m.r;
+    sumC += m.c;
+  });
+  const avgR = sumR / matches.length;
+  const avgC = sumC / matches.length;
+
+  // コンテナ内でのパーセント位置（0%〜100%）
+  const posX = ((avgC + 0.5) / PUZZLE_COLS) * 100;
+  const posY = ((avgR + 0.5) / PUZZLE_ROWS) * 100;
+
+  const popup = document.createElement('div');
+  popup.className = 'puzzle-floating-popup';
+  popup.style.left = `${posX}%`;
+  popup.style.top = `${posY}%`;
+
+  let comboLabel = `${combo} COMBO! 🔥`;
+  let isHighCombo = false;
+  if (combo >= 5) {
+    comboLabel = `MEGA x${combo}! 💥`;
+    isHighCombo = true;
+  } else if (combo >= 4) {
+    comboLabel = `FANTASTIC x${combo}! 🌟`;
+    isHighCombo = true;
+  } else if (combo >= 3) {
+    comboLabel = `3 COMBO! ⚡`;
+  } else if (combo === 2) {
+    comboLabel = `2 COMBO! 🔥`;
+  } else {
+    comboLabel = `MATCH! ✨`;
+  }
+
+  popup.innerHTML = `
+    <div class="floating-combo-pill ${isHighCombo ? 'high' : ''}">
+      ${comboLabel}
+    </div>
+    <div class="floating-score-text">+${points.toLocaleString()}</div>
+  `;
+
+  container.appendChild(popup);
+
+  // アニメーション完了後に自動破棄
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.parentNode.removeChild(popup);
+    }
+  }, 900);
 }
 
 function applyGravityAndRefill() {
