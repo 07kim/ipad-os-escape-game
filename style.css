@@ -8008,33 +8008,37 @@ body {
 /* メインボディ */
 .bubble-app-body {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   padding: 12px;
   background: radial-gradient(circle at 50% 20%, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  -webkit-overflow-scrolling: touch;
   position: relative;
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
-/* パズルボード（8x8）大画面対応 */
+/* パズルボード（8x8）大画面・完全正方形固定 */
 .puzzle-board-container {
-  width: 100%;
-  max-width: min(600px, calc(100vh - 210px));
+  width: min(520px, 86vw, calc(100vh - 220px));
+  height: min(520px, 86vw, calc(100vh - 220px));
   aspect-ratio: 1 / 1;
-  background: rgba(255, 255, 255, 0.86);
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(24px);
   border: 2px solid rgba(255, 255, 255, 0.95);
   border-radius: 26px;
-  padding: 10px;
+  padding: 8px;
   box-shadow: 0 20px 48px rgba(100, 116, 139, 0.18), 0 4px 12px rgba(0, 0, 0, 0.04), inset 0 1px 2px #ffffff;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .puzzle-grid-board {
@@ -8043,23 +8047,29 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  gap: 6px;
+  gap: 5px;
   touch-action: none;
+  box-sizing: border-box;
 }
 
 .puzzle-cell {
   position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
   display: flex;
   justify-content: center;
   align-items: center;
   user-select: none;
   touch-action: none;
+  box-sizing: border-box;
 }
 
 /* 💎 ジュエル調光沢バブル（白背景に映える鮮やかなパステルジュエル） */
 .puzzle-bubble {
-  width: 92%;
-  height: 92%;
+  width: 90%;
+  height: 90%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   cursor: grab;
   position: relative;
@@ -8067,6 +8077,8 @@ body {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 .puzzle-bubble:active {
   cursor: grabbing;
