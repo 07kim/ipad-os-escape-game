@@ -4002,57 +4002,386 @@ body {
   background-color: #e8f0fe;
   box-shadow: inset 0 0 0 2px #1a73e8;
 }
-
 /* ------------------------------------------
-   ⑤ LMS「manaba」（千葉工業大学）
+   ⑤ LMS「manaba」（千葉工業大学公式完全再現）
    ------------------------------------------ */
 .manaba-login-container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   flex: 1;
-  background-color: #f4f6f8;
+  background-color: #ffffff;
+  padding: 20px 10px;
+  overflow-y: auto;
 }
 
-.manaba-login-card {
+.manaba-official-login-wrapper {
   width: 100%;
-  max-width: 400px;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  max-width: 780px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
-.manaba-rabbit-logo {
-  font-size: 54px;
-  text-align: center;
+/* 1. 最上部ヘッダー */
+.manaba-official-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+}
+
+.manaba-chibatech-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chibatech-icon {
+  display: flex;
+  align-items: center;
+}
+
+.chibatech-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.chibatech-jp {
+  font-size: 17px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+
+.chibatech-en {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222222;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.manaba-lang-btn {
+  font-size: 12px;
+  color: #333333;
+  background: #e8e8e8;
+  border: 1px solid #bfbfbf;
+  border-radius: 4px;
+  padding: 3px 12px;
+  cursor: pointer;
+}
+
+.manaba-official-border-line {
+  height: 4px;
+  background-color: #5c9a00;
+  width: 100%;
+  margin-bottom: 25px;
+}
+
+/* 2. 2行×3列のメイングリッド */
+.manaba-official-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  grid-template-rows: 170px 170px;
+  gap: 12px;
+  width: 100%;
+}
+
+.grid-cell {
+  background: #ffffff;
+  border: 1px solid #84cc16;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  box-sizing: border-box;
+}
+
+/* [上段左] ロゴセル */
+.cell-logo {
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manaba-logo-composition {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.manaba-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-manaba {
+  font-size: 38px;
+  font-weight: 800;
+  color: #74b800;
+  letter-spacing: -1px;
+  line-height: 1;
+  font-family: "VAG Rounded", "Arial Rounded MT Bold", sans-serif;
+}
+
+.brand-course {
+  font-size: 20px;
+  font-weight: 600;
+  color: #00a0e9;
+  text-align: right;
+  margin-top: -2px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.manaba-four-leaves {
+  position: relative;
+  width: 55px;
+  height: 55px;
+}
+
+.leaf {
+  position: absolute;
+  border-radius: 50% 0 50% 50%;
+}
+
+.leaf-1 {
+  width: 28px;
+  height: 28px;
+  background: #74b800;
+  top: 0;
+  left: 6px;
+  transform: rotate(-15deg);
+}
+
+.leaf-2 {
+  width: 24px;
+  height: 24px;
+  background: #90d200;
+  bottom: 4px;
+  left: 0;
+  transform: rotate(-75deg);
+}
+
+.leaf-3 {
+  width: 26px;
+  height: 26px;
+  background: #00a0e9;
+  top: 14px;
+  right: 0;
+  transform: rotate(45deg);
+}
+
+.leaf-4 {
+  width: 14px;
+  height: 14px;
+  background: #50c0f0;
+  bottom: 0;
+  right: 12px;
+  transform: rotate(105deg);
+}
+
+/* [上段中央] 公式ログインフォーム */
+.cell-login-form {
+  padding: 12px 14px;
+  flex-direction: column;
+}
+
+.official-login-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.official-login-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #5c9a00;
   margin-bottom: 10px;
 }
 
-.manaba-title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--manaba-green);
-  margin-bottom: 15px;
+.official-form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.manaba-btn {
-  background-color: var(--manaba-green);
-  color: white;
-  border: none;
-  width: 100%;
-  padding: 12px;
-  font-size: 15px;
+.official-form-row label {
+  width: 65px;
+  font-size: 12px;
+  color: #333333;
   font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 14px;
-  transition: opacity 0.2s, transform 0.1s;
+  text-align: right;
+  margin-right: 8px;
 }
 
-.manaba-btn:active {
-  transform: scale(0.98);
+.official-input {
+  flex: 1;
+  height: 24px;
+  border: 1px solid #a3b899;
+  background-color: #f6fcf0;
+  padding: 2px 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.official-input:focus {
+  background-color: #ffffff;
+  border-color: #5c9a00;
+}
+
+.official-form-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.official-login-btn {
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 40%, #e2e2e2 95%, #ffffff);
+  border: 1px solid #929292;
+  border-radius: 4px;
+  color: #323232;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 18px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.official-login-btn:hover {
+  background: #e3e3e3;
+}
+
+.official-login-btn:active {
+  background: #d5d5d5;
+}
+
+/* [上段右] うさぎイラスト */
+.cell-rabbit {
+  border: none;
+  background: #ebf5e0;
+  position: relative;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.rabbit-cityscape {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="%23c8e6c9"><rect x="10" y="40" width="15" height="60"/><rect x="30" y="50" width="20" height="50"/><path d="M12 40 L12 0 L15 0 L15 40 Z"/><rect x="140" y="30" width="20" height="70"/><rect x="165" y="45" width="25" height="55"/></svg>') repeat-x bottom;
+  opacity: 0.6;
+}
+
+.chiba-rabbit-art {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 2px;
+}
+
+/* [下段左] システムニュース */
+.cell-news {
+  padding: 10px;
+  overflow: hidden;
+}
+
+.official-news-scroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #333333;
+}
+
+.official-news-item {
+  margin-bottom: 12px;
+}
+
+.news-date {
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c9a00;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.news-text {
+  margin: 0;
+  color: #444444;
+}
+
+/* [下段中央] キャンパス写真 */
+.cell-campus-photo {
+  border: none;
+  padding: 0;
+}
+
+.campus-photo-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.campus-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* [下段右] プレースホルダー */
+.cell-empty {
+  background: #f4fbf0;
+  border: 1px solid #c2e59c;
+}
+
+/* 3. 公式フッター */
+.manaba-official-footer {
+  margin-top: 15px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 8px;
+}
+
+.footer-powered-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.powered-text {
+  font-size: 11px;
+  color: #666666;
+}
+
+.powered-logo-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: #74b800;
+}
+
+.powered-mini-leaf {
+  width: 12px;
+  height: 12px;
+  background: #74b800;
+  border-radius: 50% 0 50% 50%;
+}
+
+.footer-copyright-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #888888;
 }
 
 /* 🔐 iPadOS公式スタイル キーチェーン自動入力ポップアップ */
@@ -4148,10 +4477,6 @@ body {
   background-color: #fefce8 !important; /* iOSの自動入力ハイライト黄色 */
   border-color: #facc15 !important;
   transition: background-color 0.3s ease;
-}
-
-.manaba-btn:hover {
-  opacity: 0.9;
 }
 
 .manaba-error-msg {
