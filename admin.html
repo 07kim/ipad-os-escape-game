@@ -335,89 +335,104 @@
       animation: highlightPulse 1.2s ease-out;
     }
 
-    /* ⏱️ 公演タイムライン ＆ 周回タイマーカード */
-    .timer-dashboard-card {
+    /* ⏱️ ヘッダー組み込み型 コンパクトタイマー ＆ ステータスバー */
+    .admin-top-banner {
+      max-width: 1400px;
+      margin: 0 auto 20px auto;
+      padding: 10px 16px;
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       color: #ffffff;
-      border-radius: 14px;
-      padding: 18px 20px;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+      border-radius: 12px;
       border: 1px solid #334155;
-      margin-bottom: 24px;
-    }
-    .timer-display-main {
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 14px;
+      gap: 12px;
     }
-    .timer-val-box {
+    .top-timer-group {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .timer-label {
-      font-size: 11px;
+    .timer-badge-chip {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .timer-chip-label {
+      font-size: 10px;
       font-weight: 700;
       color: #94a3b8;
       letter-spacing: 0.5px;
       text-transform: uppercase;
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-bottom: 2px;
+      gap: 3px;
     }
-    .timer-digits-total {
+    .timer-chip-digits.total {
       font-family: 'Orbitron', monospace;
-      font-size: 28px;
+      font-size: 16px;
       font-weight: 900;
       color: #38bdf8;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
-    .timer-digits-loop {
+    .timer-chip-digits.loop {
       font-family: 'Orbitron', monospace;
-      font-size: 24px;
+      font-size: 16px;
       font-weight: 800;
       color: #4ade80;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
-    .loop-laps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .lap-item {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 8px 12px;
-      transition: all 0.2s ease;
-    }
-    .lap-item.active {
-      background: rgba(56, 189, 248, 0.12);
-      border-color: #38bdf8;
-    }
-    .lap-item-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: #cbd5e1;
+    .top-laps-inline {
       display: flex;
-      justify-content: space-between;
+      gap: 6px;
       align-items: center;
     }
-    .lap-item-time {
+    .top-lap-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+    }
+    .top-lap-pill.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+    }
+    .lap-name {
+      font-weight: 700;
+      color: #cbd5e1;
+      font-size: 10px;
+    }
+    .lap-val {
       font-family: 'Orbitron', monospace;
-      font-size: 15px;
+      font-size: 12px;
       font-weight: 700;
       color: #ffffff;
-      margin-top: 4px;
+    }
+    .lap-tag {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #94a3b8;
+    }
+    .top-lap-pill.active .lap-tag {
+      background: #0284c7;
+      color: #ffffff;
     }
     .timer-ctrl-btn {
-      padding: 5px 10px;
+      padding: 4px 10px;
       font-size: 11px;
       font-weight: 700;
       border-radius: 6px;
@@ -431,6 +446,12 @@
     .timer-ctrl-btn:hover {
       opacity: 0.9;
       transform: translateY(-1px);
+    }
+    .top-status-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
   </style>
 </head>
@@ -447,20 +468,60 @@
     </div>
   </header>
 
-  <!-- 📡 クラウド連携・遠隔統制ステータスバー -->
-  <div style="max-width:1400px; margin: 0 auto 20px auto; padding: 14px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.04); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
-    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-      <div id="admin-cloud-indicator" style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; background:#f8fafc; padding:6px 12px; border-radius:20px; border:1px solid #e2e8f0;">
-        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
-        <span id="admin-status-text">クラウド接続確認中...</span>
+  <!-- ⏱️ ＆ 📡 公演タイマー・クラウド連携 コンパクトヘッダーバー -->
+  <div class="admin-top-banner">
+    <!-- 左側：タイマー（トータル ＆ 現在周回 ＆ 1~3周目ラップ ＆ 操作ボタン） -->
+    <div class="top-timer-group">
+      <div class="timer-badge-chip">
+        <span class="timer-chip-label"><i data-lucide="clock" style="width:11px; height:11px;"></i> トータル</span>
+        <span class="timer-chip-digits total" id="timer-total-digits">00:00</span>
       </div>
-      <div style="font-size:12px; color:var(--text-muted);" id="admin-last-command-info">直近送信: なし</div>
+
+      <div class="timer-badge-chip">
+        <span class="timer-chip-label"><i data-lucide="repeat" style="width:11px; height:11px; color:#4ade80;"></i> <span id="timer-current-loop-name">1周目</span></span>
+        <span class="timer-chip-digits loop" id="timer-loop-digits">00:00</span>
+      </div>
+
+      <!-- 1〜3周目ラップタイム -->
+      <div class="top-laps-inline">
+        <div class="top-lap-pill active" id="lap-card-1">
+          <span class="lap-name">1周</span>
+          <span class="lap-val" id="lap-time-1">00:00</span>
+          <span class="lap-tag" id="lap-status-1">進行中</span>
+        </div>
+        <div class="top-lap-pill" id="lap-card-2">
+          <span class="lap-name">2周</span>
+          <span class="lap-val" id="lap-time-2">--:--</span>
+          <span class="lap-tag" id="lap-status-2">待機</span>
+        </div>
+        <div class="top-lap-pill" id="lap-card-3">
+          <span class="lap-name">3周</span>
+          <span class="lap-val" id="lap-time-3">--:--</span>
+          <span class="lap-tag" id="lap-status-3">待機</span>
+        </div>
+      </div>
+
+      <!-- タイマー操作ボタン -->
+      <div style="display:flex; gap:5px;">
+        <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff;">
+          <i data-lucide="play" id="icon-timer-toggle" style="width:12px; height:12px;"></i> <span id="text-timer-toggle">ゲームスタート</span>
+        </button>
+        <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1;">
+          <i data-lucide="rotate-ccw" style="width:12px; height:12px;"></i> リセット
+        </button>
+      </div>
     </div>
 
-    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-      <input type="text" id="admin-gas-url-input" placeholder="Google Apps Script (GAS) Web API URL" style="width:280px; padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border-color);">
-      <button class="nav-btn" onclick="saveAdminGasUrl()" style="padding:6px 12px; font-size:12px; font-weight:700; background:var(--primary); color:#fff; border:none;"><i data-lucide="save"></i> URL保存</button>
-      <button class="nav-btn" onclick="testGasPing()" style="padding:6px 12px; font-size:12px; font-weight:700;"><i data-lucide="radio"></i> 📡 疎通テスト</button>
+    <!-- 右側：クラウド接続ステータス ＆ GAS URL -->
+    <div class="top-status-group">
+      <div id="admin-cloud-indicator" style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); padding:4px 9px; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
+        <span id="admin-status-text">確認中...</span>
+      </div>
+      <div style="font-size:11px; color:#94a3b8; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="admin-last-command-info">直近: なし</div>
+      <input type="text" id="admin-gas-url-input" placeholder="GAS Web API URL" style="width:150px; padding:3px 8px; font-size:11px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:#fff;">
+      <button class="nav-btn" onclick="saveAdminGasUrl()" style="padding:4px 8px; font-size:11px; font-weight:700; background:var(--primary); color:#fff; border:none;" title="URL保存"><i data-lucide="save" style="width:12px; height:12px;"></i></button>
+      <button class="nav-btn" onclick="testGasPing()" style="padding:4px 8px; font-size:11px; font-weight:700;" title="疎通テスト"><i data-lucide="radio" style="width:12px; height:12px;"></i></button>
     </div>
   </div>
 
@@ -468,65 +529,7 @@
     
     <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
     <div>
-      <!-- ⏱️ 公演タイムライン ＆ 周回タイマーパネル -->
-      <div class="timer-dashboard-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-          <div style="font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; color:#f8fafc;">
-            <i data-lucide="timer" style="color:#38bdf8; width:20px; height:20px;"></i> 公演タイムライン ＆ 周回タイマー
-          </div>
-          <div style="display:flex; gap:6px;">
-            <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff; font-size:12px; padding:6px 12px;">
-              <i data-lucide="play" id="icon-timer-toggle" style="width:14px; height:14px;"></i> <span id="text-timer-toggle">ゲームスタート</span>
-            </button>
-            <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1; font-size:12px; padding:6px 10px;">
-              <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> リセット
-            </button>
-          </div>
-        </div>
-
-        <div class="timer-display-main">
-          <!-- トータル公演時間 -->
-          <div class="timer-val-box">
-            <span class="timer-label"><i data-lucide="clock" style="width:12px; height:12px;"></i> トータル公演時間</span>
-            <span class="timer-digits-total" id="timer-total-digits">00:00</span>
-          </div>
-          <!-- 現在の周回経過時間 -->
-          <div class="timer-val-box" style="text-align:right;">
-            <span class="timer-label" style="justify-content:flex-end;"><i data-lucide="repeat" style="width:12px; height:12px; color:#4ade80;"></i> <span id="timer-current-loop-name">1周目</span> 経過時間</span>
-            <span class="timer-digits-loop" id="timer-loop-digits">00:00</span>
-          </div>
-        </div>
-
-        <!-- 各周回ラップタイムバー -->
-        <div class="loop-laps-grid">
-          <div class="lap-item active" id="lap-card-1">
-            <div class="lap-item-title">
-              <span>🌀 1周目</span>
-              <span id="lap-status-1" style="color:#38bdf8; font-size:10px;">進行中</span>
-            </div>
-            <div class="lap-item-time" id="lap-time-1">00:00</div>
-          </div>
-          <div class="lap-item" id="lap-card-2">
-            <div class="lap-item-title">
-              <span>🌀 2周目</span>
-              <span id="lap-status-2" style="color:#94a3b8; font-size:10px;">待機</span>
-            </div>
-            <div class="lap-item-time" id="lap-time-2">--:--</div>
-          </div>
-          <div class="lap-item" id="lap-card-3">
-            <div class="lap-item-title">
-              <span>🌀 3周目</span>
-              <span id="lap-status-3" style="color:#94a3b8; font-size:10px;">待機</span>
-            </div>
-            <div class="lap-item-time" id="lap-time-3">--:--</div>
-          </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
-          <span>※ シーン進行プリセット（1周目・2周目・3周目）を押すと、周回タイマーが自動でラップ切り替えされます。</span>
-        </div>
-      </div>
-      <!-- 🎬 シーン別進行プリセットパネル -->
+      <!-- 🎬 シーン別進行プリセットパネル（最上部） -->
       <div class="card">
         <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（全30台クラウド一斉同期）</div>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">ボタンを押すと、Googleスプレッドシート経由で全稼働中iPad（30台）へ周回切り替え・演出が一括配信されます。</p>
