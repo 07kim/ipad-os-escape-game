@@ -4116,8 +4116,10 @@ body {
 
 /* [上段中央] 公式ログインフォーム */
 .cell-login-form {
-  padding: 10px 14px;
+  padding: 10px 12px;
   flex-direction: column;
+  overflow: visible !important; /* ポップアップや要素の見切れを防止 */
+  z-index: 50;
 }
 
 .official-login-box {
@@ -4126,6 +4128,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .official-login-title {
@@ -4143,26 +4146,33 @@ body {
   align-items: center;
   margin-bottom: 6px;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .official-form-row label {
-  min-width: 65px;
+  min-width: 60px;
+  width: 60px;
   font-size: 12px;
   color: #222222;
   font-weight: 700;
   text-align: right;
-  margin-right: 8px;
+  margin-right: 6px;
   white-space: nowrap; /* 2行改行を完全に防止 */
+  flex-shrink: 0;
 }
 
 .official-input {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   height: 24px;
   border: 1px solid #a3b899;
   background-color: #f6fcf0;
   padding: 2px 6px;
   font-size: 13px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .official-input:focus {
@@ -4311,22 +4321,22 @@ body {
 /* 🔐 iPadOS公式スタイル キーチェーン自動入力ポップアップ */
 .ios-keychain-popup {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 5px);
   left: 0;
-  z-index: 1000;
+  z-index: 9999;
   width: max-content;
-  min-width: 255px;
+  max-width: 280px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 13px;
   padding: 8px 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 0 3px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   cursor: pointer;
   animation: keychainPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transition: transform 0.1s, background-color 0.15s, box-shadow 0.15s;
