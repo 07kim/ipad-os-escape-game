@@ -737,6 +737,42 @@ window.GAME_DATABASE = {
     maintenanceNotice: "2026-08-10 システムメンテナンス復旧のお知らせ。一部時間割が変更されています。",
     users: {
       // ① 初期保存用：仮アカウント（氏名なし）
+      "U24c3040": {
+        pass: "pass3040",
+        name: "学生",
+        department: "一般教養課程",
+        studentId: "U24c3040",
+        timetable: {
+          "Mon": ["基礎情報リテラシー", "", "アカデミック英語", "", ""],
+          "Tue": ["", "統計学入門", "", "", ""],
+          "Wed": ["日本国憲法", "", "", "健康科学", ""],
+          "Thu": ["", "", "キャリア形成基礎", "", ""],
+          "Fri": ["", "", "", "", "情報倫理"]
+        },
+        courses: [
+          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "2026 前期 月曜 1限", room: "津田沼校舎1号館" },
+          { id: "c_english", name: "アカデミック英語", teacher: "Smith John", term: "2026 前期 月曜 3限", room: "津田沼校舎3号館" }
+        ]
+      },
+
+      "2024B0159": {
+        pass: "pass0159",
+        name: "学生",
+        department: "一般教養課程",
+        studentId: "2024B0159",
+        timetable: {
+          "Mon": ["基礎情報リテラシー", "", "", "", ""],
+          "Tue": ["", "統計学入門", "", "情報数学", ""],
+          "Wed": ["日本国憲法", "", "", "", ""],
+          "Thu": ["", "", "物理学基礎", "", ""],
+          "Fri": ["", "", "", "情報倫理", ""]
+        },
+        courses: [
+          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "2026 前期 月曜 1限", room: "津田沼校舎1号館" },
+          { id: "c_math", name: "情報数学", teacher: "田中 宏", term: "2026 前期 火曜 4限", room: "津田沼校舎2号館" }
+        ]
+      },
+
       "s25b9999": {
         pass: "pass9999",
         name: "学生",
@@ -750,8 +786,7 @@ window.GAME_DATABASE = {
           "Fri": ["", "", "", "", "情報倫理"]
         },
         courses: [
-          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "2026 前期 月曜 1限", room: "津田沼校舎1号館" },
-          { id: "c_english", name: "アカデミック英語", teacher: "Smith John", term: "2026 前期 月曜 3限", room: "津田沼校舎3号館" }
+          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "2026 前期 月曜 1限", room: "津田沼校舎1号館" }
         ]
       },
 

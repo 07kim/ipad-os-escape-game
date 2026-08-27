@@ -934,18 +934,63 @@
                     <label>ユーザID</label>
                     <input type="text" class="official-input" id="manaba-id-input" placeholder="" autocomplete="off" onfocus="showManabaKeychainPopup()" onblur="hideManabaKeychainPopup()">
                     
-                    <!-- 🔐 iPadOS公式キーチェーン自動入力ポップアップ -->
-                    <div class="ios-keychain-popup" id="manaba-keychain-popup" style="display:none;" onmousedown="event.preventDefault()" onclick="autofillManabaLogin('s25b9999', 'pass9999', '保存されたアカウント')">
-                      <div class="keychain-left">
-                        <div class="keychain-icon-wrap">
-                          <i data-lucide="key" style="width:16px; height:16px; color:#ffffff;"></i>
+                    <!-- 🔐 Chrome風 オートコンプリート・パスワード候補ポップアップ -->
+                    <div class="chrome-autofill-popup" id="manaba-keychain-popup" style="display:none;" onmousedown="event.preventDefault()">
+                      <!-- 三角の吹き出し矢印 -->
+                      <div class="chrome-popup-arrow"></div>
+                      
+                      <!-- 候補リスト -->
+                      <div class="chrome-autofill-list">
+                        <div class="chrome-autofill-item" onclick="autofillManabaLogin('U24c3040', 'pass3040', 'U24c3040')">
+                          <div class="manaba-item-leaf-icon">
+                            <svg viewBox="0 0 40 40" width="18" height="18">
+                              <ellipse cx="14" cy="12" rx="7" ry="12" transform="rotate(25 14 12)" fill="#84cc16"/>
+                              <ellipse cx="15" cy="28" rx="6" ry="10" transform="rotate(-35 15 28)" fill="#78be20"/>
+                              <ellipse cx="26" cy="22" rx="6" ry="11" transform="rotate(75 26 22)" fill="#84cc16"/>
+                              <path d="M14 18 Q17 22 20 20 Q18 15 14 18 Z" fill="#0099e5"/>
+                            </svg>
+                          </div>
+                          <div class="chrome-item-info">
+                            <span class="chrome-item-id">U24c3040</span>
+                            <span class="chrome-item-dots">••••••••</span>
+                          </div>
                         </div>
-                        <div class="keychain-text-group">
-                          <span class="keychain-title">パスワードを自動入力</span>
-                          <span class="keychain-account">s25b9999 (cit.ac.jp)</span>
+
+                        <div class="chrome-autofill-item" onclick="autofillManabaLogin('2024B0159', 'pass0159', '2024B0159')">
+                          <div class="manaba-item-leaf-icon">
+                            <svg viewBox="0 0 40 40" width="18" height="18">
+                              <ellipse cx="14" cy="12" rx="7" ry="12" transform="rotate(25 14 12)" fill="#84cc16"/>
+                              <ellipse cx="15" cy="28" rx="6" ry="10" transform="rotate(-35 15 28)" fill="#78be20"/>
+                              <ellipse cx="26" cy="22" rx="6" ry="11" transform="rotate(75 26 22)" fill="#84cc16"/>
+                              <path d="M14 18 Q17 22 20 20 Q18 15 14 18 Z" fill="#0099e5"/>
+                            </svg>
+                          </div>
+                          <div class="chrome-item-info">
+                            <span class="chrome-item-id">2024B0159</span>
+                            <span class="chrome-item-dots">••••••••</span>
+                          </div>
                         </div>
                       </div>
-                      <div class="keychain-badge">使用</div>
+
+                      <!-- 最下部：パスワードを管理... -->
+                      <div class="chrome-autofill-footer">
+                        <div class="chrome-footer-left">
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#5f6368"/>
+                            <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+                            <circle cx="12" cy="12" r="3" fill="#1a73e8"/>
+                          </svg>
+                          <span>パスワードを管理...</span>
+                        </div>
+                        <div class="chrome-footer-right">
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="8" cy="12" r="5" fill="none" stroke="#ea4335" stroke-width="2.5"/>
+                            <rect x="10" y="10.8" width="10" height="2.4" fill="#4285f4"/>
+                            <rect x="15" y="12" width="2.4" height="4" fill="#fbbc05"/>
+                            <rect x="18" y="12" width="2.4" height="4" fill="#34a853"/>
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

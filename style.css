@@ -4180,6 +4180,137 @@ body {
   border-color: #5c9a00;
 }
 
+/* 🔐 Google Chrome風 オートコンプリート・パスワード候補ポップアップ */
+.chrome-autofill-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 35px;
+  z-index: 9999;
+  width: 225px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22), 0 1px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+  animation: chromePopupFade 0.15s ease-out;
+}
+
+@keyframes chromePopupFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 三角の吹き出し矢印 */
+.chrome-popup-arrow {
+  position: absolute;
+  top: -6px;
+  left: 28px;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+.chrome-autofill-list {
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chrome-autofill-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.chrome-autofill-item:hover {
+  background-color: #f1f3f4;
+}
+
+.chrome-autofill-item:active {
+  background-color: #e8eaed;
+}
+
+.manaba-item-leaf-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chrome-item-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+}
+
+.chrome-item-id {
+  font-size: 13px;
+  font-weight: 700;
+  color: #202124;
+  line-height: 1.2;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.chrome-item-dots {
+  font-size: 11px;
+  color: #5f6368;
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* 最下部：パスワードを管理... */
+.chrome-autofill-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-top: 1px solid #e8eaed;
+  background-color: #fafafa;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+  cursor: default;
+}
+
+.chrome-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #3c4043;
+  font-weight: 500;
+}
+
+.chrome-footer-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.autofilled-field {
+  background-color: #e8f0fe !important; /* Chromeの自動入力水色ハイライト */
+  border-color: #1a73e8 !important;
+  transition: background-color 0.3s ease;
+}
+
 .official-form-btn-row {
   display: flex;
   justify-content: flex-end;
@@ -4318,110 +4449,7 @@ body {
   color: #888888;
 }
 
-/* 🔐 iPadOS公式スタイル キーチェーン自動入力ポップアップ */
-.ios-keychain-popup {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  z-index: 9999;
-  width: max-content;
-  max-width: 280px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 13px;
-  padding: 8px 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-  animation: keychainPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: transform 0.1s, background-color 0.15s, box-shadow 0.15s;
-  white-space: nowrap;
-}
 
-.ios-keychain-popup:hover {
-  background: #ffffff;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24), 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.ios-keychain-popup:active {
-  transform: scale(0.98);
-}
-
-@keyframes keychainPopIn {
-  0% {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.keychain-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.keychain-icon-wrap {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #f59e0b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.35);
-  flex-shrink: 0;
-}
-
-.keychain-text-group {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.keychain-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e293b;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.keychain-account {
-  font-size: 11px;
-  color: #64748b;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  margin-top: 2px;
-  white-space: nowrap;
-}
-
-.keychain-badge {
-  background: #007aff;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 14px;
-  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.25);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.autofilled-field {
-  background-color: #fefce8 !important; /* iOSの自動入力ハイライト黄色 */
-  border-color: #facc15 !important;
-  transition: background-color 0.3s ease;
-}
 
 .manaba-error-msg {
   color: var(--system-red);
