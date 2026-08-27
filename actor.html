@@ -768,8 +768,8 @@
     // アイコン初期化 & 接続テスト開始 & ACKリスナー登録 & 周回同期リスナー
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
-      // 周回バッジ初期更新
-      updateLoopBadge(currentGlobalLoop);
+      // 周回バッジ初期更新（初回はisInitial=trueでリセット発火を抑止）
+      updateLoopBadge(currentGlobalLoop, true);
       // ACKリスナー起動
       initAckListener();
       // 周回同期リスナー起動
@@ -780,9 +780,12 @@
       setInterval(checkGasConnection, 10000);
     });
 
-    // 🌀 周回表示の更新
-    function updateLoopBadge(loopNum) {
-      currentGlobalLoop = parseInt(loopNum || 1, 10);
+    // 🌀 周回表示の更新 ＆ 送信状態の自動リセット（周回が変わったら未送信に戻す）
+    function updateLoopBadge(loopNum, isInitial = false) {
+      const newLoop = parseInt(loopNum || 1, 10);
+      const isLoopChanged = (!isInitial && newLoop !== currentGlobalLoop);
+
+      currentGlobalLoop = newLoop;
       localStorage.setItem('game_loop', String(currentGlobalLoop));
       
       const badge = document.getElementById('current-loop-badge');
@@ -793,9 +796,16 @@
       }
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
-      // 現在開いている演者画面を再描画（ロック状態の即時更新）
-      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
-        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      // 🔄 周回が変わった場合は、送信済み状態を自動リセットして未送信（送信可能）に戻す
+      if (isLoopChanged) {
+        console.log(`🌀 周回が【${newLoop}周目】に変更されたため、送信状態を初期化（未送信に戻す）しました`);
+        resetAllActorsSilent();
+        showToast(`🌀【${newLoop}周目】へ移行しました。送信ボタンを未送信に戻しました。`, false, 4000);
+      } else {
+        // 現在開いている演者画面を再描画（ロック状態の即時更新）
+        if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+          renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+        }
       }
     }
 
@@ -809,6 +819,10 @@
           if (type === 'preset' && payload && payload.loop) {
             console.log("🌀 BroadcastChannel経由で周回変更を検知:", payload.loop);
             updateLoopBadge(payload.loop);
+          } else if (type === 'loop_change' || type === 'master_reset' || type === 'reset_actor_triggers') {
+            console.log("🌀 周回リセットシグナルを受信:", type);
+            resetAllActorsSilent();
+            if (payload && payload.loop) updateLoopBadge(payload.loop);
           } else if (payload && payload.loop) {
             updateLoopBadge(payload.loop);
           }
@@ -1003,6 +1017,22 @@
       }
     }
 
+    // 🔄 個別トリガーを未送信に戻す
+    function resetSingleTrigger(triggerId) {
+      delete sentTriggers[triggerId];
+      delete confirmedTriggers[triggerId];
+      localStorage.removeItem(`actor_ack_${triggerId}`);
+      localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
+      localStorage.setItem('actor_confirmed_triggers', JSON.stringify(confirmedTriggers));
+
+      if (navigator.vibrate) navigator.vibrate(40);
+      showToast("🔄 送信状態を「未送信」に戻しました", false, 3000);
+
+      if (currentActorCode && ACTOR_SCRIPTS[currentActorCode]) {
+        renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
+      }
+    }
+
     // 演者選択
     function selectActor(code) {
       currentActorCode = code;
@@ -1103,6 +1133,14 @@
               <i data-lucide="${isConfirmed ? 'check-check' : (isSent ? 'check' : (isLoopLocked || isSequentialLocked ? 'lock' : 'send'))}"></i>
               <span>${btnText}</span>
             </button>
+
+            ${(isSent || isConfirmed) ? `
+              <div style="text-align:right; margin-top:8px;">
+                <button onclick="resetSingleTrigger('${tr.id}')" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; text-decoration:underline; display:inline-flex; align-items:center; gap:4px; padding:4px 8px;">
+                  <i data-lucide="rotate-ccw" style="width:12px; height:12px;"></i> 未送信に戻す
+                </button>
+              </div>
+            ` : ''}
           </div>
         `;
       });
