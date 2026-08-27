@@ -357,7 +357,6 @@ function executeRemoteAdminCommand(cmd) {
     localStorage.clear();
     localStorage.setItem('team_id', currentTeam);
     localStorage.setItem('game_loop', '1');
-    showPushNotification("公演前データリセット", "端末データが完全初期化されました（1周目）", "rotate-ccw");
     playSystemSound("fanfare");
     setTimeout(() => {
       location.reload();
@@ -1339,7 +1338,6 @@ function saveStaffConfig() {
     if (settIcon) settIcon.innerText = newTeamId;
 
     logWriteToGAS("STAFF_CONFIG_SAVED", `端末名: ${newTeamId}, 周回: ${tempStaffLoop} に設定保存されました。`);
-    showPushNotification("設定完了", `端末名: ${newTeamId} (周回: ${tempStaffLoop})`, "check-circle");
   }
   closeStaffModal();
   updateAppUI();
@@ -1351,7 +1349,6 @@ function performMasterReset() {
     localStorage.clear();
     localStorage.setItem('team_id', currentTeam);
     localStorage.setItem('game_loop', '1');
-    showPushNotification("端末初期化完了", "全データを初期化し、再読み込みします...", "rotate-ccw");
     setTimeout(() => {
       location.reload();
     }, 400);
@@ -2153,7 +2150,6 @@ function clipCurrentPageToMemo() {
   memoArea.value = (memoArea.value + clipText).trim();
   localStorage.setItem('game_memo', memoArea.value);
 
-  showPushNotification("26__0094", "記事を調査メモへ転記しました", "clipboard-check");
   playSystemSound("success");
 }
 
@@ -2559,7 +2555,6 @@ function sendCustomLinkMessage() {
         if (typeof lucide !== 'undefined') lucide.createIcons();
       }
     }
-    showPushNotification("LINK", "メッセージの送信に失敗しました", "alert-circle");
     playSystemSound("error");
   }, 2000);
 
@@ -2636,7 +2631,6 @@ function copyLinkMyQrUrl() {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url);
   }
-  showPushNotification("リンクコピー", "マイQRコードの招待リンクをコピーしました", "check-circle");
   playSystemSound("success");
 }
 
@@ -2647,7 +2641,6 @@ function refreshLinkMyQr() {
     setTimeout(() => {
       imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT_REFRESH_${Date.now()}`;
       imgEl.style.opacity = '1';
-      showPushNotification("マイQRコード", "QRコードを新しく更新しました", "refresh-cw");
     }, 400);
   }
 }
@@ -2757,7 +2750,6 @@ function closeLinkInAppForm() {
 
 function refreshLinkInAppForm() {
   openLinkInAppForm();
-  showPushNotification("更新", "フォームを再読み込みしました", "rotate-cw");
 }
 
 function submitInAppForm() {
@@ -2818,7 +2810,6 @@ function submitInAppForm() {
   }
 
   playSystemSound("success");
-  showPushNotification("送信完了", "回答を記録しました。", "check-circle");
   logWriteToGAS("FORM_SUBMITTED", `フォーム送信: ${name} / ${dept}`);
 }
 
@@ -2885,7 +2876,6 @@ function openGSpreadsheet(e) {
   gameState.isGSheetEditing = false;
 
   renderGSpreadsheet();
-  showPushNotification("システム保安局", "機密スプレッドシートへの侵入を検知しました", "database");
   logWriteToGAS("HACKING_SPREADSHEET_OPEN", "偽スプレッドシートに侵入しました！");
 }
 
@@ -2898,7 +2888,6 @@ function toggleGSheetEdit() {
     if (gameState.isGSheetEditing) {
       btn.classList.add('editing');
       label.innerText = "閲覧モードに戻す";
-      showPushNotification("スプレッドシート", "セルを直接タップして編集できます", "edit-3");
     } else {
       btn.classList.remove('editing');
       label.innerText = "編集モード";
@@ -3052,7 +3041,6 @@ function autofillManabaLogin(id, pass, name) {
     }, 1500);
 
     playSystemSound("touch");
-    showPushNotification("パスワード自動入力", `${name} (${id}) を入力しました`, "key");
   }
 }
 
@@ -3065,7 +3053,6 @@ function handleManabaLogin() {
     gameState.manabaUser = id;
     saveStateToStorage();
     playSystemSound("success");
-    showPushNotification("manaba", `ようこそ、${user.name} さん`, "check-circle");
     initManabaApp();
     logWriteToGAS("MANABA_LOGIN_SUCCESS", `manabaログイン成功: ${user.name} (${id})`);
   } else {
@@ -3776,7 +3763,6 @@ function clipTextToMemo(title, text) {
   memoArea.value = (memoArea.value + clipText).trim();
   localStorage.setItem('game_memo', memoArea.value);
 
-  showPushNotification("26__0094", "講義資料を調査メモへ転記しました", "clipboard-check");
   playSystemSound("success");
 }
 
@@ -4180,10 +4166,9 @@ function endPhoneCall(isSilent = false) {
 
 // 端末完全再読み込み（リロード）
 function reloadIpadPage() {
-  showPushNotification("システム再読み込み", "iPad画面を完全リフレッシュしています...", "refresh-cw");
   setTimeout(() => {
     location.reload();
-  }, 350);
+  }, 100);
 }
 
 // ==========================================================================
@@ -4614,6 +4599,5 @@ window.addEventListener('storage', (e) => {
   } else if (e.key === 'game_db_cache_trigger') {
     loadGameDatabase();
     updateAppUI();
-    showPushNotification("システム", "運営設定が更新されました", "refresh-cw");
   }
 });
