@@ -3127,6 +3127,22 @@ function renderManabaPortal() {
 
   // 2. 曜日時間割（月〜土 1〜7限 + 他）のレンダリング
   const timetableBody = document.getElementById('manaba-official-timetable-body');
+  // 科目名からコースIDを特定するヘルパー
+  function findCourseIdByName(name) {
+    if (!name) return "c_quantum";
+    const allCourses = window.GAME_DATABASE.manaba.courses || {};
+    // 1. 完全一致
+    for (const [cid, cobj] of Object.entries(allCourses)) {
+      if (cobj.name === name) return cid;
+    }
+    // 2. ユーザーの所属コースから検索
+    if (user.courses) {
+      const match = user.courses.find(c => c.name === name);
+      if (match) return match.id;
+    }
+    return "c_quantum";
+  }
+
   if (timetableBody) {
     timetableBody.innerHTML = "";
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -3137,9 +3153,9 @@ function renderManabaPortal() {
         const periodIdx = period - 1;
         const courseName = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
         if (courseName) {
-          const matchedCourse = (user.courses && user.courses.find(c => c.name === courseName)) || { id: 'c_quantum', name: courseName };
+          const resolvedCourseId = findCourseIdByName(courseName);
           rowHtml += `
-            <td class="has-course" onclick="openManabaCourse('${matchedCourse.id}')" title="${courseName}">
+            <td class="has-course" onclick="openManabaCourse('${resolvedCourseId}')" title="${courseName}">
               <a href="javascript:void(0);" class="timetable-course-link">${courseName}</a>
             </td>
           `;
@@ -3156,8 +3172,9 @@ function renderManabaPortal() {
     days.forEach(day => {
       const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][7]) || "";
       if (extraCourse) {
+        const resolvedCourseId = findCourseIdByName(extraCourse);
         extraRowHtml += `
-          <td class="has-course" onclick="openManabaCourse('c_quantum')">
+          <td class="has-course" onclick="openManabaCourse('${resolvedCourseId}')">
             <a href="javascript:void(0);" class="timetable-course-link">${extraCourse}</a>
           </td>
         `;
@@ -3375,7 +3392,7 @@ function openManabaCourse(courseId) {
     
     // 1. 授業動画カード
     cardGrid.innerHTML += `
-      <div class="content-card-item" onclick="showPushNotification('授業動画', '動画アーカイブを再生します', 'video')">
+      <div class="content-card-item" onclick="showIpadModal('講義アーカイブ動画', '【第11回 講義アーカイブ】\n映像データは現在ストリーミングサーバーから同期中です。\n\n▶ 内容: 高周波共鳴回路と量子変調の実験実演\n▶ 講師: 神崎 恭介 教授\n▶ 収録時間: 45分\n\n（※講義資料PDFおよびメモをご確認ください）')">
         <div class="content-card-icon">
           <div class="card-icon-line"></div>
           <div class="card-icon-line"></div>
@@ -3500,14 +3517,14 @@ function switchCourseSubTab(tabKey) {
             <tbody>
               <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:12px 14px; font-size:13.5px;">
-                  <a href="javascript:void(0);" onclick="showPushNotification('レポート詳細', '【期末成果レポート】変調周波数の検証レポート：第11回資料に記載された基準周波数(119.43MHz)の導出検証を提出してください。', 'file-text')" style="color:#0272c1; font-weight:700; text-decoration:none;">
+                  <a href="javascript:void(0);" onclick="showIpadModal('レポート課題要項', '【期末成果レポート課題要項】\n\n■ 課題内容:\n第11回授業資料に記載された基準変調周波数（119.43MHz）の導出式および超伝導共鳴器の駆動手順について、検証レポートを作成すること。\n\n■ 提出期日: 2026/08/28 23:55\n■ 対象者: 履修生全員')" style="color:#0272c1; font-weight:700; text-decoration:none;">
                     【期末成果レポート】変調周波数の検証レポート
                   </a>
                 </td>
                 <td style="padding:12px 14px; font-size:12px; color:#666;">2026/08/20 09:00 〜 2026/08/28 23:55</td>
-                <td style="padding:12px 14px; text-align:center;"><span style="color:#d97706; font-weight:700; font-size:12px; background:#fef3c7; padding:3px 8px; border-radius:4px;">未提出</span></td>
+                <td style="padding:12px 14px; text-align:center;"><span style="color:#d97706; font-weight:700; font-size:12px; background:#fef3c7; padding:3px 8px; border-radius:4px;">受付中</span></td>
                 <td style="padding:12px 14px; text-align:center;">
-                  <button class="btn btn-secondary btn-sm" onclick="showPushNotification('レポート提出', '提出受付中：調査メモのデータをもとに提出してください。', 'upload')" style="font-size:12px; padding:3px 10px;">提出</button>
+                  <button class="btn btn-secondary btn-sm" onclick="showIpadModal('レポート提出', '【提出受付】\n調査メモに記録したデータをもとに提出します。\n\n（※本演習では自動的に調査メモの記録が反映されます）')" style="font-size:12px; padding:3px 10px;">提出</button>
                 </td>
               </tr>
             </tbody>
@@ -3768,30 +3785,101 @@ function closePdfViewer() {
 }
 
 // ==========================================================================
-// ⑥ メールアプリ
+// ⑥ メールアプリ（作成・送信・削除・返信・フラグ・検索・フォルダ管理）
 // ==========================================================================
+let mailState = {
+  currentFolder: 'inbox',
+  searchQuery: '',
+  selectedMailId: null,
+  flaggedIds: new Set(),
+  trashIds: new Set(),
+  sentMails: []
+};
+
+function showMailInAppToast(text) {
+  const toast = document.getElementById('mail-inapp-toast');
+  const textEl = document.getElementById('mail-inapp-toast-text');
+  if (toast && textEl) {
+    textEl.innerText = text;
+    toast.style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    setTimeout(() => { toast.style.display = 'none'; }, 2200);
+  }
+}
+
+function switchMailFolder(folder) {
+  mailState.currentFolder = folder;
+  const select = document.getElementById('mail-folder-select');
+  if (select) select.value = folder;
+  const badge = document.getElementById('mail-current-folder-badge');
+  const title = document.getElementById('mail-folder-title');
+  const folderNames = { inbox: '受信', sent: '送信済み', trash: 'ゴミ箱', flagged: 'フラグ付き' };
+  if (badge) badge.innerText = folderNames[folder] || '受信';
+  if (title) title.innerText = (folderNames[folder] || '受信') + (folder === 'inbox' ? 'トレイ' : '');
+  renderMailList();
+}
+
+function onMailSearchInput(val) {
+  mailState.searchQuery = (val || '').toLowerCase().trim();
+  renderMailList();
+}
+
+function getMailItemsForCurrentFolder() {
+  const dbMails = window.GAME_DATABASE.mailApp[gameState.loop] || [];
+  let list = [];
+
+  if (mailState.currentFolder === 'inbox') {
+    list = dbMails.filter(m => !mailState.trashIds.has(m.id));
+  } else if (mailState.currentFolder === 'sent') {
+    list = mailState.sentMails.filter(m => !mailState.trashIds.has(m.id));
+  } else if (mailState.currentFolder === 'trash') {
+    const all = [...dbMails, ...mailState.sentMails];
+    list = all.filter(m => mailState.trashIds.has(m.id));
+  } else if (mailState.currentFolder === 'flagged') {
+    const all = [...dbMails, ...mailState.sentMails];
+    list = all.filter(m => mailState.flaggedIds.has(m.id) && !mailState.trashIds.has(m.id));
+  }
+
+  if (mailState.searchQuery) {
+    list = list.filter(m => {
+      const s = (m.sender || '').toLowerCase();
+      const t = (m.subject || m.title || '').toLowerCase();
+      const b = (m.body || '').toLowerCase();
+      return s.includes(mailState.searchQuery) || t.includes(mailState.searchQuery) || b.includes(mailState.searchQuery);
+    });
+  }
+
+  return list;
+}
+
 function renderMailList() {
   const container = document.getElementById('mail-list');
   if (!container) return;
   container.innerHTML = "";
 
-  const mails = window.GAME_DATABASE.mailApp[gameState.loop] || [];
+  const mails = getMailItemsForCurrentFolder();
   if (mails.length === 0) {
-    container.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:24px; font-size:13px;">メールはありません</div>`;
+    container.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:32px 16px; font-size:13px;">メールはありません</div>`;
+    const headerEl = document.getElementById('mail-body-header');
+    const contentEl = document.getElementById('mail-body-content');
+    if (headerEl) headerEl.innerHTML = `<div class="mail-empty-selection"><i data-lucide="mail-open" style="width:48px; height:48px; stroke-width:1.2; color:#9ca3af; margin-bottom:12px;"></i><p>メールがありません</p></div>`;
+    if (contentEl) contentEl.innerHTML = "";
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
 
   mails.forEach((mail, idx) => {
-    const isFirst = idx === 0;
+    const isSelected = mail.id === mailState.selectedMailId || (!mailState.selectedMailId && idx === 0);
     const snippet = (mail.body || "").replace(/\n/g, " ").slice(0, 48) + "...";
-    const initial = (mail.sender || "学")[0];
+    const isFlagged = mailState.flaggedIds.has(mail.id);
     
     container.innerHTML += `
-      <div class="mail-item ${isFirst ? 'active' : ''}" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
+      <div class="mail-item ${isSelected ? 'active' : ''}" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
         <div class="mail-item-top">
           <div class="mail-item-sender">
             <span class="mail-unread-dot"></span>
             ${mail.sender}
+            ${isFlagged ? '<i data-lucide="flag" style="width:11px; height:11px; color:#f97316; fill:#f97316; margin-left:4px;"></i>' : ''}
           </div>
           <div class="mail-item-date">${mail.date}</div>
         </div>
@@ -3801,19 +3889,33 @@ function renderMailList() {
     `;
   });
 
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
   // 初期選択
-  if (mails.length > 0) {
-    openMail(mails[0].id);
+  const currentSelected = mails.find(m => m.id === mailState.selectedMailId) || mails[0];
+  if (currentSelected) {
+    openMail(currentSelected.id);
   }
 }
 
 function openMail(mailId) {
+  mailState.selectedMailId = mailId;
   document.querySelectorAll('.mail-item').forEach(el => el.classList.remove('active'));
   const activeItem = document.getElementById(`mail-item-${mailId}`);
   if (activeItem) activeItem.classList.add('active');
 
-  const mails = window.GAME_DATABASE.mailApp[gameState.loop] || [];
-  const mail = mails.find(m => m.id === mailId);
+  const allMails = [...(window.GAME_DATABASE.mailApp[gameState.loop] || []), ...mailState.sentMails];
+  const mail = allMails.find(m => m.id === mailId);
+
+  // フラグボタンのスタイル更新
+  const flagBtn = document.getElementById('mail-flag-btn');
+  if (flagBtn) {
+    if (mailState.flaggedIds.has(mailId)) {
+      flagBtn.style.color = '#f97316';
+    } else {
+      flagBtn.style.color = '';
+    }
+  }
 
   if (mail) {
     const initial = (mail.sender || "学")[0];
@@ -3829,10 +3931,10 @@ function openMail(mailId) {
               <div class="mail-sender-avatar">${initial}</div>
               <div class="mail-sender-meta">
                 <span class="mail-sender-name">${mail.sender}</span>
-                <span class="mail-recipient-to">宛先: 矢田 逞 &lt;s25b1150er@cit.ac.jp&gt;</span>
+                <span class="mail-recipient-to">宛先: ${mail.recipient || '矢田 逞 <s25b1150er@cit.ac.jp>'}</span>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
               <span class="mail-sent-date-badge">${mail.date}</span>
               <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mail.subject || mail.title}', '${mail.body.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')" style="display:flex; align-items:center; gap:4px; font-size:11px; padding:4px 8px;">
                 <i data-lucide="clipboard-copy" style="width:13px; height:13px;"></i> メモ転記
@@ -3851,6 +3953,109 @@ function openMail(mailId) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     logWriteToGAS("MAIL_OPEN", `メールを開きました: ${mailId} (${mail.subject || mail.title})`);
   }
+}
+
+// 新規作成モーダル開閉
+function openComposeMailModal(replyTo = null) {
+  const modal = document.getElementById('mail-compose-modal');
+  if (!modal) return;
+  const toInput = document.getElementById('compose-mail-to');
+  const subInput = document.getElementById('compose-mail-subject');
+  const bodyInput = document.getElementById('compose-mail-body');
+
+  if (replyTo) {
+    if (toInput) toInput.value = replyTo.sender || "inukai@uzw-corp.jp";
+    if (subInput) subInput.value = `Re: ${replyTo.subject || replyTo.title || ""}`;
+    if (bodyInput) bodyInput.value = `\n\n--- 元のメッセージ ---\n${replyTo.body || ""}`;
+  } else {
+    if (toInput) toInput.value = "";
+    if (subInput) subInput.value = "";
+    if (bodyInput) bodyInput.value = "";
+  }
+
+  modal.style.display = 'flex';
+  if (toInput && !replyTo) toInput.focus();
+  playSystemSound("touch");
+}
+
+function closeComposeMailModal() {
+  const modal = document.getElementById('mail-compose-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function sendComposedMail() {
+  const toInput = document.getElementById('compose-mail-to');
+  const subInput = document.getElementById('compose-mail-subject');
+  const bodyInput = document.getElementById('compose-mail-body');
+
+  const to = toInput ? toInput.value.trim() : "";
+  const subject = subInput ? subInput.value.trim() : "（件名なし）";
+  const body = bodyInput ? bodyInput.value.trim() : "";
+
+  if (!to) {
+    alert("宛先を入力してください。");
+    return;
+  }
+
+  const newMail = {
+    id: "sent_" + Date.now(),
+    sender: "矢田 逞",
+    recipient: to,
+    subject: subject,
+    title: subject,
+    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    body: body
+  };
+
+  mailState.sentMails.unshift(newMail);
+  closeComposeMailModal();
+  playSystemSound("notif");
+  showMailInAppToast("メールを送信しました");
+  logWriteToGAS("MAIL_SEND", `メール送信: To=${to}, Subject=${subject}`);
+}
+
+function deleteCurrentSelectedMail() {
+  if (!mailState.selectedMailId) {
+    showMailInAppToast("削除するメールが選択されていません");
+    return;
+  }
+  mailState.trashIds.add(mailState.selectedMailId);
+  playSystemSound("touch");
+  showMailInAppToast("ゴミ箱に移動しました");
+  mailState.selectedMailId = null;
+  renderMailList();
+}
+
+function replyToCurrentSelectedMail(isForward = false) {
+  const allMails = [...(window.GAME_DATABASE.mailApp[gameState.loop] || []), ...mailState.sentMails];
+  const mail = allMails.find(m => m.id === mailState.selectedMailId);
+  if (!mail) {
+    openComposeMailModal();
+    return;
+  }
+  if (isForward) {
+    openComposeMailModal({
+      sender: "",
+      subject: `Fwd: ${mail.subject || mail.title || ""}`,
+      body: mail.body
+    });
+  } else {
+    openComposeMailModal(mail);
+  }
+}
+
+function toggleFlagCurrentSelectedMail() {
+  if (!mailState.selectedMailId) return;
+  const id = mailState.selectedMailId;
+  if (mailState.flaggedIds.has(id)) {
+    mailState.flaggedIds.delete(id);
+    showMailInAppToast("フラグを解除しました");
+  } else {
+    mailState.flaggedIds.add(id);
+    showMailInAppToast("フラグを付けました");
+  }
+  playSystemSound("touch");
+  renderMailList();
 }
 
 // ==========================================================================
@@ -3986,16 +4191,25 @@ function reloadIpadPage() {
 // ==========================================================================
 function switchSettingsTab(tabId) {
   document.querySelectorAll('.settings-menu-item').forEach(btn => btn.classList.remove('active'));
-  const activeBtn = Array.from(document.querySelectorAll('.settings-menu-item')).find(btn => {
-    const oc = btn.getAttribute('onclick');
-    return oc && oc.includes(tabId);
+  const btn = document.getElementById(`settings-tab-btn-${tabId}`);
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.settings-content-view').forEach(view => {
+    view.style.display = 'none';
   });
-  if (activeBtn) activeBtn.classList.add('active');
+
+  const targetView = document.getElementById(`settings-view-${tabId}`);
+  if (targetView) {
+    targetView.style.display = 'block';
+  }
+
+  playSystemSound("touch");
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  logWriteToGAS("SETTINGS_TAB", `設定タブ切り替え: ${tabId}`);
 }
 
 function triggerSettingsRestriction(itemName) {
-  showIpadModal("アクセス制限", `「${itemName}」へのアクセスは、大学保安局および学友会執行委員会システム監視室の保安ポリシーにより制限されています。`);
-  logWriteToGAS("SETTINGS_RESTRICTED_ACCESS", `制限機能へのアクセス試行: ${itemName}`);
+  showIpadModal("アクセス制限", `「${itemName}」の設定は現在固定されています。`);
 }
 
 // ==========================================================================

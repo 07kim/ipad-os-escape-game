@@ -973,6 +973,132 @@ window.GAME_DATABASE = {
         room: "津田沼校舎3号館201",
         news: [{ title: "第3回 課題レポートについて", date: "2026-07-19" }],
         materials: [{ id: 1, title: "第1回: 視覚認知とアフォーダンス", file: "cognitive_01.pdf", content: "「ギブソンの生態心理学と認知的インタフェース。」" }]
+      },
+      "c_electromag": {
+        id: "c_electromag",
+        name: "電磁気学演習",
+        teacher: "佐々木 健",
+        term: "2026 前期 木曜 4限",
+        room: "新習志野校舎4号館201",
+        news: [{ title: "演習課題の提出について", date: "2026-07-16" }],
+        materials: [{ id: 1, title: "第1回: マクスウェル方程式の微分形式", file: "electromag_01.pdf", content: "「電磁ポテンシャルとゲージ変換の基礎。」" }]
+      },
+      "c_phys_exp": {
+        id: "c_phys_exp",
+        name: "先端物理実験",
+        teacher: "高橋 誠",
+        term: "2026 前期 金曜 5限",
+        room: "新習志野実験棟101",
+        news: [{ title: "実験安全講習の受講確認", date: "2026-07-10" }],
+        materials: [{ id: 1, title: "第1回: 光電子分光実験ガイダンス", file: "phys_exp_01.pdf", content: "「超伝導素子の特性測定と極低温実験手順。」" }]
+      },
+      "c_database": {
+        id: "c_database",
+        name: "データベース工学",
+        teacher: "吉田 聡",
+        term: "2026 前期 火曜 1限",
+        room: "津田沼校舎2号館302",
+        news: [{ title: "SQL演習環境のログイン情報", date: "2026-07-15" }],
+        materials: [{ id: 1, title: "第1回: リレーショナルモデルと正規化", file: "database_01.pdf", content: "「ACID特性とトランザクション分離レベル。」" }]
+      },
+      "c_ai": {
+        id: "c_ai",
+        name: "人工知能概論",
+        teacher: "井上 拓哉",
+        term: "2026 前期 木曜 4限",
+        room: "津田沼校舎1号館401",
+        news: [{ title: "第2回 機械学習レポート課題", date: "2026-07-21" }],
+        materials: [{ id: 1, title: "第1回: ディープラーニングの基礎理論", file: "ai_01.pdf", content: "「ニューラルネットワークの順伝播と誤差逆伝播法。」" }]
+      },
+      "c_color": {
+        id: "c_color",
+        name: "色彩心理学",
+        teacher: "加藤 恵子",
+        term: "2026 前期 火曜 2限",
+        room: "津田沼校舎3号館102",
+        news: [{ title: "色彩配色カードの持参について", date: "2026-07-13" }],
+        materials: [{ id: 1, title: "第1回: 表色系と色の三属性", file: "color_01.pdf", content: "「マンセル表色系と色彩感情効果の心理実験。」" }]
+      },
+      "c_interactive": {
+        id: "c_interactive",
+        name: "インタラクティブデザイン",
+        teacher: "渡辺 裕子",
+        term: "2026 前期 金曜 5限",
+        room: "津田沼校舎2号館405",
+        news: [{ title: "展示制作の中間発表について", date: "2026-07-28" }],
+        materials: [{ id: 1, title: "第1回: フィジカルコンピューティング基礎", file: "interactive_01.pdf", content: "「センサー入力とリアルタイムフィードバックの演出。」" }]
+      },
+      "c_english": {
+        id: "c_english",
+        name: "アカデミック英語",
+        teacher: "Smith John",
+        term: "2026 前期 月曜 3限",
+        room: "津田沼校舎3号館",
+        news: [{ title: "Presentation assignment guidelines", date: "2026-07-17" }],
+        materials: [{ id: 1, title: "Unit 1: Academic Paper Reading", file: "english_01.pdf", content: "「Reading comprehension and technical terminology.」" }]
+      },
+      "c_stat": {
+        id: "c_stat",
+        name: "統計学入門",
+        teacher: "鈴木 隆",
+        term: "2026 前期 火曜 2限",
+        room: "津田沼校舎1号館201",
+        news: [{ title: "統計解析ツールの配布", date: "2026-07-11" }],
+        materials: [{ id: 1, title: "第1回: 確率変数と正規分布", file: "stat_01.pdf", content: "「平均・分散・標準偏差の算出と仮説検定。」" }]
+      },
+      "c_constitution": {
+        id: "c_constitution",
+        name: "日本国憲法",
+        teacher: "木村 陽介",
+        term: "2026 前期 水曜 1限",
+        room: "津田沼校舎1号館101",
+        news: [{ title: "判例研究レポートについて", date: "2026-07-14" }],
+        materials: [{ id: 1, title: "第1回: 立憲主義と基本的人権", file: "constitution_01.pdf", content: "「統治機構の分立と司法権の役割。」" }]
+      },
+      "c_health": {
+        id: "c_health",
+        name: "健康科学",
+        teacher: "森田 浩司",
+        term: "2026 前期 水曜 4限",
+        room: "津田沼体育館講義室",
+        news: [{ title: "体力測定結果のフィードバック", date: "2026-07-09" }],
+        materials: [{ id: 1, title: "第1回: 運動生理学と生体恒常性", file: "health_01.pdf", content: "「有酸素運動と生活習慣病予防の科学。」" }]
+      },
+      "c_career": {
+        id: "c_career",
+        name: "キャリア形成基礎",
+        teacher: "岡田 麻美",
+        term: "2026 前期 木曜 3限",
+        room: "津田沼校舎2号館101",
+        news: [{ title: "OB/OG懇話会のご案内", date: "2026-07-22" }],
+        materials: [{ id: 1, title: "第1回: 自己分析とキャリアデザイン", file: "career_01.pdf", content: "「職業観の形成とエントリーシートの基礎。」" }]
+      },
+      "c_ethics": {
+        id: "c_ethics",
+        name: "情報倫理",
+        teacher: "斎藤 敬",
+        term: "2026 前期 金曜 5限",
+        room: "津田沼校舎1号館301",
+        news: [{ title: "著作権と生成AIに関する小論文", date: "2026-07-26" }],
+        materials: [{ id: 1, title: "第1回: 情報社会の法と倫理", file: "ethics_01.pdf", content: "「プライバシー保護、知的財産権、サイバーセキュリティ法規。」" }]
+      },
+      "c_math": {
+        id: "c_math",
+        name: "情報数学",
+        teacher: "田中 宏",
+        term: "2026 前期 火曜 4限",
+        room: "津田沼校舎2号館",
+        news: [{ title: "第3回 演習問題解答", date: "2026-07-15" }],
+        materials: [{ id: 1, title: "第1回: 集合論と命題論理", file: "math_01.pdf", content: "「真理値表と論理式の同値変形。」" }]
+      },
+      "c_physics_basic": {
+        id: "c_physics_basic",
+        name: "物理学基礎",
+        teacher: "小野 達也",
+        term: "2026 前期 木曜 3限",
+        room: "新習志野校舎3号館101",
+        news: [{ title: "力学演習の補講について", date: "2026-07-18" }],
+        materials: [{ id: 1, title: "第1回: ニュートン力学と運動方程式", file: "physics_basic_01.pdf", content: "「質点の運動と保存則の導出。」" }]
       }
     }
   },

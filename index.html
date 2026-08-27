@@ -1873,14 +1873,22 @@
           <div class="mail-sidebar">
             <div class="mail-sidebar-header">
               <div class="mail-header-top">
-                <h2>受信トレイ</h2>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <h2 id="mail-folder-title" style="margin:0;">受信トレイ</h2>
+                  <select id="mail-folder-select" onchange="switchMailFolder(this.value)" style="padding:2px 6px; font-size:11px; border:1px solid var(--border-color); border-radius:6px; background:#fff;">
+                    <option value="inbox">受信</option>
+                    <option value="sent">送信済み</option>
+                    <option value="trash">ゴミ箱</option>
+                    <option value="flagged">フラグ付き</option>
+                  </select>
+                </div>
                 <div class="mail-header-actions">
-                  <button class="mail-tool-btn" title="新規作成"><i data-lucide="square-pen"></i></button>
+                  <button class="mail-tool-btn" title="新規作成" onclick="openComposeMailModal()"><i data-lucide="square-pen"></i></button>
                 </div>
               </div>
               <div class="mail-search-box">
                 <i data-lucide="search" class="mail-search-icon"></i>
-                <input type="text" placeholder="検索" class="mail-search-input" readonly>
+                <input type="text" id="mail-search-input" placeholder="検索" class="mail-search-input" oninput="onMailSearchInput(this.value)">
               </div>
             </div>
             <div class="mail-list" id="mail-list"></div>
@@ -1891,14 +1899,14 @@
             <!-- 上部ツールバー -->
             <div class="mail-toolbar">
               <div class="mail-toolbar-left">
-                <span class="mail-mailbox-badge">受信</span>
+                <span class="mail-mailbox-badge" id="mail-current-folder-badge">受信</span>
               </div>
               <div class="mail-toolbar-right">
-                <button class="mail-action-icon-btn" title="返信"><i data-lucide="reply"></i></button>
-                <button class="mail-action-icon-btn" title="全員に返信"><i data-lucide="reply-all"></i></button>
-                <button class="mail-action-icon-btn" title="転送"><i data-lucide="forward"></i></button>
-                <button class="mail-action-icon-btn" title="ゴミ箱"><i data-lucide="trash-2"></i></button>
-                <button class="mail-action-icon-btn" title="フラグ"><i data-lucide="flag"></i></button>
+                <button class="mail-action-icon-btn" title="返信" onclick="replyToCurrentSelectedMail()"><i data-lucide="reply"></i></button>
+                <button class="mail-action-icon-btn" title="全員に返信" onclick="replyToCurrentSelectedMail()"><i data-lucide="reply-all"></i></button>
+                <button class="mail-action-icon-btn" title="転送" onclick="replyToCurrentSelectedMail(true)"><i data-lucide="forward"></i></button>
+                <button class="mail-action-icon-btn" title="ゴミ箱" onclick="deleteCurrentSelectedMail()"><i data-lucide="trash-2"></i></button>
+                <button class="mail-action-icon-btn" title="フラグ" onclick="toggleFlagCurrentSelectedMail()" id="mail-flag-btn"><i data-lucide="flag"></i></button>
               </div>
             </div>
 
@@ -1914,6 +1922,38 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- メール作成モーダル（iPadOS Mail公式風ポップアップ） -->
+        <div class="modal-overlay" id="mail-compose-modal" style="display:none; align-items:center; justify-content:center; z-index:9000; background:rgba(0,0,0,0.4);">
+          <div class="modal-card" style="width:540px; max-width:92%; background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.2); overflow:hidden; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #e5e7eb; background:#f9fafb;">
+              <button onclick="closeComposeMailModal()" class="btn-subtle" style="font-size:13px; color:#0284c7; background:none; border:none; cursor:pointer; font-weight:600;">キャンセル</button>
+              <span style="font-weight:700; font-size:14px; color:#1f2937;">新規メッセージ</span>
+              <button onclick="sendComposedMail()" style="font-size:13px; color:#fff; background:#0284c7; border:none; padding:4px 12px; border-radius:6px; font-weight:700; cursor:pointer;">送信</button>
+            </div>
+            <div style="padding:14px 18px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; border-bottom:1px solid #e5e7eb; padding-bottom:6px;">
+                <span style="width:50px; font-size:12px; color:#6b7280; font-weight:600;">宛先:</span>
+                <input type="text" id="compose-mail-to" placeholder="宛先アドレス (例: professor@cit.ac.jp)" style="flex:1; border:none; outline:none; font-size:13px;">
+              </div>
+              <div style="display:flex; align-items:center; border-bottom:1px solid #e5e7eb; padding-bottom:6px;">
+                <span style="width:50px; font-size:12px; color:#6b7280; font-weight:600;">差出人:</span>
+                <span style="font-size:13px; color:#374151;">矢田 逞 &lt;s25b1150er@cit.ac.jp&gt;</span>
+              </div>
+              <div style="display:flex; align-items:center; border-bottom:1px solid #e5e7eb; padding-bottom:6px;">
+                <span style="width:50px; font-size:12px; color:#6b7280; font-weight:600;">件名:</span>
+                <input type="text" id="compose-mail-subject" placeholder="件名を入力" style="flex:1; border:none; outline:none; font-size:13px; font-weight:600;">
+              </div>
+              <textarea id="compose-mail-body" placeholder="本文を入力..." style="width:100%; height:160px; border:none; outline:none; resize:none; font-size:13px; line-height:1.6; font-family:inherit; margin-top:6px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- メールアプリ内専用トースト -->
+        <div id="mail-inapp-toast" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(30,41,59,0.9); color:#fff; padding:8px 18px; border-radius:20px; font-size:12px; font-weight:600; display:none; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100;">
+          <i data-lucide="check" style="width:14px; height:14px; color:#4ade80;"></i>
+          <span id="mail-inapp-toast-text">メールを送信しました</span>
         </div>
       </div>
 
@@ -1975,23 +2015,130 @@
               </div>
             </div>
             <div class="settings-menu-list">
-              <button class="settings-menu-item active" onclick="switchSettingsTab('general')">一般</button>
-              <button class="settings-menu-item" onclick="triggerSettingsRestriction('Wi-Fi')">Wi-Fi</button>
-              <button class="settings-menu-item" onclick="triggerSettingsRestriction('Bluetooth')">Bluetooth</button>
-              <button class="settings-menu-item" onclick="triggerSettingsRestriction('コントロールセンター')">コントロールセンター</button>
-              <button class="settings-menu-item" onclick="triggerSettingsRestriction('画面表示と明るさ')">画面表示と明るさ</button>
+              <button class="settings-menu-item active" id="settings-tab-btn-general" onclick="switchSettingsTab('general')">
+                <i data-lucide="settings" style="width:16px; height:16px; margin-right:8px; vertical-align:middle; color:#64748b;"></i> 一般
+              </button>
+              <button class="settings-menu-item" id="settings-tab-btn-wifi" onclick="switchSettingsTab('wifi')">
+                <i data-lucide="wifi" style="width:16px; height:16px; margin-right:8px; vertical-align:middle; color:#0284c7;"></i> Wi-Fi
+              </button>
+              <button class="settings-menu-item" id="settings-tab-btn-bluetooth" onclick="switchSettingsTab('bluetooth')">
+                <i data-lucide="bluetooth" style="width:16px; height:16px; margin-right:8px; vertical-align:middle; color:#0284c7;"></i> Bluetooth
+              </button>
+              <button class="settings-menu-item" id="settings-tab-btn-display" onclick="switchSettingsTab('display')">
+                <i data-lucide="sun" style="width:16px; height:16px; margin-right:8px; vertical-align:middle; color:#f59e0b;"></i> 画面表示と明るさ
+              </button>
+              <button class="settings-menu-item" id="settings-tab-btn-control" onclick="switchSettingsTab('control')">
+                <i data-lucide="sliders" style="width:16px; height:16px; margin-right:8px; vertical-align:middle; color:#8b5cf6;"></i> コントロールセンター
+              </button>
             </div>
           </div>
-          <div class="settings-body">
-            <h2>一般 (General)</h2>
-            <table class="spec-table">
-              <tr><td>システム名</td><td>iPad</td></tr>
-              <tr><td>OSバージョン</td><td id="spec-os">iPadOS</td></tr>
-              <tr><td>プロセッサ</td><td id="spec-processor">Apple Silicon</td></tr>
-              <tr><td>RAMメモリ</td><td id="spec-ram">8 GB</td></tr>
-              <tr><td>ストレージ</td><td id="spec-storage">128 GB</td></tr>
-              <tr><td>シリアル番号</td><td id="spec-serial">DMPXG087Q1GC</td></tr>
-            </table>
+
+          <!-- 右側：設定本文ペイン -->
+          <div class="settings-body" id="settings-body-pane">
+            <!-- 一般ビュー -->
+            <div id="settings-view-general" class="settings-content-view">
+              <h2>一般 (General)</h2>
+              <table class="spec-table">
+                <tr><td>システム名</td><td>iPad</td></tr>
+                <tr><td>OSバージョン</td><td id="spec-os">iPadOS</td></tr>
+                <tr><td>プロセッサ</td><td id="spec-processor">Apple Silicon</td></tr>
+                <tr><td>RAMメモリ</td><td id="spec-ram">8 GB</td></tr>
+                <tr><td>ストレージ</td><td id="spec-storage">128 GB</td></tr>
+                <tr><td>シリアル番号</td><td id="spec-serial">DMPXG087Q1GC</td></tr>
+              </table>
+            </div>
+
+            <!-- Wi-Fiビュー -->
+            <div id="settings-view-wifi" class="settings-content-view" style="display:none;">
+              <h2>Wi-Fi</h2>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; font-size:14px;">Wi-Fi</span>
+                <span style="color:#10b981; font-weight:700; font-size:13px;">ON</span>
+              </div>
+              <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">接続中のネットワーク</p>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <i data-lucide="check" style="width:16px; height:16px; color:#0284c7;"></i>
+                  <span style="font-weight:700; font-size:14px;">CIT-SECURE-CAMPUS-5G</span>
+                </div>
+                <i data-lucide="lock" style="width:14px; height:14px; color:#94a3b8;"></i>
+              </div>
+              <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">利用可能なネットワーク</p>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+                <div style="padding:10px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+                  <span>CIT-GUEST-FREE</span>
+                  <i data-lucide="wifi" style="width:14px; height:14px; color:#64748b;"></i>
+                </div>
+                <div style="padding:10px 16px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+                  <span>eduroam</span>
+                  <i data-lucide="lock" style="width:14px; height:14px; color:#94a3b8;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bluetoothビュー -->
+            <div id="settings-view-bluetooth" class="settings-content-view" style="display:none;">
+              <h2>Bluetooth</h2>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; font-size:14px;">Bluetooth</span>
+                <span style="color:#10b981; font-weight:700; font-size:13px;">ON</span>
+              </div>
+              <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">自分のデバイス</p>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+                <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; font-size:13px;">Apple Pencil</span>
+                  <span style="color:#10b981; font-size:12px; font-weight:700;">接続済み (100%)</span>
+                </div>
+                <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; font-size:13px;">Magic Keyboard</span>
+                  <span style="color:#94a3b8; font-size:12px;">未接続</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 画面表示と明るさビュー -->
+            <div id="settings-view-display" class="settings-content-view" style="display:none;">
+              <h2>画面表示と明るさ</h2>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:16px; margin-bottom:14px;">
+                <p style="font-size:12px; color:#64748b; margin-bottom:10px; font-weight:700;">明るさ</p>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <i data-lucide="sun" style="width:16px; height:16px; color:#94a3b8;"></i>
+                  <input type="range" min="20" max="100" value="85" style="flex:1;">
+                  <i data-lucide="sun" style="width:22px; height:22px; color:#f59e0b;"></i>
+                </div>
+              </div>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+                <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; font-weight:600;">True Tone</span>
+                  <span style="color:#10b981; font-weight:700; font-size:12px;">ON</span>
+                </div>
+                <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; font-weight:600;">自動ロック</span>
+                  <span style="color:#64748b; font-size:12px;">なし（公演モード）</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- コントロールセンタービュー -->
+            <div id="settings-view-control" class="settings-content-view" style="display:none;">
+              <h2>コントロールセンター</h2>
+              <p style="font-size:12px; color:#64748b; margin-bottom:12px;">右上から下にスワイプするとコントロールセンターにアクセスできます。</p>
+              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+                <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:8px; font-size:13px;">
+                  <i data-lucide="flashlight" style="width:16px; height:16px; color:#0284c7;"></i>
+                  <span>フラッシュライト</span>
+                </div>
+                <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:8px; font-size:13px;">
+                  <i data-lucide="timer" style="width:16px; height:16px; color:#f59e0b;"></i>
+                  <span>タイマー</span>
+                </div>
+                <div style="padding:12px 16px; display:flex; align-items:center; gap:8px; font-size:13px;">
+                  <i data-lucide="camera" style="width:16px; height:16px; color:#10b981;"></i>
+                  <span>カメラ</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
