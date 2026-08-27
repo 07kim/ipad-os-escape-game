@@ -3608,24 +3608,28 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 900;
-  font-family: Arial, Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 .gsheet-app-header {
-  height: 58px;
+  min-height: 56px;
+  height: auto;
   background: #f9fbfd;
   border-bottom: 1px solid #dadce0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 6px 14px;
   flex-shrink: 0;
+  gap: 12px;
 }
 
 .gsheet-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .gsheet-nav-back-btn, .gsheet-close-icon-btn {
@@ -3639,27 +3643,40 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .gsheet-nav-back-btn:hover, .gsheet-close-icon-btn:hover {
   background: #e8eaed;
   color: #202124;
 }
 
+.gsheet-app-logo {
+  flex-shrink: 0;
+}
+
 .gsheet-meta-wrapper {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
 .gsheet-title-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .gsheet-doc-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
 }
 
 .gsheet-save-cloud {
@@ -3669,19 +3686,24 @@ body {
   align-items: center;
   gap: 4px;
   margin-left: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .gsheet-menubar {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 11.5px;
   color: #5f6368;
-  margin-top: 2px;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 .gsheet-menubar span {
   cursor: pointer;
   padding: 1px 4px;
   border-radius: 3px;
+  white-space: nowrap;
 }
 .gsheet-menubar span:hover {
   background: #f1f3f4;
@@ -3691,7 +3713,8 @@ body {
 .gsheet-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .gsheet-edit-toggle-btn {
@@ -3701,12 +3724,13 @@ body {
   background: #e6f4ea;
   color: #137333;
   border: 1px solid #ceead6;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 4px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 .gsheet-edit-toggle-btn:hover {
   background: #ceead6;
@@ -3723,24 +3747,26 @@ body {
   background: #c2e7ff;
   color: #001d35;
   border: none;
-  padding: 6px 16px;
+  padding: 6px 14px;
   border-radius: 18px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .gsheet-user-avatar {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #1a73e8;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 /* 2. 公式ツールバー (リボン) */
@@ -3844,10 +3870,12 @@ body {
 
 .gsheet-official-table {
   border-collapse: collapse;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   font-size: 13px;
   color: #1f1f1f;
   background: #ffffff;
+  table-layout: auto;
 }
 
 .gsheet-official-table th {
@@ -3856,17 +3884,26 @@ body {
   font-weight: 600;
   color: #5f6368;
   font-size: 12px;
-  padding: 6px 10px;
+  padding: 6px 14px;
   text-align: center;
   position: sticky;
   top: 0;
   z-index: 10;
   user-select: none;
+  white-space: nowrap;
+}
+
+.gsheet-official-table th div {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #202124;
+  font-size: 11.5px;
+  margin-top: 2px;
 }
 
 .gsheet-official-table td {
   border: 1px solid #e0e0e0;
-  padding: 8px 12px;
+  padding: 8px 14px;
   white-space: nowrap;
   font-size: 13px;
   color: #1f1f1f;
@@ -4020,159 +4057,7 @@ body {
   transform: scale(0.95);
 }
 
-/* 偽スプレッドシート */
-.gsheet-container {
-  background-color: #fff;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.gsheet-header {
-  background-color: #f9fbfd;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.gsheet-header-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-}
-
-.gsheet-filename {
-  font-size: 16px;
-  font-weight: 600;
-  color: #202124;
-}
-
-.gsheet-top-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gsheet-edit-mode-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #e6f4ea;
-  color: #137333;
-  border: 1px solid #ceead6;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-.gsheet-edit-mode-btn:hover {
-  background-color: #ceead6;
-}
-.gsheet-edit-mode-btn.editing {
-  background-color: #137333;
-  color: #fff;
-}
-
-.gsheet-close-btn {
-  background-color: #f1f3f4;
-  color: #3c4043;
-  border: 1px solid #dadce0;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: background-color 0.2s;
-}
-.gsheet-close-btn:hover {
-  background-color: #e8eaed;
-}
-
-.gsheet-menu-bar {
-  display: flex;
-  gap: 14px;
-  padding: 6px 16px;
-  font-size: 12px;
-  color: #5f6368;
-  border-bottom: 1px solid #f1f3f4;
-}
-
-.gsheet-tabs {
-  display: flex;
-  background-color: #f1f3f4;
-  border-top: 1px solid #dadce0;
-  overflow-x: auto;
-}
-
-.gsheet-tab-btn {
-  padding: 8px 18px;
-  border: none;
-  background: none;
-  font-size: 12px;
-  cursor: pointer;
-  border-right: 1px solid #dadce0;
-  color: #3c4043;
-  transition: all 0.15s;
-}
-.gsheet-tab-btn:hover {
-  background-color: #e8eaed;
-}
-.gsheet-tab-btn.active {
-  background-color: #fff;
-  font-weight: bold;
-  color: #107c41;
-  border-bottom: 3px solid #107c41;
-}
-
-.gsheet-body {
-  flex: 1;
-  overflow: auto;
-  background-color: #fff;
-}
-
-.gsheet-grid-wrapper {
-  padding: 0;
-  overflow: auto;
-}
-
-.gsheet-table {
-  border-collapse: collapse;
-  font-size: 12px;
-  width: 100%;
-  min-width: 600px;
-}
-
-.gsheet-table th, .gsheet-table td {
-  border: 1px solid #e0e0e0;
-  padding: 7px 12px;
-  text-align: left;
-}
-
-.gsheet-table th {
-  background-color: #f8f9fa;
-  color: #5f6368;
-  font-weight: 600;
-  font-size: 11px;
-}
-
-.gsheet-row-num {
-  background-color: #f8f9fa;
-  color: #70757a;
-  text-align: center !important;
-  font-weight: 600;
-  width: 40px;
-  user-select: none;
-}
-
-.gsheet-cell {
-  color: #202124;
-  outline: none;
-}
+/* 偽スプレッドシートの共通ユーティリティ */
 .gsheet-cell[contenteditable="true"] {
   background-color: #fff;
   cursor: text;
