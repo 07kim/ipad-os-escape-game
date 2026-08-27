@@ -5453,6 +5453,130 @@ body {
   padding: 2px 8px;
   cursor: pointer;
 }
+/* 📰 コースニュース詳細画面（千葉工大 公式完全再現） */
+.official-course-news-detail-container {
+  padding: 24px 28px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.news-detail-card-frame {
+  background: #b6dc76;
+  padding: 10px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+}
+
+.news-detail-card-body {
+  background: #ffffff;
+  border-radius: 2px;
+  padding: 18px 22px;
+  font-size: 13px;
+  color: #222222;
+  position: relative;
+}
+
+.news-detail-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.news-detail-subject {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+.news-detail-date {
+  font-size: 11px;
+  color: #666666;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.news-detail-author-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid #5c9a00;
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+}
+
+.author-tag-label {
+  background: #eef7e6;
+  color: #444444;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.author-name-link {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.news-detail-content-text {
+  line-height: 1.75;
+  font-size: 13px;
+  color: #222222;
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Meiryo, sans-serif;
+}
+
+.news-detail-lastmod-row {
+  text-align: right;
+  font-size: 11px;
+  color: #666666;
+  margin-top: 14px;
+  border-top: 1px dotted #cccccc;
+  padding-top: 8px;
+}
+
+.news-detail-lastmod-row a {
+  color: #0272c1;
+  text-decoration: none;
+}
+
+.news-detail-memo-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.news-detail-card-footer {
+  background: #b6dc76;
+  padding: 6px 4px 0 4px;
+  text-align: right;
+}
+
+.news-detail-card-footer a {
+  color: #0272c1;
+  font-weight: 700;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.news-detail-card-footer a:hover {
+  text-decoration: underline;
+}
+
+/* フッター */
+.portal-official-footer {
+  margin-top: 20px;
   border-top: 1px solid #e0e0e0;
   padding: 10px 18px;
   display: flex;

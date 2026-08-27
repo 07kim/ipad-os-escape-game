@@ -3038,14 +3038,29 @@ function openManabaCourse(courseId) {
   if (newsTable) {
     newsTable.innerHTML = "";
     const newsList = course.news && course.news.length > 0 ? course.news : [
-      { date: "2026-08-20", title: `【成績保留者】${course.name} 成績保留の対応について` },
-      { date: "2026-07-10", title: `${course.name}｜期末試験のお知らせ` },
-      { date: "2026-06-16", title: `${course.name}｜配付資料を公開しました` }
+      {
+        date: "2026-08-20",
+        title: `【成績保留者】${course.name} 成績保留の対応について`,
+        content: `成績保留の学生は、各自の学番を確認し、以下に示した対応をとってください。対応がない場合は不可となります。\n\n対応A：最終試験を受験する 実施日（9月1日11:00〜12:00＠1号館12階1210オフィス）\n対応B：成果レポート1：ユーザビリティテスト（内容は第7回授業資料を確認すること）を提出する\n対応C：成果レポート2： KA法（内容は第12回授業資料を確認すること）を提出する\n\n・提出先：manaba ＞ レポート ＞ 保留対応提出先\n・締切り：8月28日（金）23:55\n\nなお、何か不明な点や意見などがある場合は、manabaの個別指導コレクションからお知らせください。メールには送らないようにしてください。`
+      },
+      {
+        date: "2026-07-10",
+        title: `${course.name}｜期末試験座席案内`,
+        content: `期末試験の座席配置を公開しました。\n各自、学生証を持参の上、指定の座席に着席してください。\n筆記用具および指定の関数電卓以外の持ち込みは禁止です。`
+      },
+      {
+        date: "2026-06-16",
+        title: `${course.name}｜配付資料を公開しました`,
+        content: `第11回の講義資料を公開しました。\n変調周波数パラメータおよび超伝導共振器の駆動手順について記載されています。\n各自復習を行ってください。`
+      }
     ];
 
-    newsList.forEach(item => {
+    gameState._currentCourseNewsList = newsList;
+    gameState._currentCourseObj = course;
+
+    newsList.forEach((item, idx) => {
       newsTable.innerHTML += `
-        <tr>
+        <tr onclick="openManabaCourseNewsDetail(${idx})" style="cursor:pointer;">
           <td><a href="javascript:void(0);">◆ ${item.title}</a></td>
           <td class="news-td-date">${item.date}</td>
         </tr>
@@ -3090,7 +3105,55 @@ function openManabaCourse(courseId) {
     `;
   }
 
+  // コーストップ表示状態を初期化
+  backToCourseTop();
+
   logWriteToGAS("MANABA_COURSE_OPEN", `manabaコース詳細を開きました: ${course.name}`);
+}
+
+function openManabaCourseNewsDetail(newsIndex) {
+  const newsList = gameState._currentCourseNewsList || [];
+  const course = gameState._currentCourseObj || {};
+  const item = newsList[newsIndex];
+  if (!item) return;
+
+  const mainBody = document.querySelector('.official-course-main-body');
+  const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const noticeBox = document.querySelector('.official-course-notice-box');
+  const sublinksRow = document.querySelector('.official-course-sublinks-row');
+
+  if (mainBody) mainBody.style.display = 'none';
+  if (noticeBox) noticeBox.style.display = 'none';
+  if (sublinksRow) sublinksRow.style.display = 'none';
+  if (newsDetailView) newsDetailView.style.display = 'flex';
+
+  const subjectEl = document.getElementById('news-detail-subject');
+  const dateEl = document.getElementById('news-detail-date');
+  const authorEl = document.getElementById('news-detail-author');
+  const contentEl = document.getElementById('news-detail-content');
+  const lastmodAuthorEl = document.getElementById('news-detail-lastmod-author');
+  const lastmodTimeEl = document.getElementById('news-detail-lastmod-time');
+
+  if (subjectEl) subjectEl.innerText = item.title;
+  if (dateEl) dateEl.innerText = `${item.date} 12:03`;
+  if (authorEl) authorEl.innerText = course.teacher || "安藤 昌也";
+  if (contentEl) contentEl.innerText = item.content || `成績保留の学生は、各自の学番を確認し、対応をとってください。\n詳細については授業内でのアナウンスを参照してください。`;
+  if (lastmodAuthorEl) lastmodAuthorEl.innerText = course.teacher || "安藤 昌也";
+  if (lastmodTimeEl) lastmodTimeEl.innerText = `${item.date} 16:16`;
+
+  logWriteToGAS("MANABA_COURSE_NEWS_OPEN", `コースニュース閲覧: ${item.title}`);
+}
+
+function backToCourseTop() {
+  const mainBody = document.querySelector('.official-course-main-body');
+  const newsDetailView = document.getElementById('manaba-course-news-detail-view');
+  const noticeBox = document.querySelector('.official-course-notice-box');
+  const sublinksRow = document.querySelector('.official-course-sublinks-row');
+
+  if (newsDetailView) newsDetailView.style.display = 'none';
+  if (mainBody) mainBody.style.display = 'block';
+  if (noticeBox) noticeBox.style.display = 'block';
+  if (sublinksRow) sublinksRow.style.display = 'flex';
 }
 
 function backToManabaPortal() {
