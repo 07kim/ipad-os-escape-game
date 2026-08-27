@@ -5087,6 +5087,20 @@ async function detonateSpecialBubble(r, c) {
   document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
   puzzleState.combo = 0;
 
+  // 🎬 特殊効果演出（ボム・レーザー・レインボーごとの特大VFX）
+  if (targetBubble.special === 'bomb') {
+    triggerScreenShake(true);
+    spawnShockwave(r, c);
+    playExplosionSound();
+  } else if (targetBubble.special === 'line') {
+    triggerScreenShake(false);
+    spawnLaserBeam(r, c);
+    playLaserSound();
+  } else if (targetBubble.special === 'rainbow') {
+    spawnPrismFlash();
+    playPrismSound();
+  }
+
   // 起爆範囲を収集
   const blastCoords = new Set();
   blastCoords.add(`${r},${c}`);
@@ -5098,19 +5112,20 @@ async function detonateSpecialBubble(r, c) {
   });
 
   // 音響＆スコア
-  playBubbleMatchSound(1);
   const points = matchedList.length * 150;
   addPuzzleScore(points);
   spawnBoardComboPopup(matchedList, 1, points);
 
-  // 破裂アニメーション
+  // 破裂＆ジュエルパーティクル飛散
   matchedList.forEach(m => {
+    const cellData = puzzleState.board[m.r][m.c];
+    if (cellData) spawnJewelParticles(m.r, m.c, cellData.color);
     const bubbleEl = document.getElementById(`bubble-${m.r}-${m.c}`);
     if (bubbleEl) bubbleEl.classList.add('popping');
     puzzleState.board[m.r][m.c] = null;
   });
 
-  await sleep(220);
+  await sleep(240);
 
   // 重力落下＆新バブル補充
   applyGravityAndRefill();
@@ -5291,6 +5306,8 @@ function expandSpecialsRecursive(matchedSet) {
 
       if (bubble.special === 'line') {
         // ⚡ 十字レーザー（行全体 + 列全体）
+        triggerScreenShake(false);
+        spawnLaserBeam(r, c);
         for (let col = 0; col < PUZZLE_COLS; col++) {
           const k = `${r},${col}`;
           if (!matchedSet.has(k)) { matchedSet.add(k); addedNew = true; }
@@ -5301,6 +5318,8 @@ function expandSpecialsRecursive(matchedSet) {
         }
       } else if (bubble.special === 'bomb') {
         // 💣 周囲3x3（9マス大爆発）
+        triggerScreenShake(true);
+        spawnShockwave(r, c);
         for (let dr = -1; dr <= 1; dr++) {
           for (let dc = -1; dc <= 1; dc++) {
             const nr = r + dr, nc = c + dc;
@@ -5312,6 +5331,7 @@ function expandSpecialsRecursive(matchedSet) {
         }
       } else if (bubble.special === 'rainbow') {
         // 🌈 レインボー（画面上の最多色のバブルを全消去）
+        spawnPrismFlash();
         const colorCounts = {};
         for (let row = 0; row < PUZZLE_ROWS; row++) {
           for (let col = 0; col < PUZZLE_COLS; col++) {
@@ -5343,6 +5363,9 @@ async function processMatches(initialMatchResult = null) {
     showComboBadge(puzzleState.combo);
     playBubbleMatchSound(puzzleState.combo);
 
+    if (puzzleState.combo >= 4) triggerScreenShake(true);
+    else if (puzzleState.combo >= 2) triggerScreenShake(false);
+
     const matches = matchResult.matches;
     const newSpecials = matchResult.newSpecials;
 
@@ -5353,8 +5376,10 @@ async function processMatches(initialMatchResult = null) {
     // 🌟 消去場所の近くにフローティングポップアップ出現
     spawnBoardComboPopup(matches, puzzleState.combo, points);
 
-    // 破裂アニメーション
+    // 破裂＆ジュエルパーティクル飛散
     matches.forEach(m => {
+      const cellData = puzzleState.board[m.r][m.c];
+      if (cellData) spawnJewelParticles(m.r, m.c, cellData.color);
       const bubbleEl = document.getElementById(`bubble-${m.r}-${m.c}`);
       if (bubbleEl) bubbleEl.classList.add('popping');
       puzzleState.board[m.r][m.c] = null;
@@ -5380,6 +5405,167 @@ async function processMatches(initialMatchResult = null) {
   }
 
   setTimeout(hideComboBadge, 1200);
+}
+
+// 💥 スクリーンシェイク演出
+function triggerScreenShake(isHeavy = false) {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container) return;
+  const shakeClass = isHeavy ? 'puzzle-shake-heavy' : 'puzzle-shake-light';
+  container.classList.remove('puzzle-shake-light', 'puzzle-shake-heavy');
+  void container.offsetWidth; // リフロー
+  container.classList.add(shakeClass);
+  setTimeout(() => container.classList.remove(shakeClass), isHeavy ? 450 : 300);
+}
+
+// 🌟 ジュエル破裂パーティクル生成
+function spawnJewelParticles(r, c, color) {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container) return;
+
+  const colorMap = {
+    pink: '#f43f5e',
+    blue: '#06b6d4',
+    green: '#10b981',
+    yellow: '#f59e0b',
+    purple: '#a855f7'
+  };
+  const hex = colorMap[color] || '#ffffff';
+
+  const posX = ((c + 0.5) / PUZZLE_COLS) * 100;
+  const posY = ((r + 0.5) / PUZZLE_ROWS) * 100;
+
+  const particleCount = 8;
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'puzzle-spark-particle';
+    p.style.left = `${posX}%`;
+    p.style.top = `${posY}%`;
+    p.style.background = hex;
+    p.style.boxShadow = `0 0 8px ${hex}`;
+
+    const size = Math.random() * 6 + 5;
+    p.style.width = `${size}px`;
+    p.style.height = `${size}px`;
+
+    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.5;
+    const dist = Math.random() * 40 + 30;
+    const tx = Math.cos(angle) * dist;
+    const ty = Math.sin(angle) * dist;
+
+    p.style.setProperty('--tx', `${tx}px`);
+    p.style.setProperty('--ty', `${ty}px`);
+
+    container.appendChild(p);
+    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 650);
+  }
+}
+
+// 💣 衝撃波リング
+function spawnShockwave(r, c) {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container) return;
+  const ring = document.createElement('div');
+  ring.className = 'puzzle-shockwave-ring';
+  ring.style.left = `${((c + 0.5) / PUZZLE_COLS) * 100}%`;
+  ring.style.top = `${((r + 0.5) / PUZZLE_ROWS) * 100}%`;
+  ring.style.width = '100px';
+  ring.style.height = '100px';
+  container.appendChild(ring);
+  setTimeout(() => { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 550);
+}
+
+// ⚡ 十字レーザービーム
+function spawnLaserBeam(r, c) {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container) return;
+  const posY = ((r + 0.5) / PUZZLE_ROWS) * 100;
+  const posX = ((c + 0.5) / PUZZLE_COLS) * 100;
+
+  const beamH = document.createElement('div');
+  beamH.className = 'puzzle-laser-beam horizontal';
+  beamH.style.top = `${posY}%`;
+
+  const beamV = document.createElement('div');
+  beamV.className = 'puzzle-laser-beam vertical';
+  beamV.style.left = `${posX}%`;
+
+  container.appendChild(beamH);
+  container.appendChild(beamV);
+  setTimeout(() => {
+    if (beamH.parentNode) beamH.parentNode.removeChild(beamH);
+    if (beamV.parentNode) beamV.parentNode.removeChild(beamV);
+  }, 450);
+}
+
+// 🌈 プリズムフラッシュ
+function spawnPrismFlash() {
+  const container = document.querySelector('.puzzle-board-container');
+  if (!container) return;
+  const flash = document.createElement('div');
+  flash.className = 'puzzle-prism-flash';
+  container.appendChild(flash);
+  setTimeout(() => { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 650);
+}
+
+// 🎵 特殊効果サウンドシンセシス
+function playExplosionSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.36);
+  } catch(e) {}
+}
+
+function playLaserSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(980, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.25);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.26);
+  } catch(e) {}
+}
+
+function playPrismSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    notes.forEach((freq, i) => {
+      const now = ctx.currentTime + i * 0.04;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    });
+  } catch(e) {}
 }
 
 // 🌟 消去場所の近くにフワッと浮かぶコンボバッジを生成
