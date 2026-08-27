@@ -331,6 +331,9 @@ function executeRemoteAdminCommand(cmd) {
       localStorage.setItem('fake_clock_start_iso', loopClockISO);
       gameState.clockStartISO = loopClockISO;
 
+      // 🔄 ループ切り替え時にLINKアプリのチャットデータを初期状態へ完全復元
+      resetLinkAppForLoop();
+
       // 通知は出さず、勝手にロック画面へ強制移行
       showLockScreen();
       updateAppUI();
@@ -836,6 +839,38 @@ function initBatterySync() {
   }
 }
 
+// 🔄 周回切り替え時にLINKアプリのチャットデータ・友達リスト・未読状態を初期データへ復元する
+function resetLinkAppForLoop() {
+  if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
+    // INITIAL_GAME_DATABASEから完全クローンして上書き復元
+    window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
+    try {
+      localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
+    } catch(e) {}
+  }
+
+  // 未読バッジの初期化（3周目は0件、1・2周目は初期1件）
+  const badge = document.getElementById('dock-link-badge');
+  if (badge) {
+    if (gameState.loop === 3) {
+      badge.style.display = 'none';
+      badge.innerText = '0';
+    } else {
+      badge.style.display = 'flex';
+      badge.innerText = '1';
+    }
+  }
+
+  // 友達リスト＆チャット画面の再描画
+  renderLinkChatList();
+
+  // もしLINKアプリが開いていたら、現在アクティブなトークルーム（または全体連絡）を再描画
+  if (gameState.activeApp === 'link') {
+    const activeContactId = gameState.activeContactId || 'committee_group';
+    openLinkChat(activeContactId);
+  }
+}
+
 // --- 周回（ループ）の強制切り替え演出 ---
 function triggerLoopTransition(nextLoop) {
   // 効果音（ブラウザのAudio制限対策としてエラーハンドリング）
@@ -852,13 +887,16 @@ function triggerLoopTransition(nextLoop) {
   // 3. アプリをすべて閉じる (裏側でサイレント切替)
   closeAllWindowsSilent();
 
-  // 4. コンテンツUI更新
+  // 4. LINKアプリのチャットデータを初期状態へ復元
+  resetLinkAppForLoop();
+
+  // 5. コンテンツUI更新
   updateAppUI();
 
-  // 5. ロック画面の日常通知を更新
+  // 6. ロック画面の日常通知を更新
   renderLockNotifications();
 
-  // 6. プッシュ通知でさりげなく新着通知演出
+  // 7. プッシュ通知でさりげなく新着通知演出
   showPushNotification("LINK", "新着メッセージを受信しました", "message-square", "LINK");
 
   logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${nextLoop} へ移行しました。`);
