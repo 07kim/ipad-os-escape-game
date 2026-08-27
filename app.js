@@ -2889,6 +2889,29 @@ function initManabaApp() {
   }
 }
 
+function autofillManabaLogin(id, pass, name) {
+  const idInput = document.getElementById('manaba-id-input');
+  const passInput = document.getElementById('manaba-pass-input');
+  const errorMsg = document.getElementById('manaba-error');
+  if (errorMsg) errorMsg.style.display = 'none';
+
+  if (idInput && passInput) {
+    idInput.value = id;
+    passInput.value = pass;
+    idInput.classList.add('autofilled-field');
+    passInput.classList.add('autofilled-field');
+
+    // 1.5秒後にハイライト解除
+    setTimeout(() => {
+      idInput.classList.remove('autofilled-field');
+      passInput.classList.remove('autofilled-field');
+    }, 1500);
+
+    playSystemSound("touch");
+    showPushNotification("パスワード自動入力", `${name} (${id}) を入力しました`, "key");
+  }
+}
+
 function handleManabaLogin() {
   const id = document.getElementById('manaba-id-input').value.trim();
   const pass = document.getElementById('manaba-pass-input').value.trim();
