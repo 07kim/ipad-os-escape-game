@@ -883,6 +883,15 @@ function triggerLoopTransition(nextLoop) {
   // 2. 状態更新
   gameState.loop = nextLoop;
   saveStateToStorage();
+  localStorage.setItem('game_loop', String(nextLoop));
+
+  // 📡 演者ツール（actor.html）へ周回移行を即時通知
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const bc = new BroadcastChannel('escape_game_channel');
+      bc.postMessage({ type: 'loop_change', payload: { loop: nextLoop } });
+    } catch(e) {}
+  }
 
   // 3. アプリをすべて閉じる (裏側でサイレント切替)
   closeAllWindowsSilent();

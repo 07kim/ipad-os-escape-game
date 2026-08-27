@@ -524,7 +524,7 @@
       <i data-lucide="radio"></i> ACTOR TRIGGER
     </div>
     <div style="display:flex; align-items:center; gap:6px;">
-      <div class="loop-badge loop-1" id="current-loop-badge">
+      <div class="loop-badge loop-1" id="current-loop-badge" onclick="cycleLoopManual()" style="cursor:pointer;" title="タップで周回を切り替え">
         <i data-lucide="refresh-cw" style="width:11px; height:11px;"></i> <span id="current-loop-text">1周目</span>
       </div>
       <div class="sync-badge checking" id="sync-status-badge">
@@ -813,6 +813,13 @@
           renderTriggers(ACTOR_SCRIPTS[currentActorCode]);
         }
       }
+    }
+
+    // 🌀 周回バッジタップ時の手動切り替え（1周目 ➔ 2周目 ➔ 3周目 ➔ 1周目）
+    function cycleLoopManual() {
+      const nextLoop = (currentGlobalLoop % 3) + 1;
+      updateLoopBadge(nextLoop);
+      if (navigator.vibrate) navigator.vibrate(50);
     }
 
     // 🌀 運営・他タブからの周回変更を同期監視

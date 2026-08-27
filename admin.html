@@ -1016,17 +1016,29 @@
     // --- クラウド経由でのコマンド送信コア関数 ---
     function sendCloudAdminCommand(commandObj, successMsg) {
       const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const cmdPayload = Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj);
 
-      // 同一端末テスト用LocalStorage
+      // 同一端末テスト用LocalStorage & 周回同期
       if (commandObj.type === 'preset') {
         localStorage.setItem('admin_preset_trigger', JSON.stringify(commandObj.params));
         localStorage.setItem('admin_preset_trigger_time', Date.now());
+        if (commandObj.params && commandObj.params.loop) {
+          localStorage.setItem('game_loop', String(commandObj.params.loop));
+        }
       } else if (commandObj.type === 'sound') {
         localStorage.setItem('admin_sound_trigger', commandObj.params.sound);
         localStorage.setItem('admin_sound_trigger_time', Date.now());
       } else if (commandObj.type === 'alert') {
         localStorage.setItem('admin_alert_trigger', commandObj.params.alertMsg);
         localStorage.setItem('admin_alert_trigger_time', Date.now());
+      }
+
+      // 📡 BroadcastChannelで演者ツール（actor.html）およびiPad画面へ即時ローカル通知
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: commandObj.type, payload: cmdPayload.params || cmdPayload });
+        } catch(e) {}
       }
 
       // UIに直近コマンド表示
