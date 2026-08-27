@@ -4055,86 +4055,93 @@ body {
   transform: scale(0.98);
 }
 
-/* 🔐 iPadOS / キーチェーン風 自動入力チップ */
-.manaba-autofill-section {
-  margin: 12px 0 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.manaba-autofill-title {
+/* 🔐 iPadOS公式スタイル キーチェーン自動入力ポップアップ */
+.ios-keychain-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), 0 3px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 8px;
-}
-
-.manaba-autofill-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.manaba-autofill-chip {
-  flex: 1;
-  min-width: 130px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  animation: keychainPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.1s, background-color 0.15s;
 }
 
-.manaba-autofill-chip:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  transform: translateY(-1px);
+.ios-keychain-popup:hover {
+  background: rgba(248, 250, 252, 0.98);
 }
 
-.manaba-autofill-chip:active {
-  transform: scale(0.97);
+.ios-keychain-popup:active {
+  transform: scale(0.98);
 }
 
-.chip-avatar {
-  width: 26px;
-  height: 26px;
+@keyframes keychainPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.keychain-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.keychain-icon-wrap {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #fef3c7;
-  color: #b45309;
-  font-size: 12px;
-  font-weight: 700;
+  background: #f59e0b;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.35);
 }
 
-.chip-info {
+.keychain-text-group {
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
-.chip-info strong {
-  font-size: 12px;
-  color: #0f172a;
+.keychain-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
   line-height: 1.2;
 }
 
-.chip-info span {
-  font-size: 10px;
+.keychain-account {
+  font-size: 11px;
   color: #64748b;
-  font-family: monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin-top: 2px;
+}
+
+.keychain-badge {
+  background: #007aff;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.25);
 }
 
 .autofilled-field {
@@ -4142,7 +4149,7 @@ body {
   border-color: #facc15 !important;
   transition: background-color 0.3s ease;
 }
-}
+
 .manaba-btn:hover {
   opacity: 0.9;
 }

@@ -2889,11 +2889,29 @@ function initManabaApp() {
   }
 }
 
+function showManabaKeychainPopup() {
+  const popup = document.getElementById('manaba-keychain-popup');
+  if (popup) {
+    popup.style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function hideManabaKeychainPopup() {
+  // フォーカスアウト直後にクリックできるよう、少し遅延して閉じる
+  setTimeout(() => {
+    const popup = document.getElementById('manaba-keychain-popup');
+    if (popup) popup.style.display = 'none';
+  }, 200);
+}
+
 function autofillManabaLogin(id, pass, name) {
   const idInput = document.getElementById('manaba-id-input');
   const passInput = document.getElementById('manaba-pass-input');
   const errorMsg = document.getElementById('manaba-error');
+  const popup = document.getElementById('manaba-keychain-popup');
   if (errorMsg) errorMsg.style.display = 'none';
+  if (popup) popup.style.display = 'none';
 
   if (idInput && passInput) {
     idInput.value = id;
