@@ -475,10 +475,10 @@
             <i data-lucide="timer" style="color:#38bdf8; width:20px; height:20px;"></i> 公演タイムライン ＆ 周回タイマー
           </div>
           <div style="display:flex; gap:6px;">
-            <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff;">
-              <i data-lucide="play" id="icon-timer-toggle" style="width:13px; height:13px;"></i> <span id="text-timer-toggle">スタート</span>
+            <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff; font-size:12px; padding:6px 12px;">
+              <i data-lucide="play" id="icon-timer-toggle" style="width:14px; height:14px;"></i> <span id="text-timer-toggle">ゲームスタート</span>
             </button>
-            <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1;">
+            <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1; font-size:12px; padding:6px 10px;">
               <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> リセット
             </button>
           </div>
@@ -957,8 +957,13 @@
       const p = presets.find(item => item.id === presetId);
       if (!p) return;
 
-      // ⏱️ 周回変更プリセットの場合、タイマーのラップを自動更新
-      if (p.loop) {
+      // ⏱️ 「1周目 開始（ゲームスタート）」プリセット実行時にタイマーを自動スタート
+      if (presetId === 's1_start' || p.id === 's1_start') {
+        if (!adminTimerState.isRunning) {
+          startAdminTimer();
+        }
+      } else if (p.loop) {
+        // ⏱️ 周回変更プリセットの場合、タイマーのラップを自動更新
         onAdminLoopChanged(p.loop);
       }
 
