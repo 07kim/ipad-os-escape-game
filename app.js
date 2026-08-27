@@ -2341,13 +2341,24 @@ function openLinkChat(contactId) {
       messageArea.innerHTML += `
         <div class="chat-message-row outgoing">
           <div class="chat-message-content">
-            <div class="message-bubble outgoing">
-              ${formattedText}
-              <span class="message-time">${msg.time}</span>
+            <div class="chat-bubble-wrapper">
+              <div class="chat-meta-info">
+                <span class="chat-read-status">既読</span>
+                <span class="chat-time-str">${msg.time}</span>
+              </div>
+              <div class="message-bubble outgoing">
+                ${formattedText}
+              </div>
             </div>
             ${ogpHtml ? `
-              <div class="message-bubble outgoing line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none; margin-top:4px;">
-                ${ogpHtml}
+              <div class="chat-bubble-wrapper" style="margin-top:4px;">
+                <div class="chat-meta-info">
+                  <span class="chat-read-status">既読</span>
+                  <span class="chat-time-str">${msg.time}</span>
+                </div>
+                <div class="message-bubble outgoing line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none;">
+                  ${ogpHtml}
+                </div>
               </div>
             ` : ''}
           </div>
@@ -2359,13 +2370,22 @@ function openLinkChat(contactId) {
           <div class="chat-sender-avatar ${meta.avatarClass}">${meta.avatar}</div>
           <div class="chat-message-content">
             <div class="chat-sender-name">${meta.name}</div>
-            <div class="message-bubble incoming">
-              ${formattedText}
-              <span class="message-time">${msg.time}</span>
+            <div class="chat-bubble-wrapper">
+              <div class="message-bubble incoming">
+                ${formattedText}
+              </div>
+              <div class="chat-meta-info">
+                <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${msg.time}</span>
+              </div>
             </div>
             ${ogpHtml ? `
-              <div class="message-bubble incoming line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none; margin-top:4px;">
-                ${ogpHtml}
+              <div class="chat-bubble-wrapper" style="margin-top:4px;">
+                <div class="message-bubble incoming line-ogp-bubble" style="padding:0; background:transparent; box-shadow:none; border:none;">
+                  ${ogpHtml}
+                </div>
+                <div class="chat-meta-info">
+                  <span class="chat-time-str" style="color:rgba(255,255,255,0.85);">${msg.time}</span>
+                </div>
               </div>
             ` : ''}
           </div>
@@ -2376,7 +2396,7 @@ function openLinkChat(contactId) {
 
   // 3周目の不気味演出
   if (gameState.loop === 3 && contactId === 'fukasawa') {
-    messageArea.innerHTML += `<div class="link-welcome-msg" style="color:var(--system-red); font-size:11px; margin-top:8px; text-align:center;">⚠️ 警告：接続中の相手はシステム保安局により物理的に排除された可能性があります。</div>`;
+    messageArea.innerHTML += `<div class="chat-system-event" style="background:rgba(239,68,68,0.25); color:#fee2e2; border:1px solid rgba(239,68,68,0.4);">⚠️ 警告：接続中の相手はシステム保安局により物理的に排除された可能性があります。</div>`;
   }
 
   if (window.lucide) lucide.createIcons();
@@ -3522,15 +3542,35 @@ function renderMailList() {
   container.innerHTML = "";
 
   const mails = window.GAME_DATABASE.mailApp[gameState.loop] || [];
-  mails.forEach(mail => {
+  if (mails.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:24px; font-size:13px;">メールはありません</div>`;
+    return;
+  }
+
+  mails.forEach((mail, idx) => {
+    const isFirst = idx === 0;
+    const snippet = (mail.body || "").replace(/\n/g, " ").slice(0, 48) + "...";
+    const initial = (mail.sender || "学")[0];
+    
     container.innerHTML += `
-      <div class="mail-item" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
-        <div class="mail-item-sender">${mail.sender}</div>
+      <div class="mail-item ${isFirst ? 'active' : ''}" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
+        <div class="mail-item-top">
+          <div class="mail-item-sender">
+            <span class="mail-unread-dot"></span>
+            ${mail.sender}
+          </div>
+          <div class="mail-item-date">${mail.date}</div>
+        </div>
         <div class="mail-item-title">${mail.subject || mail.title}</div>
-        <div class="mail-item-date">${mail.date}</div>
+        <div class="mail-item-snippet">${snippet}</div>
       </div>
     `;
   });
+
+  // 初期選択
+  if (mails.length > 0) {
+    openMail(mails[0].id);
+  }
 }
 
 function openMail(mailId) {
@@ -3542,15 +3582,43 @@ function openMail(mailId) {
   const mail = mails.find(m => m.id === mailId);
 
   if (mail) {
-    document.getElementById('mail-body-header').innerHTML = `
-      <div class="mail-body-title">${mail.subject || mail.title}</div>
-      <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">
-        差出人: <strong>${mail.sender}</strong><br>
-        日付: ${mail.date}
-      </div>
-    `;
-    document.getElementById('mail-body-content').innerText = mail.body;
-    logWriteToGAS("MAIL_OPEN", `メールを開きました: ${mailId}`);
+    const initial = (mail.sender || "学")[0];
+    const headerEl = document.getElementById('mail-body-header');
+    const contentEl = document.getElementById('mail-body-content');
+
+    if (headerEl) {
+      headerEl.innerHTML = `
+        <div class="mail-detail-header-card">
+          <h1 class="mail-body-title">${mail.subject || mail.title}</h1>
+          <div class="mail-sender-profile-row">
+            <div class="mail-sender-avatar-group">
+              <div class="mail-sender-avatar">${initial}</div>
+              <div class="mail-sender-meta">
+                <span class="mail-sender-name">${mail.sender}</span>
+                <span class="mail-recipient-to">宛先: 矢田 逞 &lt;s25b1150er@cit.ac.jp&gt;</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="mail-sent-date-badge">${mail.date}</span>
+              <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mail.subject || mail.title}', '${mail.body.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')" style="display:flex; align-items:center; gap:4px; font-size:11px; padding:4px 8px;">
+                <i data-lucide="clipboard-copy" style="width:13px; height:13px;"></i> メモ転記
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <div style="font-size:14.5px; line-height:1.8; color:#1f2937;">
+          ${mail.body}
+        </div>
+      `;
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    logWriteToGAS("MAIL_OPEN", `メールを開きました: ${mailId} (${mail.subject || mail.title})`);
   }
 }
 

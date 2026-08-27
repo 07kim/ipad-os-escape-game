@@ -1647,24 +1647,56 @@
       </div>
 
       <!-- ------------------------------------------ -->
-      <!-- ⑥ メールアプリ -->
+      <!-- ⑥ メールアプリ（iPadOS Mail公式風） -->
       <!-- ------------------------------------------ -->
       <div class="app-window" id="app-mail-app">
         <div class="mail-layout">
-          <!-- メールリスト -->
+          
+          <!-- 左側：メール一覧サイドバー (320px) -->
           <div class="mail-sidebar">
             <div class="mail-sidebar-header">
-              受信トレイ
+              <div class="mail-header-top">
+                <h2>受信トレイ</h2>
+                <div class="mail-header-actions">
+                  <button class="mail-tool-btn" title="新規作成"><i data-lucide="square-pen"></i></button>
+                </div>
+              </div>
+              <div class="mail-search-box">
+                <i data-lucide="search" class="mail-search-icon"></i>
+                <input type="text" placeholder="検索" class="mail-search-input" readonly>
+              </div>
             </div>
             <div class="mail-list" id="mail-list"></div>
           </div>
-          <!-- メール本文 -->
-          <div class="mail-body">
-            <div class="mail-body-header" id="mail-body-header">
-              メールを選択してください。
+
+          <!-- 右側：メール本文ペイン -->
+          <div class="mail-body-pane">
+            <!-- 上部ツールバー -->
+            <div class="mail-toolbar">
+              <div class="mail-toolbar-left">
+                <span class="mail-mailbox-badge">受信</span>
+              </div>
+              <div class="mail-toolbar-right">
+                <button class="mail-action-icon-btn" title="返信"><i data-lucide="reply"></i></button>
+                <button class="mail-action-icon-btn" title="全員に返信"><i data-lucide="reply-all"></i></button>
+                <button class="mail-action-icon-btn" title="転送"><i data-lucide="forward"></i></button>
+                <button class="mail-action-icon-btn" title="ゴミ箱"><i data-lucide="trash-2"></i></button>
+                <button class="mail-action-icon-btn" title="フラグ"><i data-lucide="flag"></i></button>
+              </div>
             </div>
-            <div class="mail-body-content" id="mail-body-content"></div>
+
+            <!-- メール詳細本文エリア -->
+            <div class="mail-body-scroll-area">
+              <div class="mail-body-header" id="mail-body-header">
+                <div class="mail-empty-selection">
+                  <i data-lucide="mail-open" style="width:48px; height:48px; stroke-width:1.2; color:#9ca3af; margin-bottom:12px;"></i>
+                  <p>メールを選択してください</p>
+                </div>
+              </div>
+              <div class="mail-body-content" id="mail-body-content"></div>
+            </div>
           </div>
+
         </div>
       </div>
 
