@@ -4458,162 +4458,718 @@ body {
   text-align: center;
 }
 
-/* ポータル画面 */
-.manaba-portal {
+/* ---------------------------------------------------- */
+/* 🎓 千葉工業大学 公式 manaba マイページ 完全再現スタイル */
+/* ---------------------------------------------------- */
+
+.manaba-portal-official {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  color: #333333;
+}
+
+/* 1. 最上部ヘッダー */
+.official-portal-header {
+  background: #ffffff;
+  border-bottom: 1px solid #cccccc;
+}
+
+.portal-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px;
+}
+
+.cit-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ChibaTech 幾何学シンボルロゴ */
+.cit-emblem-small {
+  display: grid;
+  grid-template-columns: repeat(4, 4px);
+  grid-template-rows: repeat(3, 4px);
+  gap: 2px;
+}
+
+.cit-emblem-small .dot {
+  width: 4px;
+  height: 4px;
+  background: #000000;
+}
+
+.cit-header-text {
   display: flex;
   flex-direction: column;
 }
 
-.manaba-header {
-  background-color: var(--manaba-green);
-  color: white;
-  padding: 12px 20px;
+.cit-jp {
+  font-size: 15px;
+  font-weight: 900;
+  color: #111111;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.cit-en {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.portal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-date-str {
+  font-size: 11px;
+  color: #666666;
+}
+
+.portal-user-links {
+  font-size: 11px;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.portal-username {
+  font-weight: 700;
+  color: #0272c1;
+  cursor: pointer;
+}
+
+.portal-sep {
+  color: #cccccc;
+}
+
+.portal-link {
+  color: #0272c1;
+  text-decoration: none;
+}
+
+.portal-link:hover {
+  text-decoration: underline;
+}
+
+.portal-user-avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  border: 1px solid #cccccc;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* グローバルナビゲーションバー（緑グラデーション） */
+.portal-global-nav {
+  background: linear-gradient(to bottom, #86af00 0%, #6e9300 100%);
+  height: 34px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  padding: 0 16px;
+  border-top: 1px solid #99c600;
 }
 
-.manaba-logo-text {
-  font-size: 20px;
-  font-weight: bold;
-}
-.manaba-subtitle {
-  font-size: 11px;
-  margin-left: 8px;
+.portal-nav-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 100%;
 }
 
-.manaba-header-right {
+.nav-tab {
+  height: 30px;
+  padding: 0 16px;
+  background: transparent;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  color: #ffffff;
   font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.15s ease;
+}
+
+.nav-tab.active {
+  background: #4d6900;
+  color: #ffffff;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+.nav-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.portal-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.nav-btn-memo, .nav-btn-lang {
+  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
+  border: 1px solid #666666;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333333;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 2. サブヘッダー（グレー背景） */
+.portal-sub-header {
+  background: #eeeeee;
+  border-bottom: 1px solid #dddddd;
+  padding: 10px 18px;
+}
+
+.portal-user-card {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-.manaba-header-right a {
-  color: white;
+
+.portal-avatar-box {
+  width: 48px;
+  height: 48px;
+  background: #ffffff;
+  border: 1px solid #bbbbbb;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-user-meta h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0 0 6px 0;
+}
+
+.portal-sub-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.sub-btn {
+  background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+  border: 1px solid #aaaaaa;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333333;
+  padding: 2px 14px;
+  cursor: pointer;
+}
+
+.sub-btn.active {
+  background: linear-gradient(to bottom, #a0cc2a 0%, #7da617 100%);
+  color: #ffffff;
+  border-color: #648a0a;
+}
+
+/* 3. アラートバー */
+.portal-alert-bar {
+  padding: 8px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #fffafa;
+  border-bottom: 1px solid #f0e0e0;
+  position: relative;
+}
+
+.alert-item {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d90000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.portal-memo-edit-link {
+  position: absolute;
+  right: 18px;
+  top: 8px;
+}
+
+.memo-add-btn {
+  background: linear-gradient(to bottom, #ffffff 0%, #e6e6e6 100%);
+  border: 1px solid #999999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #444444;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* 4. メインコンテンツ（2カラム構成） */
+.portal-main-columns {
+  display: flex;
+  gap: 16px;
+  padding: 14px 18px;
+  flex: 1;
+}
+
+.portal-col-left {
+  flex: 72;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.portal-col-right {
+  flex: 28;
+  min-width: 0;
+}
+
+/* セクションボックス共通 */
+.portal-section-box {
+  background: #ffffff;
+  border: 1px solid #84cc16;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.portal-box-header {
+  background: linear-gradient(to right, #7fb000 0%, #9ec91d 100%);
+  padding: 5px 12px;
+  color: #ffffff;
+}
+
+.portal-box-header h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.box-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.portal-box-body {
+  padding: 10px 12px;
+}
+
+.news-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.news-date-tag {
+  font-weight: 700;
+  color: #333333;
+}
+
+.news-title-link {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.news-title-link:hover {
   text-decoration: underline;
 }
 
-.manaba-tabs {
+/* コース一覧のコントロールバー */
+.portal-course-controls {
+  padding: 8px 12px 6px 12px;
   display: flex;
-  background-color: #f1f3f4;
-  border-bottom: 1px solid var(--border-light);
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
 }
 
-.manaba-tab {
-  padding: 12px 24px;
-  border: none;
-  background: none;
-  font-size: 14px;
-  font-weight: 600;
+.course-select-group {
+  display: flex;
+  gap: 6px;
+}
+
+.portal-dropdown {
+  font-size: 11px;
+  padding: 2px 4px;
+  border: 1px solid #aaaaaa;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #333333;
+}
+
+.course-view-tabs {
+  display: flex;
+  border-bottom: 2px solid #7fb000;
+}
+
+.view-tab {
+  background: #f0f0f0;
+  border: 1px solid #cccccc;
+  border-bottom: none;
+  font-size: 11px;
+  padding: 3px 10px;
   cursor: pointer;
-  color: var(--text-muted);
-}
-.manaba-tab.active {
-  background-color: white;
-  color: var(--manaba-green);
-  border-bottom: 3px solid var(--manaba-green);
+  color: #555555;
 }
 
-.manaba-body {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background-color: #fafafa;
+.view-tab.active {
+  background: #7fb000;
+  color: #ffffff;
+  font-weight: 700;
+  border-color: #7fb000;
 }
 
-.manaba-panel {
-  display: none;
+/* 曜日時間割テーブル */
+.portal-timetable-container {
+  padding: 0 12px 10px 12px;
 }
-.manaba-panel.active {
+
+.official-timetable-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.official-timetable-grid thead th {
+  background: #dcebc0;
+  border: 1px solid #a3c960;
+  font-size: 11px;
+  font-weight: 700;
+  color: #333333;
+  padding: 4px;
+  text-align: center;
+}
+
+.official-timetable-grid thead th.col-period {
+  width: 24px;
+}
+
+.official-timetable-grid tbody td {
+  border: 1px solid #cce29d;
+  height: 52px;
+  vertical-align: top;
+  padding: 4px;
+  font-size: 10px;
+  background: #ffffff;
+}
+
+.official-timetable-grid tbody td.period-num {
+  background: #f7faf0;
+  text-align: center;
+  font-weight: 700;
+  color: #555555;
+  vertical-align: middle;
+  padding: 0;
+}
+
+.official-timetable-grid tbody td.has-course {
+  background: #fbfdf9;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.official-timetable-grid tbody td.has-course:hover {
+  background: #eef8db;
+}
+
+.timetable-course-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.timetable-course-item a {
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.25;
   display: block;
 }
 
-.manaba-panel h3 {
-  font-size: 16px;
-  margin-bottom: 12px;
-  color: var(--manaba-green);
+.timetable-course-item a:hover {
+  text-decoration: underline;
 }
 
-/* 時間割 */
-.manaba-timetable {
+.timetable-course-icons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #a0a0a0;
+  margin-top: 2px;
+}
+
+/* その他の曜日テーブル */
+.portal-other-courses-section {
+  padding: 6px 12px 12px 12px;
+}
+
+.other-courses-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c9a00;
+  margin: 0 0 6px 0;
+}
+
+.official-other-courses-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  font-size: 11px;
 }
 
-.manaba-timetable th, .manaba-timetable td {
-  border: 1px solid var(--border-light);
-  padding: 12px;
-  text-align: center;
-  font-size: 12px;
+.official-other-courses-table th {
+  background: #dcebc0;
+  border: 1px solid #a3c960;
+  font-weight: 700;
+  color: #333333;
+  padding: 4px 6px;
+  text-align: left;
 }
 
-.manaba-timetable th {
-  background-color: #f2f2f7;
-  font-weight: bold;
+.official-other-courses-table td {
+  border: 1px solid #cce29d;
+  padding: 5px 6px;
+  color: #333333;
 }
 
-.manaba-timetable td.clickable {
-  background-color: var(--manaba-green-light);
-  color: var(--manaba-green);
+.official-other-courses-table tr:nth-child(even) {
+  background-color: #f7faf0;
+}
+
+.official-other-courses-table a {
+  color: #0272c1;
+  text-decoration: none;
   font-weight: 600;
-  cursor: pointer;
 }
 
-/* コース詳細 */
-.manaba-course-detail {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+.official-other-courses-table a:hover {
+  text-decoration: underline;
 }
 
-.course-detail-header {
-  border-bottom: 1px solid var(--border-light);
-  padding-bottom: 12px;
-  margin-bottom: 20px;
+/* 右カラム：課題サイドバー */
+.sidebar-box-wrapper {
+  border: 1px solid #84cc16;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
 }
 
-.course-back-btn {
-  border: none;
-  background: none;
-  color: var(--manaba-green);
-  font-weight: bold;
-  cursor: pointer;
-  margin-bottom: 8px;
+.sidebar-box-header {
+  background: #dcebc0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #a3c960;
 }
 
-.course-grid {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 20px;
-}
-
-.course-news, .course-materials {
-  background-color: #fafafa;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-.course-news h4, .course-materials h4 {
-  margin-bottom: 12px;
-  border-bottom: 2px solid var(--manaba-green);
-  padding-bottom: 6px;
-  color: var(--manaba-green);
-}
-
-.course-news ul {
-  list-style: none;
-}
-.course-news li {
-  padding: 8px 0;
-  border-bottom: 0.5px solid var(--border-light);
+.sidebar-box-header h3 {
   font-size: 12px;
+  font-weight: 700;
+  color: #333333;
+  margin: 0;
+}
+
+.sidebar-box-content {
+  padding: 10px;
+}
+
+.sidebar-sub-section {
+  margin-bottom: 12px;
+}
+
+.sidebar-sub-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c9a00;
+  margin-bottom: 4px;
+}
+
+.sidebar-link-row {
+  margin-top: 4px;
+}
+
+.sidebar-action-link {
+  font-size: 11px;
+  color: #0272c1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sidebar-action-link:hover {
+  text-decoration: underline;
+}
+
+.sidebar-empty-msg {
+  font-size: 11px;
+  color: #666666;
+  margin: 2px 0 4px 0;
+}
+
+/* コース詳細画面（公式スタイル） */
+.manaba-course-detail-official {
+  background: #ffffff;
+  padding: 16px;
+  border-top: 2px solid #7fb000;
+}
+
+.official-course-header-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.course-back-official-btn {
+  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
+  border: 1px solid #999999;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333333;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.official-course-meta h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5c9a00;
+  margin: 0 0 4px 0;
+}
+
+.course-sub-info {
+  font-size: 11px;
+  color: #666666;
+}
+
+.official-course-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 16px;
+}
+
+.official-course-news-box, .official-course-materials-box {
+  border: 1px solid #cce29d;
+  border-radius: 4px;
+  background: #fafdf5;
+  overflow: hidden;
+}
+
+.box-title-bar {
+  background: #dcebc0;
+  padding: 6px 12px;
+  border-bottom: 1px solid #a3c960;
+}
+
+.box-title-bar h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333333;
+  margin: 0;
+}
+
+.course-news-items {
+  list-style: none;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.course-news-items li {
+  padding: 6px 0;
+  border-bottom: 1px dashed #dcdcdc;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.course-materials-items {
+  padding: 8px 12px;
+}
+
+.material-item-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.material-item-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0272c1;
+  cursor: pointer;
+}
+
+.material-item-title:hover {
+  text-decoration: underline;
+}
+
+.material-item-date {
+  font-size: 10px;
+  color: #888888;
+}
+
+/* フッター */
+.portal-official-footer {
+  margin-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #888888;
+  background: #fafafa;
+}
+
+.portal-footer-links {
+  display: flex;
+  gap: 12px;
+}
+
+.footer-link {
+  color: #666666;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
 }
 
 .course-material-item {

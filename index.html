@@ -1068,90 +1068,263 @@
           </div>
         </div>
 
-        <!-- manaba ログイン後マイページ -->
-        <div class="manaba-portal" id="manaba-portal-view" style="display:none;">
-          <div class="manaba-header">
-            <div class="manaba-header-left">
-              <span class="manaba-logo-text">manaba</span>
-              <span class="manaba-subtitle">千葉工業大学</span>
-            </div>
-            <div class="manaba-header-right">
-              <span id="manaba-header-date">2026-08-22 (Sat)</span>
-              <span id="manaba-user-name">テスト 太郎</span>
-              <a href="#" onclick="logoutManaba()">ログアウト</a>
-            </div>
-          </div>
-          <!-- メインタブ -->
-          <div class="manaba-tabs">
-            <button class="manaba-tab active" onclick="switchManabaTab('mypage')">マイページ</button>
-            <button class="manaba-tab" onclick="switchManabaTab('courses')">コース</button>
-            <button class="manaba-tab" onclick="switchManabaTab('portfolio')">ポートフォリオ</button>
-          </div>
+        <!-- manaba ログイン後マイページ (千葉工大 公式完全一致) -->
+        <div class="manaba-portal-official" id="manaba-portal-view" style="display:none;">
           
-          <div class="manaba-body">
-            <!-- マイページタブ -->
-            <div class="manaba-panel active" id="manaba-panel-mypage">
-              <h3>今週の時間割</h3>
-              <table class="manaba-timetable">
-                <thead>
-                  <tr><th></th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th></tr>
-                </thead>
-                <tbody id="manaba-timetable-body">
-                  <!-- JSで動的に構築 -->
-                </tbody>
-              </table>
-              <p style="font-size:11px; color:var(--text-muted); margin-top:8px;">※金曜5限の「情報デザイン論及び演習」を選択するとコース詳細を開きます。</p>
-            </div>
+          <!-- 1. 最上部ヘッダー -->
+          <div class="official-portal-header">
+            <div class="portal-header-top">
+              <div class="portal-header-left">
+                <!-- ChibaTech 幾何学ロゴ -->
+                <div class="cit-header-logo">
+                  <div class="cit-emblem-small">
+                    <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
+                    <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+                    <span class="dot d9"></span><span class="dot d10"></span><span class="dot d11"></span><span class="dot d12"></span>
+                  </div>
+                  <div class="cit-header-text">
+                    <span class="cit-jp">千葉工業大学</span>
+                    <span class="cit-en">ChibaTech</span>
+                  </div>
+                </div>
+              </div>
 
-            <!-- コースタブ -->
-            <div class="manaba-panel" id="manaba-panel-courses">
-              <h3>所属コース一覧</h3>
-              <div class="manaba-course-list">
-                <div class="manaba-course-card" onclick="openManabaCourse()">
-                  <h4>情報デザイン論及び演習 (2026 前期 金曜 5限)</h4>
-                  <p>担当教員: 安藤 昌也 | 教室: 津田沼校舎2号館</p>
+              <div class="portal-header-right">
+                <span class="portal-date-str" id="manaba-header-date">2026-08-27 (Thu)</span>
+                <div class="portal-user-links">
+                  <span class="portal-username" id="manaba-user-display-name">学生 太郎</span>
+                  <span class="portal-sep">|</span>
+                  <a href="#" class="portal-link">設定</a>
+                  <span class="portal-sep">|</span>
+                  <a href="#" class="portal-link" onclick="logoutManaba()">ログアウト</a>
+                </div>
+                <div class="portal-user-avatar-mini">
+                  <svg viewBox="0 0 24 24" width="28" height="28" fill="#a0a0a0">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6v1H4v-1z"/>
+                  </svg>
                 </div>
               </div>
             </div>
 
-            <!-- コース詳細画面 -->
-            <div class="manaba-course-detail" id="manaba-course-detail-view" style="display:none;">
-              <div class="course-detail-header">
-                <button onclick="backToManabaPortal()" class="course-back-btn">← マイページに戻る</button>
-                <h3 id="manaba-course-title">情報デザイン論及び演習</h3>
-                <p>担当教員: <span id="manaba-course-teacher">安藤 昌也</span> | 開講: <span id="manaba-course-term">前期金曜5限</span></p>
+            <!-- グローバルナビゲーションバー（緑グラデーション） -->
+            <div class="portal-global-nav">
+              <div class="portal-nav-tabs">
+                <button class="nav-tab active" onclick="switchManabaTab('mypage')">
+                  <i data-lucide="user" style="width:14px; height:14px;"></i> マイページ
+                </button>
+                <button class="nav-tab" onclick="switchManabaTab('courses')">
+                  <i data-lucide="users" style="width:14px; height:14px;"></i> コース
+                </button>
+                <button class="nav-tab" onclick="switchManabaTab('portfolio')">
+                  <i data-lucide="folder" style="width:14px; height:14px;"></i> ポートフォリオ
+                </button>
               </div>
-              <div class="course-grid">
-                <!-- ニュース（左） -->
-                <div class="course-news">
-                  <h4>コースニュース</h4>
-                  <ul id="manaba-course-news-list"></ul>
-                </div>
-                <!-- 授業資料（右） -->
-                <div class="course-materials">
-                  <h4>授業資料リスト</h4>
-                  <div class="course-materials-list" id="manaba-materials-list"></div>
-                </div>
+              <div class="portal-nav-buttons">
+                <button class="nav-btn-memo"><i data-lucide="edit-3" style="width:12px; height:12px;"></i> メモ一覧</button>
+                <button class="nav-btn-lang">English</button>
               </div>
-            </div>
-
-            <!-- PDF/添付ファイルビューア -->
-            <div class="manaba-pdf-viewer" id="manaba-pdf-viewer" style="display:none;">
-              <div class="pdf-viewer-header">
-                <span id="pdf-filename">document.pdf</span>
-                <button onclick="closePdfViewer()">閉じる</button>
-              </div>
-              <div class="pdf-viewer-body" id="pdf-viewer-body">
-                PDFのプレビュー内容を表示
-              </div>
-            </div>
-
-            <!-- ポートフォリオタブ -->
-            <div class="manaba-panel" id="manaba-panel-portfolio">
-              <h3>マイポートフォリオ</h3>
-              <p style="color:var(--text-muted);">提出済みの課題やふりかえりシートのログはありません。</p>
             </div>
           </div>
+
+          <!-- 2. サブヘッダー（グレー背景） -->
+          <div class="portal-sub-header">
+            <div class="portal-user-card">
+              <div class="portal-avatar-box">
+                <svg viewBox="0 0 24 24" width="38" height="38" fill="#94a3b8">
+                  <circle cx="12" cy="8" r="4.5"/>
+                  <path d="M4 20c0-4 4-6.5 8-6.5s8 2.5 8 6.5v1H4v-1z"/>
+                </svg>
+              </div>
+              <div class="portal-user-meta">
+                <h2 id="manaba-portal-welcome-name">学生 太郎さんのマイページ</h2>
+                <div class="portal-sub-btns">
+                  <button class="sub-btn active">トップ</button>
+                  <button class="sub-btn">未提出課題</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. アラートバー（赤文字） -->
+          <div class="portal-alert-bar">
+            <div class="alert-item"><span class="alert-icon">❗</span> ポートフォリオにコレクションが追加されました。</div>
+            <div class="alert-item"><span class="alert-icon">❗</span> コレクションに追加添付ファイルがあります。</div>
+            <div class="portal-memo-edit-link">
+              <button class="memo-add-btn">📝 メモ追加</button>
+            </div>
+          </div>
+
+          <!-- 4. メインコンテンツ（2カラム構成） -->
+          <div class="portal-main-columns">
+            
+            <!-- [左カラム] メインコンテンツ (72%) -->
+            <div class="portal-col-left">
+              
+              <!-- お知らせブロック -->
+              <div class="portal-section-box">
+                <div class="portal-box-header">
+                  <h3>お知らせ</h3>
+                </div>
+                <div class="portal-box-body">
+                  <div class="news-line">
+                    <span class="news-date-tag">2026-03-24</span>
+                    <span class="news-speaker-icon">📢</span>
+                    <a href="#" class="news-title-link">2026年度授業の更新完了について</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- コース一覧ブロック -->
+              <div class="portal-section-box">
+                <div class="portal-box-header course-header-bg">
+                  <div class="box-header-title">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    <h3>コース一覧</h3>
+                  </div>
+                </div>
+
+                <div class="portal-course-controls">
+                  <div class="course-select-group">
+                    <select class="portal-dropdown"><option>現在のコース</option><option>過去のコース</option><option>すべてのコース</option></select>
+                    <select class="portal-dropdown"><option>すべての年度</option><option selected>2026年度</option></select>
+                  </div>
+                  <div class="course-view-tabs">
+                    <button class="view-tab">サムネイル</button>
+                    <button class="view-tab">リスト</button>
+                    <button class="view-tab active">曜日</button>
+                  </div>
+                </div>
+
+                <!-- 曜日時間割テーブル (月〜土 / 1〜7限 + 他) -->
+                <div class="portal-timetable-container">
+                  <table class="official-timetable-grid">
+                    <thead>
+                      <tr>
+                        <th class="col-period"></th>
+                        <th>月</th>
+                        <th>火</th>
+                        <th>水</th>
+                        <th>木</th>
+                        <th>金</th>
+                        <th>土</th>
+                      </tr>
+                    </thead>
+                    <tbody id="manaba-official-timetable-body">
+                      <!-- JSで動的レンダリング -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 「その他の曜日」テーブル -->
+                <div class="portal-other-courses-section">
+                  <h4 class="other-courses-title">その他の曜日</h4>
+                  <table class="official-other-courses-table">
+                    <thead>
+                      <tr>
+                        <th style="width:52%;">コース名</th>
+                        <th style="width:10%;">年度</th>
+                        <th style="width:18%;">開講情報</th>
+                        <th style="width:20%;">担当教員</th>
+                      </tr>
+                    </thead>
+                    <tbody id="manaba-official-other-courses-body">
+                      <!-- JSで動的レンダリング -->
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- [右カラム] 課題サイドバー (28%) -->
+            <div class="portal-col-right">
+              <div class="sidebar-box-wrapper">
+                <div class="sidebar-box-header">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="#5c9a00">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                  </svg>
+                  <h3>課題</h3>
+                </div>
+                <div class="sidebar-box-content">
+                  <!-- 未提出課題 -->
+                  <div class="sidebar-sub-section">
+                    <div class="sidebar-sub-title">◆ 未提出課題</div>
+                    <div class="sidebar-link-row">
+                      <a href="#" class="sidebar-action-link">➔ 未提出課題一覧</a>
+                    </div>
+                  </div>
+                  <!-- 提出記録 -->
+                  <div class="sidebar-sub-section">
+                    <div class="sidebar-sub-title">◆ 提出記録</div>
+                    <p class="sidebar-empty-msg">最近の提出記録はありません</p>
+                    <div class="sidebar-link-row">
+                      <a href="#" class="sidebar-action-link">➔ すべて表示</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- コース詳細画面（モーダル／スライドビュー） -->
+          <div class="manaba-course-detail-official" id="manaba-course-detail-view" style="display:none;">
+            <div class="official-course-header-banner">
+              <button onclick="backToManabaPortal()" class="course-back-official-btn">← マイページに戻る</button>
+              <div class="official-course-meta">
+                <h2 id="manaba-course-title">応用量子力学</h2>
+                <div class="course-sub-info">
+                  担当教員: <span id="manaba-course-teacher">安藤 昌也</span> ｜ 開講: <span id="manaba-course-term">2026 前期 月曜 2限</span> ｜ 教室: <span id="manaba-course-room">新習志野校舎6号館301</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="official-course-content-grid">
+              <!-- コースニュース -->
+              <div class="official-course-news-box">
+                <div class="box-title-bar">
+                  <h3>コースニュース</h3>
+                </div>
+                <ul class="course-news-items" id="manaba-course-news-list">
+                  <!-- JSで動的表示 -->
+                </ul>
+              </div>
+
+              <!-- 授業資料リスト -->
+              <div class="official-course-materials-box">
+                <div class="box-title-bar">
+                  <h3>授業資料・配布コンテンツ</h3>
+                </div>
+                <div class="course-materials-items" id="manaba-materials-list">
+                  <!-- JSで動的表示（第11回資料にタイムマシン起動ヒント等） -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PDF / 講義資料ビューアー -->
+          <div class="manaba-pdf-viewer" id="manaba-pdf-viewer" style="display:none;">
+            <div class="pdf-viewer-header">
+              <span id="pdf-filename">講義資料.pdf</span>
+              <button onclick="closePdfViewer()" class="pdf-close-btn">閉じる</button>
+            </div>
+            <div class="pdf-viewer-body" id="pdf-viewer-body">
+              <!-- 講義資料プレビュー ＋ メモ転記ボタン -->
+            </div>
+          </div>
+
+          <!-- 5. 公式フッター -->
+          <div class="portal-official-footer">
+            <div class="portal-footer-links">
+              <a href="#" class="footer-link">マニュアル</a>
+              <a href="#" class="footer-link">パーソナルデータとライセンス</a>
+            </div>
+            <div class="portal-footer-ver">manaba 2.979</div>
+          </div>
+
         </div>
 
       </div>

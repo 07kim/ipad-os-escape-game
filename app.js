@@ -2979,63 +2979,87 @@ function renderManabaPortal() {
   const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser];
   if (!user) return;
 
-  const userEl = document.getElementById('manaba-user-display') || document.getElementById('manaba-user-name');
-  if (userEl) {
-    userEl.innerText = `${user.name} (${user.studentId || gameState.manabaUser}) / ${user.department || '学生'}`;
+  const headerNameEl = document.getElementById('manaba-user-display-name');
+  const welcomeNameEl = document.getElementById('manaba-portal-welcome-name');
+  if (headerNameEl) {
+    headerNameEl.innerText = `${user.name}`;
+  }
+  if (welcomeNameEl) {
+    welcomeNameEl.innerText = `${user.name}さんのマイページ`;
   }
 
-  // 時間割描画
-  const tbody = document.getElementById('manaba-timetable-body');
+  // 1. 公式曜日時間割テーブル (月〜土 / 1〜7限 + 他)
+  const tbody = document.getElementById('manaba-official-timetable-body');
   if (tbody) {
     tbody.innerHTML = "";
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-    for (let period = 0; period < 5; period++) {
-      let rowHtml = `<tr><td class="timetable-period">${period + 1}限</td>`;
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const periodLabels = ["1", "2", "3", "4", "5", "6", "7", "他"];
+
+    periodLabels.forEach((label, pIdx) => {
+      let rowHtml = `<tr><td class="period-num">${label}</td>`;
       days.forEach(day => {
-        const subject = (user.timetable && user.timetable[day]) ? user.timetable[day][period] : "";
+        const subject = (user.timetable && user.timetable[day]) ? (user.timetable[day][pIdx] || "") : "";
         if (subject) {
-          // 科目がある場合
           const courseId = getCourseIdBySubjectName(subject);
-          rowHtml += `<td class="timetable-cell" style="color:var(--manaba-green); font-weight:600; cursor:pointer;" onclick="openManabaCourse('${courseId}')">${subject}</td>`;
+          rowHtml += `
+            <td class="course-cell has-course" onclick="openManabaCourse('${courseId}')">
+              <div class="timetable-course-item">
+                <a href="javascript:void(0);" title="${subject}">${subject}</a>
+                <div class="timetable-course-icons">
+                  <span>📢</span><span>✏️</span><span>📊</span><span>💬</span>
+                </div>
+              </div>
+            </td>
+          `;
         } else {
-          rowHtml += `<td class="timetable-cell" style="color:#94a3b8;">空き</td>`;
+          rowHtml += `<td class="course-cell"></td>`;
         }
       });
       rowHtml += "</tr>";
       tbody.innerHTML += rowHtml;
-    }
+    });
   }
 
-  // コースタブ一覧の描画
-  const courseListEl = document.querySelector('.manaba-course-list');
-  if (courseListEl) {
-    courseListEl.innerHTML = "";
+  // 2. 「その他の曜日」テーブル
+  const otherTbody = document.getElementById('manaba-official-other-courses-body');
+  if (otherTbody) {
+    otherTbody.innerHTML = "";
     const userCourses = user.courses || [];
-    if (userCourses.length > 0) {
-      userCourses.forEach(c => {
-        courseListEl.innerHTML += `
-          <div class="manaba-course-card" onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
-            <h4>${c.name} (${c.term})</h4>
-            <p>担当教員: ${c.teacher} | 教室: ${c.room}</p>
-          </div>
-        `;
-      });
-    } else {
-      courseListEl.innerHTML = "<p style='padding:20px; color:#64748b;'>現在受講中のコースはありません。</p>";
-    }
+    const baseOtherCourses = [
+      { name: `2026${user.department || '工学科'}3年生`, year: "2026", term: "", teacher: "" },
+      { name: "学生サポートセンター(数,物,化,英)", year: "", term: "", teacher: "" },
+      { name: "外国語単位認定申請", year: "", term: "", teacher: "" },
+      { name: "図書館コース", year: "", term: "", teacher: "図書館" }
+    ];
+
+    const displayCourses = [...userCourses, ...baseOtherCourses];
+
+    displayCourses.forEach(c => {
+      const cid = c.id || getCourseIdBySubjectName(c.name);
+      otherTbody.innerHTML += `
+        <tr onclick="openManabaCourse('${cid}')" style="cursor:pointer;">
+          <td>
+            <a href="javascript:void(0);">★ ${c.name}</a>
+          </td>
+          <td style="text-align:center;">${c.year || '2026'}</td>
+          <td>${c.term || '通年'}</td>
+          <td>${c.teacher || '担当教員'}</td>
+        </tr>
+      `;
+    });
   }
 }
 
 function getCourseIdBySubjectName(name) {
   if (!name) return "c_quantum";
   if (name.includes("量子")) return "c_quantum";
-  if (name.includes("UI")) return "c_uiux";
+  if (name.includes("UI") || name.includes("UX")) return "c_uiux";
   if (name.includes("分散")) return "c_distributed";
   if (name.includes("リテラシー")) return "c_literacy";
   if (name.includes("暗号")) return "c_crypto";
   if (name.includes("ネットワーク")) return "c_network";
-  if (name.includes("メディア")) return "c_media";
-  if (name.includes("認知")) return "c_cognitive";
+  if (name.includes("デザイン")) return "c_design";
+  if (name.includes("認知") || name.includes("メディア")) return "c_media";
   return "c_quantum";
 }
 
