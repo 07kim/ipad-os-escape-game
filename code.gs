@@ -1609,7 +1609,7 @@ function getInitialGameDatabase() {
         {
           "id": 1,
           "title": "1. ガイダンス",
-          "file": "情報D26_1.pdf",
+          "file": "quantum_lec_1.pdf",
           "content": "「情報デザインとは何か。ユーザーの文脈と、情報アーキテクチャの基本について学ぶ。PDFサイズ: 1.2MB」"
         },
         {
@@ -1633,7 +1633,7 @@ function getInitialGameDatabase() {
         {
           "id": 5,
           "title": "5. 情報構造設計 (IA)",
-          "file": "情報D26_5.pdf",
+          "file": "quantum_lec_5.pdf",
           "content": "「サイトマップと画面遷移図。2126年のシステムは、100年前の2026年と同期する変調キーを持つ。」"
         },
         {
@@ -1657,7 +1657,7 @@ function getInitialGameDatabase() {
         {
           "id": 9,
           "title": "9. インタラクションの詳細化",
-          "file": "情報D26_9.pdf",
+          "file": "quantum_lec_9.pdf",
           "content": "「アニメーション、マイクロインタラクションによるフィードバックの設計。」"
         },
         {
