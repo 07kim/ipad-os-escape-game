@@ -4937,52 +4937,79 @@ function renderPuzzleBoard() {
         const bubbleEl = document.createElement('div');
         bubbleEl.className = `puzzle-bubble color-${cellData.color}`;
         bubbleEl.id = `bubble-${r}-${c}`;
+        
+        // 特殊バブルのクラス付与
         if (cellData.special === 'line') bubbleEl.classList.add('special-line');
-        if (cellData.special === 'rainbow') bubbleEl.classList.add('special-rainbow');
+        else if (cellData.special === 'bomb') bubbleEl.classList.add('special-bomb');
+        else if (cellData.special === 'rainbow') bubbleEl.classList.add('special-rainbow');
 
         if (puzzleState.selectedCell && puzzleState.selectedCell.r === r && puzzleState.selectedCell.c === c) {
           bubbleEl.classList.add('selected');
         }
-
-        // スワイプ & タップ両対応リスナー
-        setupBubbleInteraction(bubbleEl, r, c);
 
         cellEl.appendChild(bubbleEl);
       }
       container.appendChild(cellEl);
     }
   }
+
+  // 🎯 グリッド全体で100%正確な幾何学的タッチ・スワイプ判定を設定
+  setupGridBoardInteraction(container);
 }
 
-// スワイプ（PointerEvents）＆タップ対応
-function setupBubbleInteraction(el, r, c) {
+// 🎯 グリッド全体の幾何学的タッチ・スワイプ判定システム（iPad実機完全対応）
+function setupGridBoardInteraction(container) {
+  if (container.dataset.listenerAttached) return;
+  container.dataset.listenerAttached = 'true';
+
   let startX = 0, startY = 0;
-  let isPointerDown = false;
+  let startR = -1, startC = -1;
+  let isTracking = false;
   let hasSwapped = false;
 
-  el.addEventListener('pointerdown', (e) => {
+  function getCellFromCoords(clientX, clientY) {
+    const rect = container.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    if (x < 0 || x >= rect.width || y < 0 || y >= rect.height) return null;
+    const col = Math.floor((x / rect.width) * PUZZLE_COLS);
+    const row = Math.floor((y / rect.height) * PUZZLE_ROWS);
+    if (row >= 0 && row < PUZZLE_ROWS && col >= 0 && col < PUZZLE_COLS) {
+      return { r: row, c: col };
+    }
+    return null;
+  }
+
+  container.addEventListener('pointerdown', (e) => {
     if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
-    isPointerDown = true;
+    const cell = getCellFromCoords(e.clientX, e.clientY);
+    if (!cell || !puzzleState.board[cell.r][cell.c]) return;
+
+    isTracking = true;
     hasSwapped = false;
     startX = e.clientX;
     startY = e.clientY;
+    startR = cell.r;
+    startC = cell.c;
+
     try {
-      el.setPointerCapture(e.pointerId);
+      container.setPointerCapture(e.pointerId);
     } catch(err) {}
   });
 
-  el.addEventListener('pointermove', (e) => {
-    if (!isPointerDown || hasSwapped || puzzleState.isProcessing) return;
+  container.addEventListener('pointermove', (e) => {
+    if (!isTracking || hasSwapped || puzzleState.isProcessing) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    // スワイプ閾値 (14px)
-    const threshold = 14;
+    // スワイプ検出閾値（20pxで誤作動ゼロ）
+    const threshold = 20;
     if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
       hasSwapped = true;
-      isPointerDown = false;
+      isTracking = false;
       puzzleState.selectedCell = null;
 
+      const r = startR, c = startC;
       if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0 && c < PUZZLE_COLS - 1) attemptSwap(r, c, r, c + 1);
         else if (dx < 0 && c > 0) attemptSwap(r, c, r, c - 1);
@@ -4993,16 +5020,18 @@ function setupBubbleInteraction(el, r, c) {
     }
   });
 
-  el.addEventListener('pointerup', (e) => {
-    if (!isPointerDown) return;
-    isPointerDown = false;
-    if (!hasSwapped) {
-      handleCellClick(r, c);
+  container.addEventListener('pointerup', (e) => {
+    if (!isTracking) return;
+    isTracking = false;
+    if (!hasSwapped && startR >= 0 && startC >= 0) {
+      handleCellClick(startR, startC);
     }
+    startR = -1; startC = -1;
   });
 
-  el.addEventListener('pointercancel', () => {
-    isPointerDown = false;
+  container.addEventListener('pointercancel', () => {
+    isTracking = false;
+    startR = -1; startC = -1;
   });
 }
 

@@ -8116,9 +8116,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* 💥 特殊バブル：ラインボム（十字レーザー） */
+/* 💥 特殊バブル：ラインボム（超高圧エレクトリック・レーザー球） */
 .puzzle-bubble.special-line {
-  box-shadow: 0 0 14px rgba(234, 179, 8, 0.7), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #38bdf8 35%, #0284c7 70%, #0c4a6e 100%) !important;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2px #38bdf8 !important;
+  border: 1.5px solid #ffffff !important;
+  animation: electricPulse 1.2s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-line::before {
   content: '⚡';
@@ -8126,14 +8129,17 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 16px;
-  filter: drop-shadow(0 0 4px #ffffff);
-  animation: pulse 0.7s infinite alternate;
+  font-size: 18px;
+  filter: drop-shadow(0 0 6px #facc15) drop-shadow(0 0 2px #ffffff);
+  z-index: 5;
 }
 
-/* 💣 特殊バブル：エリアボム（周囲3x3大爆発） */
+/* 💣 特殊バブル：エリアボム（燃えるマグマ・ビッグボム球） */
 .puzzle-bubble.special-bomb {
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.75), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+  background: radial-gradient(circle at 30% 30%, #fef08a 0%, #f97316 35%, #dc2626 70%, #450a0a 100%) !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.95), inset 0 2px 4px #ffffff, 0 0 0 2px #ef4444 !important;
+  border: 1.5px solid #fef08a !important;
+  animation: bombPulse 0.9s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-bomb::before {
   content: '💣';
@@ -8141,26 +8147,38 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 16px;
-  filter: drop-shadow(0 0 4px #ffffff);
-  animation: bounce 0.8s infinite alternate;
+  font-size: 20px;
+  filter: drop-shadow(0 0 6px #f97316) drop-shadow(0 0 2px #ffffff);
+  z-index: 5;
 }
 
-/* 🌈 特殊バブル：レインボー */
+/* 🌈 特殊バブル：レインボー（7色プリズム・ホログラム球） */
 .puzzle-bubble.special-rainbow {
-  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f43f5e 25%, #eab308 50%, #10b981 75%, #06b6d4 100%) !important;
-  box-shadow: 0 0 18px rgba(236, 72, 153, 0.75), inset 0 2px 4px #fff !important;
-  animation: rainbowSpin 3s linear infinite;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f43f5e 20%, #fbbf24 40%, #10b981 60%, #38bdf8 80%, #a855f7 100%) !important;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.9), inset 0 2px 4px #ffffff, 0 0 0 2px #ec4899 !important;
+  border: 1.5px solid #ffffff !important;
+  animation: rainbowSpin 2.5s linear infinite;
 }
 .puzzle-bubble.special-rainbow::before {
-  content: '★';
+  content: '✦';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 15px;
+  font-size: 20px;
   color: #ffffff;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px #ffffff);
+  z-index: 5;
+}
+
+@keyframes electricPulse {
+  0% { transform: scale(1.0); filter: brightness(1.0); }
+  100% { transform: scale(1.08); filter: brightness(1.25); }
+}
+
+@keyframes bombPulse {
+  0% { transform: scale(1.0); box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), inset 0 2px 4px #ffffff; }
+  100% { transform: scale(1.10); box-shadow: 0 0 24px rgba(249, 115, 22, 1), inset 0 2px 4px #ffffff; }
 }
 
 /* 選択状態 */
