@@ -1244,6 +1244,11 @@ function openApp(appId) {
   }
 }
 
+function closeApp(appId) {
+  goHome();
+}
+window.closeApp = closeApp;
+
 function goHome() {
   // ロック中はホームに行けない
   const lockScreen = document.getElementById('lock-screen');
