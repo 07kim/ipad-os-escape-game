@@ -586,7 +586,13 @@
       <h1>26__0094 ADMIN DASHBOARD</h1>
       <span class="header-badge">リアルタイム進行統制</span>
     </div>
-    <div class="header-links">
+    <div class="header-links" style="display:flex; align-items:center; gap:8px;">
+      <button class="nav-btn" onclick="sendRemoteDeviceReload('ALL')" style="background:#0284c7; color:#ffffff; border:none; font-weight:700; padding:6px 12px; cursor:pointer;" title="全30台の画面・キャッシュを強制リフレッシュ">
+        <i data-lucide="refresh-cw"></i> 🔄 全30台一斉リロード
+      </button>
+      <button class="nav-btn" onclick="sendMasterDataResetAll()" style="background:#dc2626; color:#ffffff; border:none; font-weight:700; padding:6px 12px; cursor:pointer;" title="次の公演転換時用：全iPadのメモ・入力・ログイン・周回を完全初期化">
+        <i data-lucide="trash-2"></i> 🧹 公演終了後 一括完全初期化
+      </button>
       <a href="index.html" target="_blank" class="nav-btn"><i data-lucide="tablet"></i> iPad端末画面</a>
       <a href="editor.html" class="nav-btn"><i data-lucide="edit-3"></i> コンテンツGUIエディタ</a>
     </div>
@@ -798,10 +804,17 @@
         <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
           <i data-lucide="message-square" style="width:13px; height:13px; color:var(--primary);"></i> この端末だけに個別指示・ヒントを送信（画面割込）
         </div>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
           <input type="text" id="dev-modal-msg-input" placeholder="例: 【ヒント】ブラウザのニュースを確認してください" style="flex:1; padding:8px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border-color);">
           <button class="nav-btn" onclick="sendIndividualAlert()" style="background:var(--primary); color:#fff; border:none; font-weight:700; padding:8px 14px; white-space:nowrap; cursor:pointer;">
             <i data-lucide="send"></i> 送信
+          </button>
+        </div>
+
+        <!-- 個別端末アクションバー -->
+        <div style="padding-top:12px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:8px;">
+          <button class="nav-btn" onclick="sendRemoteDeviceReload(currentSelectedDeviceId)" style="background:#0284c7; color:#fff; border:none; font-weight:700; padding:8px 14px; cursor:pointer;" title="このiPadの画面を強制リロード">
+            <i data-lucide="refresh-cw"></i> 🔄 この端末を遠隔リロード
           </button>
         </div>
       </div>
@@ -1652,6 +1665,60 @@
       }, `📢 ${deviceId} へ個別メッセージを送信完了しました！`);
       if (input) input.value = "";
       closeDeviceModal();
+    }
+
+    // 🔄 遠隔リロード送信（個別 または 全30台一斉）
+    function sendRemoteDeviceReload(targetDeviceId = 'ALL') {
+      const isAll = (targetDeviceId === 'ALL');
+      const confirmText = isAll 
+        ? "⚠️【確認】全30台のiPadへ一斉リロード命令を送信しますか？\n（画面フリーズ復旧・最新キャッシュ読込が行われます）" 
+        : `【確認】${targetDeviceId} へ遠隔リロード命令を送信しますか？`;
+
+      if (!confirm(confirmText)) return;
+
+      sendCloudAdminCommand({
+        id: "RELOAD_" + targetDeviceId + "_" + Date.now(),
+        type: "device_reload",
+        target: targetDeviceId,
+        name: isAll ? "全30台一斉リロード" : `遠隔リロード (${targetDeviceId})`,
+        params: {
+          target: targetDeviceId,
+          targetDevice: targetDeviceId,
+          action: "reload",
+          timestamp: Date.now()
+        }
+      }, isAll ? "🔄 全30台へ一斉リロード命令を送信完了しました！" : `🔄 ${targetDeviceId} へリロード命令を送信完了しました！`);
+
+      if (!isAll) {
+        closeDeviceModal();
+      }
+    }
+
+    // 🧹 公演終了後の一斉データ完全初期化（マスターリセット）
+    function sendMasterDataResetAll() {
+      const confirmMsg1 = "🚨【超重要・確認1/2】\n全30台のiPadのデータ（入力、メモ、manabaログイン、周回など）を完全に初期化しますか？\n\n※この操作は公演終了後の転換時、またはリハーサル直前のみ実行してください。";
+      if (!confirm(confirmMsg1)) return;
+
+      const confirmMsg2 = "⚠️【最終確認 2/2】\n本当に全端末のデータを完全初期化（1周目・初期状態へ復元）しますか？\nこの操作は取り消せません。";
+      if (!confirm(confirmMsg2)) return;
+
+      // 1. タイマー初期化
+      resetAdminTimer();
+
+      // 2. クラウドコマンド一斉送信
+      sendCloudAdminCommand({
+        id: "MASTER_RESET_" + Date.now(),
+        type: "master_reset",
+        target: "ALL",
+        name: "公演終了後一斉データ完全初期化",
+        params: {
+          target: "ALL",
+          action: "master_reset",
+          loop: 1,
+          sound: "fanfare",
+          timestamp: Date.now()
+        }
+      }, "🧹 全30台のデータを完全初期化し、1周目初期状態へ復元しました！");
     }
 
     // --- 🏆 ランキングビュー切り替え ---

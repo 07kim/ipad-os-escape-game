@@ -365,21 +365,44 @@ function executeRemoteAdminCommand(cmd) {
     updateAppUI();
   }
 
-  // ⑥ マスターデータ初期化（本番前一斉リセット）
-  if (type === 'master_reset') {
-    console.log("🚨 運営よりマスターデータリセットを受信しました。全データを初期化します。");
-    const currentTeam = gameState.teamId || 'iPad-01';
-    localStorage.clear();
-    localStorage.setItem('team_id', currentTeam);
-    localStorage.setItem('game_loop', '1');
-    playSystemSound("fanfare");
-    setTimeout(() => {
-      location.reload();
-    }, 800);
-    return;
+  // ⑥ 個別・全体 遠隔リロード（画面フリーズ・キャッシュリフレッシュ）
+  if (type === 'device_reload' || type === 'reload' || p.action === 'reload' || cmd.action === 'reload') {
+    const target = cmd.target || p.target || 'ALL';
+    const myTeam = gameState.teamId || 'iPad-01';
+    if (target === 'ALL' || target === myTeam) {
+      console.log(`🔄 運営より遠隔リロードを受信しました (対象: ${target})。即時リロードを実行します。`);
+      playSystemSound("beep");
+      setTimeout(() => {
+        location.reload(true);
+      }, 300);
+      return;
+    }
   }
 
-  // ⑦ 演者トリガーによるリアルタイムLINKメッセージ配信
+  // ⑦ 公演終了後の一斉データ完全消去＆初期化（マスターリセット）
+  if (type === 'master_reset' || p.action === 'master_reset' || cmd.action === 'master_reset') {
+    const target = cmd.target || p.target || 'ALL';
+    const myTeam = gameState.teamId || 'iPad-01';
+    if (target === 'ALL' || target === myTeam) {
+      console.log("🚨 運営より公演終了後一斉初期化を受信しました。全データを完全初期化します。");
+      const currentTeam = myTeam;
+      const gasUrl = localStorage.getItem('gas_url');
+      
+      // 端末識別子とGAS設定以外を完全消去
+      localStorage.clear();
+      localStorage.setItem('team_id', currentTeam);
+      localStorage.setItem('game_loop', '1');
+      if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+
+      playSystemSound("fanfare");
+      setTimeout(() => {
+        location.reload(true);
+      }, 600);
+      return;
+    }
+  }
+
+  // ⑧ 演者トリガーによるリアルタイムLINKメッセージ配信
   const isActorMsg = (cmd.action === 'actor_message' || type === 'actor_message' || p.action === 'actor_message' || p.type === 'actor_message' || (p.text && p.actor));
   if (isActorMsg) {
     const actor = cmd.actor || p.actor;
