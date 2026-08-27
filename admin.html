@@ -334,6 +334,104 @@
     .status-highlight {
       animation: highlightPulse 1.2s ease-out;
     }
+
+    /* ⏱️ 公演タイムライン ＆ 周回タイマーカード */
+    .timer-dashboard-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+      border: 1px solid #334155;
+      margin-bottom: 24px;
+    }
+    .timer-display-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 14px;
+    }
+    .timer-val-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .timer-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .timer-digits-total {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 900;
+      color: #38bdf8;
+      letter-spacing: 1px;
+    }
+    .timer-digits-loop {
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 800;
+      color: #4ade80;
+      letter-spacing: 1px;
+    }
+    .loop-laps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .lap-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
+    }
+    .lap-item.active {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: #38bdf8;
+    }
+    .lap-item-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .lap-item-time {
+      font-family: 'Orbitron', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 4px;
+    }
+    .timer-ctrl-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .timer-ctrl-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -370,6 +468,64 @@
     
     <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
     <div>
+      <!-- ⏱️ 公演タイムライン ＆ 周回タイマーパネル -->
+      <div class="timer-dashboard-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; color:#f8fafc;">
+            <i data-lucide="timer" style="color:#38bdf8; width:20px; height:20px;"></i> 公演タイムライン ＆ 周回タイマー
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff;">
+              <i data-lucide="play" id="icon-timer-toggle" style="width:13px; height:13px;"></i> <span id="text-timer-toggle">スタート</span>
+            </button>
+            <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1;">
+              <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> リセット
+            </button>
+          </div>
+        </div>
+
+        <div class="timer-display-main">
+          <!-- トータル公演時間 -->
+          <div class="timer-val-box">
+            <span class="timer-label"><i data-lucide="clock" style="width:12px; height:12px;"></i> トータル公演時間</span>
+            <span class="timer-digits-total" id="timer-total-digits">00:00</span>
+          </div>
+          <!-- 現在の周回経過時間 -->
+          <div class="timer-val-box" style="text-align:right;">
+            <span class="timer-label" style="justify-content:flex-end;"><i data-lucide="repeat" style="width:12px; height:12px; color:#4ade80;"></i> <span id="timer-current-loop-name">1周目</span> 経過時間</span>
+            <span class="timer-digits-loop" id="timer-loop-digits">00:00</span>
+          </div>
+        </div>
+
+        <!-- 各周回ラップタイムバー -->
+        <div class="loop-laps-grid">
+          <div class="lap-item active" id="lap-card-1">
+            <div class="lap-item-title">
+              <span>🌀 1周目</span>
+              <span id="lap-status-1" style="color:#38bdf8; font-size:10px;">進行中</span>
+            </div>
+            <div class="lap-item-time" id="lap-time-1">00:00</div>
+          </div>
+          <div class="lap-item" id="lap-card-2">
+            <div class="lap-item-title">
+              <span>🌀 2周目</span>
+              <span id="lap-status-2" style="color:#94a3b8; font-size:10px;">待機</span>
+            </div>
+            <div class="lap-item-time" id="lap-time-2">--:--</div>
+          </div>
+          <div class="lap-item" id="lap-card-3">
+            <div class="lap-item-title">
+              <span>🌀 3周目</span>
+              <span id="lap-status-3" style="color:#94a3b8; font-size:10px;">待機</span>
+            </div>
+            <div class="lap-item-time" id="lap-time-3">--:--</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
+          <span>※ シーン進行プリセット（1周目・2周目・3周目）を押すと、周回タイマーが自動でラップ切り替えされます。</span>
+        </div>
+      </div>
       <!-- 🎬 シーン別進行プリセットパネル -->
       <div class="card">
         <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（全30台クラウド一斉同期）</div>
@@ -485,9 +641,239 @@
     let latestDevicesData = [];
     let monitorFilter = 'all';
 
+    // ===== ⏱️ 公演タイムライン ＆ 周回タイマー管理 =====
+    let adminTimerState = {
+      isRunning: false,
+      totalStartTime: null,
+      totalElapsedBeforePause: 0,
+      currentLoop: 1,
+      loopStartTime: null,
+      loopElapsedBeforePause: 0,
+      loopLaps: {
+        1: { status: 'active', durationMs: 0 },
+        2: { status: 'waiting', durationMs: 0 },
+        3: { status: 'waiting', durationMs: 0 }
+      }
+    };
+
+    let adminTimerInterval = null;
+
+    function initAdminTimer() {
+      try {
+        const saved = localStorage.getItem('admin_timeline_timer');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          Object.assign(adminTimerState, parsed);
+          if (adminTimerState.isRunning && adminTimerState.totalStartTime) {
+            startTimerInterval();
+            updateTimerButtonsUI(true);
+          } else {
+            renderTimerUI();
+          }
+        } else {
+          renderTimerUI();
+        }
+      } catch(e) {
+        renderTimerUI();
+      }
+    }
+
+    function saveAdminTimerState() {
+      try {
+        localStorage.setItem('admin_timeline_timer', JSON.stringify(adminTimerState));
+      } catch(e) {}
+    }
+
+    function toggleAdminTimer() {
+      if (adminTimerState.isRunning) {
+        pauseAdminTimer();
+      } else {
+        startAdminTimer();
+      }
+    }
+
+    function startAdminTimer() {
+      const now = Date.now();
+      adminTimerState.isRunning = true;
+      adminTimerState.totalStartTime = now;
+      adminTimerState.loopStartTime = now;
+      
+      startTimerInterval();
+      updateTimerButtonsUI(true);
+      saveAdminTimerState();
+      showToast("⏱️ 公演タイマーを開始しました！");
+    }
+
+    function pauseAdminTimer() {
+      if (!adminTimerState.isRunning) return;
+      const now = Date.now();
+      
+      adminTimerState.totalElapsedBeforePause += (now - adminTimerState.totalStartTime);
+      adminTimerState.loopElapsedBeforePause += (now - adminTimerState.loopStartTime);
+      adminTimerState.isRunning = false;
+      adminTimerState.totalStartTime = null;
+      adminTimerState.loopStartTime = null;
+
+      if (adminTimerInterval) clearInterval(adminTimerInterval);
+      updateTimerButtonsUI(false);
+      renderTimerUI();
+      saveAdminTimerState();
+      showToast("⏸️ 公演タイマーを一時停止しました");
+    }
+
+    function resetAdminTimer() {
+      if (adminTimerInterval) clearInterval(adminTimerInterval);
+      adminTimerState = {
+        isRunning: false,
+        totalStartTime: null,
+        totalElapsedBeforePause: 0,
+        currentLoop: 1,
+        loopStartTime: null,
+        loopElapsedBeforePause: 0,
+        loopLaps: {
+          1: { status: 'active', durationMs: 0 },
+          2: { status: 'waiting', durationMs: 0 },
+          3: { status: 'waiting', durationMs: 0 }
+        }
+      };
+      updateTimerButtonsUI(false);
+      renderTimerUI();
+      saveAdminTimerState();
+      showToast("🔄 公演タイマーをリセットしました（1周目初期状態）");
+    }
+
+    // 周回が変更されたときに自動でラップを切り替え
+    function onAdminLoopChanged(newLoop) {
+      const targetLoop = parseInt(newLoop, 10);
+      if (isNaN(targetLoop) || targetLoop === adminTimerState.currentLoop) return;
+
+      const prevLoop = adminTimerState.currentLoop;
+      const now = Date.now();
+
+      // 前の周回の確定所要時間を記録
+      let prevDuration = adminTimerState.loopElapsedBeforePause;
+      if (adminTimerState.isRunning && adminTimerState.loopStartTime) {
+        prevDuration += (now - adminTimerState.loopStartTime);
+      }
+      if (adminTimerState.loopLaps[prevLoop]) {
+        adminTimerState.loopLaps[prevLoop].durationMs = prevDuration;
+        adminTimerState.loopLaps[prevLoop].status = 'done';
+      }
+
+      // 新しい周回の計測スタート
+      adminTimerState.currentLoop = targetLoop;
+      adminTimerState.loopElapsedBeforePause = 0;
+      adminTimerState.loopStartTime = adminTimerState.isRunning ? now : null;
+
+      if (adminTimerState.loopLaps[targetLoop]) {
+        adminTimerState.loopLaps[targetLoop].status = 'active';
+      }
+
+      // もしタイマーが止まっていたら自動スタート
+      if (!adminTimerState.isRunning) {
+        startAdminTimer();
+      } else {
+        renderTimerUI();
+        saveAdminTimerState();
+      }
+
+      showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（${prevLoop}周目実績: ${formatMs(prevDuration)}）`);
+    }
+
+    function startTimerInterval() {
+      if (adminTimerInterval) clearInterval(adminTimerInterval);
+      adminTimerInterval = setInterval(renderTimerUI, 500);
+      renderTimerUI();
+    }
+
+    function renderTimerUI() {
+      const now = Date.now();
+      
+      // 1. トータル時間計算
+      let totalMs = adminTimerState.totalElapsedBeforePause;
+      if (adminTimerState.isRunning && adminTimerState.totalStartTime) {
+        totalMs += (now - adminTimerState.totalStartTime);
+      }
+
+      // 2. 現在の周回時間計算
+      let loopMs = adminTimerState.loopElapsedBeforePause;
+      if (adminTimerState.isRunning && adminTimerState.loopStartTime) {
+        loopMs += (now - adminTimerState.loopStartTime);
+      }
+
+      // DOM更新
+      const totalDigitsEl = document.getElementById('timer-total-digits');
+      const loopDigitsEl = document.getElementById('timer-loop-digits');
+      const loopNameEl = document.getElementById('timer-current-loop-name');
+
+      if (totalDigitsEl) totalDigitsEl.innerText = formatMs(totalMs);
+      if (loopDigitsEl) loopDigitsEl.innerText = formatMs(loopMs);
+      if (loopNameEl) loopNameEl.innerText = `${adminTimerState.currentLoop}周目`;
+
+      // ラップタイムカード更新
+      for (let l = 1; l <= 3; l++) {
+        const cardEl = document.getElementById(`lap-card-${l}`);
+        const statusEl = document.getElementById(`lap-status-${l}`);
+        const timeEl = document.getElementById(`lap-time-${l}`);
+
+        if (!cardEl) continue;
+
+        if (l === adminTimerState.currentLoop) {
+          cardEl.className = 'lap-item active';
+          if (statusEl) {
+            statusEl.innerText = adminTimerState.isRunning ? '進行中 ⏱️' : '一時停止 ⏸️';
+            statusEl.style.color = '#38bdf8';
+          }
+          if (timeEl) timeEl.innerText = formatMs(loopMs);
+        } else if (l < adminTimerState.currentLoop) {
+          cardEl.className = 'lap-item';
+          const dur = adminTimerState.loopLaps[l] ? adminTimerState.loopLaps[l].durationMs : 0;
+          if (statusEl) {
+            statusEl.innerText = '完了 ✅';
+            statusEl.style.color = '#4ade80';
+          }
+          if (timeEl) timeEl.innerText = formatMs(dur);
+        } else {
+          cardEl.className = 'lap-item';
+          if (statusEl) {
+            statusEl.innerText = '待機';
+            statusEl.style.color = '#94a3b8';
+          }
+          if (timeEl) timeEl.innerText = '--:--';
+        }
+      }
+    }
+
+    function formatMs(ms) {
+      if (ms < 0) ms = 0;
+      const totalSec = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSec / 60);
+      const seconds = totalSec % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function updateTimerButtonsUI(isRunning) {
+      const btnToggle = document.getElementById('btn-timer-toggle');
+      const iconToggle = document.getElementById('icon-timer-toggle');
+      const textToggle = document.getElementById('text-timer-toggle');
+
+      if (!btnToggle) return;
+      if (isRunning) {
+        btnToggle.style.background = '#f59e0b';
+        if (textToggle) textToggle.innerText = '一時停止';
+        if (iconToggle) iconToggle.setAttribute('data-lucide', 'pause');
+      } else {
+        btnToggle.style.background = '#0284c7';
+        if (textToggle) textToggle.innerText = 'スタート';
+        if (iconToggle) iconToggle.setAttribute('data-lucide', 'play');
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
       renderPresetButtons();
+      initAdminTimer();
 
       // GAS URLの初期化
       const savedGasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || "";
@@ -531,6 +917,11 @@
       const presets = (window.GAME_DATABASE && window.GAME_DATABASE.adminPresets) || [];
       const p = presets.find(item => item.id === presetId);
       if (!p) return;
+
+      // ⏱️ 周回変更プリセットの場合、タイマーのラップを自動更新
+      if (p.loop) {
+        onAdminLoopChanged(p.loop);
+      }
 
       sendCloudAdminCommand({
         id: "PRESET_" + p.id + "_" + Date.now(),
@@ -709,6 +1100,9 @@
       // ローカルモニタリングデータも初期化
       latestDevicesData = [];
       renderMonitoringCards();
+
+      // ⏱️ 公演タイマーも初期化
+      resetAdminTimer();
     }
 
     // --- 30台モニタリングダッシュボード ---
