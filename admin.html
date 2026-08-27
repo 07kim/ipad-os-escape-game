@@ -861,14 +861,14 @@
         if (!cardEl) continue;
 
         if (l === adminTimerState.currentLoop) {
-          cardEl.className = 'lap-item active';
+          cardEl.className = 'top-lap-pill active';
           if (statusEl) {
             statusEl.innerText = adminTimerState.isRunning ? '進行中 ⏱️' : '一時停止 ⏸️';
             statusEl.style.color = '#38bdf8';
           }
           if (timeEl) timeEl.innerText = formatMs(loopMs);
         } else if (l < adminTimerState.currentLoop) {
-          cardEl.className = 'lap-item';
+          cardEl.className = 'top-lap-pill';
           const dur = adminTimerState.loopLaps[l] ? adminTimerState.loopLaps[l].durationMs : 0;
           if (statusEl) {
             statusEl.innerText = '完了 ✅';
@@ -876,7 +876,7 @@
           }
           if (timeEl) timeEl.innerText = formatMs(dur);
         } else {
-          cardEl.className = 'lap-item';
+          cardEl.className = 'top-lap-pill';
           if (statusEl) {
             statusEl.innerText = '待機';
             statusEl.style.color = '#94a3b8';
