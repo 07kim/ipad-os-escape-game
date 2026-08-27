@@ -2210,24 +2210,101 @@
       </div>
 
       <!-- ------------------------------------------ -->
-      <!-- ⑪ 無限プチプチ（Bubble Wrap）アプリ -->
+      <!-- ⑪ バブルパズル（Bubble Pop Match-3）アプリ -->
       <!-- ------------------------------------------ -->
       <div class="app-window" id="app-bubble-app">
-        <div class="app-window-header" style="background:#0f172a; border-bottom:1px solid rgba(255,255,255,0.1); color:#ffffff;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="window-title" style="color:#ffffff;"><i data-lucide="sparkles" style="width:16px; height:16px; vertical-align:middle; margin-right:4px; color:#ec4899;"></i> 無限プチプチ</span>
-            <span id="bubble-count-tag" style="font-size:11px; font-weight:700; background:rgba(236,72,153,0.2); color:#f472b6; padding:2px 8px; border-radius:12px; border:1px solid rgba(236,72,153,0.3);">潰した数: 0</span>
+        <div class="bubble-game-header">
+          <!-- 上部ナビゲーション -->
+          <div class="bubble-nav-row">
+            <div class="bubble-title-group">
+              <div class="bubble-logo-badge">
+                <i data-lucide="sparkles"></i>
+              </div>
+              <div>
+                <h1 class="bubble-game-title">Bubble Pop!</h1>
+                <p class="bubble-game-sub">Match-3 Jewel Puzzle</p>
+              </div>
+            </div>
+
+            <!-- モード切替タブ（パズル / フリー） -->
+            <div class="bubble-mode-tabs">
+              <button class="bubble-mode-tab active" id="bubble-tab-puzzle" onclick="switchBubbleMode('puzzle')">
+                <i data-lucide="puzzle"></i> パズル
+              </button>
+              <button class="bubble-mode-tab" id="bubble-tab-free" onclick="switchBubbleMode('free')">
+                <i data-lucide="infinity"></i> フリー
+              </button>
+            </div>
+
+            <div class="bubble-header-actions">
+              <button class="bubble-icon-btn" onclick="restartBubbleGame()" title="リスタート">
+                <i data-lucide="rotate-ccw"></i>
+              </button>
+              <button class="bubble-icon-btn close" onclick="closeApp('bubble-app')" title="閉じる">
+                ✕
+              </button>
+            </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="nav-btn" onclick="resetAllBubbles()" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:6px; cursor:pointer;" title="すべてのプチプチを復活">
-              <i data-lucide="rotate-ccw"></i> 全復活
+
+          <!-- パズル情報ステータスバー（パズルモード用） -->
+          <div class="bubble-stats-bar" id="bubble-puzzle-stats">
+            <div class="bubble-stat-card">
+              <span class="stat-label">SCORE</span>
+              <span class="stat-val primary" id="puzzle-score-val">0</span>
+            </div>
+            <div class="bubble-stat-card">
+              <span class="stat-label">BEST</span>
+              <span class="stat-val highlight" id="puzzle-best-val">0</span>
+            </div>
+            <div class="bubble-stat-card">
+              <span class="stat-label">MOVES</span>
+              <span class="stat-val" id="puzzle-moves-val">25</span>
+            </div>
+            <div class="bubble-stat-card combo-card" id="puzzle-combo-card" style="opacity: 0;">
+              <span class="stat-label">COMBO</span>
+              <span class="stat-val combo-text" id="puzzle-combo-val">x2!</span>
+            </div>
+          </div>
+
+          <!-- フリーモード用ステータスバー -->
+          <div class="bubble-stats-bar" id="bubble-free-stats" style="display: none;">
+            <div class="bubble-stat-card">
+              <span class="stat-label">POPPED</span>
+              <span class="stat-val primary" id="free-popped-val">0</span>
+            </div>
+            <div class="bubble-stat-card">
+              <span class="stat-label">STATUS</span>
+              <span class="stat-val" style="color: #34d399;">無限プチプチ</span>
+            </div>
+            <button class="bubble-free-reset-btn" onclick="resetAllBubbles()">
+              <i data-lucide="refresh-cw"></i> 全復活
             </button>
-            <button class="window-close-btn" onclick="closeApp('bubble-app')" style="background:rgba(255,255,255,0.15); color:#ffffff;">✕</button>
           </div>
         </div>
+
         <div class="bubble-app-body">
-          <div class="bubble-grid-container" id="bubble-grid-container">
-            <!-- JSで動的生成 -->
+          <!-- パズルモード用ボード（8x8） -->
+          <div class="puzzle-board-container" id="puzzle-board-container">
+            <div class="puzzle-grid-board" id="puzzle-grid-board">
+              <!-- JSで8x8スロットを生成 -->
+            </div>
+            <!-- ゲームオーバー / クリアオーバーレイ -->
+            <div class="puzzle-result-overlay" id="puzzle-result-overlay" style="display: none;">
+              <div class="puzzle-result-modal">
+                <div class="result-icon-badge" id="puzzle-result-icon">🏆</div>
+                <h2 id="puzzle-result-title">STAGE CLEAR!</h2>
+                <div class="result-score-line">
+                  <span>FINAL SCORE</span>
+                  <strong id="puzzle-result-final-score">0</strong>
+                </div>
+                <button class="puzzle-replay-btn" onclick="restartBubbleGame()">もう一度あそぶ</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- フリーモード用ボード -->
+          <div class="bubble-grid-container" id="bubble-grid-container" style="display: none;">
+            <!-- JSでフリー気泡を生成 -->
           </div>
         </div>
       </div>

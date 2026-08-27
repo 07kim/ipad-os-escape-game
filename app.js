@@ -1235,7 +1235,7 @@ function openApp(appId) {
     } else if (appId === 'calc-app') {
       updateCalcDisplay();
     } else if (appId === 'bubble-app') {
-      initBubbleWrap();
+      initBubbleApp();
     } else if (appId === 'compass-app') {
       initCompassApp();
     }
@@ -4828,89 +4828,510 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================================================
-// ⑪ 無限プチプチ（Bubble Wrap）エンジン（完全独立モジュール）
+// ⑪ バブルパズル（Bubble Pop Match-3）＆ 無限プチプチ エンジン
 // ==========================================================================
-let bubbleWrapInitialized = false;
-let poppedBubbleCount = 0;
+const PUZZLE_ROWS = 8;
+const PUZZLE_COLS = 8;
+const BUBBLE_COLORS = ['pink', 'blue', 'green', 'yellow', 'purple'];
 
-function initBubbleWrap() {
+let puzzleState = {
+  board: [],           // 8x8 グリッド
+  selectedCell: null,  // {r, c}
+  isProcessing: false,
+  score: 0,
+  bestScore: 0,
+  moves: 25,
+  combo: 0,
+  mode: 'puzzle'       // 'puzzle' | 'free'
+};
+
+let freePoppedCount = 0;
+
+function initBubbleApp() {
+  if (puzzleState.board.length === 0) {
+    // ハイスコア読み込み
+    try {
+      puzzleState.bestScore = parseInt(localStorage.getItem('bubble_puzzle_best') || '0', 10);
+    } catch(e) {}
+    document.getElementById('puzzle-best-val').innerText = puzzleState.bestScore.toLocaleString();
+    
+    restartBubbleGame();
+  }
+  if (puzzleState.mode === 'free') {
+    initFreeBubbles();
+  }
+}
+
+// モード切替（パズル / フリー）
+function switchBubbleMode(mode) {
+  puzzleState.mode = mode;
+  playSystemSound("notif");
+
+  const tabPuzzle = document.getElementById('bubble-tab-puzzle');
+  const tabFree = document.getElementById('bubble-tab-free');
+  const statsPuzzle = document.getElementById('bubble-puzzle-stats');
+  const statsFree = document.getElementById('bubble-free-stats');
+  const boardPuzzle = document.getElementById('puzzle-board-container');
+  const boardFree = document.getElementById('bubble-grid-container');
+
+  if (mode === 'puzzle') {
+    if (tabPuzzle) tabPuzzle.classList.add('active');
+    if (tabFree) tabFree.classList.remove('active');
+    if (statsPuzzle) statsPuzzle.style.display = 'flex';
+    if (statsFree) statsFree.style.display = 'none';
+    if (boardPuzzle) boardPuzzle.style.display = 'flex';
+    if (boardFree) boardFree.style.display = 'none';
+  } else {
+    if (tabPuzzle) tabPuzzle.classList.remove('active');
+    if (tabFree) tabFree.classList.add('active');
+    if (statsPuzzle) statsPuzzle.style.display = 'none';
+    if (statsFree) statsFree.style.display = 'flex';
+    if (boardPuzzle) boardPuzzle.style.display = 'none';
+    if (boardFree) boardFree.style.display = 'grid';
+    initFreeBubbles();
+  }
+}
+
+// ゲームリスタート
+function restartBubbleGame() {
+  puzzleState.score = 0;
+  puzzleState.moves = 25;
+  puzzleState.combo = 0;
+  puzzleState.selectedCell = null;
+  puzzleState.isProcessing = false;
+
+  document.getElementById('puzzle-score-val').innerText = '0';
+  document.getElementById('puzzle-moves-val').innerText = '25';
+  hideComboBadge();
+  document.getElementById('puzzle-result-overlay').style.display = 'none';
+
+  // 初期盤面生成（初期マッチが発生しないように生成）
+  generateInitialBoard();
+  renderPuzzleBoard();
+}
+
+function generateInitialBoard() {
+  puzzleState.board = [];
+  for (let r = 0; r < PUZZLE_ROWS; r++) {
+    const row = [];
+    for (let c = 0; c < PUZZLE_COLS; c++) {
+      let color;
+      do {
+        color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
+      } while (
+        (c >= 2 && row[c - 1].color === color && row[c - 2].color === color) ||
+        (r >= 2 && puzzleState.board[r - 1][c].color === color && puzzleState.board[r - 2][c].color === color)
+      );
+      row.push({ color: color, special: 'none', id: `b_${r}_${c}_${Date.now()}` });
+    }
+    puzzleState.board.push(row);
+  }
+}
+
+function renderPuzzleBoard() {
+  const container = document.getElementById('puzzle-grid-board');
+  if (!container) return;
+  container.innerHTML = "";
+
+  for (let r = 0; r < PUZZLE_ROWS; r++) {
+    for (let c = 0; c < PUZZLE_COLS; c++) {
+      const cellData = puzzleState.board[r][c];
+      const cellEl = document.createElement('div');
+      cellEl.className = 'puzzle-cell';
+      cellEl.dataset.row = r;
+      cellEl.dataset.col = c;
+
+      if (cellData) {
+        const bubbleEl = document.createElement('div');
+        bubbleEl.className = `puzzle-bubble color-${cellData.color}`;
+        if (cellData.special === 'line') bubbleEl.classList.add('special-line');
+        if (cellData.special === 'rainbow') bubbleEl.classList.add('special-rainbow');
+
+        if (puzzleState.selectedCell && puzzleState.selectedCell.r === r && puzzleState.selectedCell.c === c) {
+          bubbleEl.classList.add('selected');
+        }
+
+        // タップ/クリックイベント
+        bubbleEl.onclick = () => handleCellClick(r, c);
+
+        // スワイプ/ドラッグ対応
+        setupBubbleSwipe(bubbleEl, r, c);
+
+        cellEl.appendChild(bubbleEl);
+      }
+      container.appendChild(cellEl);
+    }
+  }
+}
+
+// スワイプ操作対応
+function setupBubbleSwipe(el, r, c) {
+  let startX = 0, startY = 0;
+  el.addEventListener('touchstart', (e) => {
+    if (puzzleState.isProcessing) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  el.addEventListener('touchend', (e) => {
+    if (puzzleState.isProcessing || !startX) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    startX = 0; startY = 0;
+
+    const threshold = 20;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > threshold && c < PUZZLE_COLS - 1) attemptSwap(r, c, r, c + 1);
+      else if (dx < -threshold && c > 0) attemptSwap(r, c, r, c - 1);
+    } else {
+      if (dy > threshold && r < PUZZLE_ROWS - 1) attemptSwap(r, c, r + 1, c);
+      else if (dy < -threshold && r > 0) attemptSwap(r, c, r - 1, c);
+    }
+  }, { passive: true });
+}
+
+// セル選択＆スワップ処理
+function handleCellClick(r, c) {
+  if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
+
+  if (!puzzleState.selectedCell) {
+    puzzleState.selectedCell = { r, c };
+    playBubblePopSound(440, 0.08);
+    renderPuzzleBoard();
+  } else {
+    const sel = puzzleState.selectedCell;
+    const isAdjacent = (Math.abs(sel.r - r) + Math.abs(sel.c - c)) === 1;
+
+    if (sel.r === r && sel.c === c) {
+      puzzleState.selectedCell = null;
+      renderPuzzleBoard();
+    } else if (isAdjacent) {
+      attemptSwap(sel.r, sel.c, r, c);
+      puzzleState.selectedCell = null;
+    } else {
+      puzzleState.selectedCell = { r, c };
+      playBubblePopSound(440, 0.08);
+      renderPuzzleBoard();
+    }
+  }
+}
+
+async function attemptSwap(r1, c1, r2, c2) {
+  if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
+  puzzleState.isProcessing = true;
+
+  playBubbleSwapSound();
+
+  // スワップ実行
+  const temp = puzzleState.board[r1][c1];
+  puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
+  puzzleState.board[r2][c2] = temp;
+  renderPuzzleBoard();
+
+  await sleep(150);
+
+  // マッチ判定
+  const matches = findMatches();
+
+  if (matches.length > 0) {
+    // 有効な手
+    puzzleState.moves--;
+    document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
+    puzzleState.combo = 0;
+    await processMatches();
+  } else {
+    // マッチなし：元に戻す
+    const rollback = puzzleState.board[r1][c1];
+    puzzleState.board[r1][c1] = puzzleState.board[r2][c2];
+    puzzleState.board[r2][c2] = rollback;
+    playBubblePopSound(250, 0.15); // ミス音
+    renderPuzzleBoard();
+  }
+
+  puzzleState.isProcessing = false;
+
+  // 手数終了判定
+  if (puzzleState.moves <= 0) {
+    setTimeout(showPuzzleResult, 600);
+  }
+}
+
+// 縦横3個以上のマッチ検出
+function findMatches() {
+  const matchedCoords = new Set();
+  const matchGroups = [];
+
+  // 横方向チェック
+  for (let r = 0; r < PUZZLE_ROWS; r++) {
+    let matchLen = 1;
+    for (let c = 0; c < PUZZLE_COLS; c++) {
+      const checkNext = (c < PUZZLE_COLS - 1) && 
+        puzzleState.board[r][c] && puzzleState.board[r][c + 1] &&
+        (puzzleState.board[r][c].color === puzzleState.board[r][c + 1].color || puzzleState.board[r][c].special === 'rainbow' || puzzleState.board[r][c + 1].special === 'rainbow');
+
+      if (checkNext) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          const group = [];
+          for (let i = 0; i < matchLen; i++) {
+            matchedCoords.add(`${r},${c - i}`);
+            group.push({ r, c: c - i });
+          }
+          matchGroups.push(group);
+        }
+        matchLen = 1;
+      }
+    }
+  }
+
+  // 縦方向チェック
+  for (let c = 0; c < PUZZLE_COLS; c++) {
+    let matchLen = 1;
+    for (let r = 0; r < PUZZLE_ROWS; r++) {
+      const checkNext = (r < PUZZLE_ROWS - 1) && 
+        puzzleState.board[r][c] && puzzleState.board[r + 1][c] &&
+        (puzzleState.board[r][c].color === puzzleState.board[r + 1][c].color || puzzleState.board[r][c].special === 'rainbow' || puzzleState.board[r + 1][c].special === 'rainbow');
+
+      if (checkNext) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          const group = [];
+          for (let i = 0; i < matchLen; i++) {
+            matchedCoords.add(`${r - i},${c}`);
+            group.push({ r: r - i, c });
+          }
+          matchGroups.push(group);
+        }
+        matchLen = 1;
+      }
+    }
+  }
+
+  return Array.from(matchedCoords).map(str => {
+    const [r, c] = str.split(',').map(Number);
+    return { r, c };
+  });
+}
+
+// 連鎖処理ループ
+async function processMatches() {
+  let matches = findMatches();
+  while (matches.length > 0) {
+    puzzleState.combo++;
+    showComboBadge(puzzleState.combo);
+    playBubbleMatchSound(puzzleState.combo);
+
+    // スコア加算
+    const points = matches.length * 100 * puzzleState.combo;
+    addPuzzleScore(points);
+
+    // 破裂アニメーション
+    matches.forEach(m => {
+      const cell = document.querySelector(`.puzzle-cell[data-row="${m.r}"][data-col="${m.c}"] .puzzle-bubble`);
+      if (cell) cell.classList.add('popping');
+      puzzleState.board[m.r][m.c] = null;
+    });
+
+    await sleep(220);
+
+    // 重力落下＆新バブル補充
+    applyGravityAndRefill();
+    renderPuzzleBoard();
+
+    await sleep(250);
+    matches = findMatches();
+  }
+
+  setTimeout(hideComboBadge, 1200);
+}
+
+function applyGravityAndRefill() {
+  for (let c = 0; c < PUZZLE_COLS; c++) {
+    // 下から詰める
+    let emptyRow = PUZZLE_ROWS - 1;
+    for (let r = PUZZLE_ROWS - 1; r >= 0; r--) {
+      if (puzzleState.board[r][c] !== null) {
+        if (emptyRow !== r) {
+          puzzleState.board[emptyRow][c] = puzzleState.board[r][c];
+          puzzleState.board[r][c] = null;
+        }
+        emptyRow--;
+      }
+    }
+    // 上部の空きに新バブルを補充
+    for (let r = emptyRow; r >= 0; r--) {
+      const color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
+      const isLineSpecial = Math.random() < 0.06;
+      const isRainbow = Math.random() < 0.02;
+      const special = isRainbow ? 'rainbow' : (isLineSpecial ? 'line' : 'none');
+      puzzleState.board[r][c] = { color, special, id: `b_${r}_${c}_${Date.now()}` };
+    }
+  }
+}
+
+function addPuzzleScore(pts) {
+  puzzleState.score += pts;
+  document.getElementById('puzzle-score-val').innerText = puzzleState.score.toLocaleString();
+
+  if (puzzleState.score > puzzleState.bestScore) {
+    puzzleState.bestScore = puzzleState.score;
+    document.getElementById('puzzle-best-val').innerText = puzzleState.bestScore.toLocaleString();
+    try {
+      localStorage.setItem('bubble_puzzle_best', String(puzzleState.bestScore));
+    } catch(e) {}
+  }
+}
+
+function showComboBadge(combo) {
+  const card = document.getElementById('puzzle-combo-card');
+  const val = document.getElementById('puzzle-combo-val');
+  if (card && val) {
+    val.innerText = `x${combo}! 🔥`;
+    card.style.opacity = '1';
+    card.style.transform = 'scale(1.1)';
+    setTimeout(() => { card.style.transform = 'scale(1)'; }, 150);
+  }
+}
+
+function hideComboBadge() {
+  const card = document.getElementById('puzzle-combo-card');
+  if (card) card.style.opacity = '0';
+}
+
+function showPuzzleResult() {
+  const overlay = document.getElementById('puzzle-result-overlay');
+  const finalScore = document.getElementById('puzzle-result-final-score');
+  const title = document.getElementById('puzzle-result-title');
+  const icon = document.getElementById('puzzle-result-icon');
+
+  if (finalScore) finalScore.innerText = puzzleState.score.toLocaleString();
+  if (puzzleState.score >= 10000) {
+    if (title) title.innerText = "AMAZING MASTER!";
+    if (icon) icon.innerText = "👑";
+  } else if (puzzleState.score >= 5000) {
+    if (title) title.innerText = "GREAT SCORE!";
+    if (icon) icon.innerText = "⭐";
+  } else {
+    if (title) title.innerText = "GAME OVER";
+    if (icon) icon.innerText = "🎉";
+  }
+
+  if (overlay) overlay.style.display = 'flex';
+  playSystemSound("notif");
+}
+
+// --- ♾️ フリーモード（従来の無限プチプチ） ---
+function initFreeBubbles() {
   const container = document.getElementById('bubble-grid-container');
   if (!container) return;
 
-  if (!bubbleWrapInitialized || container.children.length === 0) {
+  if (container.children.length === 0) {
     container.innerHTML = "";
-    // iPad画面に合わせて約72個のプチプチを生成
     for (let i = 0; i < 72; i++) {
       const bubble = document.createElement('div');
       bubble.className = 'bubble-item';
       bubble.onclick = function() {
-        popBubble(this);
+        if (!this.classList.contains('popped')) {
+          this.classList.add('popped');
+          freePoppedCount++;
+          document.getElementById('free-popped-val').innerText = freePoppedCount;
+          playBubblePopSound(600 + Math.random() * 200, 0.05);
+          if (navigator.vibrate) navigator.vibrate(20);
+        }
       };
       container.appendChild(bubble);
     }
-    bubbleWrapInitialized = true;
-  }
-  updateBubbleCountDisplay();
-}
-
-function popBubble(el) {
-  if (el.classList.contains('popped')) return;
-
-  el.classList.add('popped');
-  poppedBubbleCount++;
-  updateBubbleCountDisplay();
-  playBubblePopSound();
-
-  if (navigator.vibrate) {
-    navigator.vibrate(20);
   }
 }
 
 function resetAllBubbles() {
   const container = document.getElementById('bubble-grid-container');
   if (!container) return;
-
   playSystemSound("notif");
-  container.querySelectorAll('.bubble-item').forEach(b => {
-    b.classList.remove('popped');
-  });
-  poppedBubbleCount = 0;
-  updateBubbleCountDisplay();
+  container.querySelectorAll('.bubble-item').forEach(b => b.classList.remove('popped'));
+  freePoppedCount = 0;
+  document.getElementById('free-popped-val').innerText = "0";
 }
 
-function updateBubbleCountDisplay() {
-  const countTag = document.getElementById('bubble-count-tag');
-  if (countTag) {
-    countTag.innerText = `潰した数: ${poppedBubbleCount}`;
-  }
-}
-
-// リアルな気泡破裂音（Web Audio APIによるシンセサイズ：外部ファイル依存ゼロ）
-function playBubblePopSound() {
+// ==========================================================================
+// 🎵 Web Audio API 連鎖・スワップ音響シンセサイザー
+// ==========================================================================
+function playBubbleSwapSound() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
-    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(580, ctx.currentTime + 0.06);
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.07);
+  } catch(e) {}
+}
+
+function playBubbleMatchSound(comboStep) {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    // 連鎖音階（ド・レ・ミ・ファ・ソ・ラ・シ・高ド）
+    const scale = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+    const pitchIndex = Math.min(comboStep - 1, scale.length - 1);
+    const baseFreq = scale[pitchIndex];
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // 高めの短いピッチダウン音（プチッ♪）
-    const baseFreq = 700 + Math.random() * 250;
     osc.type = 'sine';
     osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.045);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, ctx.currentTime + 0.09);
 
     gain.gain.setValueAtTime(0.35, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.045);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.09);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     osc.start();
-    osc.stop(ctx.currentTime + 0.05);
+    osc.stop(ctx.currentTime + 0.1);
   } catch(e) {}
+}
+
+function playBubblePopSound(freq = 600, duration = 0.05) {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + duration);
+
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration + 0.01);
+  } catch(e) {}
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // 初期化時にフラグ（enableBubbleWrap / enableCompass）を判定してアイコン表示制御
