@@ -3975,7 +3975,7 @@ function openMail(mailId) {
               <div class="mail-sender-avatar">${initial}</div>
               <div class="mail-sender-meta">
                 <span class="mail-sender-name">${mail.sender}</span>
-                <span class="mail-recipient-to">宛先: ${mail.recipient || '矢田 逞 <s25b1150er@cit.ac.jp>'}</span>
+                <span class="mail-recipient-to">宛先: ${mail.recipient || '自分 <cit-student@cit.ac.jp>'}</span>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -4043,7 +4043,7 @@ function sendComposedMail() {
 
   const newMail = {
     id: "sent_" + Date.now(),
-    sender: "矢田 逞",
+    sender: "自分",
     recipient: to,
     subject: subject,
     title: subject,

@@ -7681,6 +7681,8 @@ body {
 /* ========================================================================== */
 #app-calc-app {
   background-color: #000000;
+}
+#app-calc-app.active {
   display: flex;
   flex-direction: column;
 }
@@ -7691,16 +7693,16 @@ body {
   justify-content: center;
   align-items: center;
   background-color: #000000;
-  padding: 20px;
+  padding: 16px;
   overflow: hidden;
 }
 
 .calc-inner-container {
   width: 100%;
-  max-width: 460px;
+  max-width: min(340px, 85vw);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .calc-display-section {
@@ -7708,23 +7710,23 @@ body {
   flex-direction: column;
   justify-content: flex-end;
   align-items: flex-end;
-  padding: 10px 16px;
-  min-height: 110px;
+  padding: 6px 12px;
+  min-height: 80px;
   background: transparent;
   user-select: none;
 }
 
 .calc-history-text {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 400;
   color: #8e8e93;
-  min-height: 24px;
-  letter-spacing: 1px;
+  min-height: 20px;
+  letter-spacing: 0.5px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
 }
 
 .calc-main-digits {
-  font-size: 64px;
+  font-size: 48px;
   font-weight: 300;
   color: #ffffff;
   letter-spacing: -1px;
@@ -7739,7 +7741,7 @@ body {
 .calc-keypad-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .calc-key {
@@ -8529,6 +8531,9 @@ body {
 /* ========================================================================== */
 #app-compass-app {
   background: #000000;
+  color: #ffffff;
+}
+#app-compass-app.active {
   display: flex;
   flex-direction: column;
 }
@@ -8539,10 +8544,11 @@ body {
   justify-content: center;
   align-items: center;
   background: #000000;
-  padding: 24px;
+  padding: 16px;
   overflow: hidden;
   user-select: none;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .compass-main-container {
@@ -8550,19 +8556,22 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 20px;
   width: 100%;
   max-width: 440px;
+  box-sizing: border-box;
 }
 
 /* ダイヤル外枠 */
 .compass-dial-wrap {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: min(320px, 72vw);
+  height: min(320px, 72vw);
+  aspect-ratio: 1 / 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .compass-dial {
