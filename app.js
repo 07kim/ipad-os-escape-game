@@ -331,6 +331,21 @@ function executeRemoteAdminCommand(cmd) {
       localStorage.setItem('fake_clock_start_iso', loopClockISO);
       gameState.clockStartISO = loopClockISO;
 
+      // 🔄 ループ切り替え時に開いているアプリをすべて閉じ、ホーム画面状態に戻す
+      closeAllWindowsSilent();
+      gameState.activeApp = null;
+
+      // 🔄 manabaのログインセッションを初期化（未ログイン状態に戻す）
+      gameState.manabaUser = null;
+      localStorage.removeItem('game_manaba_user');
+
+      // 🔄 メールアプリの送信・削除状態を周回初期状態へ復元
+      if (typeof mailState !== 'undefined') {
+        mailState.selectedMailId = null;
+        mailState.trashIds.clear();
+        mailState.flaggedIds.clear();
+      }
+
       // 🔄 ループ切り替え時にLINKアプリのチャットデータを初期状態へ完全復元
       resetLinkAppForLoop();
 
