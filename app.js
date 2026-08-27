@@ -2810,17 +2810,19 @@ function renderGSpreadsheet() {
   // 列記号 (A, B, C, D...)
   const colLetters = headers.map((_, i) => String.fromCharCode(65 + i));
 
-  let html = `<thead><tr><th class="gsheet-row-num">#</th>`;
+  let html = `<thead><tr><th class="gsheet-row-num"></th>`;
   headers.forEach((h, i) => {
-    html += `<th>${colLetters[i] || ''} <span style="color:#202124; font-weight:normal; margin-left:4px;">(${h})</span></th>`;
+    html += `<th>${colLetters[i] || ''}<div style="color:#202124; font-weight:500; font-size:11px; margin-top:2px;">${h}</div></th>`;
   });
   html += `</tr></thead><tbody>`;
 
   rows.forEach((row, rIdx) => {
     html += `<tr><td class="gsheet-row-num">${rIdx + 1}</td>`;
     row.forEach((cell, cIdx) => {
+      const colName = colLetters[cIdx] || 'A';
+      const cellName = `${colName}${rIdx + 1}`;
       const editableAttr = isEditing ? 'contenteditable="true" onblur="handleCellEdit(this, \'' + currentTab + '\', ' + rIdx + ', ' + cIdx + ')"' : '';
-      html += `<td class="gsheet-cell" ${editableAttr}>${cell}</td>`;
+      html += `<td class="gsheet-cell" data-cell="${cellName}" onclick="selectGSheetCell(this, '${cellName}')" ${editableAttr}>${cell}</td>`;
     });
     html += `</tr>`;
   });
@@ -2828,13 +2830,35 @@ function renderGSpreadsheet() {
   html += `</tbody>`;
   table.innerHTML = html;
 
+  // 初期選択セル A1
+  const firstCell = table.querySelector('.gsheet-cell');
+  if (firstCell) {
+    selectGSheetCell(firstCell, 'A1');
+  }
+
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function selectGSheetCell(cellEl, cellName) {
+  const table = document.getElementById('gsheet-table');
+  if (table) {
+    table.querySelectorAll('.gsheet-cell').forEach(td => td.classList.remove('active-cell'));
+  }
+  if (cellEl) {
+    cellEl.classList.add('active-cell');
+    const cellNameEl = document.getElementById('gsheet-selected-cell-name');
+    const fxInput = document.getElementById('gsheet-fx-input');
+    if (cellNameEl) cellNameEl.innerText = cellName;
+    if (fxInput) fxInput.value = cellEl.innerText;
+  }
 }
 
 function handleCellEdit(cellEl, tab, rIdx, cIdx) {
   const ss = window.GAME_DATABASE.hacking.spreadsheet;
   if (ss && ss.rows && ss.rows[tab] && ss.rows[tab][rIdx]) {
     ss.rows[tab][rIdx][cIdx] = cellEl.innerText;
+    const fxInput = document.getElementById('gsheet-fx-input');
+    if (fxInput) fxInput.value = cellEl.innerText;
     try {
       localStorage.setItem('game_custom_gsheet_rows', JSON.stringify(ss.rows));
     } catch (e) {}

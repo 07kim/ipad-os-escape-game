@@ -2969,87 +2969,133 @@ body {
   margin-top: 4px;
 }
 
-/* 🟣 Googleフォーム公式風 編集画面 */
+/* 🟣 Google Forms公式 完全準拠 編集画面（ヘッダー ＆ タブ ＆ 回答サマリー） */
 .gform-editor-container {
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto 40px;
+  max-width: 770px;
+  margin: 0 auto 60px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.gform-editor-navbar {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 12px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 10px;
-  z-index: 50;
-}
-
-.editor-nav-left {
-  display: flex;
-  align-items: center;
   gap: 12px;
+  font-family: Roboto, "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.editor-back-btn, .editor-close-btn {
-  background: #f1f5f9;
+.gform-editor-header-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #dadce0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 2px rgba(60,64,67,0.1);
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.gform-editor-nav-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.editor-left-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-back-btn, .editor-close-btn, .editor-icon-btn {
+  background: none;
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  color: #64748b;
+  color: #5f6368;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  transition: background 0.15s ease;
+}
+.editor-back-btn:hover, .editor-close-btn:hover, .editor-icon-btn:hover {
+  background: #f1f3f4;
+  color: #202124;
 }
 
-.editor-back-btn:hover, .editor-close-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.editor-file-info {
+.editor-title-container {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
-.editor-file-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
+.editor-form-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
 }
 
-.editor-file-status {
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.editor-nav-tabs {
+.editor-doc-actions {
   display: flex;
-  gap: 4px;
-  background: #f1f5f9;
-  padding: 3px;
-  border-radius: 10px;
+  align-items: center;
+  gap: 6px;
 }
 
-.editor-tab-btn {
+.editor-save-status {
+  font-size: 11px;
+  color: #5f6368;
+  margin-left: 4px;
+}
+
+.editor-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-send-btn {
+  background-color: #673ab7;
+  color: #ffffff;
   border: none;
+  padding: 8px 22px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.editor-send-btn:hover {
+  background-color: #512da8;
+}
+
+.editor-avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 公式中央タブ（質問・回答・設定） */
+.gform-editor-main-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  border-top: 1px solid #f1f3f4;
+}
+
+.gform-tab-item {
   background: none;
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #5f6368;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -3057,165 +3103,521 @@ body {
   transition: all 0.2s ease;
 }
 
-.editor-tab-btn.active {
-  background: #ffffff;
-  color: #7c3aed;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+.gform-tab-item:hover {
+  color: #202124;
 }
 
-.editor-badge {
-  background: #ede9fe;
-  color: #7c3aed;
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 10px;
+.gform-tab-item.active {
+  color: #673ab7;
+  border-bottom-color: #673ab7;
+  font-weight: 600;
+}
+
+.gform-tab-count {
+  background: #ede7f6;
+  color: #673ab7;
+  font-size: 11px;
   font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
 }
 
-.editor-tab-btn.active .editor-badge {
-  background: #7c3aed;
+.gform-tab-item.active .gform-tab-count {
+  background: #673ab7;
   color: #ffffff;
 }
 
-.editor-panel-content {
+/* 回答タブ サマリー */
+.responses-summary-header {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  animation: fadeIn 0.2s ease;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.editor-header-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.editor-form-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 12px 0 6px;
-}
-
-.editor-form-desc {
-  font-size: 13px;
-  color: #64748b;
+.responses-total-num {
+  font-size: 28px;
+  font-weight: 400;
+  color: #202124;
   margin: 0;
 }
 
-.editor-question-card {
-  border-left: 4px solid #7c3aed;
-}
-
-.editor-q-header {
+.responses-header-right-tools {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 14px;
 }
 
-.editor-q-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.editor-q-type {
-  font-size: 11px;
-  color: #94a3b8;
-  background: #f8fafc;
-  padding: 3px 8px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-/* 📊 回答タブ＆スプレッドシート連携 */
-.responses-top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #f1f5f9;
-  margin-bottom: 16px;
-}
-
-.responses-count-heading h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 4px;
-}
-
-.responses-accepting-badge {
-  font-size: 11px;
-  color: #16a34a;
-  background: #f0fdf4;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.btn-create-gsheet {
-  display: flex;
+/* 📊 公式Sheets連携ボタン */
+.btn-sheets-official {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 7px 14px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
+  color: #137333;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.1);
+  box-shadow: 0 1px 2px rgba(60,64,67,0.1);
+  transition: all 0.15s ease;
 }
-
-.btn-create-gsheet:hover {
-  background: #dcfce7;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+.btn-sheets-official:hover {
+  background: #f1f8f3;
+  border-color: #0f9d58;
+  box-shadow: 0 1px 3px rgba(60,64,67,0.2);
 }
-
-.btn-create-gsheet:active {
+.btn-sheets-official:active {
   transform: scale(0.98);
 }
 
-.responses-sub-title {
+.responses-accept-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid #dadce0;
+}
+
+.gform-switch-input {
+  accent-color: #673ab7;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.responses-sub-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #dadce0;
+  padding-bottom: 8px;
+  margin-top: 8px;
+}
+
+.responses-sub-tab {
+  background: none;
+  border: none;
   font-size: 13px;
-  font-weight: 700;
-  color: #475569;
-  margin: 0 0 10px;
+  font-weight: 500;
+  color: #5f6368;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.responses-sub-tab.active {
+  background: #f1f3f4;
+  color: #202124;
+  font-weight: 600;
 }
 
-.response-log-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
+/* 質問ごとの集計カード */
+.response-detail-card {
+  margin-top: 12px;
 }
 
-.response-log-meta {
+.response-card-title-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
+  align-items: baseline;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #f1f3f4;
+  padding-bottom: 8px;
 }
 
-.response-log-meta strong {
-  font-size: 13px;
-  color: #0f172a;
+.response-card-title-row h3 {
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
+  margin: 0;
 }
 
-.response-log-meta span {
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.response-log-text {
+.response-card-count {
   font-size: 12px;
-  color: #334155;
-  line-height: 1.4;
+  color: #5f6368;
+}
+
+.response-answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.response-answer-item {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: #202124;
+  line-height: 1.5;
+}
+
+.response-item-header {
+  margin-bottom: 4px;
+  color: #1a73e8;
+}
+
+/* ========================================================================== */
+/* 📊 Google Sheets公式 完全準拠 スタイル */
+/* ========================================================================== */
+.gsheet-container {
+  background-color: #ffffff;
+  position: absolute;
+  top: 24px; /* ステータスバー直下 */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 900;
+  font-family: Arial, Roboto, sans-serif;
+}
+
+.gsheet-app-header {
+  height: 58px;
+  background: #f9fbfd;
+  border-bottom: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.gsheet-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gsheet-nav-back-btn, .gsheet-close-icon-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #5f6368;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gsheet-nav-back-btn:hover, .gsheet-close-icon-btn:hover {
+  background: #e8eaed;
+  color: #202124;
+}
+
+.gsheet-meta-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.gsheet-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gsheet-doc-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
+}
+
+.gsheet-save-cloud {
+  font-size: 11px;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.gsheet-menubar {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 2px;
+}
+.gsheet-menubar span {
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.gsheet-menubar span:hover {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.gsheet-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gsheet-edit-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e6f4ea;
+  color: #137333;
+  border: 1px solid #ceead6;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gsheet-edit-toggle-btn:hover {
+  background: #ceead6;
+}
+.gsheet-edit-toggle-btn.editing {
+  background: #137333;
+  color: #ffffff;
+}
+
+.gsheet-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #c2e7ff;
+  color: #001d35;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gsheet-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2. 公式ツールバー (リボン) */
+.gsheet-toolbar {
+  height: 38px;
+  background: #edf2fa;
+  border-bottom: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.tool-btn {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: #444746;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+.tool-btn:hover {
+  background: #e0e6ef;
+  color: #1f1f1f;
+}
+.tool-btn i {
+  width: 15px;
+  height: 15px;
+}
+
+.tool-divider {
+  width: 1px;
+  height: 18px;
+  background: #c7c7c7;
+  margin: 0 4px;
+}
+
+.tool-select {
+  font-size: 12px;
+  color: #444746;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* 3. 公式fx数式バー */
+.gsheet-fx-bar {
+  height: 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.fx-cell-name {
+  width: 60px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444746;
+  text-align: center;
+  border-right: 1px solid #dadce0;
+  padding: 2px 4px;
+}
+
+.fx-symbol {
+  width: 32px;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 700;
+  color: #80868b;
+  text-align: center;
+}
+
+.fx-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #1f1f1f;
+  padding: 4px 8px;
+  font-family: Arial, sans-serif;
+}
+
+/* 4. グリッドテーブル */
+.gsheet-grid-viewport {
+  flex: 1;
+  overflow: auto;
+  background: #ffffff;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gsheet-official-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  color: #1f1f1f;
+  background: #ffffff;
+}
+
+.gsheet-official-table th {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  font-weight: 600;
+  color: #5f6368;
+  font-size: 12px;
+  padding: 6px 10px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  user-select: none;
+}
+
+.gsheet-official-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #1f1f1f;
+  background: #ffffff;
+  outline: none;
+}
+
+.gsheet-official-table td.gsheet-row-num {
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  width: 42px;
+  user-select: none;
+}
+
+.gsheet-official-table td.active-cell {
+  outline: 2px solid #0f9d58 !important;
+  outline-offset: -1px;
+}
+
+/* 5. 下部シートタブバー */
+.gsheet-bottom-tabs-bar {
+  height: 38px;
+  background: #f1f3f4;
+  border-top: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.gsheet-add-sheet-btn, .gsheet-all-sheets-btn {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #5f6368;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+.gsheet-add-sheet-btn:hover, .gsheet-all-sheets-btn:hover {
+  background: #e8eaed;
+}
+
+.gsheet-tabs-list {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  overflow-x: auto;
+}
+
+.gsheet-tab-btn {
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #5f6368;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.gsheet-tab-btn:hover {
+  background: #e8eaed;
+  color: #202124;
+}
+
+.gsheet-tab-btn.active {
+  background: #ffffff;
+  color: #137333;
+  font-weight: 700;
+  border-color: #dadce0;
+  border-bottom: 3px solid #0f9d58;
 }
 
 .gform-submit-btn {

@@ -549,7 +549,7 @@
       <!-- ------------------------------------------ -->
       <!-- ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング） -->
       <!-- ------------------------------------------ -->
-      <div class="hacking-modal" id="hacking-modal" style="display:none;">
+      <div class="hacking-modal" id="hacking-modal" style="display:none; top:24px;">
         <!-- ① 偽Googleフォーム (回答閲覧画面) -->
         <div class="gform-container" id="gform-view">
           <div class="gform-header" style="position:relative;">
@@ -559,108 +559,176 @@
               <h1 id="gform-title">部署業務の認知度</h1>
               <p id="gform-desc">この回答は記録されます。</p>
             </div>
+            <div class="gform-account-bar">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <i data-lucide="user-check" style="width:15px; height:15px; color:#1a73e8;"></i>
+                <span>学友会アカウント (<strong>cit_student@cit.ac.jp</strong>) で回答中</span>
+              </div>
+              <span style="font-size:11px; color:#1a73e8; cursor:pointer;">アカウントを切り替える</span>
+            </div>
+            <div class="gform-required-note">* 必須</div>
           </div>
           <div class="gform-card">
-            <label class="gform-label">閲覧申請者 (セキュリティIDまたは本名)</label>
-            <input type="text" class="gform-input" id="gform-input-user" placeholder="例: J-098">
+            <label class="gform-label">閲覧申請者 (セキュリティIDまたは本名) <span class="req">*</span></label>
+            <input type="text" class="gform-input" id="gform-input-user" placeholder="回答を入力（例: J-098）">
           </div>
           <div class="gform-card">
-            <label class="gform-label">閲覧目的</label>
-            <input type="text" class="gform-input" placeholder="閲覧理由を記述">
+            <label class="gform-label">閲覧目的・理由 <span class="req">*</span></label>
+            <textarea class="gform-textarea" placeholder="回答を入力"></textarea>
           </div>
-          <div class="gform-footer">
+          <div class="gform-actions-row">
             <button class="gform-submit-btn" onclick="submitGForm()">送信</button>
-            <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input').forEach(i => i.value='')">フォームをクリア</button>
+            <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input,textarea').forEach(i => i.value='')">フォームをクリア</button>
           </div>
-          <!-- Googleフォーム公式風 編集ペンマーク（フォームをクリアの下） -->
-          <button class="gform-edit-fab" id="gform-edit-fab" onclick="openHackingEditor()" title="このフォームを編集">
-            <i data-lucide="edit-3"></i>
-          </button>
+          <div class="gform-legal-footer">
+            <div>パスワードを Google フォームで送信しないでください。</div>
+            <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
+            <div class="gform-branding"><span style="font-weight:700; color:#5f6368;">Google</span> フォーム</div>
+          </div>
+          <!-- Googleフォーム公式風 編集ペンマーク -->
+          <div class="gform-edit-fab" id="gform-edit-fab" onclick="openHackingEditor()" title="このフォームを編集">
+            <i data-lucide="edit-2"></i>
+          </div>
         </div>
 
-        <!-- ② 偽Googleフォーム公式風 編集画面 (質問タブ ＆ 回答タブ ➡️ スプレッドシート連携) -->
+        <!-- ② Googleフォーム公式 完全準拠 編集画面 (質問タブ ＆ 回答タブ ➡️ スプレッドシート連携) -->
         <div class="gform-editor-container" id="gform-editor-view" style="display:none;">
-          <div class="gform-editor-navbar">
-            <div class="editor-nav-left">
-              <button class="editor-back-btn" onclick="openHackingForm()" title="フォーム表示へ戻る"><i data-lucide="arrow-left"></i></button>
-              <div class="editor-file-info">
-                <span class="editor-file-title" id="editor-file-title">2126年 メンタルヘルス・スキャン</span>
-                <span class="editor-file-status">すべての変更をドライブに保存しました</span>
+          <!-- 公式Google Formsエディタナビゲーションバー -->
+          <div class="gform-editor-header-bar">
+            <div class="gform-editor-nav-top">
+              <div class="editor-left-brand">
+                <button class="editor-back-btn" onclick="openHackingForm()" title="フォーム表示へ戻る"><i data-lucide="arrow-left"></i></button>
+                <svg class="gform-official-icon" viewBox="0 0 24 24" width="24" height="24" style="fill:#7248b9;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <div class="editor-title-container">
+                  <span class="editor-form-name" id="editor-file-title">部署業務の認知度</span>
+                  <div class="editor-doc-actions">
+                    <i data-lucide="folder" style="width:13px; height:13px; color:#5f6368;" title="マイドライブ"></i>
+                    <i data-lucide="star" style="width:13px; height:13px; color:#5f6368;" title="スターを付ける"></i>
+                    <span class="editor-save-status">すべての変更をドライブに保存しました</span>
+                  </div>
+                </div>
+              </div>
+              <div class="editor-right-actions">
+                <button class="editor-icon-btn" title="プレビュー" onclick="openHackingForm()"><i data-lucide="eye"></i></button>
+                <button class="editor-icon-btn" title="テーマをカスタマイズ"><i data-lucide="palette"></i></button>
+                <button class="editor-send-btn" onclick="showPushNotification('Googleフォーム', '共同編集リンクがコピーされました', 'link')">送信</button>
+                <div class="editor-avatar-btn">C</div>
+                <button onclick="closeHacking()" class="editor-close-btn" title="閉じる"><i data-lucide="x"></i></button>
               </div>
             </div>
-            <div class="editor-nav-tabs">
-              <button class="editor-tab-btn active" id="editor-tab-questions-btn" onclick="switchEditorTab('questions')">質問</button>
-              <button class="editor-tab-btn" id="editor-tab-responses-btn" onclick="switchEditorTab('responses')">
-                回答 <span class="editor-badge" id="editor-responses-count">3</span>
+            <!-- 公式中央タブ（質問 / 回答 / 設定） -->
+            <div class="gform-editor-main-tabs">
+              <button class="gform-tab-item" id="editor-tab-questions-btn" onclick="switchEditorTab('questions')">質問</button>
+              <button class="gform-tab-item active" id="editor-tab-responses-btn" onclick="switchEditorTab('responses')">
+                回答 <span class="gform-tab-count" id="editor-responses-count">3</span>
               </button>
-              <button class="editor-tab-btn" id="editor-tab-settings-btn" onclick="switchEditorTab('settings')">設定</button>
-            </div>
-            <div class="editor-nav-right">
-              <button onclick="closeHacking()" class="editor-close-btn" title="閉じる">✕</button>
+              <button class="gform-tab-item" id="editor-tab-settings-btn" onclick="switchEditorTab('settings')">設定</button>
             </div>
           </div>
 
           <!-- ① 質問タブ -->
-          <div class="editor-panel-content" id="editor-panel-questions">
+          <div class="editor-panel-content" id="editor-panel-questions" style="display:none;">
             <div class="gform-card editor-header-card">
               <div class="gform-header-bar"></div>
-              <h2 class="editor-form-title">2126年 メンタルヘルス・スキャン</h2>
+              <h2 class="editor-form-title">部署業務の認知度</h2>
               <p class="editor-form-desc">学友会執行委員会 内部保管データ申請フォーム（※管理者編集画面）</p>
             </div>
             <div class="gform-card editor-question-card">
               <div class="editor-q-header">
-                <span class="editor-q-title">申請者氏名・セキュリティID</span>
+                <span class="editor-q-title">氏名</span>
                 <span class="editor-q-type">記述式 (テキスト)</span>
               </div>
               <input type="text" class="gform-input" disabled value="回答者の記述テキスト">
             </div>
             <div class="gform-card editor-question-card">
               <div class="editor-q-header">
-                <span class="editor-q-title">申請理由・閲覧目的</span>
+                <span class="editor-q-title">所属・学籍番号</span>
+                <span class="editor-q-type">記述式 (テキスト)</span>
+              </div>
+              <input type="text" class="gform-input" disabled value="例: M25b1046">
+            </div>
+            <div class="gform-card editor-question-card">
+              <div class="editor-q-header">
+                <span class="editor-q-title">部署業務への理解度・意見</span>
                 <span class="editor-q-type">段落 (長文テキスト)</span>
               </div>
               <textarea class="gform-textarea" disabled style="height:60px;">回答者の詳細テキスト</textarea>
             </div>
           </div>
 
-          <!-- ② 回答タブ (スプレッドシート連携ボタン配置！) -->
-          <div class="editor-panel-content" id="editor-panel-responses" style="display:none;">
+          <!-- ② 回答タブ (Google Forms公式集計画面 ＆ Sheets連携) -->
+          <div class="editor-panel-content" id="editor-panel-responses" style="display:flex;">
+            <!-- 回答サマリーカード -->
             <div class="gform-card editor-responses-summary-card">
-              <div class="responses-top-bar">
-                <div class="responses-count-heading">
-                  <h3>3 件の回答</h3>
-                  <span class="responses-accepting-badge">回答を受付中</span>
+              <div class="responses-summary-header">
+                <div class="responses-count-wrapper">
+                  <h2 class="responses-total-num">3 件の回答</h2>
                 </div>
-                <!-- 📊 スプレッドシートで表示（スプレッドシート作成）ボタン -->
-                <button class="btn-create-gsheet" onclick="openGSpreadsheet(event)" title="スプレッドシートで回答を表示">
-                  <i data-lucide="table" style="color:#107c41;"></i>
-                  <span>📊 スプレッドシートで表示</span>
-                </button>
+                <div class="responses-header-right-tools">
+                  <!-- 📊 公式Google Sheets連携ボタン -->
+                  <button class="btn-sheets-official" onclick="openGSpreadsheet(event)" title="スプレッドシートで回答を表示">
+                    <svg viewBox="0 0 24 24" width="20" height="20" style="fill:#0f9d58;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H6v-2h3v2zm0-4H6v-2h3v2zm0-4H6V7h3v2zm9 8h-7v-2h7v2zm0-4h-7v-2h7v2zm0-4h-7V7h7v2z"/></svg>
+                    <span>スプレッドシートで表示</span>
+                  </button>
+                  <div class="responses-accept-toggle">
+                    <span style="font-size:13px; color:#202124;">回答を受付中</span>
+                    <input type="checkbox" checked disabled class="gform-switch-input">
+                  </div>
+                </div>
               </div>
 
-              <!-- 集計プレビュー一覧 -->
-              <div class="responses-preview-section">
-                <h4 class="responses-sub-title">最近の回答者ログ</h4>
-                <div class="response-log-item">
-                  <div class="response-log-meta">
-                    <strong>陣内 樹 (J-098)</strong>
-                    <span>2126/08/22 09:15</span>
-                  </div>
-                  <div class="response-log-text">安藤教授の研究室から持ち出された機密データ暗号の解除要請</div>
+              <!-- サブタブ (概要 / 質問 / 個別) -->
+              <div class="responses-sub-nav">
+                <button class="responses-sub-tab active">概要</button>
+                <button class="responses-sub-tab">質問</button>
+                <button class="responses-sub-tab">個別</button>
+              </div>
+            </div>
+
+            <!-- 質問1 集計カード -->
+            <div class="gform-card response-detail-card">
+              <div class="response-card-title-row">
+                <h3>氏名</h3>
+                <span class="response-card-count">3 件の回答</span>
+              </div>
+              <div class="response-answers-list">
+                <div class="response-answer-item">陣内 樹</div>
+                <div class="response-answer-item">深澤 文哉</div>
+                <div class="response-answer-item">犬飼 玲</div>
+              </div>
+            </div>
+
+            <!-- 質問2 集計カード -->
+            <div class="gform-card response-detail-card">
+              <div class="response-card-title-row">
+                <h3>所属・学籍番号</h3>
+                <span class="response-card-count">3 件の回答</span>
+              </div>
+              <div class="response-answers-list">
+                <div class="response-answer-item">J-098（安藤研究室）</div>
+                <div class="response-answer-item">F-042（執行委員会）</div>
+                <div class="response-answer-item">I-012（学内保安統制局）</div>
+              </div>
+            </div>
+
+            <!-- 質問3 集計カード -->
+            <div class="gform-card response-detail-card">
+              <div class="response-card-title-row">
+                <h3>部署業務への理解度・意見</h3>
+                <span class="response-card-count">3 件の回答</span>
+              </div>
+              <div class="response-answers-list">
+                <div class="response-answer-item">
+                  <div class="response-item-header"><strong>陣内 樹:</strong></div>
+                  安藤教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
                 </div>
-                <div class="response-log-item">
-                  <div class="response-log-meta">
-                    <strong>深澤 文哉 (F-042)</strong>
-                    <span>2126/08/22 09:28</span>
-                  </div>
-                  <div class="response-log-text">学友会予算執行状況および役員名簿の緊急照会</div>
+                <div class="response-answer-item">
+                  <div class="response-item-header"><strong>深澤 文哉:</strong></div>
+                  学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
                 </div>
-                <div class="response-log-item">
-                  <div class="response-log-meta">
-                    <strong>犬飼 玲 (I-012)</strong>
-                    <span>2126/08/22 09:40</span>
-                  </div>
-                  <div class="response-log-text">【統制局】2024年度跳躍者の所持端末の初期化・回収手続き</div>
+                <div class="response-answer-item">
+                  <div class="response-item-header"><strong>犬飼 玲:</strong></div>
+                  【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
                 </div>
               </div>
             </div>
@@ -669,12 +737,12 @@
           <!-- ③ 設定タブ -->
           <div class="editor-panel-content" id="editor-panel-settings" style="display:none;">
             <div class="gform-card">
-              <h3 style="font-size:15px; margin:0 0 10px;">フォームの設定</h3>
-              <p style="font-size:12px; color:#64748b; margin:0 0 14px;">回答の収集、表示、デフォルト設定を管理します。</p>
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid #f1f5f9;">
+              <h3 style="font-size:16px; margin:0 0 10px; color:#202124;">フォームの設定</h3>
+              <p style="font-size:13px; color:#5f6368; margin:0 0 16px;">回答の収集、表示、デフォルト設定を管理します。</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #dadce0;">
                 <div>
-                  <strong style="font-size:13px; color:#1e293b;">メールアドレスを収集する</strong>
-                  <div style="font-size:11px; color:#94a3b8;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
+                  <strong style="font-size:14px; color:#202124;">メールアドレスを収集する</strong>
+                  <div style="font-size:12px; color:#70757a;">学内ドメイン (@cit.ac.jp) からのアクセスのみ許可</div>
                 </div>
                 <input type="checkbox" checked disabled>
               </div>
@@ -682,29 +750,71 @@
           </div>
         </div>
 
-        <!-- 偽スプレッドシート -->
+        <!-- 📊 Google Sheets公式 完全準拠 スプレッドシート画面 -->
         <div class="gsheet-container" id="gsheet-view" style="display:none;">
-          <div class="gsheet-header">
-            <div class="gsheet-header-top">
-              <i data-lucide="table" style="color:#107c41; width:22px; height:22px;"></i>
-              <span class="gsheet-filename" id="gsheet-filename">学友会執行委員会_重要名簿・予算管理 (2126年度)</span>
-              <div class="gsheet-top-actions">
-                <button class="gsheet-edit-mode-btn" id="gsheet-edit-btn" onclick="toggleGSheetEdit()" title="シートを編集">
-                  <i data-lucide="edit-2" style="width:14px; height:14px;"></i> <span id="gsheet-edit-label">編集モード</span>
-                </button>
-                <button class="gsheet-close-btn" onclick="closeHacking()"><i data-lucide="x"></i> 閉じる</button>
+          <!-- 1. 最上部ヘッダー ＆ ドキュメント情報 -->
+          <div class="gsheet-app-header">
+            <div class="gsheet-header-left">
+              <button class="gsheet-nav-back-btn" onclick="openHackingEditor()" title="Googleフォームへ戻る"><i data-lucide="arrow-left"></i></button>
+              <svg class="gsheet-app-logo" viewBox="0 0 24 24" width="28" height="28" style="fill:#0f9d58;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H6v-2h3v2zm0-4H6v-2h3v2zm0-4H6V7h3v2zm9 8h-7v-2h7v2zm0-4h-7v-2h7v2zm0-4h-7V7h7v2z"/></svg>
+              <div class="gsheet-meta-wrapper">
+                <div class="gsheet-title-row">
+                  <span class="gsheet-doc-name" id="gsheet-filename">学友会執行委員会_重要名簿・予算管理 (2126年度)</span>
+                  <i data-lucide="star" style="width:14px; height:14px; color:#5f6368; cursor:pointer;" title="スターを付ける"></i>
+                  <i data-lucide="folder" style="width:14px; height:14px; color:#5f6368; cursor:pointer;" title="移動"></i>
+                  <span class="gsheet-save-cloud"><i data-lucide="cloud-check" style="width:13px; height:13px;"></i> ドライブに保存済み</span>
+                </div>
+                <div class="gsheet-menubar">
+                  <span>ファイル</span><span>編集</span><span>表示</span><span>挿入</span><span>表示形式</span><span>データ</span><span>ツール</span><span>拡張機能</span><span>ヘルプ</span>
+                </div>
               </div>
             </div>
-            <div class="gsheet-menu-bar">
-              <span>ファイル</span><span>編集</span><span>表示</span><span>挿入</span><span>フォーマット</span><span>データ</span><span>ツール</span><span>拡張機能</span><span>ヘルプ</span>
+            <div class="gsheet-header-right">
+              <button class="gsheet-edit-toggle-btn" id="gsheet-edit-btn" onclick="toggleGSheetEdit()" title="セル編集モード">
+                <i data-lucide="edit-3" style="width:14px; height:14px;"></i> <span id="gsheet-edit-label">編集モード</span>
+              </button>
+              <button class="gsheet-share-btn"><i data-lucide="lock" style="width:13px; height:13px;"></i> 共有</button>
+              <div class="gsheet-user-avatar">C</div>
+              <button class="gsheet-close-icon-btn" onclick="closeHacking()" title="閉じる"><i data-lucide="x"></i></button>
             </div>
-            <!-- シートタブ -->
-            <div class="gsheet-tabs" id="gsheet-tabs"></div>
           </div>
-          <div class="gsheet-body">
-            <div class="gsheet-grid-wrapper">
-              <table class="gsheet-table" id="gsheet-table"></table>
-            </div>
+
+          <!-- 2. 公式ツールバー (アイコンリボン) -->
+          <div class="gsheet-toolbar">
+            <button class="tool-btn" title="元に戻す (Ctrl+Z)"><i data-lucide="undo"></i></button>
+            <button class="tool-btn" title="やり直し (Ctrl+Y)"><i data-lucide="redo"></i></button>
+            <button class="tool-btn" title="印刷"><i data-lucide="printer"></i></button>
+            <button class="tool-btn" title="書式を貼り付け"><i data-lucide="paint-bucket"></i></button>
+            <div class="tool-divider"></div>
+            <span class="tool-select">100%</span>
+            <div class="tool-divider"></div>
+            <button class="tool-btn font-bold" title="太字"><strong>B</strong></button>
+            <button class="tool-btn font-italic" title="斜体"><em>I</em></button>
+            <button class="tool-btn font-color" title="テキストの色"><span style="border-bottom:3px solid #ea4335;">A</span></button>
+            <button class="tool-btn bg-color" title="塗りつぶしの色"><i data-lucide="droplet" style="color:#fbbc04;"></i></button>
+            <button class="tool-btn" title="枠線"><i data-lucide="grid"></i></button>
+            <div class="tool-divider"></div>
+            <button class="tool-btn" title="水平方向の配置"><i data-lucide="align-left"></i></button>
+            <button class="tool-btn" title="垂直方向の配置"><i data-lucide="align-center"></i></button>
+          </div>
+
+          <!-- 3. 公式fx数式バー -->
+          <div class="gsheet-fx-bar">
+            <div class="fx-cell-name" id="gsheet-selected-cell-name">A1</div>
+            <div class="fx-symbol">fx</div>
+            <input type="text" class="fx-input" id="gsheet-fx-input" readonly placeholder="数式またはセルデータ">
+          </div>
+
+          <!-- 4. グリッドテーブル -->
+          <div class="gsheet-grid-viewport">
+            <table class="gsheet-official-table" id="gsheet-table"></table>
+          </div>
+
+          <!-- 5. 下部シートタブバー -->
+          <div class="gsheet-bottom-tabs-bar">
+            <button class="gsheet-add-sheet-btn" title="シートを追加"><i data-lucide="plus"></i></button>
+            <button class="gsheet-all-sheets-btn" title="すべてのシート"><i data-lucide="menu"></i></button>
+            <div class="gsheet-tabs-list" id="gsheet-tabs"></div>
           </div>
         </div>
       </div>
