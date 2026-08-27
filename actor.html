@@ -493,6 +493,14 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake {
+      animation: shake 0.35s ease-in-out !important;
+    }
 
     /* スピナー */
     .spinner {
@@ -1054,14 +1062,14 @@
           statusClass = 'locked';
           statusIcon = 'lock';
           statusText = `🔒 【${allowedLoops.join('・')}周目】限定（現在${currentGlobalLoop}周目）`;
-          btnText = `🔒 ${allowedLoops.join('・')}周目開始までロック`;
-          isBtnDisabled = true;
+          btnText = tr.btnLabel;
+          isBtnDisabled = false; // タップ可能（押すと周回違いの警告を表示）
         } else if (isSequentialLocked) {
           statusClass = 'locked';
           statusIcon = 'lock';
           statusText = '🔒 1通目未送信';
-          btnText = '🔒 ロック中（1通目待ち）';
-          isBtnDisabled = true;
+          btnText = tr.btnLabel;
+          isBtnDisabled = false; // タップ可能（押すと順序違いの警告を表示）
         }
 
         container.innerHTML += `
@@ -1077,12 +1085,12 @@
             ${isLoopLocked ? `
               <div class="lock-hint-text" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
                 <i data-lucide="alert-circle" style="width:13px; height:13px;"></i>
-                <span>※ 現在は【${currentGlobalLoop}周目】のため送信できません（${allowedLoops.join('・')}周目に自動解除されます）</span>
+                <span>※ 現在は【${currentGlobalLoop}周目】です（タップすると警告が表示されます）</span>
               </div>
             ` : (isSequentialLocked ? `
               <div class="lock-hint-text">
                 <i data-lucide="info" style="width:13px; height:13px;"></i>
-                <span>※【送信①】を先に送信すると解除されます</span>
+                <span>※【送信①】を先に送信してください</span>
               </div>
             ` : '')}
 
@@ -1109,20 +1117,31 @@
       const tr = actor.triggers.find(t => t.id === triggerId);
       if (!tr) return;
 
-      // 🔒 周回ロックチェック
+      const btn = document.getElementById(`btn-${triggerId}`);
+
+      // 🔒 1. 周回ロックチェック（違う周回のボタンを押した時）
       const allowedLoops = tr.allowedLoops || [1, 2, 3];
       if (!allowedLoops.includes(currentGlobalLoop)) {
-        showToast(`⚠️ このトリガーは【${allowedLoops.join('・')}周目】のみ送信可能です（現在${currentGlobalLoop}周目）`, true);
+        if (btn) {
+          btn.classList.add('shake');
+          setTimeout(() => btn.classList.remove('shake'), 400);
+        }
+        if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+        showToast(`⚠️ 現在は【${currentGlobalLoop}周目】です！\nこのメッセージは【${allowedLoops.join('・')}周目】限定のため送信できません。`, true, 5000);
         return;
       }
 
-      // 順序ロックチェック
+      // 🔒 2. 順序ロックチェック（1通目を送る前に2通目を押した時）
       if (tr.dependsOn && !sentTriggers[tr.dependsOn]) {
-        showToast('⚠️ 先に1通目を送信してください', true);
+        if (btn) {
+          btn.classList.add('shake');
+          setTimeout(() => btn.classList.remove('shake'), 400);
+        }
+        if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+        showToast('⚠️ 先に【送信①】のメッセージを送信してください！', true, 4500);
         return;
       }
 
-      const btn = document.getElementById(`btn-${triggerId}`);
       if (!btn || btn.disabled) return;
 
       // 送信中スピナー表示
