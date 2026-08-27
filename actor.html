@@ -752,6 +752,12 @@
       if (saved) sentTriggers = JSON.parse(saved);
     } catch(e) {}
 
+    // 🔑 周回ごとに独立したトリガーキーを生成（例: j_exit_hall_L1, j_exit_hall_L2）
+    function getTrigKey(triggerId, loop) {
+      const l = loop || currentGlobalLoop || 1;
+      return `${triggerId}_L${l}`;
+    }
+
     // BroadcastChannel通信（actor.html → iPad app.js へのローカル送信）
     let adminBroadcast = null;
     if (typeof BroadcastChannel !== 'undefined') {
@@ -857,8 +863,9 @@
     }
 
     function onLinkAckReceived(triggerId) {
-      if (!confirmedTriggers[triggerId]) {
-        confirmedTriggers[triggerId] = Date.now();
+      const key = getTrigKey(triggerId);
+      if (!confirmedTriggers[key]) {
+        confirmedTriggers[key] = Date.now();
         localStorage.setItem('actor_confirmed_triggers', JSON.stringify(confirmedTriggers));
         
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -974,6 +981,11 @@
       if (!actor) return;
 
       actor.triggers.forEach(tr => {
+        for (let l = 1; l <= 3; l++) {
+          const k = getTrigKey(tr.id, l);
+          delete sentTriggers[k];
+          delete confirmedTriggers[k];
+        }
         delete sentTriggers[tr.id];
         delete confirmedTriggers[tr.id];
         localStorage.removeItem(`actor_ack_${tr.id}`);
@@ -1019,6 +1031,9 @@
 
     // 🔄 個別トリガーを未送信に戻す
     function resetSingleTrigger(triggerId) {
+      const key = getTrigKey(triggerId);
+      delete sentTriggers[key];
+      delete confirmedTriggers[key];
       delete sentTriggers[triggerId];
       delete confirmedTriggers[triggerId];
       localStorage.removeItem(`actor_ack_${triggerId}`);
@@ -1062,9 +1077,11 @@
       container.innerHTML = "";
 
       actor.triggers.forEach((tr) => {
-        const isSent = !!sentTriggers[tr.id];
-        const isConfirmed = !!confirmedTriggers[tr.id];
-        const isSequentialLocked = tr.dependsOn && !sentTriggers[tr.dependsOn];
+        const loopKey = getTrigKey(tr.id);
+        const isSent = !!sentTriggers[loopKey];
+        const isConfirmed = !!confirmedTriggers[loopKey];
+        const depKey = tr.dependsOn ? getTrigKey(tr.dependsOn) : null;
+        const isSequentialLocked = depKey && !sentTriggers[depKey];
         
         // 🔒 周回ロック判定（該当周回以外は発動不可）
         const allowedLoops = tr.allowedLoops || [1, 2, 3];
@@ -1239,8 +1256,9 @@
         gasError = 'GAS URL未設定';
       }
 
-      // ── STEP 3: 送信済みフラグ記録 ──
-      sentTriggers[triggerId] = Date.now();
+      // ── STEP 3: 送信済みフラグ記録（周回ごとに独立記録） ──
+      const loopKey = getTrigKey(triggerId);
+      sentTriggers[loopKey] = Date.now();
       localStorage.setItem('actor_sent_triggers', JSON.stringify(sentTriggers));
 
       // ── STEP 4: 2段階フィードバック（1: 送信完了 → 2: LINK反映待ち/成功） ──
