@@ -123,6 +123,28 @@ body {
   gap: 6px;
 }
 
+.wifi-icon {
+  width: 14px;
+  height: 14px;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+.wifi-icon.connected {
+  color: inherit;
+  opacity: 1.0;
+}
+.wifi-icon.disconnected {
+  color: #94a3b8 !important;
+  opacity: 0.45 !important;
+}
+.wifi-icon.syncing {
+  animation: wifiPulse 0.75s ease;
+}
+@keyframes wifiPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+
 .status-bar-center {
   cursor: pointer; /* スタッフ裏コマンド用 */
 }

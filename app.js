@@ -196,6 +196,9 @@ function fetchLatestDataFromSpreadsheet() {
     return;
   }
 
+  // 通信中の微かなパルスアニメーション
+  updateWifiStatusIndicator('syncing');
+
   const startTime = Date.now();
   const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
   
@@ -567,7 +570,42 @@ function sendDeviceStatusHeartbeat() {
   localStorage.setItem('mon_last_update', String(Date.now()));
 }
 
+// 📶 左上Wi-Fiアイコンによるスプレッドシート（GAS）接続状態の隠しインジケーター
+function updateWifiStatusIndicator(status) {
+  const wrapper = document.getElementById('sb-wifi-wrapper');
+  if (!wrapper) return;
+
+  if (status === 'syncing') {
+    const icon = wrapper.querySelector('.wifi-icon');
+    if (icon) {
+      icon.classList.remove('syncing');
+      void icon.offsetWidth; // リフロー
+      icon.classList.add('syncing');
+    }
+    return;
+  }
+
+  if (status === 'connected') {
+    // 🟢 正常接続時：通常のWi-Fiアイコン（白色・クリア点灯）
+    wrapper.innerHTML = `<i data-lucide="wifi" class="wifi-icon connected"></i>`;
+  } else {
+    // 🔴 未接続・通信エラー時：Wi-Fiマークに斜線（wifi-off）かつ灰色
+    wrapper.innerHTML = `<i data-lucide="wifi-off" class="wifi-icon disconnected"></i>`;
+  }
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
 function updateStaffSyncUI() {
+  // 左上Wi-Fiアイコンの隠しステータスを即時連動
+  if (window.CLOUD_SYNC_STATUS.connected) {
+    updateWifiStatusIndicator('connected');
+  } else {
+    updateWifiStatusIndicator('disconnected');
+  }
+
   const statusEl = document.getElementById('staff-sync-status');
   if (!statusEl) return;
 
