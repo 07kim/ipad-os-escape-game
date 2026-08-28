@@ -5135,13 +5135,10 @@ async function detonateSpecialBubble(r, c) {
     puzzleState.board[m.r][m.c] = null;
   });
 
-  await sleep(240);
+  await sleep(260);
 
-  // 重力落下＆新バブル補充
-  applyGravityAndRefill();
-  renderPuzzleBoard();
-
-  await sleep(250);
+  // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
+  await animateDropAndRefill();
 
   // 起爆後の連鎖マッチ処理
   await processMatches();
@@ -5453,13 +5450,11 @@ async function processMatches(initialMatchResult = null) {
       };
     });
 
-    await sleep(220);
-
-    // 重力落下＆新バブル補充
-    applyGravityAndRefill();
-    renderPuzzleBoard();
-
     await sleep(250);
+
+    // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
+    await animateDropAndRefill();
+
     matchResult = findMatchesWithSpecials();
   }
 
@@ -5484,31 +5479,36 @@ function spawnJewelParticles(r, c, color) {
 
   const colorMap = {
     pink: '#f43f5e',
-    blue: '#06b6d4',
+    blue: '#0ea5e9',
     green: '#10b981',
-    yellow: '#f59e0b',
-    purple: '#a855f7'
+    yellow: '#fbbf24',
+    purple: '#c084fc'
   };
   const hex = colorMap[color] || '#ffffff';
 
   const posX = ((c + 0.5) / PUZZLE_COLS) * 100;
   const posY = ((r + 0.5) / PUZZLE_ROWS) * 100;
 
-  const particleCount = 8;
+  const particleCount = 12;
   for (let i = 0; i < particleCount; i++) {
     const p = document.createElement('div');
     p.className = 'puzzle-spark-particle';
     p.style.left = `${posX}%`;
     p.style.top = `${posY}%`;
-    p.style.background = hex;
-    p.style.boxShadow = `0 0 8px ${hex}`;
+    p.style.background = i % 2 === 0 ? hex : '#ffffff';
+    p.style.boxShadow = `0 0 12px ${hex}, 0 0 4px #ffffff`;
 
-    const size = Math.random() * 6 + 5;
+    const size = Math.random() * 8 + 8;
     p.style.width = `${size}px`;
     p.style.height = `${size}px`;
+    if (i % 3 === 0) {
+      p.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'; // ダイヤ型
+    } else {
+      p.style.borderRadius = '50%';
+    }
 
-    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.5;
-    const dist = Math.random() * 40 + 30;
+    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.4;
+    const dist = Math.random() * 50 + 35;
     const tx = Math.cos(angle) * dist;
     const ty = Math.sin(angle) * dist;
 
@@ -5516,7 +5516,7 @@ function spawnJewelParticles(r, c, color) {
     p.style.setProperty('--ty', `${ty}px`);
 
     container.appendChild(p);
-    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 650);
+    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 680);
   }
 }
 
@@ -5683,28 +5683,125 @@ function spawnBoardComboPopup(matches, combo, points) {
   }, 900);
 }
 
-function applyGravityAndRefill() {
+// 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充アニメーション
+async function animateDropAndRefill() {
+  const container = document.getElementById('puzzle-grid-board');
+  if (!container) return;
+
+  // 1. 各列の落下と新バブル補充データを計算
+  const drops = []; // { toR, toC, distance, isNew, color, special }
+
   for (let c = 0; c < PUZZLE_COLS; c++) {
-    // 下から詰める
     let emptyRow = PUZZLE_ROWS - 1;
     for (let r = PUZZLE_ROWS - 1; r >= 0; r--) {
       if (puzzleState.board[r][c] !== null) {
         if (emptyRow !== r) {
-          puzzleState.board[emptyRow][c] = puzzleState.board[r][c];
+          const bubble = puzzleState.board[r][c];
+          puzzleState.board[emptyRow][c] = bubble;
           puzzleState.board[r][c] = null;
+          drops.push({
+            toR: emptyRow,
+            toC: c,
+            distance: emptyRow - r,
+            isNew: false,
+            color: bubble.color,
+            special: bubble.special
+          });
         }
         emptyRow--;
       }
     }
     // 上部の空きに新バブルを補充
+    let newCount = 0;
     for (let r = emptyRow; r >= 0; r--) {
+      newCount++;
       const color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
       const isLineSpecial = Math.random() < 0.06;
       const isRainbow = Math.random() < 0.02;
       const special = isRainbow ? 'rainbow' : (isLineSpecial ? 'line' : 'none');
-      puzzleState.board[r][c] = { color, special, id: `b_${r}_${c}_${Date.now()}` };
+      const newBubble = { color, special, id: `b_${r}_${c}_${Date.now()}_${r}` };
+      puzzleState.board[r][c] = newBubble;
+      drops.push({
+        toR: r,
+        toC: c,
+        distance: (emptyRow - r) + 1.2, // 盤面上部から降ってくる距離
+        isNew: true,
+        color: newBubble.color,
+        special: newBubble.special
+      });
     }
   }
+
+  // 2. DOM上に新ボードを描画（落ちるバブルは初期状態で上方にオフセット配置）
+  container.innerHTML = "";
+  const dropElements = [];
+
+  for (let r = 0; r < PUZZLE_ROWS; r++) {
+    for (let c = 0; c < PUZZLE_COLS; c++) {
+      const cellData = puzzleState.board[r][c];
+      const cellEl = document.createElement('div');
+      cellEl.className = 'puzzle-cell';
+      cellEl.id = `cell-${r}-${c}`;
+      cellEl.dataset.row = r;
+      cellEl.dataset.col = c;
+
+      if (cellData) {
+        const bubbleEl = document.createElement('div');
+        bubbleEl.className = `puzzle-bubble color-${cellData.color}`;
+        bubbleEl.id = `bubble-${r}-${c}`;
+        
+        if (cellData.special === 'line') bubbleEl.classList.add('special-line');
+        else if (cellData.special === 'bomb') bubbleEl.classList.add('special-bomb');
+        else if (cellData.special === 'rainbow') bubbleEl.classList.add('special-rainbow');
+
+        const dropInfo = drops.find(d => d.toR === r && d.toC === c);
+        if (dropInfo && dropInfo.distance > 0) {
+          bubbleEl.style.transform = `translateY(-${dropInfo.distance * 100}%)`;
+          dropElements.push({ el: bubbleEl, delay: c * 15 });
+        }
+
+        cellEl.appendChild(bubbleEl);
+      }
+      container.appendChild(cellEl);
+    }
+  }
+
+  setupGridBoardInteraction(container);
+
+  // 3. リフローを強制してから、落下バウンス・トランジションを発動！
+  void container.offsetHeight;
+
+  dropElements.forEach(item => {
+    item.el.classList.add('dropping');
+    setTimeout(() => {
+      item.el.style.transform = 'translateY(0)';
+    }, item.delay);
+  });
+
+  // 落下着地効果音
+  playBubbleDropSound();
+
+  // プレイヤーが目で追える心地よいウェイト（380ms）
+  await sleep(390);
+}
+
+function playBubbleDropSound() {
+  try {
+    const ctx = getSystemAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    const now = ctx.currentTime;
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.12);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  } catch(e) {}
 }
 
 function addPuzzleScore(pts) {
