@@ -2207,16 +2207,6 @@
               </div>
             </div>
 
-            <!-- モード切替タブ（パズル / フリー） -->
-            <div class="bubble-mode-tabs">
-              <button class="bubble-mode-tab active" id="bubble-tab-puzzle" onclick="switchBubbleMode('puzzle')">
-                <i data-lucide="puzzle"></i> パズル
-              </button>
-              <button class="bubble-mode-tab" id="bubble-tab-free" onclick="switchBubbleMode('free')">
-                <i data-lucide="infinity"></i> フリー
-              </button>
-            </div>
-
             <div class="bubble-header-actions">
               <button class="bubble-icon-btn" onclick="restartBubbleGame()" title="リスタート">
                 <i data-lucide="rotate-ccw"></i>
@@ -2227,7 +2217,7 @@
             </div>
           </div>
 
-          <!-- パズル情報ステータスバー（パズルモード用） -->
+          <!-- パズル情報ステータスバー -->
           <div class="bubble-stats-bar" id="bubble-puzzle-stats">
             <div class="bubble-stat-card">
               <span class="stat-label">SCORE</span>
@@ -2243,23 +2233,8 @@
             </div>
             <div class="bubble-stat-card combo-card" id="puzzle-combo-card" style="opacity: 0;">
               <span class="stat-label">COMBO</span>
-              <span class="stat-val combo-text" id="puzzle-combo-val">x2!</span>
+              <span class="stat-val combo-text" id="puzzle-combo-val">2 COMBO</span>
             </div>
-          </div>
-
-          <!-- フリーモード用ステータスバー -->
-          <div class="bubble-stats-bar" id="bubble-free-stats" style="display: none;">
-            <div class="bubble-stat-card">
-              <span class="stat-label">POPPED</span>
-              <span class="stat-val primary" id="free-popped-val">0</span>
-            </div>
-            <div class="bubble-stat-card">
-              <span class="stat-label">STATUS</span>
-              <span class="stat-val" style="color: #34d399;">無限プチプチ</span>
-            </div>
-            <button class="bubble-free-reset-btn" onclick="resetAllBubbles()">
-              <i data-lucide="refresh-cw"></i> 全復活
-            </button>
           </div>
         </div>
 
@@ -2276,11 +2251,6 @@
 
           <!-- 🌟 はみ出し見切れ防止：特大文字VFX・コンボ表示専用レイヤー -->
           <div id="puzzle-vfx-layer" class="puzzle-vfx-layer"></div>
-
-          <!-- フリーモード用ボード -->
-          <div class="bubble-grid-container" id="bubble-grid-container" style="display: none;">
-            <!-- JSでフリー気泡を生成 -->
-          </div>
         </div>
 
         <!-- 🏆 ゲームオーバー / クリアオーバーレイ（アプリウィンドウ中央に上からドロップ） -->

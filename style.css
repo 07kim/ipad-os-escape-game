@@ -8258,12 +8258,12 @@ body {
   transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* 落下バウンス・アニメーション用クラス */
+/* 落下バウンス・アニメーション用クラス（サクサク軽快） */
 .puzzle-bubble.dropping {
-  transition: transform 0.44s cubic-bezier(0.34, 1.25, 0.64, 1) !important;
+  transition: transform 0.28s cubic-bezier(0.25, 1.15, 0.5, 1) !important;
 }
 
-/* 🌟 完全フレームなし・文字のみのダイナミック・コンボ＆スコア演出（絶対見切れゼロ） */
+/* 🌟 Appleライクなシンプル・洗練タイポグラフィ（コンボ＆スコア） */
 .puzzle-floating-puretext {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -8273,48 +8273,43 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  animation: pureTextFloatUp 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: pureTextFloatUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   white-space: nowrap;
   user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Display", sans-serif;
 }
 
 .floating-combo-puretext {
-  font-size: clamp(32px, 7.5vw, 54px);
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: 1.5px;
-  background: linear-gradient(180deg, #ffffff 0%, #fde047 35%, #ff5722 75%, #dc2626 100%);
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 2px #000000;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 20px rgba(253, 224, 71, 0.9));
-  line-height: 1.1;
+  font-size: clamp(26px, 5.5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.6);
+  line-height: 1;
 }
 
 .floating-combo-puretext.high {
-  font-size: clamp(38px, 9vw, 64px);
-  background: linear-gradient(180deg, #ffffff 0%, #ff80bf 30%, #ff0844 70%, #990033 100%);
-  -webkit-text-stroke: 2.5px #000000;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 28px rgba(255, 8, 68, 0.95));
+  color: #fde047;
+  font-size: clamp(30px, 6.5vw, 44px);
+  text-shadow: 0 4px 20px rgba(234, 179, 8, 0.55), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .floating-score-puretext {
-  font-size: clamp(22px, 5vw, 32px);
-  font-weight: 900;
-  color: #38bdf8;
-  -webkit-text-stroke: 1.5px #000000;
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.95));
-  margin-top: 4px;
+  font-size: clamp(16px, 3.5vw, 22px);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  margin-top: 2px;
   line-height: 1;
 }
 
 @keyframes pureTextFloatUp {
   0% {
-    transform: translate(-50%, -20%) scale(0.35);
+    transform: translate(-50%, -10%) scale(0.6);
     opacity: 0;
   }
-  16% {
-    transform: translate(-50%, -50%) scale(1.35);
+  18% {
+    transform: translate(-50%, -50%) scale(1.1);
     opacity: 1;
   }
   30% {
@@ -8322,11 +8317,11 @@ body {
     opacity: 1;
   }
   75% {
-    transform: translate(-50%, -95%) scale(1.0);
+    transform: translate(-50%, -85%) scale(1.0);
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -150%) scale(0.85);
+    transform: translate(-50%, -125%) scale(0.92);
     opacity: 0;
   }
 }

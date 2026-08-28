@@ -5125,37 +5125,27 @@ function spawnBoardComboPopup(matches, combo, points) {
   popup.style.left = `${relLeft}px`;
   popup.style.top = `${relTop}px`;
 
-  let comboLabel = `${combo} COMBO! 🔥`;
-  let isHighCombo = false;
-  if (combo >= 5) {
-    comboLabel = `MEGA x${combo}! 💥`;
-    isHighCombo = true;
-  } else if (combo >= 4) {
-    comboLabel = `FANTASTIC x${combo}! 🌟`;
-    isHighCombo = true;
-  } else if (combo >= 3) {
-    comboLabel = `3 COMBO! ⚡`;
-  } else if (combo === 2) {
-    comboLabel = `2 COMBO! 🔥`;
+  let htmlContent = '';
+  if (combo >= 2) {
+    const isHigh = combo >= 4;
+    htmlContent = `
+      <div class="floating-combo-puretext ${isHigh ? 'high' : ''}">
+        ${combo} COMBO
+      </div>
+      <div class="floating-score-puretext">+${points.toLocaleString()}</div>
+    `;
   } else {
-    comboLabel = `MATCH! ✨`;
+    htmlContent = `<div class="floating-score-puretext" style="font-size:18px;">+${points.toLocaleString()}</div>`;
   }
 
-  popup.innerHTML = `
-    <div class="floating-combo-puretext ${isHighCombo ? 'high' : ''}">
-      ${comboLabel}
-    </div>
-    <div class="floating-score-puretext">+${points.toLocaleString()}</div>
-  `;
-
+  popup.innerHTML = htmlContent;
   vfxLayer.appendChild(popup);
 
-  // アニメーション完了後に自動破棄
   setTimeout(() => {
     if (popup.parentNode) {
       popup.parentNode.removeChild(popup);
     }
-  }, 950);
+  }, 850);
 }
 
 // 💥 特殊バブルのタップ起爆処理
@@ -5214,7 +5204,7 @@ async function detonateSpecialBubble(r, c) {
     puzzleState.board[m.r][m.c] = null;
   });
 
-  await sleep(350);
+  await sleep(200);
 
   // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
   await animateDropAndRefill();
@@ -5528,7 +5518,7 @@ async function processMatches(initialMatchResult = null) {
       };
     });
 
-    await sleep(320);
+    await sleep(180);
 
     // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
     await animateDropAndRefill();
@@ -5805,8 +5795,8 @@ async function animateDropAndRefill() {
   // 落下着地効果音
   playBubbleDropSound();
 
-  // プレイヤーが目でしっかり追える心地よいウェイト（460ms）
-  await sleep(460);
+  // サクサク軽快かつ目で追える最適ウェイト（290ms）
+  await sleep(290);
 }
 
 function playBubbleDropSound() {
