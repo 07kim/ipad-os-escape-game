@@ -8147,6 +8147,8 @@ body {
   background: rgba(255, 255, 255, 0.92);
   filter: blur(0.3px);
   pointer-events: none;
+}
+
 /* 5色のカラーバリエーション（濃密で鮮明なジュエルカラー） */
 .puzzle-bubble.color-pink {
   background: radial-gradient(circle at 32% 32%, #ffffff 0%, #fb7185 28%, #e11d48 70%, #9f1239 100%);
@@ -8246,8 +8248,6 @@ body {
 @keyframes bombPulse {
   0% { transform: scale(1.0); box-shadow: 0 0 16px #dc2626, inset 0 2px 4px #ffffff; }
   100% { transform: scale(1.1); box-shadow: 0 0 30px #ea580c, inset 0 2px 4px #ffffff; }
-}
-  100% { transform: scale(1.1); box-shadow: 0 0 26px rgba(249, 115, 22, 1), inset 0 2px 4px #ffffff; }
 }
 
 /* 選択状態 */
@@ -8359,14 +8359,6 @@ body {
   75% { transform: translate(-4px, 3px); }
 }
 
-/* 🌟 ジュエル破裂パーティクル（大きく鮮明なキラキラ星・ジュエルシャード） */
-.puzzle-spark-particle {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 50%;
-  z-index: 850;
-  will-change: transform, opacity;
-  animation: particleBurst 0.75s cubic-bezier(0.12, 0.8, 0.32, 1) forwards;
 /* 🌟 ジュエル破裂パーティクル（軽量＆高発光クリスタルシャード） */
 .puzzle-spark-particle {
   position: absolute;
