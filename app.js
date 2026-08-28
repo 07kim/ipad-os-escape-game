@@ -4831,17 +4831,17 @@ window.addEventListener('keydown', (e) => {
 // ==========================================================================
 // ⑪ バブルパズル（Bubble Pop Match-3）＆ 無限プチプチ エンジン
 // ==========================================================================
-const PUZZLE_ROWS = 8;
-const PUZZLE_COLS = 8;
+const PUZZLE_ROWS = 9;
+const PUZZLE_COLS = 12;
 const BUBBLE_COLORS = ['pink', 'blue', 'green', 'yellow', 'purple'];
 
 let puzzleState = {
-  board: [],           // 8x8 グリッド
+  board: [],           // 9x12 グリッド（108個）
   selectedCell: null,  // {r, c}
   isProcessing: false,
   score: 0,
   bestScore: 0,
-  moves: 25,
+  moves: 30,
   combo: 0,
   mode: 'puzzle'       // 'puzzle' | 'free'
 };
