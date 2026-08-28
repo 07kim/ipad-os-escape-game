@@ -8,7 +8,7 @@ window.GAME_DATABASE = {
   system: {
     gasUrl: "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec",
     teamId: "チームA",
-    deviceOwner: "26__0094 調査端末",
+    deviceOwner: "連城 観 のiPad (L)",
     features: {
       enableBubbleWrap: true, // 🔘 無限プチプチアプリのON/OFF（falseで非表示）
       enableCompass: true     // 🧭 コンパスアプリのON/OFF（falseで非表示）
@@ -719,6 +719,7 @@ window.GAME_DATABASE = {
           ["犬飼 玲", "実務統制官", "I-012", "inukai9988", "全学内セキュリティの監視担当"],
           ["陣内 樹", "幹部メンバー", "J-098", "jinnai_ken", "神崎教授のデータ回収を指揮（PCパス: JNNITMNR）"],
           ["深澤 文哉", "一般メンバー", "F-102", "fukasawa_mai", "実験の危険性に気づき始めている"],
+          ["連城 観", "観測・記録担当 (L)", "ST-884", "renjo_pass", "学生番号: s23c1044kr / パスコード: 23C1044"],
           ["森野 航", "財務担当 (K)", "ST-882", "morino_pass", "学生番号: s23b1015nd / パスコード: 25B1150"],
           ["矢田 逞", "企画担当 (A)", "ST-883", "yada_pass", "学生番号: s25b1150er / パスコード: 25B1150"]
         ],
@@ -741,6 +742,26 @@ window.GAME_DATABASE = {
   manaba: {
     maintenanceNotice: "2026-08-10 システムメンテナンス復旧のお知らせ。一部時間割が変更されています。",
     users: {
+      // 🌟 連城 観（端末の持ち主・L / パスワード記録）
+      "s23c1044kr": {
+        pass: "23C1044",
+        name: "連城 観",
+        department: "情報科学部 / 学友会執行部",
+        studentId: "s23c1044kr",
+        timetable: {
+          "Mon": ["時空間情報学", "", "観測記録演習", "", ""],
+          "Tue": ["", "分散ネットワーク論", "", "量子計測工学", ""],
+          "Wed": ["学友会執行実務", "", "", "認知データ解析", ""],
+          "Thu": ["", "", "因果律制御概論", "", ""],
+          "Fri": ["", "システム監査演習", "", "", "時空観測特論"]
+        },
+        courses: [
+          { id: "c_observation", name: "観測記録演習", teacher: "神崎 恭介", term: "2126 前期 月曜 3限", room: "新習志野校舎3号館201" },
+          { id: "c_quantum_measure", name: "量子計測工学", teacher: "高橋 誠", term: "2126 前期 火曜 4限", room: "新習志野校舎6号館102" },
+          { id: "c_timespace", name: "時空間情報学", teacher: "小林 浩二", term: "2126 前期 月曜 1限", room: "津田沼校舎1号館" }
+        ]
+      },
+
       // ① 初期保存用：仮アカウント（氏名なし）
       "U24c3040": {
         pass: "pass3040",
