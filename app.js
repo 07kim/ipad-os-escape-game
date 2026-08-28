@@ -4413,15 +4413,29 @@ function generateWavDataUri(type) {
       }
       samples.push(sample * 0.85);
     }
+  } else if (type === "touch") {
+    // 📱 iOS標準風の軽快な上品タップ・クリック音（コッ/カチッ）
+    duration = 0.04;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = 480 - (t / duration) * 320; // 480Hz -> 160Hzへ急速スイープ
+      let env = Math.exp(-t * 85);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.45);
+    }
   } else {
-    // beep / dtmf / touch
+    // dtmf / beep
     duration = 0.12;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
       const t = i / sampleRate;
-      let freq = type === "touch" ? 800 : (type === "dtmf" ? 697 : 800);
+      let freq = type === "dtmf" ? 697 : 800;
       let env = Math.exp(-t * 12);
-      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.85);
+      let s = Math.sin(2 * Math.PI * freq * t);
+      if (type === "dtmf") {
+        s = 0.5 * s + 0.5 * Math.sin(2 * Math.PI * 1209 * t);
+      }
+      samples.push(s * env * 0.65);
     }
   }
 
@@ -4477,10 +4491,26 @@ function playSystemSound(type) {
       }
       const now = ctx.currentTime;
 
-      if (type === "beep" || type === "dtmf" || type === "touch") {
-        const f1 = type === "touch" ? 800 : 697;
-        const f2 = type === "touch" ? 1200 : 1209;
-        const dur = type === "touch" ? 0.08 : 0.12;
+      if (type === "touch") {
+        // 📱 iOS標準風の軽快な上品タップ音（480Hz -> 140Hzの超短時間スイープ）
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.035);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+        playedWebAudio = true;
+
+      } else if (type === "dtmf" || type === "beep") {
+        // ☎️ 電話キーパッドのプッシュ和音 (DTMF: 697Hz + 1209Hz)
+        const f1 = type === "dtmf" ? 697 : 800;
+        const f2 = type === "dtmf" ? 1209 : 800;
+        const dur = 0.12;
 
         [f1, f2].forEach(freq => {
           const osc = ctx.createOscillator();
@@ -4488,8 +4518,8 @@ function playSystemSound(type) {
           osc.type = "sine";
           osc.frequency.setValueAtTime(freq, now);
           gain.gain.setValueAtTime(0.01, now);
-          gain.gain.linearRampToValueAtTime(0.45, now + 0.004);
-          gain.gain.setValueAtTime(0.40, now + dur - 0.015);
+          gain.gain.linearRampToValueAtTime(0.35, now + 0.004);
+          gain.gain.setValueAtTime(0.30, now + dur - 0.015);
           gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
           osc.connect(gain);
           gain.connect(ctx.destination);
