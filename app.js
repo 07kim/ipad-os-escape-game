@@ -5214,7 +5214,7 @@ async function detonateSpecialBubble(r, c) {
     puzzleState.board[m.r][m.c] = null;
   });
 
-  await sleep(260);
+  await sleep(350);
 
   // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
   await animateDropAndRefill();
@@ -5528,7 +5528,7 @@ async function processMatches(initialMatchResult = null) {
       };
     });
 
-    await sleep(250);
+    await sleep(320);
 
     // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充
     await animateDropAndRefill();
@@ -5805,8 +5805,8 @@ async function animateDropAndRefill() {
   // 落下着地効果音
   playBubbleDropSound();
 
-  // プレイヤーが目で追える心地よいウェイト（380ms）
-  await sleep(390);
+  // プレイヤーが目でしっかり追える心地よいウェイト（460ms）
+  await sleep(460);
 }
 
 function playBubbleDropSound() {

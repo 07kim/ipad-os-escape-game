@@ -2277,22 +2277,22 @@
           <!-- 🌟 はみ出し見切れ防止：特大文字VFX・コンボ表示専用レイヤー -->
           <div id="puzzle-vfx-layer" class="puzzle-vfx-layer"></div>
 
-          <!-- 🏆 ゲームオーバー / クリアオーバーレイ（画面中央に上からドロップ） -->
-          <div class="puzzle-result-overlay" id="puzzle-result-overlay" style="display: none;">
-            <div class="puzzle-result-modal">
-              <div class="result-icon-badge" id="puzzle-result-icon">🏆</div>
-              <h2 id="puzzle-result-title">STAGE CLEAR!</h2>
-              <div class="result-score-line">
-                <span>FINAL SCORE</span>
-                <strong id="puzzle-result-final-score">0</strong>
-              </div>
-              <button class="puzzle-replay-btn" onclick="restartBubbleGame()">もう一度あそぶ</button>
-            </div>
-          </div>
-
           <!-- フリーモード用ボード -->
           <div class="bubble-grid-container" id="bubble-grid-container" style="display: none;">
             <!-- JSでフリー気泡を生成 -->
+          </div>
+        </div>
+
+        <!-- 🏆 ゲームオーバー / クリアオーバーレイ（アプリウィンドウ中央に上からドロップ） -->
+        <div class="puzzle-result-overlay" id="puzzle-result-overlay" style="display: none;">
+          <div class="puzzle-result-modal">
+            <div class="result-icon-badge" id="puzzle-result-icon">🏆</div>
+            <h2 id="puzzle-result-title">STAGE CLEAR!</h2>
+            <div class="result-score-line">
+              <span>FINAL SCORE</span>
+              <strong id="puzzle-result-final-score">0</strong>
+            </div>
+            <button class="puzzle-replay-btn" onclick="restartBubbleGame()">もう一度あそぶ</button>
           </div>
         </div>
       </div>
