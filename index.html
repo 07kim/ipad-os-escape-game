@@ -2263,23 +2263,30 @@
           </div>
         </div>
 
-        <div class="bubble-app-body">
-          <!-- パズルモード用ボード（8x8） -->
+        <div class="bubble-app-body" id="bubble-app-body">
+          <!-- ⚡ 特殊スキル発動バナー（画面上部にシュッと出現） -->
+          <div id="puzzle-skill-banner" class="puzzle-skill-banner" style="display:none;"></div>
+
+          <!-- パズルモード用ボード（8x8 大画面） -->
           <div class="puzzle-board-container" id="puzzle-board-container">
             <div class="puzzle-grid-board" id="puzzle-grid-board">
               <!-- JSで8x8スロットを生成 -->
             </div>
-            <!-- ゲームオーバー / クリアオーバーレイ -->
-            <div class="puzzle-result-overlay" id="puzzle-result-overlay" style="display: none;">
-              <div class="puzzle-result-modal">
-                <div class="result-icon-badge" id="puzzle-result-icon">🏆</div>
-                <h2 id="puzzle-result-title">STAGE CLEAR!</h2>
-                <div class="result-score-line">
-                  <span>FINAL SCORE</span>
-                  <strong id="puzzle-result-final-score">0</strong>
-                </div>
-                <button class="puzzle-replay-btn" onclick="restartBubbleGame()">もう一度あそぶ</button>
+          </div>
+
+          <!-- 🌟 はみ出し見切れ防止：特大文字VFX・コンボ表示専用レイヤー -->
+          <div id="puzzle-vfx-layer" class="puzzle-vfx-layer"></div>
+
+          <!-- 🏆 ゲームオーバー / クリアオーバーレイ（画面中央に上からドロップ） -->
+          <div class="puzzle-result-overlay" id="puzzle-result-overlay" style="display: none;">
+            <div class="puzzle-result-modal">
+              <div class="result-icon-badge" id="puzzle-result-icon">🏆</div>
+              <h2 id="puzzle-result-title">STAGE CLEAR!</h2>
+              <div class="result-score-line">
+                <span>FINAL SCORE</span>
+                <strong id="puzzle-result-final-score">0</strong>
               </div>
+              <button class="puzzle-replay-btn" onclick="restartBubbleGame()">もう一度あそぶ</button>
             </div>
           </div>
 

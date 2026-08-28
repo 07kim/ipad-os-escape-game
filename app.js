@@ -5082,6 +5082,82 @@ function handleCellClick(r, c) {
   }
 }
 
+// ⚡ 特殊スキル発動バナー表示
+function showPuzzleSkillBanner(type, text) {
+  const banner = document.getElementById('puzzle-skill-banner');
+  if (!banner) return;
+  banner.className = `puzzle-skill-banner ${type}`;
+  banner.innerText = text;
+  banner.style.display = 'block';
+
+  // アニメーション再トリガー
+  void banner.offsetWidth;
+
+  setTimeout(() => {
+    if (banner) banner.style.display = 'none';
+  }, 950);
+}
+
+// 🌟 消去場所に出現するフレームなし・文字のみのダイナミック・コンボ＆スコア演出（見切れゼロ）
+function spawnBoardComboPopup(matches, combo, points) {
+  const vfxLayer = document.getElementById('puzzle-vfx-layer') || document.getElementById('puzzle-board-container');
+  const board = document.getElementById('puzzle-board-container');
+  if (!vfxLayer || !board || !matches || matches.length === 0) return;
+
+  // 消去されたバブル群の中心座標（行・列）を算出
+  let sumR = 0, sumC = 0;
+  matches.forEach(m => {
+    sumR += m.r;
+    sumC += m.c;
+  });
+  const avgR = sumR / matches.length;
+  const avgC = sumC / matches.length;
+
+  // ボードの画面上の位置を取得して、VFXレイヤー上に配置
+  const boardRect = board.getBoundingClientRect();
+  const vfxRect = vfxLayer.getBoundingClientRect();
+
+  const relLeft = (boardRect.left - vfxRect.left) + ((avgC + 0.5) / PUZZLE_COLS) * boardRect.width;
+  const relTop = (boardRect.top - vfxRect.top) + ((avgR + 0.5) / PUZZLE_ROWS) * boardRect.height;
+
+  const popup = document.createElement('div');
+  popup.className = 'puzzle-floating-puretext';
+  popup.style.left = `${relLeft}px`;
+  popup.style.top = `${relTop}px`;
+
+  let comboLabel = `${combo} COMBO! 🔥`;
+  let isHighCombo = false;
+  if (combo >= 5) {
+    comboLabel = `MEGA x${combo}! 💥`;
+    isHighCombo = true;
+  } else if (combo >= 4) {
+    comboLabel = `FANTASTIC x${combo}! 🌟`;
+    isHighCombo = true;
+  } else if (combo >= 3) {
+    comboLabel = `3 COMBO! ⚡`;
+  } else if (combo === 2) {
+    comboLabel = `2 COMBO! 🔥`;
+  } else {
+    comboLabel = `MATCH! ✨`;
+  }
+
+  popup.innerHTML = `
+    <div class="floating-combo-puretext ${isHighCombo ? 'high' : ''}">
+      ${comboLabel}
+    </div>
+    <div class="floating-score-puretext">+${points.toLocaleString()}</div>
+  `;
+
+  vfxLayer.appendChild(popup);
+
+  // アニメーション完了後に自動破棄
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.parentNode.removeChild(popup);
+    }
+  }, 950);
+}
+
 // 💥 特殊バブルのタップ起爆処理
 async function detonateSpecialBubble(r, c) {
   if (puzzleState.isProcessing || puzzleState.moves <= 0) return;
@@ -5097,16 +5173,19 @@ async function detonateSpecialBubble(r, c) {
   document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
   puzzleState.combo = 0;
 
-  // 🎬 特殊効果演出（ボム・レーザー・レインボーごとの特大VFX）
+  // 🎬 特殊効果演出（ボム・レーザー・レインボーごとの特大VFX＆効果名バナー）
   if (targetBubble.special === 'bomb') {
+    showPuzzleSkillBanner('bomb', '💣 3×3 エリアボム爆破！');
     triggerScreenShake(true);
     spawnShockwave(r, c);
     playExplosionSound();
   } else if (targetBubble.special === 'line') {
+    showPuzzleSkillBanner('line', '⚡ 十字一閃ラインレーザー！');
     triggerScreenShake(false);
     spawnLaserBeam(r, c);
     playLaserSound();
   } else if (targetBubble.special === 'rainbow') {
+    showPuzzleSkillBanner('rainbow', '🌈 全同色一斉消去！');
     spawnPrismFlash();
     playPrismSound();
   }
@@ -5192,8 +5271,7 @@ async function attemptSwap(r1, c1, r2, c2) {
     renderPuzzleBoard();
     puzzleState.moves--;
     document.getElementById('puzzle-moves-val').innerText = puzzleState.moves;
-    puzzleState.combo = 0;
-
+    showPuzzleSkillBanner('rainbow', `🌈 全${targetColor.toUpperCase()}バブル一網打尽！`);
     spawnPrismFlash();
     playPrismSound();
 
@@ -5627,61 +5705,7 @@ function playPrismSound() {
   } catch(e) {}
 }
 
-// 🌟 消去場所の近くにフワッと浮かぶコンボバッジを生成
-function spawnBoardComboPopup(matches, combo, points) {
-  const container = document.querySelector('.puzzle-board-container');
-  if (!container || !matches || matches.length === 0) return;
 
-  // 消去されたバブル群の中心座標（行・列）を算出
-  let sumR = 0, sumC = 0;
-  matches.forEach(m => {
-    sumR += m.r;
-    sumC += m.c;
-  });
-  const avgR = sumR / matches.length;
-  const avgC = sumC / matches.length;
-
-  // コンテナ内でのパーセント位置（0%〜100%）
-  const posX = ((avgC + 0.5) / PUZZLE_COLS) * 100;
-  const posY = ((avgR + 0.5) / PUZZLE_ROWS) * 100;
-
-  const popup = document.createElement('div');
-  popup.className = 'puzzle-floating-popup';
-  popup.style.left = `${posX}%`;
-  popup.style.top = `${posY}%`;
-
-  let comboLabel = `${combo} COMBO! 🔥`;
-  let isHighCombo = false;
-  if (combo >= 5) {
-    comboLabel = `MEGA x${combo}! 💥`;
-    isHighCombo = true;
-  } else if (combo >= 4) {
-    comboLabel = `FANTASTIC x${combo}! 🌟`;
-    isHighCombo = true;
-  } else if (combo >= 3) {
-    comboLabel = `3 COMBO! ⚡`;
-  } else if (combo === 2) {
-    comboLabel = `2 COMBO! 🔥`;
-  } else {
-    comboLabel = `MATCH! ✨`;
-  }
-
-  popup.innerHTML = `
-    <div class="floating-combo-pill ${isHighCombo ? 'high' : ''}">
-      ${comboLabel}
-    </div>
-    <div class="floating-score-text">+${points.toLocaleString()}</div>
-  `;
-
-  container.appendChild(popup);
-
-  // アニメーション完了後に自動破棄
-  setTimeout(() => {
-    if (popup.parentNode) {
-      popup.parentNode.removeChild(popup);
-    }
-  }, 900);
-}
 
 // 🚀 スーッと落ちてポンッと弾む滑らかな重力落下＆新バブル補充アニメーション
 async function animateDropAndRefill() {
@@ -5847,12 +5871,16 @@ function showPuzzleResult() {
     if (title) title.innerText = "GREAT SCORE!";
     if (icon) icon.innerText = "⭐";
   } else {
-    if (title) title.innerText = "GAME OVER";
+    if (title) title.innerText = "STAGE CLEAR!";
     if (icon) icon.innerText = "🎉";
   }
 
-  if (overlay) overlay.style.display = 'flex';
-  playSystemSound("notif");
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // リフロー強制で中央・上からのドロップインアニメーションを確実にトリガー
+    void overlay.offsetWidth;
+  }
+  playSystemSound("success");
 }
 
 // --- ♾️ フリーモード（従来の無限プチプチ） ---
