@@ -5755,13 +5755,35 @@ async function animateDropAndRefill() {
         emptyRow--;
       }
     }
-    // 上部の空きに新バブルを補充
+    // 上部の空きに新バブルを補充（スマートリフィル：着地直後に勝手に3連マッチしない色を優先選択）
     let newCount = 0;
     for (let r = emptyRow; r >= 0; r--) {
       newCount++;
-      const color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
-      const isLineSpecial = Math.random() < 0.06;
-      const isRainbow = Math.random() < 0.02;
+
+      // 着地時に即座に3連マッチを作ってしまう色を除外
+      const availableColors = BUBBLE_COLORS.filter(color => {
+        // 横方向の連続判定
+        const left1 = c > 0 ? puzzleState.board[r][c-1]?.color : null;
+        const left2 = c > 1 ? puzzleState.board[r][c-2]?.color : null;
+        const right1 = c < PUZZLE_COLS - 1 ? puzzleState.board[r][c+1]?.color : null;
+        const right2 = c < PUZZLE_COLS - 2 ? puzzleState.board[r][c+2]?.color : null;
+        if (left1 === color && left2 === color) return false;
+        if (right1 === color && right2 === color) return false;
+        if (left1 === color && right1 === color) return false;
+
+        // 縦方向の連続判定（下方向に配置済みのバブル）
+        const down1 = r < PUZZLE_ROWS - 1 ? puzzleState.board[r+1][c]?.color : null;
+        const down2 = r < PUZZLE_ROWS - 2 ? puzzleState.board[r+2][c]?.color : null;
+        if (down1 === color && down2 === color) return false;
+
+        return true;
+      });
+
+      const candidates = availableColors.length > 0 ? availableColors : BUBBLE_COLORS;
+      const color = candidates[Math.floor(Math.random() * candidates.length)];
+
+      const isLineSpecial = Math.random() < 0.04;
+      const isRainbow = Math.random() < 0.015;
       const special = isRainbow ? 'rainbow' : (isLineSpecial ? 'line' : 'none');
       const newBubble = { color, special, id: `b_${r}_${c}_${Date.now()}_${r}` };
       puzzleState.board[r][c] = newBubble;
@@ -5831,8 +5853,9 @@ async function animateDropAndRefill() {
 
 function playBubbleDropSound() {
   try {
-    const ctx = getSystemAudioContext();
+    const ctx = getAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -5943,6 +5966,7 @@ function playBubbleSwapSound() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -5965,6 +5989,7 @@ function playBubbleMatchSound(comboStep) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const now = ctx.currentTime;
     
     // 連鎖音階（ド・レ・ミ・ファ・ソ・ラ・シ・高ド）
@@ -5993,6 +6018,7 @@ function playBubblePopSound(freq = 600, duration = 0.05) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
