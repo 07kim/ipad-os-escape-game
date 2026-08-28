@@ -38,7 +38,7 @@ window.GAME_DATABASE = {
     nanase: { id: "nanase", symbol: "I", name: "七瀬 いろは", era: "2126年（未来）", role: "総務1年 / 不思議ちゃんヒロイン", studentId: "s2341013qr", pass: "2341013", icon: "heart", avatarBg: "#ff2d55" },
     jinnai: { id: "jinnai", symbol: "J", name: "陣内 樹", era: "2126年（未来）", role: "企画3年 / PC持ち主・知識豊富", studentId: "s24c2117au", pass: "JNNITMNR", icon: "laptop", avatarBg: "#30b0c7" },
     morino: { id: "morino", symbol: "K", name: "森野 航", era: "2126年（未来）", role: "財務3年 / タイムマシン実行犯", studentId: "s23b1015nd", pass: "25B1150", icon: "clock", avatarBg: "#64d2ff" },
-    renjo: { id: "renjo", symbol: "L", name: "連城 観", era: "2126年（未来）", role: "執行部 / 観測・記録担当", studentId: "s23c1044kr", pass: "23C1044", icon: "compass", avatarBg: "#5ac8fa" },
+    renjo: { id: "renjo", symbol: "L", name: "連城 観", kana: "れんじょう みる", era: "2126年（未来）", role: "執行部 / 観測・記録担当", studentId: "s23c1044kr", pass: "23C1044", icon: "compass", avatarBg: "#5ac8fa" },
     inukai: { id: "inukai", symbol: "M", name: "犬飼 玲", era: "2126年（未来）", role: "U.Z.W.鵜沢社長の冷酷な忠臣", studentId: "unknown", pass: "UZW119", icon: "zap", avatarBg: "#1c1c1e" }
   },
 
