@@ -3158,7 +3158,7 @@ function switchCourseViewMode(mode) {
 
 function renderManabaPortal() {
   const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser] || {
-    name: "学生",
+    name: "L",
     department: "一般教養課程",
     studentId: "U24c3040",
     timetable: {},
@@ -3166,9 +3166,11 @@ function renderManabaPortal() {
   };
 
   // 1. ユーザー名・所属表示
-  const userNameEl = document.getElementById('portal-username-disp');
+  const userNameEl = document.getElementById('portal-username-disp') || document.getElementById('manaba-user-display-name');
+  const welcomeNameEl = document.getElementById('manaba-portal-welcome-name');
   const userIdEl = document.getElementById('portal-userid-disp');
   if (userNameEl) userNameEl.innerText = user.name;
+  if (welcomeNameEl) welcomeNameEl.innerText = `${user.name}さんのマイページ`;
   if (userIdEl) userIdEl.innerText = user.studentId || gameState.manabaUser;
 
   // 2. 曜日時間割（月〜土 1〜7限 + 他）のレンダリング

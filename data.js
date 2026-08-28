@@ -762,10 +762,10 @@ window.GAME_DATABASE = {
         ]
       },
 
-      // ① 初期保存用：仮アカウント（氏名なし）
+      // ① 初期保存用：アカウント（L）
       "U24c3040": {
         pass: "pass3040",
-        name: "学生",
+        name: "L",
         department: "一般教養課程",
         studentId: "U24c3040",
         timetable: {
@@ -783,7 +783,7 @@ window.GAME_DATABASE = {
 
       "2024B0159": {
         pass: "pass0159",
-        name: "学生",
+        name: "L",
         department: "一般教養課程",
         studentId: "2024B0159",
         timetable: {
