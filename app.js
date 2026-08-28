@@ -5265,7 +5265,7 @@ async function attemptSwap(r1, c1, r2, c2) {
     spawnPrismFlash();
     playPrismSound();
 
-    // ターゲット色の全セル＋レインボーセルを消去
+    // ターゲット色の全セル＋レインボーセルを収集
     const matchedCoords = new Set();
     matchedCoords.add(`${r1},${c1}`);
     matchedCoords.add(`${r2},${c2}`);
@@ -5274,10 +5274,16 @@ async function attemptSwap(r1, c1, r2, c2) {
         const b = puzzleState.board[r][c];
         if (b && (b.color === targetColor || b.special === 'rainbow')) {
           matchedCoords.add(`${r},${c}`);
+          // 予告発光パルスを付与
+          const el = document.getElementById(`bubble-${r}-${c}`);
+          if (el) el.classList.add('rainbow-target-glow');
         }
       }
     }
     expandSpecialsRecursive(matchedCoords);
+
+    // 予告発光を見せるための短いウェイト（140ms）
+    await sleep(140);
 
     const initialMatchResult = {
       matches: Array.from(matchedCoords).map(str => {
@@ -5289,7 +5295,7 @@ async function attemptSwap(r1, c1, r2, c2) {
 
     await processMatches(initialMatchResult);
     puzzleState.isProcessing = false;
-    if (puzzleState.moves <= 0) setTimeout(showPuzzleResult, 600);
+    if (puzzleState.moves <= 0) setTimeout(showPuzzleResult, 500);
     return;
   }
 
@@ -5546,37 +5552,31 @@ function spawnJewelParticles(r, c, color) {
   if (!container) return;
 
   const colorMap = {
-    pink: '#f43f5e',
-    blue: '#0ea5e9',
-    green: '#10b981',
-    yellow: '#fbbf24',
-    purple: '#c084fc'
+    pink: '#e11d48',
+    blue: '#0284c7',
+    green: '#16a34a',
+    yellow: '#d97706',
+    purple: '#9333ea'
   };
   const hex = colorMap[color] || '#ffffff';
 
   const posX = ((c + 0.5) / PUZZLE_COLS) * 100;
   const posY = ((r + 0.5) / PUZZLE_ROWS) * 100;
 
-  const particleCount = 12;
+  const particleCount = 4;
   for (let i = 0; i < particleCount; i++) {
     const p = document.createElement('div');
     p.className = 'puzzle-spark-particle';
     p.style.left = `${posX}%`;
     p.style.top = `${posY}%`;
-    p.style.background = i % 2 === 0 ? hex : '#ffffff';
-    p.style.boxShadow = `0 0 12px ${hex}, 0 0 4px #ffffff`;
+    p.style.background = hex;
+    p.style.boxShadow = `0 0 8px ${hex}, 0 0 2px #ffffff`;
+    p.style.width = '7px';
+    p.style.height = '7px';
+    p.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
 
-    const size = Math.random() * 8 + 8;
-    p.style.width = `${size}px`;
-    p.style.height = `${size}px`;
-    if (i % 3 === 0) {
-      p.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'; // ダイヤ型
-    } else {
-      p.style.borderRadius = '50%';
-    }
-
-    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.4;
-    const dist = Math.random() * 50 + 35;
+    const angle = (Math.PI * 2 / particleCount) * i + (Math.random() - 0.5) * 0.3;
+    const dist = Math.random() * 30 + 20;
     const tx = Math.cos(angle) * dist;
     const ty = Math.sin(angle) * dist;
 
@@ -5584,7 +5584,7 @@ function spawnJewelParticles(r, c, color) {
     p.style.setProperty('--ty', `${ty}px`);
 
     container.appendChild(p);
-    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 680);
+    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 550);
   }
 }
 

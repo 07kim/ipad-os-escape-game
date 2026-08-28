@@ -8147,43 +8147,41 @@ body {
   background: rgba(255, 255, 255, 0.92);
   filter: blur(0.3px);
   pointer-events: none;
-}
-
-/* 5色のカラーバリエーション（ライトモード） */
+/* 5色のカラーバリエーション（濃密で鮮明なジュエルカラー） */
 .puzzle-bubble.color-pink {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, #f472b6 40%, #ec4899 80%, #be185d 100%);
-  box-shadow: 0 4px 10px rgba(236, 72, 153, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 32% 32%, #ffffff 0%, #fb7185 28%, #e11d48 70%, #9f1239 100%);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
 }
 
 .puzzle-bubble.color-blue {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, #38bdf8 40%, #0ea5e9 80%, #0284c7 100%);
-  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 32% 32%, #ffffff 0%, #38bdf8 28%, #0284c7 70%, #075985 100%);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
 }
 
 .puzzle-bubble.color-green {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, #4ade80 40%, #22c55e 80%, #15803d 100%);
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 32% 32%, #ffffff 0%, #4ade80 28%, #16a34a 70%, #14532d 100%);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
 }
 
 .puzzle-bubble.color-yellow {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, #fde047 40%, #eab308 80%, #b45309 100%);
-  box-shadow: 0 4px 10px rgba(234, 179, 8, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 32% 32%, #ffffff 0%, #fde047 28%, #d97706 70%, #78350f 100%);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
 }
 
 .puzzle-bubble.color-purple {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, #c084fc 40%, #a855f7 80%, #7e22ce 100%);
-  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 32% 32%, #ffffff 0%, #c084fc 28%, #9333ea 70%, #581c87 100%);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
 }
 
-/* ⚡ 特殊バブル：十字ラインボム（⚡十字一閃レーザー） */
+/* ⚡ 特殊バブル：十字ラインボム（⚡濃い電撃ゴールド） */
 .puzzle-bubble.special-line {
-  box-shadow: 0 0 22px rgba(250, 204, 21, 0.95), inset 0 2px 4px #ffffff, 0 0 0 3px #facc15 !important;
-  animation: electricPulse 1.1s infinite alternate ease-in-out;
+  box-shadow: 0 0 24px #eab308, inset 0 2px 4px #ffffff, 0 0 0 3.5px #ca8a04 !important;
+  animation: electricPulse 1.0s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-line::before {
   content: '⚡';
@@ -8192,14 +8190,14 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: min(28px, 5.5vw);
-  filter: drop-shadow(0 0 8px #facc15) drop-shadow(0 0 3px #ffffff);
+  filter: drop-shadow(0 0 8px #eab308) drop-shadow(0 0 3px #ffffff);
   z-index: 5;
 }
 
-/* 💣 特殊バブル：エリアボム（💣周囲3x3爆破） */
+/* 💣 特殊バブル：エリアボム（💣濃いフレイムレッド） */
 .puzzle-bubble.special-bomb {
-  box-shadow: 0 0 24px rgba(239, 68, 68, 1), inset 0 2px 4px #ffffff, 0 0 0 3px #ef4444 !important;
-  animation: bombPulse 0.85s infinite alternate ease-in-out;
+  box-shadow: 0 0 26px #dc2626, inset 0 2px 4px #ffffff, 0 0 0 3.5px #b91c1c !important;
+  animation: bombPulse 0.8s infinite alternate ease-in-out;
 }
 .puzzle-bubble.special-bomb::before {
   content: '💣';
@@ -8208,16 +8206,16 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: min(28px, 5.5vw);
-  filter: drop-shadow(0 0 8px #f97316) drop-shadow(0 0 3px #ffffff);
+  filter: drop-shadow(0 0 8px #ea580c) drop-shadow(0 0 3px #ffffff);
   z-index: 5;
 }
 
-/* 🌈 特殊バブル：レインボー（🌈全同色一斉消去） */
+/* 🌈 特殊バブル：レインボー（🌈濃密プリズムオーラ） */
 .puzzle-bubble.special-rainbow {
-  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f43f5e 20%, #fbbf24 40%, #10b981 60%, #38bdf8 80%, #a855f7 100%) !important;
-  box-shadow: 0 0 26px rgba(236, 72, 153, 0.95), inset 0 2px 4px #ffffff, 0 0 0 3px #ec4899 !important;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f43f5e 22%, #eab308 42%, #16a34a 62%, #0284c7 82%, #7e22ce 100%) !important;
+  box-shadow: 0 0 28px #db2777, inset 0 2px 4px #ffffff, 0 0 0 3.5px #be185d !important;
   border: 2px solid #ffffff !important;
-  animation: rainbowSpin 2.2s linear infinite;
+  animation: rainbowSpin 2.0s linear infinite;
 }
 .puzzle-bubble.special-rainbow::before {
   content: '✦';
@@ -8227,17 +8225,28 @@ body {
   transform: translate(-50%, -50%);
   font-size: min(28px, 5.5vw);
   color: #ffffff;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px #ffffff);
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 12px #ffffff);
   z-index: 5;
+}
+
+/* 🌈 レインボー対象予告パルス（消える直前に一斉に濃く輝く） */
+.puzzle-bubble.rainbow-target-glow {
+  transform: scale(1.18);
+  box-shadow: 0 0 20px #ffffff, 0 0 32px #38bdf8, 0 0 0 4px #ffffff !important;
+  filter: brightness(1.5);
+  transition: all 0.15s ease-out;
+  z-index: 20;
 }
 
 @keyframes electricPulse {
   0% { transform: scale(1.0); filter: brightness(1.0); }
-  100% { transform: scale(1.08); filter: brightness(1.25); }
+  100% { transform: scale(1.08); filter: brightness(1.3); }
 }
 
 @keyframes bombPulse {
-  0% { transform: scale(1.0); box-shadow: 0 0 14px rgba(239, 68, 68, 0.85), inset 0 2px 4px #ffffff; }
+  0% { transform: scale(1.0); box-shadow: 0 0 16px #dc2626, inset 0 2px 4px #ffffff; }
+  100% { transform: scale(1.1); box-shadow: 0 0 30px #ea580c, inset 0 2px 4px #ffffff; }
+}
   100% { transform: scale(1.1); box-shadow: 0 0 26px rgba(249, 115, 22, 1), inset 0 2px 4px #ffffff; }
 }
 
@@ -8358,12 +8367,20 @@ body {
   z-index: 850;
   will-change: transform, opacity;
   animation: particleBurst 0.75s cubic-bezier(0.12, 0.8, 0.32, 1) forwards;
-  filter: drop-shadow(0 0 6px #ffffff);
+/* 🌟 ジュエル破裂パーティクル（軽量＆高発光クリスタルシャード） */
+.puzzle-spark-particle {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 850;
+  will-change: transform, opacity;
+  animation: particleBurst 0.55s cubic-bezier(0.12, 0.8, 0.32, 1) forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
 }
 
 @keyframes particleBurst {
   0% {
-    transform: translate(0, 0) scale(1.3);
+    transform: translate(0, 0) scale(1.2);
     opacity: 1;
   }
   100% {
@@ -8372,17 +8389,17 @@ body {
   }
 }
 
-/* 💣 衝撃波リングエフェクト（大迫力・燃える爆炎ウェーブ） */
+/* 💣 衝撃波リングエフェクト（濃密ブラッディフレイム） */
 .puzzle-shockwave-ring {
   position: absolute;
   pointer-events: none;
   border-radius: 50%;
-  border: 6px solid rgba(255, 69, 0, 0.95);
-  box-shadow: 0 0 32px rgba(255, 69, 0, 0.95), inset 0 0 20px rgba(255, 215, 0, 0.95);
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, rgba(255, 69, 0, 0.2) 60%, transparent 80%);
+  border: 7px solid #dc2626;
+  box-shadow: 0 0 36px #ea580c, inset 0 0 24px #facc15;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.4) 0%, rgba(220, 38, 38, 0.25) 60%, transparent 80%);
   z-index: 860;
   transform: translate(-50%, -50%) scale(0.1);
-  animation: shockwaveExpand 0.7s ease-out forwards;
+  animation: shockwaveExpand 0.55s ease-out forwards;
 }
 
 @keyframes shockwaveExpand {
@@ -8398,46 +8415,46 @@ body {
   }
 }
 
-/* ⚡ 十字レーザービームエフェクト（太く眩しい高エネルギーネオンビーム） */
+/* ⚡ 十字レーザービームエフェクト（濃密エレクトリックシアン＋純白ビーム） */
 .puzzle-laser-beam {
   position: absolute;
   pointer-events: none;
   z-index: 870;
-  animation: laserFlash 0.6s ease-out forwards;
+  animation: laserFlash 0.5s ease-out forwards;
 }
 .puzzle-laser-beam.horizontal {
   left: 0;
   width: 100%;
-  height: 28px;
+  height: 32px;
   transform: translateY(-50%);
-  background: linear-gradient(90deg, transparent 0%, #38bdf8 15%, #ffffff 50%, #38bdf8 85%, transparent 100%);
-  box-shadow: 0 0 28px #38bdf8, 0 0 56px #0284c7, 0 0 10px #ffffff;
+  background: linear-gradient(90deg, transparent 0%, #0284c7 15%, #ffffff 50%, #0284c7 85%, transparent 100%);
+  box-shadow: 0 0 32px #0284c7, 0 0 64px #0369a1, 0 0 12px #ffffff;
 }
 .puzzle-laser-beam.vertical {
   top: 0;
   height: 100%;
-  width: 28px;
+  width: 32px;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, transparent 0%, #38bdf8 15%, #ffffff 50%, #38bdf8 85%, transparent 100%);
-  box-shadow: 0 0 28px #38bdf8, 0 0 56px #0284c7, 0 0 10px #ffffff;
+  background: linear-gradient(180deg, transparent 0%, #0284c7 15%, #ffffff 50%, #0284c7 85%, transparent 100%);
+  box-shadow: 0 0 32px #0284c7, 0 0 64px #0369a1, 0 0 12px #ffffff;
 }
 
 @keyframes laserFlash {
   0% { opacity: 0; transform: scaleY(0.2); }
-  20% { opacity: 1; transform: scaleY(1.35); filter: brightness(2.2); }
+  20% { opacity: 1; transform: scaleY(1.35); filter: brightness(2.4); }
   100% { opacity: 0; transform: scaleY(0.6); }
 }
 
-/* 🌈 プリズム・フラッシュ（全画面虹色ホログラムウェーブ） */
+/* 🌈 プリズム・フラッシュ（濃密オーラウェーブ） */
 .puzzle-prism-flash {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 30px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, rgba(56, 189, 248, 0.55) 50%, transparent 80%);
-  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
+  background: radial-gradient(circle, rgba(219, 39, 119, 0.75) 0%, rgba(2, 132, 199, 0.6) 50%, transparent 80%);
+  box-shadow: inset 0 0 45px rgba(255, 255, 255, 0.95);
   z-index: 860;
-  animation: prismScreenFlash 0.8s ease-out forwards;
+  animation: prismScreenFlash 0.65s ease-out forwards;
 }
 
 @keyframes prismScreenFlash {
