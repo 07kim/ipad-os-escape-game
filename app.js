@@ -2443,7 +2443,8 @@ function openLinkChat(contactId) {
     "sotozono": { name: "外園 胡春", avatar: "G", avatarClass: "avatar-g" },
     "higa": { name: "比嘉 俊希", avatar: "H", avatarClass: "avatar-h" },
     "inukai": { name: "犬飼 玲", avatar: "犬", avatarClass: "avatar-inukai" },
-    "morino": { name: "森野 航", avatar: "森", avatarClass: "avatar-default" }
+    "morino": { name: "森野 航", avatar: "森", avatarClass: "avatar-default" },
+    "renjo": { name: "連城 観", avatar: "L", avatarClass: "avatar-default" }
   };
 
   filteredMessages.forEach(msg => {
