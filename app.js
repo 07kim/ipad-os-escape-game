@@ -3175,21 +3175,6 @@ function renderManabaPortal() {
 
   // 2. 曜日時間割（月〜土 1〜7限 + 他）のレンダリング
   const timetableBody = document.getElementById('manaba-official-timetable-body');
-  // 科目名からコースIDを特定するヘルパー
-  function findCourseIdByName(name) {
-    if (!name) return "c_quantum";
-    const allCourses = window.GAME_DATABASE.manaba.courses || {};
-    // 1. 完全一致
-    for (const [cid, cobj] of Object.entries(allCourses)) {
-      if (cobj.name === name) return cid;
-    }
-    // 2. ユーザーの所属コースから検索
-    if (user.courses) {
-      const match = user.courses.find(c => c.name === name);
-      if (match) return match.id;
-    }
-    return "c_quantum";
-  }
 
   if (timetableBody) {
     timetableBody.innerHTML = "";
@@ -3201,9 +3186,8 @@ function renderManabaPortal() {
         const periodIdx = period - 1;
         const courseName = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
         if (courseName) {
-          const resolvedCourseId = findCourseIdByName(courseName);
           rowHtml += `
-            <td class="has-course" onclick="openManabaCourse('${resolvedCourseId}')" title="${courseName}">
+            <td class="has-course" onclick="openManabaCourse('${courseName}')" title="${courseName}">
               <a href="javascript:void(0);" class="timetable-course-link">${courseName}</a>
             </td>
           `;
@@ -3220,9 +3204,8 @@ function renderManabaPortal() {
     days.forEach(day => {
       const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][7]) || "";
       if (extraCourse) {
-        const resolvedCourseId = findCourseIdByName(extraCourse);
         extraRowHtml += `
-          <td class="has-course" onclick="openManabaCourse('${resolvedCourseId}')">
+          <td class="has-course" onclick="openManabaCourse('${extraCourse}')">
             <a href="javascript:void(0);" class="timetable-course-link">${extraCourse}</a>
           </td>
         `;
@@ -3352,22 +3335,67 @@ function togglePortfolioYear(yearId) {
   }
 }
 
-function openManabaCourse(courseId) {
-  const cid = courseId || "c_quantum";
-  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {
-    name: "応用量子力学",
-    teacher: "神崎 恭介",
-    term: "2026 前期 月曜 2限",
-    room: "新習志野校舎6号館301",
-    code: "24QM3011",
-    news: [
-      { date: "2026-08-20", title: "【重要】第11回 時空トンネリング変調周波数に関する補足資料", content: "第11回の講義資料を公開しました。時空転移回路の基準変調周波数（119.43MHz）の導出式およびフェイルセーフ回路の安全要件を確認してください。" },
-      { date: "2026-08-15", title: "夏季集中実験室（東金地下ラボ）への立ち入りについて", content: "夏季期間中、東金地下研究棟への入室には指定の生体認証およびゲートキーパー認証が必要となります。" }
-    ],
-    materials: [
-      { id: 1, title: "第11回 講義資料（高周波共鳴と量子変調）", file: "quantum_dynamics_lec11.pdf", content: "【応用量子力学 第11回講義ノート】\n\n時空転移回路における変調周波数特性:\n超伝導共振器の駆動には、特定の基準搬送波周波数との同期が必須となる。\n\n▶ 実験設定パラメータ:\n- 基準搬送波周波数: 119.43 MHz (重要)\n- 共振位相角: 0.00 rad\n\n※この周波数を量子変調器(Terminal)の周波数設定値として入力すること。" }
-    ]
-  };
+function openManabaCourse(courseIdOrName) {
+  const allCourses = (window.GAME_DATABASE && window.GAME_DATABASE.manaba && window.GAME_DATABASE.manaba.courses) || {};
+  let course = null;
+
+  // 1. IDでの検索
+  if (courseIdOrName && allCourses[courseIdOrName]) {
+    course = allCourses[courseIdOrName];
+  }
+  
+  // 2. 講義名（日本語）での完全一致検索
+  if (!course && courseIdOrName) {
+    for (const [cid, cobj] of Object.entries(allCourses)) {
+      if (cobj.name === courseIdOrName || cid === courseIdOrName) {
+        course = cobj;
+        break;
+      }
+    }
+  }
+
+  // 3. ログイン中ユーザーのcourses配列から検索
+  const currentUser = (window.GAME_DATABASE && window.GAME_DATABASE.manaba && window.GAME_DATABASE.manaba.users && window.GAME_DATABASE.manaba.users[gameState.manabaUser]);
+  if (!course && currentUser && currentUser.courses) {
+    const userMatch = currentUser.courses.find(c => c.id === courseIdOrName || c.name === courseIdOrName);
+    if (userMatch) {
+      course = {
+        id: userMatch.id || `c_${Date.now()}`,
+        name: userMatch.name,
+        teacher: userMatch.teacher || "佐藤 健一",
+        term: userMatch.term || "2026 前期",
+        room: userMatch.room || "津田沼校舎1号館",
+        code: "24" + Math.floor(100000 + Math.random() * 900000),
+        news: [
+          { date: "2026-08-20", title: `【受講者連絡】${userMatch.name} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
+          { date: "2026-08-05", title: `${userMatch.name}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
+        ],
+        materials: [
+          { id: 1, title: `第1回: ${userMatch.name} ガイダンス`, file: `${userMatch.name}_01.pdf`, content: `【${userMatch.name} 第1回講義資料】\n\nシラバス説明と評価基準について。` }
+        ]
+      };
+    }
+  }
+
+  // 4. まだ見つからない場合（時間割の科目名から動的生成）
+  if (!course) {
+    const fallbackName = courseIdOrName || "応用量子力学";
+    course = {
+      id: `c_${Date.now()}`,
+      name: fallbackName,
+      teacher: "佐藤 健一",
+      term: "2026 前期",
+      room: "津田沼校舎1号館",
+      code: "24" + Math.floor(100000 + Math.random() * 900000),
+      news: [
+        { date: "2026-08-20", title: `【受講者連絡】${fallbackName} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
+        { date: "2026-08-05", title: `${fallbackName}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
+      ],
+      materials: [
+        { id: 1, title: `第1回: ${fallbackName} ガイダンス`, file: `${fallbackName}_01.pdf`, content: `【${fallbackName} 第1回講義資料】\n\nシラバス説明と評価基準について。` }
+      ]
+    };
+  }
 
   // 表示切り替え
   const mainCols = document.querySelector('.portal-main-columns');
@@ -6172,5 +6200,116 @@ function toggleCompassTargetLock() {
     lockedCompassHeading = null;
   }
   updateCompassUI(currentCompassHeading, 0, 0);
+}
+
+// ==========================================================================
+// 📱 iPadOSネイティブ風：左端エッジスワイプで前の画面に戻るジェスチャー
+// ==========================================================================
+function setupGlobalSwipeBackGestures() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isEdgeSwipe = false;
+
+  window.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    // 画面左端（70px以内）からのタッチのみエッジスワイプ判定
+    isEdgeSwipe = (touchStartX <= 70);
+  }, { passive: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!isEdgeSwipe || e.changedTouches.length !== 1) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+
+    // 右向きに65px以上スワイプ、かつ水平方向が主
+    if (deltaX > 65 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      handleGlobalSwipeBack();
+    }
+    isEdgeSwipe = false;
+  }, { passive: true });
+}
+
+function handleGlobalSwipeBack() {
+  // 1. 🎓 LMS「manaba」内の戻る処理
+  const manabaApp = document.getElementById('app-manaba-app');
+  if (manabaApp && manabaApp.style.display !== 'none') {
+    // A. ページビュー（資料詳細/目次）が開いている ➔ コース詳細へ戻る
+    const pageView = document.getElementById('manaba-page-detail-view');
+    if (pageView && pageView.style.display !== 'none') {
+      if (typeof closeManabaPageView === 'function') closeManabaPageView();
+      playSystemSound("touch");
+      return;
+    }
+
+    // B. 資料PDFビューが開いている ➔ コース詳細へ戻る
+    const materialView = document.getElementById('manaba-material-detail-view');
+    if (materialView && materialView.style.display !== 'none') {
+      if (typeof closeManabaMaterialView === 'function') closeManabaMaterialView();
+      playSystemSound("touch");
+      return;
+    }
+
+    // C. コースニュース詳細モーダルが開いている ➔ 閉じる
+    const newsModal = document.getElementById('manaba-news-modal');
+    if (newsModal && newsModal.style.display !== 'none') {
+      newsModal.style.display = 'none';
+      playSystemSound("touch");
+      return;
+    }
+
+    // D. コース詳細画面が開いている ➔ マイページ（時間割）へ戻る
+    const courseDetail = document.getElementById('manaba-course-detail-view');
+    if (courseDetail && courseDetail.style.display !== 'none') {
+      switchManabaTab('mypage');
+      playSystemSound("touch");
+      return;
+    }
+
+    // E. ポートフォリオが開いている ➔ マイページへ戻る
+    const portfolioView = document.getElementById('manaba-portfolio-view');
+    if (portfolioView && portfolioView.style.display !== 'none') {
+      switchManabaTab('mypage');
+      playSystemSound("touch");
+      return;
+    }
+  }
+
+  // 2. 🌐 Safari（ブラウザ）内の戻る処理
+  const safariApp = document.getElementById('app-safari-app');
+  if (safariApp && safariApp.style.display !== 'none') {
+    const articleView = document.getElementById('safari-article-view');
+    if (articleView && articleView.style.display !== 'none') {
+      if (typeof closeSafariArticle === 'function') closeSafariArticle();
+      playSystemSound("touch");
+      return;
+    }
+  }
+
+  // 3. 🖼️ 写真アプリ内の戻る処理
+  const photoModal = document.getElementById('photo-modal');
+  if (photoModal && photoModal.style.display !== 'none') {
+    if (typeof closePhotoModal === 'function') closePhotoModal();
+    playSystemSound("touch");
+    return;
+  }
+
+  // 4. システムモーダルが開いていたら閉じる
+  const activeModal = document.querySelector('.ipad-system-modal[style*="display: flex"], .modal-overlay[style*="display: flex"]');
+  if (activeModal) {
+    activeModal.style.display = 'none';
+    playSystemSound("touch");
+    return;
+  }
+}
+
+// 起動時にエッジスワイプジェスチャーを自動登録
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupGlobalSwipeBackGestures);
+} else {
+  setupGlobalSwipeBackGestures();
 }
 
