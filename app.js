@@ -1687,46 +1687,69 @@ function renderMetaEvidence() {
   if (window.lucide) lucide.createIcons();
 }
 
+let evidenceScanCooldown = false;
+
 // 📦 調査資料 専用QRスキャナーモーダル開閉
 function openMetaEvidenceQrScanner() {
   const modal = document.getElementById('meta-evidence-qr-modal');
   const statusEl = document.getElementById('evidence-scanner-status');
+  const errToast = document.getElementById('evidence-scanner-error-toast');
   if (!modal) return;
 
+  evidenceScanCooldown = false;
+  if (errToast) errToast.style.display = 'none';
   modal.style.display = 'flex';
-  if (statusEl) statusEl.innerText = "カメラを起動中...";
+  if (statusEl) {
+    statusEl.innerText = "カメラを起動中...";
+    statusEl.className = "scanner-status-msg";
+  }
 
   startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
 }
 
 function closeMetaEvidenceQrScanner() {
   const modal = document.getElementById('meta-evidence-qr-modal');
+  const errToast = document.getElementById('evidence-scanner-error-toast');
   if (modal) modal.style.display = 'none';
+  if (errToast) errToast.style.display = 'none';
+  evidenceScanCooldown = false;
   stopAllCameraStreams();
 }
 
 // 📦 調査資料 QRコード読み取り成功ハンドラー
 function handleEvidenceQrDetected(decodedText, statusBox) {
-  if (!decodedText) return;
+  if (!decodedText || evidenceScanCooldown) return;
   const cleanKey = decodedText.trim();
 
   const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
   const matched = allItems.find(it => it.qrKey === cleanKey || it.id === cleanKey);
 
   if (!matched) {
+    evidenceScanCooldown = true;
+    playSystemSound("error");
+
+    // スキャナー画面の上に即時ポップアップバナーを表示
+    const errToast = document.getElementById('evidence-scanner-error-toast');
+    if (errToast) {
+      errToast.style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    }
     if (statusBox) {
-      statusBox.innerText = "⚠️ 該当する調査資料データが見つかりません。";
+      statusBox.innerText = "⚠️ 該当する調査資料がありません";
       statusBox.className = "scanner-status-msg error";
     }
-    
-    // スキャナーを閉じてエラー音とポップアップモーダルで通知
-    closeMetaEvidenceQrScanner();
-    playSystemSound("error");
-    showIpadModal(
-      "調査資料が見つかりません",
-      "読み取ったQRコードに対応する調査資料データはありません。\n正しいQRコードをお確かめの上、再度スキャンしてください。"
-    );
+
     logWriteToGAS("EVIDENCE_SCAN_NOT_FOUND", `未登録のQRコード読み取り: ${cleanKey}`);
+
+    // カメラは閉じず、約1.8秒後にポップアップを消して即座に再スキャン待機状態へ！
+    setTimeout(() => {
+      if (errToast) errToast.style.display = 'none';
+      if (statusBox) {
+        statusBox.innerText = "枠内にQRコードを合わせてください";
+        statusBox.className = "scanner-status-msg";
+      }
+      evidenceScanCooldown = false;
+    }, 1800);
     return;
   }
 

@@ -2576,7 +2576,13 @@
         <span class="scanner-header-title">📷 調査資料 QRコードスキャン</span>
         <button class="scanner-close-btn" onclick="closeMetaEvidenceQrScanner()">✕</button>
       </div>
-      <div class="scanner-card-body">
+      <div class="scanner-card-body" style="position:relative;">
+        <!-- ⚠️ スキャナー内 即時再スキャン対応 エラーポップアップバナー -->
+        <div id="evidence-scanner-error-toast" style="display:none; position:absolute; top:12px; left:12px; right:12px; background:rgba(239, 68, 68, 0.95); backdrop-filter:blur(6px); color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:700; align-items:center; gap:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3); z-index:50; animation:slideDownIn 0.3s ease;">
+          <i data-lucide="alert-triangle" style="width:18px; height:18px; flex-shrink:0;"></i>
+          <span style="flex:1;">該当する調査資料はありません</span>
+        </div>
+
         <div class="scanner-viewport-box">
           <video id="evidence-scanner-video" autoplay playsinline></video>
           <canvas id="evidence-scanner-canvas" style="display:none;"></canvas>
