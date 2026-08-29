@@ -1718,12 +1718,15 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
       statusBox.innerText = "⚠️ 該当する調査資料データが見つかりません。";
       statusBox.className = "scanner-status-msg error";
     }
-    // 少し待って再スキャン待機
-    setTimeout(() => {
-      if (document.getElementById('meta-evidence-qr-modal').style.display === 'flex') {
-        startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
-      }
-    }, 1500);
+    
+    // スキャナーを閉じてエラー音とポップアップモーダルで通知
+    closeMetaEvidenceQrScanner();
+    playSystemSound("error");
+    showIpadModal(
+      "調査資料が見つかりません",
+      "読み取ったQRコードに対応する調査資料データはありません。\n正しいQRコードをお確かめの上、再度スキャンしてください。"
+    );
+    logWriteToGAS("EVIDENCE_SCAN_NOT_FOUND", `未登録のQRコード読み取り: ${cleanKey}`);
     return;
   }
 
