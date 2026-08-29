@@ -315,10 +315,10 @@ body {
   flex: 1;
   width: 100%;
   height: 100%;
-  padding: 40px 40px 140px 40px; /* ドック（下部）とステータスバーを避けた余白 */
+  padding: 135px 44px 100px 44px; /* 上すぎず真ん中すぎない、iPadOS本来の自然で美しい配置 */
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 画面の上下中央（中間）にゆったり配置 */
+  justify-content: flex-start;
   align-items: center;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -327,8 +327,8 @@ body {
 .app-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 44px 32px; /* アイコン間の余白を広げてバランスよく配置 */
-  align-content: center;
+  gap: 38px 28px;
+  align-content: start;
   justify-items: center;
   max-width: 680px;
   margin: 0 auto;
