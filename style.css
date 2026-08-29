@@ -1078,6 +1078,65 @@ body {
   font-weight: 600;
 }
 
+/* ⚠️ 調査資料スキャナー内 大型エラーポップアップ */
+.scanner-large-error-popup {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 88%;
+  max-width: 320px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #ef4444;
+  border-radius: 18px;
+  padding: 22px 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: popInBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.large-popup-icon-box {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+.large-popup-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.large-popup-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+@keyframes popInBounce {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 /* 🎉 調査資料 記録完了ポップアップトースト */
 .evidence-record-toast {
   position: fixed;

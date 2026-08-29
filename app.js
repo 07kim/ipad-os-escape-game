@@ -1741,7 +1741,7 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
 
     logWriteToGAS("EVIDENCE_SCAN_NOT_FOUND", `未登録のQRコード読み取り: ${cleanKey}`);
 
-    // カメラは閉じず、約1.8秒後にポップアップを消して即座に再スキャン待機状態へ！
+    // カメラは閉じず、約2.2秒後にポップアップを消して即座に再スキャン待機状態へ！
     setTimeout(() => {
       if (errToast) errToast.style.display = 'none';
       if (statusBox) {
@@ -1749,7 +1749,7 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
         statusBox.className = "scanner-status-msg";
       }
       evidenceScanCooldown = false;
-    }, 1800);
+    }, 2200);
     return;
   }
 
