@@ -393,20 +393,15 @@ body {
   border-radius: inherit;
 }
 
-.app-mail-icon {
-  background: linear-gradient(135deg, #5ac8fa 0%, #007aff 100%);
-}
-.app-mail-icon i { color: white; }
-
-.app-phone-icon {
-  background-color: #34c759;
-}
-.app-phone-icon i { color: white; }
-
+.app-mail-icon,
+.app-phone-icon,
 .app-settings-icon {
-  background-color: #8e8e93;
+  background-color: #ffffff;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.app-settings-icon i { color: white; }
 
 .app-name {
   margin-top: 8px;
