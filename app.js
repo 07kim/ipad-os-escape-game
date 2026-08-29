@@ -1,5 +1,19 @@
 // 2126年 架空iPadOS型 脱出ゲームシステム - アプリ制御ロジック (app.js)
 
+// ⚡ 超軽量スコープ付きLucideアイコンレンダラー（全画面再スキャンを防止し高速化）
+function safeCreateIcons(target = null) {
+  if (typeof lucide === 'undefined') return;
+  try {
+    if (target && target.nodeType === 1) {
+      lucide.createIcons({ root: target });
+    } else {
+      lucide.createIcons();
+    }
+  } catch(e) {
+    try { lucide.createIcons(); } catch(err) {}
+  }
+}
+
 // --- デバッグ用グローバルエラーハンドラー ---
 window.onerror = function(message, source, lineno, colno, error) {
   const errMsg = `【JSエラー検知】\nメッセージ: ${message}\nファイル: ${source}\n行番号: ${lineno}:${colno}`;
@@ -835,6 +849,9 @@ function getFormattedFakeTime() {
 }
 
 function startFakeClock() {
+  let lastClockStr = "";
+  let lastDateStr = "";
+
   function updateClock() {
     const elapsed = gameState.timerRunning ? (Date.now() - gameState.clockSetTime) : 0;
     const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T09:04:00');
@@ -844,22 +861,27 @@ function startFakeClock() {
     const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
     const clockStr = `${hh}:${mm}`;
 
-    const sbClock = document.getElementById('sb-clock');
-    if (sbClock) sbClock.innerText = clockStr;
-
-    const lockClock = document.getElementById('lock-clock');
-    if (lockClock) lockClock.innerText = clockStr;
+    if (clockStr !== lastClockStr) {
+      lastClockStr = clockStr;
+      const sbClock = document.getElementById('sb-clock');
+      if (sbClock) sbClock.innerText = clockStr;
+      const lockClock = document.getElementById('lock-clock');
+      if (lockClock) lockClock.innerText = clockStr;
+    }
 
     // 日付表示 (ロック画面 - 曜日非表示)
     const month = fakeCurrent.getMonth() + 1;
     const day = fakeCurrent.getDate();
-    const lockDate = document.getElementById('lock-date');
-    if (lockDate) lockDate.innerText = `${month}月${day}日`;
-    
-    // manabaのヘッダー日付 (時間割に合わせた日付表記)
-    const mDateEl = document.getElementById('manaba-header-date');
-    if (mDateEl) {
-      mDateEl.innerText = `2026-08-22 (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][fakeCurrent.getDay()]})`;
+    const dateStr = `${month}月${day}日`;
+    if (dateStr !== lastDateStr) {
+      lastDateStr = dateStr;
+      const lockDate = document.getElementById('lock-date');
+      if (lockDate) lockDate.innerText = dateStr;
+      
+      const mDateEl = document.getElementById('manaba-header-date');
+      if (mDateEl) {
+        mDateEl.innerText = `2026-08-22 (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][fakeCurrent.getDay()]})`;
+      }
     }
   }
 
@@ -1124,9 +1146,7 @@ function renderLockNotifications() {
     container.appendChild(card);
   });
 
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
+  safeCreateIcons(container);
 }
 
 // ロック画面通知タップ時のシームレスアクセス処理
@@ -1582,7 +1602,7 @@ function renderMetaOverview() {
     </div>
   `).join('');
 
-  if (window.lucide) lucide.createIcons();
+  safeCreateIcons(container);
 }
 
 // 🗺️ 【順路】タブ描画: マップ1枚最大表示 (アスペクト比維持)
@@ -1605,7 +1625,7 @@ function renderMetaRoute() {
   }
   if (noteEl) noteEl.innerText = routeData.note;
 
-  if (window.lucide) lucide.createIcons();
+  safeCreateIcons(document.getElementById('meta-panel-route'));
 }
 
 // 🔍 フルスクリーン拡大プレビューモーダル開閉
@@ -1646,7 +1666,7 @@ function renderMetaEvidence() {
         <p>記録された調査資料はありません。<br>右下の「＋」ボタンからQRコードを読み取ってください。</p>
       </div>
     `;
-    if (window.lucide) lucide.createIcons();
+    safeCreateIcons(container);
     return;
   }
 
@@ -1673,7 +1693,7 @@ function renderMetaEvidence() {
     `;
   }).join('');
 
-  if (window.lucide) lucide.createIcons();
+  safeCreateIcons(container);
 }
 
 let evidenceScanCooldown = false;
@@ -2706,7 +2726,7 @@ function openLinkChat(contactId) {
     messageArea.innerHTML += `<div class="chat-system-event" style="background:rgba(239,68,68,0.25); color:#fee2e2; border:1px solid rgba(239,68,68,0.4);">⚠️ 警告：接続中の相手はシステム保安局により物理的に排除された可能性があります。</div>`;
   }
 
-  if (window.lucide) lucide.createIcons();
+  safeCreateIcons(messageArea);
   messageArea.scrollTop = messageArea.scrollHeight;
   logWriteToGAS("LINK_CHAT_OPEN", `LINKトークを開きました: ${contactId}`);
 }
@@ -2757,7 +2777,7 @@ function sendCustomLinkMessage() {
             <i data-lucide="alert-circle" style="width:12px; height:12px;"></i> 送信できませんでした（通信エラー）
           </div>
         `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        safeCreateIcons(bubbleEl);
       }
     }
     playSystemSound("error");
@@ -2778,7 +2798,7 @@ function openLinkAddFriendScanner() {
   modal.style.display = 'flex';
 
   startQrScanner('link-scanner-video', 'link-scanner-canvas', handleLinkAddFriendQrScanned);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(modal);
   logWriteToGAS("LINK_QR_SCANNER_OPEN", "LINE風 友だち追加スキャナーを起動しました。");
 }
 
@@ -2822,7 +2842,7 @@ function openLinkMyQrModal() {
   if (imgEl && myQrData.qrImage) imgEl.src = myQrData.qrImage;
 
   modal.style.display = 'flex';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(modal);
 }
 
 function closeLinkMyQrModal() {
@@ -3035,7 +3055,7 @@ function openHackingForm() {
   if (titleEl) titleEl.innerText = form.title;
   if (descEl) descEl.innerText = form.description;
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(document.getElementById('gform-view'));
   logWriteToGAS("HACKING_FORM_OPEN", "2126年メンタルヘルス・スキャンを表示しました。");
 }
 
@@ -3049,7 +3069,7 @@ function openHackingEditor() {
   document.getElementById('gsheet-view').style.display = 'none';
 
   switchEditorTab('questions');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(document.getElementById('gform-editor-view'));
   logWriteToGAS("HACKING_EDITOR_OPEN", "Googleフォーム編集画面（質問/回答）を開きました。");
 }
 
@@ -3063,7 +3083,7 @@ function switchEditorTab(tabId) {
   if (tabId === 'responses') {
     switchResponsesSubTab('summary');
   }
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(document.getElementById('gform-editor-view'));
 }
 
 // 🟣 Googleフォーム回答サブタブ（概要 / 質問 / 個別）のデータとコントローラ
@@ -3311,7 +3331,7 @@ function renderGSpreadsheet() {
     selectGSheetCell(firstCell, 'A1');
   }
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(document.getElementById('gsheet-table'));
 }
 
 function selectGSheetCell(cellEl, cellName) {
@@ -3368,7 +3388,7 @@ function showManabaKeychainPopup() {
   const popup = document.getElementById('manaba-keychain-popup');
   if (popup) {
     popup.style.display = 'flex';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    safeCreateIcons(popup);
   }
 }
 
@@ -4305,9 +4325,11 @@ function renderMailList() {
     container.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:32px 16px; font-size:13px;">メールはありません</div>`;
     const headerEl = document.getElementById('mail-body-header');
     const contentEl = document.getElementById('mail-body-content');
-    if (headerEl) headerEl.innerHTML = `<div class="mail-empty-selection"><i data-lucide="mail-open" style="width:48px; height:48px; stroke-width:1.2; color:#9ca3af; margin-bottom:12px;"></i><p>メールがありません</p></div>`;
+    if (headerEl) {
+      headerEl.innerHTML = `<div class="mail-empty-selection"><i data-lucide="mail-open" style="width:48px; height:48px; stroke-width:1.2; color:#9ca3af; margin-bottom:12px;"></i><p>メールがありません</p></div>`;
+      safeCreateIcons(headerEl);
+    }
     if (contentEl) contentEl.innerHTML = "";
-    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
 
@@ -4332,7 +4354,7 @@ function renderMailList() {
     `;
   });
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(container);
 
   // 初期選択
   const currentSelected = mails.find(m => m.id === mailState.selectedMailId) || mails[0];
@@ -4393,7 +4415,7 @@ function openMail(mailId) {
       contentEl.innerHTML = `<div class="mail-body-text-block">${sanitizedBody}</div>`;
     }
 
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    safeCreateIcons(headerEl);
     logWriteToGAS("MAIL_OPEN", `メールを開きました: ${mailId} (${mail.subject || mail.title})`);
   }
 }
@@ -4675,7 +4697,7 @@ function switchSettingsTab(tabId) {
   }
 
   playSystemSound("touch");
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(targetView);
   logWriteToGAS("SETTINGS_TAB", `設定タブ切り替え: ${tabId}`);
 }
 
