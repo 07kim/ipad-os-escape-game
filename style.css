@@ -3583,6 +3583,22 @@ body {
   font-weight: 600;
 }
 
+.gform-page-nav-btn {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.gform-page-nav-btn:hover {
+  background: #e8eaed;
+  border-color: #bdc1c6;
+}
+
 /* 質問ごとの集計カード */
 .response-detail-card {
   background: #ffffff;

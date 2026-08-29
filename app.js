@@ -3024,7 +3024,150 @@ function switchEditorTab(tabId) {
     if (btn) btn.classList.toggle('active', t === tabId);
     if (panel) panel.style.display = (t === tabId) ? 'flex' : 'none';
   });
+  if (tabId === 'responses') {
+    switchResponsesSubTab('summary');
+  }
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// 🟣 Googleフォーム回答サブタブ（概要 / 質問 / 個別）のデータとコントローラ
+const GFORM_RESPONSES_DATA = [
+  {
+    name: "陣内 樹",
+    dept: "J-098（神崎研究室）",
+    reason: "神崎教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。",
+    timestamp: "2126/08/21 16:30:15"
+  },
+  {
+    name: "深澤 文哉",
+    dept: "F-042（執行委員会）",
+    reason: "学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。",
+    timestamp: "2126/08/21 17:15:42"
+  },
+  {
+    name: "犬飼 玲",
+    dept: "I-012（学内保安統制局）",
+    reason: "【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。",
+    timestamp: "2126/08/22 08:50:04"
+  }
+];
+
+const GFORM_QUESTIONS_DEF = [
+  { id: 'name', title: '氏名', key: 'name' },
+  { id: 'dept', title: '所属・学籍番号', key: 'dept' },
+  { id: 'reason', title: '部署業務への理解度・意見', key: 'reason' }
+];
+
+let gformCurrentQuestionIndex = 0;
+let gformCurrentIndividualIndex = 0;
+
+function switchResponsesSubTab(subTabId) {
+  playSystemSound("touch");
+  ['summary', 'question', 'individual'].forEach(st => {
+    const btn = document.getElementById(`btn-resp-${st}`);
+    const view = document.getElementById(`responses-view-${st}`);
+    if (btn) btn.classList.toggle('active', st === subTabId);
+    if (view) view.style.display = (st === subTabId) ? 'flex' : 'none';
+  });
+
+  if (subTabId === 'question') {
+    renderGFormQuestionView();
+  } else if (subTabId === 'individual') {
+    renderGFormIndividualView();
+  }
+}
+
+function onSelectGFormQuestion(val) {
+  gformCurrentQuestionIndex = parseInt(val, 10);
+  renderGFormQuestionView();
+}
+
+function prevGFormQuestion() {
+  if (gformCurrentQuestionIndex > 0) {
+    gformCurrentQuestionIndex--;
+    const select = document.getElementById('gform-question-select');
+    if (select) select.value = String(gformCurrentQuestionIndex);
+    renderGFormQuestionView();
+  }
+}
+
+function nextGFormQuestion() {
+  if (gformCurrentQuestionIndex < GFORM_QUESTIONS_DEF.length - 1) {
+    gformCurrentQuestionIndex++;
+    const select = document.getElementById('gform-question-select');
+    if (select) select.value = String(gformCurrentQuestionIndex);
+    renderGFormQuestionView();
+  }
+}
+
+function renderGFormQuestionView() {
+  const qDef = GFORM_QUESTIONS_DEF[gformCurrentQuestionIndex];
+  const container = document.getElementById('gform-question-content');
+  if (!container || !qDef) return;
+
+  let html = '';
+  GFORM_RESPONSES_DATA.forEach((resp) => {
+    html += `
+      <div class="response-answer-item" style="padding:12px 14px; margin-bottom:8px; background:#f8f9fa; border-radius:6px; border:1px solid #e8eaed;">
+        <div style="font-size:11px; color:#5f6368; margin-bottom:4px; font-weight:600;">回答者: ${resp.name}</div>
+        <div style="font-size:14px; color:#202124; line-height:1.6;">${resp[qDef.key]}</div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function prevGFormIndividual() {
+  if (gformCurrentIndividualIndex > 0) {
+    gformCurrentIndividualIndex--;
+    renderGFormIndividualView();
+  }
+}
+
+function nextGFormIndividual() {
+  if (gformCurrentIndividualIndex < GFORM_RESPONSES_DATA.length - 1) {
+    gformCurrentIndividualIndex++;
+    renderGFormIndividualView();
+  }
+}
+
+function renderGFormIndividualView() {
+  const resp = GFORM_RESPONSES_DATA[gformCurrentIndividualIndex];
+  const counterEl = document.getElementById('gform-indiv-counter');
+  const timeEl = document.getElementById('gform-indiv-timestamp');
+  const sheetEl = document.getElementById('gform-individual-sheet');
+  if (!resp || !sheetEl) return;
+
+  if (counterEl) counterEl.innerText = `${gformCurrentIndividualIndex + 1} / ${GFORM_RESPONSES_DATA.length} 件`;
+  if (timeEl) timeEl.innerText = resp.timestamp;
+
+  sheetEl.innerHTML = `
+    <div class="editor-header-card" style="border-top:8px solid #673ab7; padding:22px 24px;">
+      <h1 style="font-size:24px; color:#202124; margin:0 0 8px 0; font-weight:600;">部署業務の認知度</h1>
+      <p style="font-size:13px; color:#5f6368; margin:0;">回答日時: ${resp.timestamp}</p>
+    </div>
+
+    <div class="editor-question-card" style="padding:18px 22px;">
+      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">氏名 <span style="color:#d93025;">*</span></div>
+      <div style="font-size:14px; color:#202124; padding:10px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0;">
+        ${resp.name}
+      </div>
+    </div>
+
+    <div class="editor-question-card" style="padding:18px 22px;">
+      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">所属・学籍番号 <span style="color:#d93025;">*</span></div>
+      <div style="font-size:14px; color:#202124; padding:10px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0;">
+        ${resp.dept}
+      </div>
+    </div>
+
+    <div class="editor-question-card" style="padding:18px 22px;">
+      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">部署業務への理解度・意見 <span style="color:#d93025;">*</span></div>
+      <div style="font-size:14px; color:#202124; padding:12px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0; line-height:1.6;">
+        ${resp.reason}
+      </div>
+    </div>
+  `;
 }
 
 function submitGForm() {

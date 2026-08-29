@@ -797,58 +797,95 @@
 
                 <!-- サブタブ (概要 / 質問 / 個別) -->
                 <div class="responses-sub-nav">
-                  <button class="responses-sub-tab active">概要</button>
-                  <button class="responses-sub-tab">質問</button>
-                  <button class="responses-sub-tab">個別</button>
+                  <button class="responses-sub-tab active" id="btn-resp-summary" onclick="switchResponsesSubTab('summary')">概要</button>
+                  <button class="responses-sub-tab" id="btn-resp-question" onclick="switchResponsesSubTab('question')">質問</button>
+                  <button class="responses-sub-tab" id="btn-resp-individual" onclick="switchResponsesSubTab('individual')">個別</button>
                 </div>
               </div>
 
-              <!-- 質問1 集計カード -->
-              <div class="response-detail-card">
-                <div class="response-card-title-row">
-                  <h3>氏名</h3>
-                  <span class="response-card-count">3 件の回答</span>
+              <!-- ① 概要サブタブ表示 (#responses-view-summary) -->
+              <div id="responses-view-summary" style="display:flex; flex-direction:column; gap:16px; width:100%;">
+                <!-- 質問1 集計カード -->
+                <div class="response-detail-card">
+                  <div class="response-card-title-row">
+                    <h3>氏名</h3>
+                    <span class="response-card-count">3 件の回答</span>
+                  </div>
+                  <div class="response-answers-list">
+                    <div class="response-answer-item">陣内 樹</div>
+                    <div class="response-answer-item">深澤 文哉</div>
+                    <div class="response-answer-item">犬飼 玲</div>
+                  </div>
                 </div>
-                <div class="response-answers-list">
-                  <div class="response-answer-item">陣内 樹</div>
-                  <div class="response-answer-item">深澤 文哉</div>
-                  <div class="response-answer-item">犬飼 玲</div>
+
+                <!-- 質問2 集計カード -->
+                <div class="response-detail-card">
+                  <div class="response-card-title-row">
+                    <h3>所属・学籍番号</h3>
+                    <span class="response-card-count">3 件の回答</span>
+                  </div>
+                  <div class="response-answers-list">
+                    <div class="response-answer-item">J-098（神崎研究室）</div>
+                    <div class="response-answer-item">F-042（執行委員会）</div>
+                    <div class="response-answer-item">I-012（学内保安統制局）</div>
+                  </div>
+                </div>
+
+                <!-- 質問3 集計カード -->
+                <div class="response-detail-card">
+                  <div class="response-card-title-row">
+                    <h3>部署業務への理解度・意見</h3>
+                    <span class="response-card-count">3 件の回答</span>
+                  </div>
+                  <div class="response-answers-list">
+                    <div class="response-answer-item">
+                      <div class="response-item-header"><strong>陣内 樹:</strong></div>
+                      神崎教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
+                    </div>
+                    <div class="response-answer-item">
+                      <div class="response-item-header"><strong>深澤 文哉:</strong></div>
+                      学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
+                    </div>
+                    <div class="response-answer-item">
+                      <div class="response-item-header"><strong>犬飼 玲:</strong></div>
+                      【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- 質問2 集計カード -->
-              <div class="response-detail-card">
-                <div class="response-card-title-row">
-                  <h3>所属・学籍番号</h3>
-                  <span class="response-card-count">3 件の回答</span>
-                </div>
-                <div class="response-answers-list">
-                  <div class="response-answer-item">J-098（神崎研究室）</div>
-                  <div class="response-answer-item">F-042（執行委員会）</div>
-                  <div class="response-answer-item">I-012（学内保安統制局）</div>
+              <!-- ② 質問サブタブ表示 (#responses-view-question) -->
+              <div id="responses-view-question" style="display:none; flex-direction:column; gap:16px; width:100%;">
+                <div class="response-detail-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #dadce0; padding-bottom:12px; margin-bottom:14px;">
+                    <select id="gform-question-select" onchange="onSelectGFormQuestion(this.value)" style="font-size:14px; padding:6px 12px; border:1px solid #dadce0; border-radius:4px; background:#fff; color:#202124; font-weight:600; cursor:pointer;">
+                      <option value="0">1 / 3 氏名</option>
+                      <option value="1">2 / 3 所属・学籍番号</option>
+                      <option value="2">3 / 3 部署業務への理解度・意見</option>
+                    </select>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <button class="gform-page-nav-btn" onclick="prevGFormQuestion()">◀ 前の質問</button>
+                      <button class="gform-page-nav-btn" onclick="nextGFormQuestion()">次の質問 ▶</button>
+                    </div>
+                  </div>
+                  <div id="gform-question-content" class="response-answers-list"></div>
                 </div>
               </div>
 
-              <!-- 質問3 集計カード -->
-              <div class="response-detail-card">
-                <div class="response-card-title-row">
-                  <h3>部署業務への理解度・意見</h3>
-                  <span class="response-card-count">3 件の回答</span>
-                </div>
-                <div class="response-answers-list">
-                  <div class="response-answer-item">
-                    <div class="response-item-header"><strong>陣内 樹:</strong></div>
-                    神崎教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
-                  </div>
-                  <div class="response-answer-item">
-                    <div class="response-item-header"><strong>深澤 文哉:</strong></div>
-                    学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
-                  </div>
-                  <div class="response-answer-item">
-                    <div class="response-item-header"><strong>犬飼 玲:</strong></div>
-                    【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
+              <!-- ③ 個別サブタブ表示 (#responses-view-individual) -->
+              <div id="responses-view-individual" style="display:none; flex-direction:column; gap:16px; width:100%;">
+                <div class="response-detail-card" style="padding:14px 20px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                      <span style="font-size:14px; font-weight:600; color:#5f6368;" id="gform-indiv-counter">1 / 3 件</span>
+                      <button class="gform-page-nav-btn" onclick="prevGFormIndividual()">◀ 前の回答</button>
+                      <button class="gform-page-nav-btn" onclick="nextGFormIndividual()">次の回答 ▶</button>
+                    </div>
+                    <div style="font-size:12px; color:#5f6368;" id="gform-indiv-timestamp">2126/08/21 16:30:15</div>
                   </div>
                 </div>
+                <!-- 選択された回答者の個別フォーム -->
+                <div id="gform-individual-sheet" style="display:flex; flex-direction:column; gap:12px; width:100%;"></div>
               </div>
             </div>
 
