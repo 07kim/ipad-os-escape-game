@@ -174,11 +174,8 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }, 1000);
 
-    // ロック解除ボタンのイベント登録
-    const unlockBtn = document.getElementById('swipe-to-unlock-btn');
-    if (unlockBtn) {
-      unlockBtn.addEventListener('click', unlockScreen);
-    }
+    // ロック画面の解除ジェスチャー ＆ タップイベント登録
+    initLockScreenGestures();
 
     // 画面上端からの下スワイプでロック画面（カバーシート）を呼び出し
     initTopSwipeForLockScreen();
@@ -1296,6 +1293,80 @@ function initTopSwipeForLockScreen() {
       mouseStartY = 0;
     });
   }
+}
+
+// --- ロック画面操作 ＆ 解除ジェスチャー ---
+function initLockScreenGestures() {
+  const lockScreen = document.getElementById('lock-screen');
+  if (!lockScreen) return;
+
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let isDraggingLock = false;
+
+  // 1. タッチスワイプ（iPad/スマホ）
+  lockScreen.addEventListener('touchstart', (e) => {
+    // 通知カードの直接タップ以外はスワイプ判定を開始
+    if (e.touches.length === 1) {
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      isDraggingLock = true;
+    }
+  }, { passive: true });
+
+  lockScreen.addEventListener('touchend', (e) => {
+    if (isDraggingLock && e.changedTouches.length === 1) {
+      const deltaY = touchStartY - e.changedTouches[0].clientY;
+      const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX);
+      // 上方向に25px以上スワイプ（フリック）でロック解除
+      if (deltaY > 25 && deltaY > deltaX) {
+        unlockScreen();
+      }
+    }
+    isDraggingLock = false;
+  }, { passive: true });
+
+  // 2. マウスドラッグ（PCブラウザ）
+  let mouseStartY = 0;
+  lockScreen.addEventListener('mousedown', (e) => {
+    // 通知カード自体をクリックした場合は除外
+    if (e.target.closest('.notification-card')) return;
+    mouseStartY = e.clientY;
+  });
+
+  lockScreen.addEventListener('mouseup', (e) => {
+    if (mouseStartY > 0) {
+      const deltaY = mouseStartY - e.clientY;
+      if (deltaY > 30) {
+        unlockScreen();
+      }
+    }
+    mouseStartY = 0;
+  });
+
+  // 3. ロックフッター（「上にスワイプしてロック解除」）のタップ/クリック判定
+  const lockFooter = document.querySelector('.lock-footer');
+  if (lockFooter) {
+    lockFooter.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      unlockScreen();
+    }, { passive: true });
+    lockFooter.addEventListener('click', (e) => {
+      e.stopPropagation();
+      unlockScreen();
+    });
+  }
+
+  // 4. キーボード操作（Space, Enter, ArrowUp）
+  window.addEventListener('keydown', (e) => {
+    const ls = document.getElementById('lock-screen');
+    if (ls && !ls.classList.contains('hidden')) {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        unlockScreen();
+      }
+    }
+  });
 }
 
 // --- ロック画面解除 ---

@@ -289,25 +289,40 @@ body {
 .lock-footer {
   width: 100%;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 16px 24px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  z-index: 950;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.swipe-to-unlock {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 12px 30px;
-  border-radius: 20px;
+.lock-footer:active {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+
+.lock-footer span {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  animation: pulse 2s infinite;
+  color: #1e293b;
+  letter-spacing: 0.5px;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+.lock-chevron {
+  width: 20px;
+  height: 20px;
+  color: #475569;
+  animation: bounceUp 1.8s infinite ease-in-out;
+}
+
+@keyframes bounceUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 /* --- ホーム画面（スプリングボード） --- */
