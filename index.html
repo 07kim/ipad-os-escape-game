@@ -196,13 +196,6 @@
             <span class="app-name">設定</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('calc-app')">
-            <div class="app-icon app-calc-icon">
-              <i data-lucide="calculator"></i>
-            </div>
-            <span class="app-name">計算機</span>
-          </div>
-
         </div>
 
         <!-- 下部ドック (Dock) -->
@@ -2271,47 +2264,6 @@
               </div>
             </div>
 
-          </div>
-        </div>
-      </div>
-
-      <!-- ------------------------------------------ -->
-      <!-- ⑩ 計算機（電卓）アプリ -->
-      <!-- ------------------------------------------ -->
-      <div class="app-window" id="app-calc-app">
-        <div class="calc-app-body">
-          <div class="calc-inner-container">
-            <!-- ディスプレイ -->
-            <div class="calc-display-section">
-              <div class="calc-history-text" id="calc-history-text"></div>
-              <div class="calc-main-digits" id="calc-main-digits">0</div>
-            </div>
-            <!-- ボタングリッド -->
-            <div class="calc-keypad-grid">
-              <button class="calc-key btn-func" onclick="calcInput('clear')" id="calc-key-clear">AC</button>
-              <button class="calc-key btn-func" onclick="calcInput('sign')">+/−</button>
-              <button class="calc-key btn-func" onclick="calcInput('percent')">%</button>
-              <button class="calc-key btn-op" onclick="calcInput('op', '÷')" data-op="÷">÷</button>
-
-              <button class="calc-key btn-num" onclick="calcInput('num', '7')">7</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '8')">8</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '9')">9</button>
-              <button class="calc-key btn-op" onclick="calcInput('op', '×')" data-op="×">×</button>
-
-              <button class="calc-key btn-num" onclick="calcInput('num', '4')">4</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '5')">5</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '6')">6</button>
-              <button class="calc-key btn-op" onclick="calcInput('op', '−')" data-op="−">−</button>
-
-              <button class="calc-key btn-num" onclick="calcInput('num', '1')">1</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '2')">2</button>
-              <button class="calc-key btn-num" onclick="calcInput('num', '3')">3</button>
-              <button class="calc-key btn-op" onclick="calcInput('op', '+')" data-op="+">+</button>
-
-              <button class="calc-key btn-num btn-double" onclick="calcInput('num', '0')">0</button>
-              <button class="calc-key btn-num" onclick="calcInput('dot')">.</button>
-              <button class="calc-key btn-op btn-equals" onclick="calcInput('equals')">=</button>
-            </div>
           </div>
         </div>
       </div>

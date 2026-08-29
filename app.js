@@ -964,65 +964,6 @@ function resetLinkAppForLoop() {
   }
 }
 
-// 🔄 計算機（電卓）の入力を初期化（0クリア）
-function resetCalculatorForLoop() {
-  if (typeof calcState !== 'undefined') {
-    calcState.currentInput = '0';
-    calcState.previousValue = null;
-    calcState.operation = null;
-    calcState.waitingForSecondOperand = false;
-    calcState.historyExpr = '';
-    if (typeof calcState.displayNumber === 'function') calcState.displayNumber();
-  }
-}
-
-// 🔄 Safari（ブラウザ）の検索・表示状態を初期化
-function resetSafariForLoop() {
-  const searchInput = document.getElementById('browser-search-input');
-  if (searchInput) searchInput.value = '';
-  if (typeof closeSafariArticle === 'function') closeSafariArticle();
-  const searchResults = document.getElementById('browser-search-results');
-  if (searchResults) searchResults.style.display = 'none';
-  const newsView = document.getElementById('browser-news-view');
-  if (newsView) newsView.style.display = 'block';
-}
-
-// 🔄 電話アプリの通話・入力を初期化
-function resetPhoneForLoop() {
-  if (typeof endPhoneCall === 'function') endPhoneCall(true);
-  if (typeof clearPhoneKey === 'function') clearPhoneKey();
-  gameState.phoneInput = '';
-  const display = document.getElementById('phone-display');
-  if (display) display.innerText = '';
-}
-
-// 🔄 manabaのログインセッション・タブ状態を初期化
-function resetManabaForLoop() {
-  gameState.manabaUser = null;
-  gameState.manabaLoggedInUser = null;
-  localStorage.removeItem('game_manaba_user');
-  if (typeof switchManabaTab === 'function') switchManabaTab('mypage');
-  const loginView = document.getElementById('manaba-login-view');
-  const portalView = document.getElementById('manaba-portal-view');
-  if (loginView) loginView.style.display = 'flex';
-  if (portalView) portalView.style.display = 'none';
-}
-
-// 🔄 メールアプリのゴミ箱・フラグ状態を初期化
-function resetMailForLoop() {
-  if (typeof mailState !== 'undefined') {
-    mailState.selectedMailId = null;
-    mailState.trashIds.clear();
-    mailState.flaggedIds.clear();
-    if (typeof renderMailList === 'function') renderMailList();
-  }
-}
-
-// 🔄 写真アプリのモーダルを閉じる
-function resetPhotoForLoop() {
-  if (typeof closePhotoModal === 'function') closePhotoModal();
-}
-
 // ==========================================================================
 // 🔄 ループ（周回）移行時：メタアプリ以外の全アプリ状態を初期状態へ完全復元
 // （※調査手帳・メタアプリのunlockedHintsのみループを超えて保持し続けます）
@@ -1031,7 +972,6 @@ function resetAllAppsForNewLoop() {
   // 1. 各アプリの内部ステートを初期化
   resetLinkAppForLoop();
   resetManabaForLoop();
-  resetCalculatorForLoop();
   resetSafariForLoop();
   resetPhoneForLoop();
   resetMailForLoop();
@@ -1374,8 +1314,6 @@ function openApp(appId) {
       initManabaApp();
     } else if (appId === 'mail-app') {
       renderMailList();
-    } else if (appId === 'calc-app') {
-      updateCalcDisplay();
     }
     
     logWriteToGAS("APP_OPEN", `アプリを開きました: ${appId}`);
@@ -5128,179 +5066,6 @@ window.addEventListener('storage', (e) => {
   } else if (e.key === 'game_db_cache_trigger') {
     loadGameDatabase();
     updateAppUI();
-  }
-});
-
-// ==========================================================================
-// 🔟 iPadOS標準 計算機（電卓）エンジン完全再現
-// ==========================================================================
-const calcState = {
-  currentInput: '0',
-  previousValue: null,
-  operation: null,
-  waitingForSecondOperand: false,
-  historyExpr: ''
-};
-
-function formatCalcNumber(numStr) {
-  if (numStr === 'Error' || numStr === 'NaN' || numStr === 'Infinity' || numStr === '-Infinity') return 'エラー';
-  const parts = String(numStr).split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return parts.join('.');
-}
-
-function updateCalcDisplay() {
-  const mainDisplay = document.getElementById('calc-main-digits');
-  const histDisplay = document.getElementById('calc-history-text');
-  const clearBtn = document.getElementById('calc-key-clear');
-
-  if (mainDisplay) {
-    mainDisplay.innerText = formatCalcNumber(calcState.currentInput);
-    // 桁数に応じたフォントサイズ自動調整
-    const len = calcState.currentInput.length;
-    if (len > 9) {
-      mainDisplay.style.fontSize = '38px';
-    } else if (len > 6) {
-      mainDisplay.style.fontSize = '48px';
-    } else {
-      mainDisplay.style.fontSize = '64px';
-    }
-  }
-
-  if (histDisplay) {
-    histDisplay.innerText = calcState.historyExpr;
-  }
-
-  if (clearBtn) {
-    clearBtn.innerText = (calcState.currentInput !== '0' || calcState.waitingForSecondOperand) ? 'C' : 'AC';
-  }
-
-  // 演算子ボタンのアクティブ状態更新
-  document.querySelectorAll('.calc-key.btn-op').forEach(btn => {
-    const op = btn.getAttribute('data-op');
-    if (op && op === calcState.operation && calcState.waitingForSecondOperand) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-}
-
-function calcInput(type, value) {
-  playSystemSound("touch");
-
-  if (type === 'num') {
-    if (calcState.waitingForSecondOperand) {
-      calcState.currentInput = value;
-      calcState.waitingForSecondOperand = false;
-    } else {
-      if (calcState.currentInput === '0') {
-        calcState.currentInput = value;
-      } else if (calcState.currentInput.length < 12) {
-        calcState.currentInput += value;
-      }
-    }
-  } else if (type === 'dot') {
-    if (calcState.waitingForSecondOperand) {
-      calcState.currentInput = '0.';
-      calcState.waitingForSecondOperand = false;
-    } else if (!calcState.currentInput.includes('.')) {
-      calcState.currentInput += '.';
-    }
-  } else if (type === 'sign') {
-    if (calcState.currentInput !== '0' && calcState.currentInput !== 'エラー') {
-      if (calcState.currentInput.startsWith('-')) {
-        calcState.currentInput = calcState.currentInput.slice(1);
-      } else {
-        calcState.currentInput = '-' + calcState.currentInput;
-      }
-    }
-  } else if (type === 'percent') {
-    const num = parseFloat(calcState.currentInput);
-    if (!isNaN(num)) {
-      calcState.currentInput = String(Math.round((num / 100) * 10000000000) / 10000000000);
-    }
-  } else if (type === 'clear') {
-    if (calcState.currentInput !== '0') {
-      calcState.currentInput = '0';
-    } else {
-      calcState.previousValue = null;
-      calcState.operation = null;
-      calcState.waitingForSecondOperand = false;
-      calcState.historyExpr = '';
-    }
-  } else if (type === 'op') {
-    const inputValue = parseFloat(calcState.currentInput);
-
-    if (calcState.operation && calcState.waitingForSecondOperand) {
-      calcState.operation = value;
-      calcState.historyExpr = `${formatCalcNumber(String(calcState.previousValue))} ${value}`;
-      updateCalcDisplay();
-      return;
-    }
-
-    if (calcState.previousValue === null) {
-      calcState.previousValue = inputValue;
-    } else if (calcState.operation) {
-      const result = performCalc(calcState.previousValue, inputValue, calcState.operation);
-      calcState.currentInput = String(result);
-      calcState.previousValue = result;
-    }
-
-    calcState.waitingForSecondOperand = true;
-    calcState.operation = value;
-    calcState.historyExpr = `${formatCalcNumber(String(calcState.previousValue))} ${value}`;
-  } else if (type === 'equals') {
-    if (calcState.operation === null || calcState.previousValue === null) return;
-
-    const inputValue = parseFloat(calcState.currentInput);
-    calcState.historyExpr = `${formatCalcNumber(String(calcState.previousValue))} ${calcState.operation} ${formatCalcNumber(calcState.currentInput)} =`;
-    const result = performCalc(calcState.previousValue, inputValue, calcState.operation);
-    calcState.currentInput = String(result);
-    calcState.previousValue = null;
-    calcState.operation = null;
-    calcState.waitingForSecondOperand = false;
-  }
-
-  updateCalcDisplay();
-}
-
-function performCalc(first, second, op) {
-  let res = 0;
-  if (op === '+') res = first + second;
-  else if (op === '−' || op === '-') res = first - second;
-  else if (op === '×' || op === '*') res = first * second;
-  else if (op === '÷' || op === '/') {
-    if (second === 0) return 'Error';
-    res = first / second;
-  }
-  return Math.round(res * 10000000000) / 10000000000;
-}
-
-// ⌨️ キーボード入力対応
-window.addEventListener('keydown', (e) => {
-  const calcWin = document.getElementById('app-calc-app');
-  if (!calcWin || !calcWin.classList.contains('active')) return;
-
-  if (e.key >= '0' && e.key <= '9') {
-    calcInput('num', e.key);
-  } else if (e.key === '.') {
-    calcInput('dot');
-  } else if (e.key === '+') {
-    calcInput('op', '+');
-  } else if (e.key === '-') {
-    calcInput('op', '−');
-  } else if (e.key === '*' || e.key === 'x' || e.key === 'X') {
-    calcInput('op', '×');
-  } else if (e.key === '/') {
-    calcInput('op', '÷');
-  } else if (e.key === 'Enter' || e.key === '=') {
-    e.preventDefault();
-    calcInput('equals');
-  } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
-    calcInput('clear');
-  } else if (e.key === '%') {
-    calcInput('percent');
   }
 });
 
