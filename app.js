@@ -1326,9 +1326,9 @@ function openApp(appId) {
     win.classList.add('active');
     gameState.activeApp = appId;
     
-    // アプリ固有の初期起動ロジック
     if (appId === 'meta-app') {
-      switchMetaTab(gameState.activeMetaTab);
+      metaObservationCurrentFolder = 'root';
+      switchMetaTab(gameState.activeMetaTab || 'observation');
     } else if (appId === 'browser-app') {
       goBrowserHome();
     } else if (appId === 'link-app') {
@@ -1582,7 +1582,7 @@ function renderMetaObservation(folderId = 'root') {
     }
 
     container.innerHTML = visibleFolders.map(folder => `
-      <div class="finder-item" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
+      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
         <div class="finder-thumb-wrapper">
           <div class="finder-folder-icon">
             ${generateIpadosFolderSvg()}
@@ -1594,11 +1594,15 @@ function renderMetaObservation(folderId = 'root') {
     `).join('');
   } else {
     // フォルダ内表示: 選択されたフォルダ内のファイル一覧（上へ戻るボタンは排除しパンくずでナビゲート）
-    const targetFolder = allFolders.find(f => f.id === folderId) || visibleFolders[0];
-    const files = (targetFolder && targetFolder.files) || [];
+    const targetFolder = allFolders.find(f => f.id === folderId) || visibleFolders.find(f => f.id === folderId) || visibleFolders[0];
+    if (!targetFolder) {
+      renderMetaObservation('root');
+      return;
+    }
+    const files = targetFolder.files || [];
 
     if (pathEl) {
-      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder ? targetFolder.folderName : '観測'}</strong>`;
+      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong>`;
     }
     if (countEl) {
       countEl.innerText = `${files.length} 項目`;

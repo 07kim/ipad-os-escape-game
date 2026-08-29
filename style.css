@@ -724,6 +724,13 @@ body {
   object-fit: cover;
 }
 
+.finder-item.folder-type .finder-thumb-wrapper {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
 .finder-folder-icon {
   width: 100%;
   height: 100%;
@@ -734,13 +741,13 @@ body {
 }
 
 .ipados-folder-svg {
-  width: 72px;
-  height: 60px;
-  filter: drop-shadow(0 3px 6px rgba(37, 99, 235, 0.22));
+  width: 82px;
+  height: 68px;
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.3));
   transition: transform 0.2s ease;
 }
 .finder-item:hover .ipados-folder-svg {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 .finder-file-name {
