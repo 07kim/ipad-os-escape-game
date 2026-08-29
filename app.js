@@ -335,23 +335,8 @@ function executeRemoteAdminCommand(cmd) {
       localStorage.setItem('fake_clock_start_iso', loopClockISO);
       gameState.clockStartISO = loopClockISO;
 
-      // 🔄 ループ切り替え時に開いているアプリをすべて閉じ、ホーム画面状態に戻す
-      closeAllWindowsSilent();
-      gameState.activeApp = null;
-
-      // 🔄 manabaのログインセッションを初期化（未ログイン状態に戻す）
-      gameState.manabaUser = null;
-      localStorage.removeItem('game_manaba_user');
-
-      // 🔄 メールアプリの送信・削除状態を周回初期状態へ復元
-      if (typeof mailState !== 'undefined') {
-        mailState.selectedMailId = null;
-        mailState.trashIds.clear();
-        mailState.flaggedIds.clear();
-      }
-
-      // 🔄 ループ切り替え時にLINKアプリのチャットデータを初期状態へ完全復元
-      resetLinkAppForLoop();
+      // 🔄 メタアプリ以外の全アプリ（manaba, 電卓, バブル, Safari, 電話, メール, LINK）を完全リセット！
+      resetAllAppsForNewLoop();
 
       // 通知は出さず、勝手にロック画面へ強制移行
       showLockScreen();
@@ -947,6 +932,91 @@ function resetLinkAppForLoop() {
   }
 }
 
+// 🔄 計算機（電卓）の入力を初期化（0クリア）
+function resetCalculatorForLoop() {
+  if (typeof calcState !== 'undefined') {
+    calcState.currentInput = '0';
+    calcState.previousValue = null;
+    calcState.operation = null;
+    calcState.waitingForSecondOperand = false;
+    calcState.historyExpr = '';
+    if (typeof calcState.displayNumber === 'function') calcState.displayNumber();
+  }
+}
+
+// 🔄 バブルパズル＆フリープチプチを初期状態へ完全リセット
+function resetBubbleAppForLoop() {
+  if (typeof restartBubbleGame === 'function') restartBubbleGame();
+  if (typeof resetAllBubbles === 'function') resetAllBubbles();
+}
+
+// 🔄 Safari（ブラウザ）の検索・表示状態を初期化
+function resetSafariForLoop() {
+  const searchInput = document.getElementById('browser-search-input');
+  if (searchInput) searchInput.value = '';
+  if (typeof closeSafariArticle === 'function') closeSafariArticle();
+  const searchResults = document.getElementById('browser-search-results');
+  if (searchResults) searchResults.style.display = 'none';
+  const newsView = document.getElementById('browser-news-view');
+  if (newsView) newsView.style.display = 'block';
+}
+
+// 🔄 電話アプリの通話・入力を初期化
+function resetPhoneForLoop() {
+  if (typeof endPhoneCall === 'function') endPhoneCall(true);
+  if (typeof clearPhoneKey === 'function') clearPhoneKey();
+  gameState.phoneInput = '';
+  const display = document.getElementById('phone-display');
+  if (display) display.innerText = '';
+}
+
+// 🔄 manabaのログインセッション・タブ状態を初期化
+function resetManabaForLoop() {
+  gameState.manabaUser = null;
+  gameState.manabaLoggedInUser = null;
+  localStorage.removeItem('game_manaba_user');
+  if (typeof switchManabaTab === 'function') switchManabaTab('mypage');
+  const loginView = document.getElementById('manaba-login-view');
+  const portalView = document.getElementById('manaba-portal-view');
+  if (loginView) loginView.style.display = 'flex';
+  if (portalView) portalView.style.display = 'none';
+}
+
+// 🔄 メールアプリのゴミ箱・フラグ状態を初期化
+function resetMailForLoop() {
+  if (typeof mailState !== 'undefined') {
+    mailState.selectedMailId = null;
+    mailState.trashIds.clear();
+    mailState.flaggedIds.clear();
+    if (typeof renderMailList === 'function') renderMailList();
+  }
+}
+
+// 🔄 写真アプリのモーダルを閉じる
+function resetPhotoForLoop() {
+  if (typeof closePhotoModal === 'function') closePhotoModal();
+}
+
+// ==========================================================================
+// 🔄 ループ（周回）移行時：メタアプリ以外の全アプリ状態を初期状態へ完全復元
+// （※調査手帳・メタアプリのunlockedHintsのみループを超えて保持し続けます）
+// ==========================================================================
+function resetAllAppsForNewLoop() {
+  // 1. 各アプリの内部ステートを初期化
+  resetLinkAppForLoop();
+  resetManabaForLoop();
+  resetCalculatorForLoop();
+  resetBubbleAppForLoop();
+  resetSafariForLoop();
+  resetPhoneForLoop();
+  resetMailForLoop();
+  resetPhotoForLoop();
+
+  // 2. 開いている全ウィンドウを閉じ、ホーム画面状態に戻す
+  closeAllWindowsSilent();
+  gameState.activeApp = null;
+}
+
 // --- 周回（ループ）の強制切り替え演出 ---
 function triggerLoopTransition(nextLoop) {
   // 効果音（ブラウザのAudio制限対策としてエラーハンドリング）
@@ -961,6 +1031,11 @@ function triggerLoopTransition(nextLoop) {
   saveStateToStorage();
   localStorage.setItem('game_loop', String(nextLoop));
 
+  // 時刻を 09:04 にリセット
+  const loopClockISO = "2126-08-22T09:04:00";
+  localStorage.setItem('fake_clock_start_iso', loopClockISO);
+  gameState.clockStartISO = loopClockISO;
+
   // 📡 演者ツール（actor.html）へ周回移行を即時通知
   if (typeof BroadcastChannel !== 'undefined') {
     try {
@@ -969,19 +1044,16 @@ function triggerLoopTransition(nextLoop) {
     } catch(e) {}
   }
 
-  // 3. アプリをすべて閉じる (裏側でサイレント切替)
-  closeAllWindowsSilent();
+  // 3. メタアプリ以外の全アプリを完全初期化
+  resetAllAppsForNewLoop();
 
-  // 4. LINKアプリのチャットデータを初期状態へ復元
-  resetLinkAppForLoop();
-
-  // 5. コンテンツUI更新
+  // 4. コンテンツUI更新
   updateAppUI();
 
-  // 6. ロック画面の日常通知を更新
+  // 5. ロック画面の日常通知を更新
   renderLockNotifications();
 
-  // 7. プッシュ通知でさりげなく新着通知演出
+  // 6. プッシュ通知でさりげなく新着通知演出
   showPushNotification("LINK", "新着メッセージを受信しました", "message-square", "LINK");
 
   logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${nextLoop} へ移行しました。`);
