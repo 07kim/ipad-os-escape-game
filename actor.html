@@ -758,14 +758,23 @@
       return `${triggerId}_L${l}`;
     }
 
-    // BroadcastChannel通信（actor.html → iPad app.js へのローカル送信）
+    // BroadcastChannel通信（admin.html / iPad app.js ↔ actor.html）
     let adminBroadcast = null;
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         adminBroadcast = new BroadcastChannel('escape_game_channel');
         adminBroadcast.onmessage = (event) => {
-          if (event.data && (event.data.type === 'master_reset' || event.data.type === 'reset_actor_triggers')) {
+          if (!event.data) return;
+          const { type, payload } = event.data;
+          if (type === 'master_reset' || type === 'reset_actor_triggers') {
+            console.log("🚀 管理ツールからのゲームスタート/一括リセットを検知しました");
             resetAllActorsSilent();
+            updateLoopBadge(1, false);
+            showToast("🚀【ゲームスタート】演者ツールの送信状態を初期化（1周目）しました", false, 4000);
+          } else if (type === 'preset' && payload && payload.loop) {
+            updateLoopBadge(payload.loop);
+          } else if (type === 'loop_change' && payload && payload.loop) {
+            updateLoopBadge(payload.loop);
           }
         };
       } catch(e) { console.warn('BroadcastChannel error:', e); }
@@ -782,8 +791,8 @@
       initLoopSyncListener();
       // 起動時に即時疎通確認
       checkGasConnection();
-      // 10秒おきに定期疎通確認 ＆ 周回同期
-      setInterval(checkGasConnection, 10000);
+      // 3.5秒おきに高頻度でGAS疎通確認 ＆ 周回・リセット同期
+      setInterval(checkGasConnection, 3500);
     });
 
     // 🌀 周回表示の更新 ＆ 送信状態の自動リセット（周回が変わったら未送信に戻す）
@@ -822,32 +831,21 @@
       if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // 🌀 運営・他タブからの周回変更を同期監視
+    // 🌀 運営・他タブからの周回変更・リセットを同期監視
     function initLoopSyncListener() {
-      // 1. BroadcastChannel監視
-      if (adminBroadcast) {
-        adminBroadcast.addEventListener('message', (event) => {
-          if (!event.data) return;
-          const { type, payload } = event.data;
-          if (type === 'preset' && payload && payload.loop) {
-            console.log("🌀 BroadcastChannel経由で周回変更を検知:", payload.loop);
-            updateLoopBadge(payload.loop);
-          } else if (type === 'loop_change' || type === 'master_reset' || type === 'reset_actor_triggers') {
-            console.log("🌀 周回リセットシグナルを受信:", type);
-            resetAllActorsSilent();
-            if (payload && payload.loop) updateLoopBadge(payload.loop);
-          } else if (payload && payload.loop) {
-            updateLoopBadge(payload.loop);
-          }
-        });
-      }
-
-      // 2. StorageEvent監視
+      // 1. StorageEvent監視（同一ブラウザの別タブ/ウィンドウ）
       window.addEventListener('storage', (e) => {
-        if (e.key === 'game_loop' && e.newValue) {
+        if (e.key === 'admin_reset_trigger_time') {
+          console.log("🚀 StorageEvent経由でゲームスタート/リセットを検知");
+          resetAllActorsSilent();
+          updateLoopBadge(1, false);
+          showToast("🚀【ゲームスタート】演者ツールを初期化しました", false, 3000);
+        } else if (e.key === 'game_loop' && e.newValue) {
           console.log("🌀 StorageEvent経由で周回変更を検知:", e.newValue);
           updateLoopBadge(e.newValue);
         }
+      });
+    }
       });
     }
 
@@ -911,10 +909,20 @@
 
           // GASから最新コマンドや周回情報を受信して同期
           if (json && json.data) {
-            if (json.data.latestCommand && json.data.latestCommand.params) {
-              const p = json.data.latestCommand.params;
-              if (p.loop !== undefined && p.loop !== null) {
-                updateLoopBadge(p.loop);
+            if (json.data.latestCommand) {
+              const cmd = json.data.latestCommand;
+              if (cmd.type === 'master_reset' || cmd.type === 'reset_actor_triggers') {
+                const cmdTime = (cmd.params && cmd.params.timestamp) || cmd.timestamp || 0;
+                const lastProcessedReset = parseInt(localStorage.getItem('actor_last_processed_reset') || '0', 10);
+                if (cmdTime > lastProcessedReset) {
+                  localStorage.setItem('actor_last_processed_reset', String(cmdTime));
+                  console.log("☁️ GAS経由でゲームスタート/リセットコマンドを受信しました");
+                  resetAllActorsSilent();
+                  updateLoopBadge(1, false);
+                  showToast("🚀【ゲームスタート】演者ツールを初期化しました", false, 4000);
+                }
+              } else if (cmd.params && cmd.params.loop !== undefined && cmd.params.loop !== null) {
+                updateLoopBadge(cmd.params.loop);
               }
             }
             if (json.data.system && json.data.system.loop) {
