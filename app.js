@@ -3181,9 +3181,11 @@ function openGSpreadsheet(e) {
   document.getElementById('gform-editor-view').style.display = 'none';
   document.getElementById('gsheet-view').style.display = 'flex';
 
-  if (!gameState.activeGSheetTab) {
-    const ss = window.GAME_DATABASE.hacking.spreadsheet;
-    gameState.activeGSheetTab = (ss && ss.sheets && ss.sheets.length > 0) ? ss.sheets[0] : "名簿データ";
+  const ss = window.GAME_DATABASE.hacking.spreadsheet;
+  if (ss && ss.sheets && ss.sheets.includes("フォームの回答 1")) {
+    gameState.activeGSheetTab = "フォームの回答 1";
+  } else if (!gameState.activeGSheetTab) {
+    gameState.activeGSheetTab = (ss && ss.sheets && ss.sheets.length > 0) ? ss.sheets[0] : "フォームの回答 1";
   }
   gameState.isGSheetEditing = false;
 
