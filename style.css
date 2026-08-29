@@ -6996,6 +6996,33 @@ body {
   font-weight: 500;
 }
 
+.settings-managed-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.settings-managed-banner i {
+  color: #64748b;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.settings-disabled-card {
+  opacity: 0.85;
+  cursor: not-allowed;
+  user-select: none;
+}
+
 /* ==========================================================================
    全画面オーバーレイ警告
    ========================================================================== */

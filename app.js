@@ -4640,7 +4640,8 @@ function switchSettingsTab(tabId) {
 }
 
 function triggerSettingsRestriction(itemName) {
-  showIpadModal("アクセス制限", `「${itemName}」の設定は現在固定されています。`);
+  playSystemSound("error");
+  showIpadModal("管理制御（MDM）", `「${itemName}」の設定は大学側（学内MDM管理システム）によって制御されているため、変更できません。`);
 }
 
 // ==========================================================================

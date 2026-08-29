@@ -2176,12 +2176,16 @@
             <!-- Wi-Fiビュー -->
             <div id="settings-view-wifi" class="settings-content-view" style="display:none;">
               <h2>Wi-Fi</h2>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div class="settings-managed-banner">
+                <i data-lucide="lock"></i>
+                <span>このiPadのネットワーク設定は大学側（学内MDM管理システム）によって制御されています。</span>
+              </div>
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('Wi-Fi')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:600; font-size:14px;">Wi-Fi</span>
-                <span style="color:#10b981; font-weight:700; font-size:13px;">ON</span>
+                <span style="color:#10b981; font-weight:700; font-size:13px;">ON (固定)</span>
               </div>
               <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">接続中のネットワーク</p>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('Wi-Fi')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:8px;">
                   <i data-lucide="check" style="width:16px; height:16px; color:#0284c7;"></i>
                   <span style="font-weight:700; font-size:14px;">CIT-SECURE-CAMPUS-5G</span>
@@ -2189,7 +2193,7 @@
                 <i data-lucide="lock" style="width:14px; height:14px; color:#94a3b8;"></i>
               </div>
               <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">利用可能なネットワーク</p>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('Wi-Fi')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
                 <div style="padding:10px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
                   <span>CIT-GUEST-FREE</span>
                   <i data-lucide="wifi" style="width:14px; height:14px; color:#64748b;"></i>
@@ -2204,12 +2208,16 @@
             <!-- Bluetoothビュー -->
             <div id="settings-view-bluetooth" class="settings-content-view" style="display:none;">
               <h2>Bluetooth</h2>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div class="settings-managed-banner">
+                <i data-lucide="lock"></i>
+                <span>Bluetoothデバイス接続は大学側（学内MDM管理システム）によって制御されています。</span>
+              </div>
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('Bluetooth')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:600; font-size:14px;">Bluetooth</span>
-                <span style="color:#10b981; font-weight:700; font-size:13px;">ON</span>
+                <span style="color:#10b981; font-weight:700; font-size:13px;">ON (固定)</span>
               </div>
               <p style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">自分のデバイス</p>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('Bluetooth')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
                 <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-weight:600; font-size:13px;">Apple Pencil</span>
                   <span style="color:#10b981; font-size:12px; font-weight:700;">接続済み (100%)</span>
@@ -2224,22 +2232,26 @@
             <!-- 画面表示と明るさビュー -->
             <div id="settings-view-display" class="settings-content-view" style="display:none;">
               <h2>画面表示と明るさ</h2>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:16px; margin-bottom:14px;">
-                <p style="font-size:12px; color:#64748b; margin-bottom:10px; font-weight:700;">明るさ</p>
+              <div class="settings-managed-banner">
+                <i data-lucide="lock"></i>
+                <span>画面表示と明るさの設定は大学側（学内MDM管理システム）によって制御されています。</span>
+              </div>
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('画面表示と明るさ')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); padding:16px; margin-bottom:14px;">
+                <p style="font-size:12px; color:#64748b; margin-bottom:10px; font-weight:700;">明るさ (固定)</p>
                 <div style="display:flex; align-items:center; gap:12px;">
                   <i data-lucide="sun" style="width:16px; height:16px; color:#94a3b8;"></i>
-                  <input type="range" min="20" max="100" value="85" style="flex:1;">
+                  <input type="range" min="20" max="100" value="85" style="flex:1;" disabled>
                   <i data-lucide="sun" style="width:22px; height:22px; color:#f59e0b;"></i>
                 </div>
               </div>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('画面表示と明るさ')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
                 <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:13px; font-weight:600;">True Tone</span>
-                  <span style="color:#10b981; font-weight:700; font-size:12px;">ON</span>
+                  <span style="color:#10b981; font-weight:700; font-size:12px;">ON (固定)</span>
                 </div>
                 <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:13px; font-weight:600;">自動ロック</span>
-                  <span style="color:#64748b; font-size:12px;">なし（公演モード）</span>
+                  <span style="color:#64748b; font-size:12px;">なし（大学公演モード固定）</span>
                 </div>
               </div>
             </div>
@@ -2247,19 +2259,22 @@
             <!-- コントロールセンタービュー -->
             <div id="settings-view-control" class="settings-content-view" style="display:none;">
               <h2>コントロールセンター</h2>
-              <p style="font-size:12px; color:#64748b; margin-bottom:12px;">右上から下にスワイプするとコントロールセンターにアクセスできます。</p>
-              <div style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
+              <div class="settings-managed-banner">
+                <i data-lucide="lock"></i>
+                <span>コントロールセンターのカスタマイズは大学側によって制御されています。</span>
+              </div>
+              <div class="settings-disabled-card" onclick="triggerSettingsRestriction('コントロールセンター')" style="background:#fff; border-radius:10px; border:1px solid var(--border-color); overflow:hidden;">
                 <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:8px; font-size:13px;">
                   <i data-lucide="flashlight" style="width:16px; height:16px; color:#0284c7;"></i>
-                  <span>フラッシュライト</span>
+                  <span>フラッシュライト (固定)</span>
                 </div>
                 <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:8px; font-size:13px;">
                   <i data-lucide="timer" style="width:16px; height:16px; color:#f59e0b;"></i>
-                  <span>タイマー</span>
+                  <span>タイマー (固定)</span>
                 </div>
                 <div style="padding:12px 16px; display:flex; align-items:center; gap:8px; font-size:13px;">
                   <i data-lucide="camera" style="width:16px; height:16px; color:#10b981;"></i>
-                  <span>カメラ</span>
+                  <span>カメラ (固定)</span>
                 </div>
               </div>
             </div>
