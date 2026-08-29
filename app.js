@@ -1542,22 +1542,60 @@ function switchMetaTab(tabId) {
 // 📁 Apple純正 iPadOS「ファイル」アプリ風 フォルダSVGジェネレーター
 function generateIpadosFolderSvg() {
   return `
-    <svg viewBox="0 0 100 80" class="ipados-folder-svg">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" class="ipados-folder-svg" width="82" height="68" style="display:block; margin:0 auto;">
       <defs>
-        <linearGradient id="folder-grad-back" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="folderBackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#38bdf8"/>
           <stop offset="100%" stop-color="#0284c7"/>
         </linearGradient>
-        <linearGradient id="folder-grad-front" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="folderFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#60a5fa"/>
           <stop offset="100%" stop-color="#2563eb"/>
         </linearGradient>
       </defs>
-      <path d="M10,18 Q10,12 16,12 L38,12 Q44,12 48,18 L54,24 Q58,28 64,28 L84,28 Q90,28 90,34 L90,68 Q90,74 84,74 L16,74 Q10,74 10,68 Z" fill="url(#folder-grad-back)"/>
-      <path d="M10,28 Q10,24 16,24 L84,24 Q90,24 90,28 L90,68 Q90,74 84,74 L16,74 Q10,74 10,68 Z" fill="url(#folder-grad-front)" opacity="0.96"/>
+      <path d="M 8 16 C 8 10 14 10 18 10 L 36 10 C 42 10 46 16 50 16 L 82 16 C 88 16 92 20 92 26 L 92 66 C 92 72 88 74 82 74 L 18 74 C 12 74 8 72 8 66 Z" fill="url(#folderBackGrad)" />
+      <path d="M 8 26 C 8 22 14 22 18 22 L 82 22 C 88 22 92 24 92 28 L 92 66 C 92 72 88 74 82 74 L 18 74 C 12 74 8 72 8 66 Z" fill="url(#folderFrontGrad)" />
     </svg>
   `;
 }
+
+// 観測タブ用デフォルトフォルダ定義（データ未取得時の完全保護）
+const DEFAULT_OBSERVATION_FOLDERS = [
+  {
+    id: "obs_folder_root",
+    folderName: "観測",
+    unlockLoop: 1,
+    files: [
+      { id: "f_story_1", fileName: "あらすじ.png", title: "あらすじ", image: "./あらすじ.png", desc: "2126年 タイムリープ事件概要" },
+      { id: "f_relation_1", fileName: "相関図.png", title: "相関図", image: "./相関図.png", desc: "関係者・学友会相関図" },
+      { id: "f_route_a", fileName: "順路A.png", title: "順路A", image: "./順路A.png", desc: "大ホール・PCルーム 探索ルート" },
+      { id: "f_route_b", fileName: "順路B.png", title: "順路B", image: "./順路B.png", desc: "研修室1〜3 探索ルート" },
+      { id: "f_route_c", fileName: "順路C.png", title: "順路C", image: "./順路C.png", desc: "未来資料保管庫 探索ルート" },
+      { id: "f_route_d", fileName: "順路D.png", title: "順路D", image: "./順路D.png", desc: "役員室・セキュリティエリア 探索ルート" },
+      { id: "f_route_f", fileName: "順路F.png", title: "順路F", image: "./順路F.png", desc: "最上階タイムマシン到達ルート" }
+    ]
+  },
+  {
+    id: "obs_folder_1",
+    folderName: "観測(1)",
+    unlockLoop: 2,
+    files: [
+      { id: "f_story_2", fileName: "あらすじ(1).png", title: "あらすじ(1)", image: "./あらすじ(1).png", desc: "第2周回 世界線分岐あらすじ" },
+      { id: "f_relation_2", fileName: "相関図(1).png", title: "相関図(1)", image: "./相関図(1).png", desc: "第2周回 改変後相関図" },
+      { id: "f_route_1", fileName: "順路(1).png", title: "順路(1)", image: "./順路(1).png", desc: "第2周回 調査順路マップ" }
+    ]
+  },
+  {
+    id: "obs_folder_2",
+    folderName: "観測(2)",
+    unlockLoop: 3,
+    files: [
+      { id: "f_story_3", fileName: "あらすじ(2).png", title: "あらすじ(2)", image: "./あらすじ(2).png", desc: "第3周回 最終決戦あらすじ" },
+      { id: "f_relation_3", fileName: "相関図(2).png", title: "相関図(2)", image: "./相関図(2).png", desc: "第3周回 完全真相相関図" },
+      { id: "f_route_2", fileName: "順路(2).png", title: "順路(2)", image: "./順路(2).png", desc: "第3周回 最終脱出順路マップ" }
+    ]
+  }
+];
 
 // 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー（周回解放対応）
 function renderMetaObservation(folderId = 'root') {
@@ -1568,9 +1606,14 @@ function renderMetaObservation(folderId = 'root') {
   if (!container) return;
 
   const currentLoop = Number(gameState.loop) || 1;
-  const allFolders = (window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders) || [];
-  // 現在の周回以下で解放されているフォルダのみ取得
-  const visibleFolders = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop);
+  const dbFolders = (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders);
+  const allFolders = (dbFolders && dbFolders.length > 0) ? dbFolders : DEFAULT_OBSERVATION_FOLDERS;
+  
+  // 現在の周回以下で解放されているフォルダのみ取得（最低限第1周回フォルダは必ず含む）
+  let visibleFolders = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop);
+  if (visibleFolders.length === 0) {
+    visibleFolders = [allFolders[0]];
+  }
 
   if (folderId === 'root') {
     // 最上位階層: 周回に応じたフォルダ一覧を表示
