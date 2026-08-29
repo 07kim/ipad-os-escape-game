@@ -331,7 +331,7 @@ function executeRemoteAdminCommand(cmd) {
       localStorage.setItem('game_loop', String(nextLoop));
       
       // 時刻を 09:04 に強制リセット
-      const loopClockISO = "2126-08-22T09:04:00";
+      const loopClockISO = "2126-09-04T09:04:00";
       localStorage.setItem('fake_clock_start_iso', loopClockISO);
       gameState.clockStartISO = loopClockISO;
 
@@ -698,7 +698,7 @@ function applyOperationalRestrictions() {
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
   gameState.teamId = localStorage.getItem('team_id') || 'チームA';
-  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2126-08-22T09:04:00';
+  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2126-09-04T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
   gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
   
@@ -839,12 +839,11 @@ function startFakeClock() {
     const lockClock = document.getElementById('lock-clock');
     if (lockClock) lockClock.innerText = clockStr;
 
-    // 日付表示 (ロック画面 - 年号を伏せて現代/未来を不特定化)
+    // 日付表示 (ロック画面 - 曜日非表示)
     const month = fakeCurrent.getMonth() + 1;
     const day = fakeCurrent.getDate();
-    const dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"][fakeCurrent.getDay()];
     const lockDate = document.getElementById('lock-date');
-    if (lockDate) lockDate.innerText = `${month}月${day}日 ${dayOfWeek}曜日`;
+    if (lockDate) lockDate.innerText = `${month}月${day}日`;
     
     // manabaのヘッダー日付 (時間割に合わせた日付表記)
     const mDateEl = document.getElementById('manaba-header-date');
@@ -1032,7 +1031,7 @@ function triggerLoopTransition(nextLoop) {
   localStorage.setItem('game_loop', String(nextLoop));
 
   // 時刻を 09:04 にリセット
-  const loopClockISO = "2126-08-22T09:04:00";
+  const loopClockISO = "2126-09-04T09:04:00";
   localStorage.setItem('fake_clock_start_iso', loopClockISO);
   gameState.clockStartISO = loopClockISO;
 
