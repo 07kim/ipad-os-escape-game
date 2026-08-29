@@ -1036,6 +1036,15 @@
         saveAdminTimerState();
       }
 
+      // 📡 演者ツール（actor.html）および全iPadへ周回変更を即時同期
+      localStorage.setItem('game_loop', String(targetLoop));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop } });
+        } catch(e) {}
+      }
+
       showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（${prevLoop}周目実績: ${formatMs(prevDuration)}）`);
     }
 

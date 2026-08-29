@@ -1083,22 +1083,35 @@ function updateAppUI() {
   renderMailList();
 }
 
-// --- ロック画面の日常通知レンダリング（タップで該当アプリへアクセス） ---
+// --- アプリ種別に応じた通知アプリアイコンHTML生成 ---
+function getNotificationAppIconHtml(appName, iconName) {
+  if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square') {
+    return `<div class="notif-app-icon link-icon"><i data-lucide="message-circle"></i></div>`;
+  } else if (appName === 'メール' || iconName === 'mail') {
+    return `<div class="notif-app-icon mail-icon"><i data-lucide="mail"></i></div>`;
+  } else if (appName === 'カレンダー' || iconName === 'calendar') {
+    return `<div class="notif-app-icon calendar-icon"><i data-lucide="calendar"></i></div>`;
+  } else {
+    return `<div class="notif-app-icon system-icon"><i data-lucide="${iconName || 'bell'}"></i></div>`;
+  }
+}
+
+// --- ロック画面の日常通知レンダリング（タップで該当アプリへ直行アクセス） ---
 function renderLockNotifications() {
-  const container = document.getElementById('lock-notifications-list');
+  const container = document.getElementById('lock-notif-list') || document.getElementById('lock-notifications-list');
   if (!container) return;
 
   const notifs = (window.GAME_DATABASE && window.GAME_DATABASE.lockNotifications && window.GAME_DATABASE.lockNotifications[gameState.loop]) || [];
   container.innerHTML = "";
 
-  notifs.forEach((n, idx) => {
+  notifs.forEach((n) => {
     const card = document.createElement('div');
     card.className = 'notification-card';
     card.style.marginBottom = '8px';
     card.innerHTML = `
       <div class="notif-header">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <i data-lucide="${n.icon || 'bell'}" class="notif-icon"></i>
+        <div class="notif-app-badge">
+          ${getNotificationAppIconHtml(n.app, n.icon)}
           <span>${n.app}</span>
         </div>
         <span class="notif-time">${n.time}</span>
@@ -1113,25 +1126,24 @@ function renderLockNotifications() {
   safeCreateIcons(container);
 }
 
-// ロック画面通知タップ時のシームレスアクセス処理
+// ロック画面通知タップ時のシームレスアクセス処理（タップで即座にアプリを開く）
 function handleLockNotificationClick(n) {
   unlockScreen();
   setTimeout(() => {
-    if (n.targetApp === 'link') {
+    if (n.targetApp === 'link' || n.app === 'LINK') {
       openApp('link-app');
-      if (n.contactId) {
-        setTimeout(() => {
-          openLinkChat(n.contactId);
-        }, 120);
-      }
-    } else if (n.targetApp === 'mail') {
+      const contact = n.contactId || 'committee_group';
+      setTimeout(() => {
+        openLinkChat(contact);
+      }, 120);
+    } else if (n.targetApp === 'mail' || n.app === 'メール') {
       openApp('mail-app');
       if (n.mailId) {
         setTimeout(() => {
           openMailDetail(n.mailId);
         }, 120);
       }
-    } else if (n.targetApp === 'browser') {
+    } else if (n.targetApp === 'browser' || n.app === 'ブラウザ') {
       openApp('browser-app');
       if (n.pageId) {
         setTimeout(() => {
@@ -1161,10 +1173,29 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   if (descEl) descEl.innerText = body;
   
   const iconEl = document.getElementById('push-notif-icon');
-  if (iconEl) iconEl.setAttribute('data-lucide', icon);
+  if (iconEl) {
+    if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square') {
+      iconEl.setAttribute('data-lucide', 'message-circle');
+      iconEl.style.color = '#22c55e';
+    } else {
+      iconEl.setAttribute('data-lucide', icon);
+      iconEl.style.color = '';
+    }
+  }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  currentPushAction = onClick;
+  // デフォルトタップアクション（LINK通知なら自動でLINKアプリを開く）
+  if (onClick) {
+    currentPushAction = onClick;
+  } else if (app === 'LINK') {
+    currentPushAction = () => {
+      openApp('link-app');
+      openLinkChat('committee_group');
+    };
+  } else {
+    currentPushAction = null;
+  }
+
   banner.classList.add('show');
   playSystemSound("notif");
 

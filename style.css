@@ -269,9 +269,51 @@ body {
 .notif-header {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 6px;
+}
+
+.notif-app-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-app-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.notif-app-icon.link-icon {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.notif-app-icon.mail-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.notif-app-icon.system-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.notif-app-icon.calendar-icon {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.notif-app-icon i {
+  width: 13px;
+  height: 13px;
 }
 
 .notif-title {
