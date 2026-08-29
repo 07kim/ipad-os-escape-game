@@ -3539,6 +3539,68 @@ function renderManabaPortal() {
   }
 }
 
+function openManabaSubmissions() {
+  playSystemSound("touch");
+  const courseDetail = document.getElementById('manaba-course-detail-view');
+  const portfolioView = document.getElementById('manaba-portfolio-view');
+  const mainCols = document.querySelector('.portal-main-columns');
+  const unsubmittedView = document.getElementById('manaba-unsubmitted-view');
+  const submissionsView = document.getElementById('manaba-submissions-view');
+
+  if (courseDetail) courseDetail.style.display = 'none';
+  if (portfolioView) portfolioView.style.display = 'none';
+  if (mainCols) mainCols.style.display = 'none';
+  if (unsubmittedView) unsubmittedView.style.display = 'none';
+  if (submissionsView) submissionsView.style.display = 'block';
+
+  const portalContent = document.getElementById('manaba-portal-view');
+  if (portalContent) portalContent.scrollTop = 0;
+  logWriteToGAS("MANABA_SUBMISSIONS_VIEW", "manaba提出記録画面を表示しました");
+}
+
+function openManabaUnsubmitted() {
+  playSystemSound("touch");
+  const courseDetail = document.getElementById('manaba-course-detail-view');
+  const portfolioView = document.getElementById('manaba-portfolio-view');
+  const mainCols = document.querySelector('.portal-main-columns');
+  const unsubmittedView = document.getElementById('manaba-unsubmitted-view');
+  const submissionsView = document.getElementById('manaba-submissions-view');
+
+  if (courseDetail) courseDetail.style.display = 'none';
+  if (portfolioView) portfolioView.style.display = 'none';
+  if (mainCols) mainCols.style.display = 'none';
+  if (submissionsView) submissionsView.style.display = 'none';
+  if (unsubmittedView) unsubmittedView.style.display = 'block';
+
+  // ユーザー名更新
+  const userTitle = document.getElementById('manaba-unsubmitted-user-title');
+  const currentUser = (window.GAME_DATABASE && window.GAME_DATABASE.manaba && window.GAME_DATABASE.manaba.users[gameState.manabaUser]) || { name: "連城 観" };
+  if (userTitle) userTitle.innerText = `${currentUser.name}さんのマイページ`;
+
+  const portalContent = document.getElementById('manaba-portal-view');
+  if (portalContent) portalContent.scrollTop = 0;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  logWriteToGAS("MANABA_UNSUBMITTED_VIEW", "manaba未提出課題一覧を表示しました");
+}
+
+function closeManabaSubView() {
+  playSystemSound("touch");
+  const unsubmittedView = document.getElementById('manaba-unsubmitted-view');
+  const submissionsView = document.getElementById('manaba-submissions-view');
+  const mainCols = document.querySelector('.portal-main-columns');
+  const subHeader = document.querySelector('.portal-sub-header');
+  const alertBar = document.querySelector('.portal-alert-bar');
+
+  if (unsubmittedView) unsubmittedView.style.display = 'none';
+  if (submissionsView) submissionsView.style.display = 'none';
+  if (mainCols) mainCols.style.display = 'flex';
+  if (subHeader) subHeader.style.display = 'block';
+  if (alertBar) alertBar.style.display = 'flex';
+
+  const portalContent = document.getElementById('manaba-portal-view');
+  if (portalContent) portalContent.scrollTop = 0;
+}
+
 function switchManabaTab(tabId) {
   gameState.activeManabaTab = tabId;
   const navTabs = document.querySelectorAll('.portal-nav-tabs .nav-tab');
@@ -3546,9 +3608,14 @@ function switchManabaTab(tabId) {
 
   const courseDetail = document.getElementById('manaba-course-detail-view');
   const portfolioView = document.getElementById('manaba-portfolio-view');
+  const unsubmittedView = document.getElementById('manaba-unsubmitted-view');
+  const submissionsView = document.getElementById('manaba-submissions-view');
   const mainCols = document.querySelector('.portal-main-columns');
   const subHeader = document.querySelector('.portal-sub-header');
   const alertBar = document.querySelector('.portal-alert-bar');
+
+  if (unsubmittedView) unsubmittedView.style.display = 'none';
+  if (submissionsView) submissionsView.style.display = 'none';
 
   if (tabId === 'mypage') {
     if (courseDetail) courseDetail.style.display = 'none';

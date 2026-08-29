@@ -1401,7 +1401,7 @@
                   <div class="sidebar-sub-section">
                     <div class="sidebar-sub-title">◆ 未提出課題</div>
                     <div class="sidebar-link-row">
-                      <a href="javascript:void(0);" onclick="showPushNotification('課題一覧', '未提出課題: 【期末成果レポート】変調周波数の検証レポート (締切: 8/28 23:55)', 'alert-circle')" class="sidebar-action-link">➔ 未提出課題一覧</a>
+                      <a href="javascript:void(0);" onclick="openManabaUnsubmitted()" class="sidebar-action-link">➔ 未提出課題一覧</a>
                     </div>
                   </div>
                   <!-- 提出記録 -->
@@ -1409,13 +1409,173 @@
                     <div class="sidebar-sub-title">◆ 提出記録</div>
                     <p class="sidebar-empty-msg">最近の提出記録はありません</p>
                     <div class="sidebar-link-row">
-                      <a href="javascript:void(0);" onclick="showPushNotification('提出記録', '過去に提出されたレポートの履歴はありません。', 'file-check')" class="sidebar-action-link">➔ すべて表示</a>
+                      <a href="javascript:void(0);" onclick="openManabaSubmissions()" class="sidebar-action-link">➔ すべて表示</a>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
+          </div>
+
+          <!-- 📄 提出記録画面（公式manaba提出履歴画面 完全再現） -->
+          <div class="manaba-page-container" id="manaba-submissions-view" style="display:none; padding:18px 24px; background:#fff; min-height:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h1 style="font-size:18px; color:#333; margin:0; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-block; width:6px; height:18px; background:#7fb000; border-radius:2px;"></span>
+                提出記録 (2026/08/23 - 2026/08/29)
+              </h1>
+              <button class="course-back-official-btn" onclick="closeManabaSubView()">マイページに戻る</button>
+            </div>
+
+            <div style="background:#f9f9f9; border:1px solid #e5e7eb; border-radius:4px; padding:14px 16px; margin-bottom:18px;">
+              <div style="margin-bottom:12px; font-size:13px; color:#4b5563;">
+                <span style="font-weight:700; margin-right:8px;">絞り込み</span>
+                <select style="padding:4px 10px; border:1px solid #d1d5db; border-radius:4px; background:#fff; font-size:13px;">
+                  <option>すべてのコース</option>
+                  <option>応用量子力学</option>
+                  <option>量子計測工学</option>
+                  <option>時空間情報学</option>
+                </select>
+              </div>
+              <div style="font-size:13px; color:#2563eb; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px solid #e5e7eb; padding-top:10px;">
+                <span style="border-bottom:2px solid #2563eb; font-weight:700; color:#1e40af; padding-bottom:2px;">すべて</span>
+                <span style="color:#d1d5db;">|</span>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">小テスト</a>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">アンケート</a>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">ドリル</a>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">レポート</a>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">プロジェクト</a>
+              </div>
+              <div style="display:flex; gap:6px; margin-top:12px;">
+                <button style="padding:3px 10px; font-size:12px; background:#2563eb; color:#fff; border:1px solid #1d4ed8; border-radius:3px; font-weight:600;">7日</button>
+                <button style="padding:3px 10px; font-size:12px; background:#fff; color:#374151; border:1px solid #d1d5db; border-radius:3px;">30日</button>
+                <button style="padding:3px 10px; font-size:12px; background:#fff; color:#374151; border:1px solid #d1d5db; border-radius:3px;">90日</button>
+                <button style="padding:3px 10px; font-size:12px; background:#fff; color:#374151; border:1px solid #d1d5db; border-radius:3px;">180日</button>
+              </div>
+            </div>
+
+            <div style="background:#f3f4f6; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; padding:8px 12px; margin-bottom:16px;">
+              <button style="padding:3px 12px; font-size:12px; background:#fff; border:1px solid #d1d5db; border-radius:3px; color:#4b5563;">次へ</button>
+            </div>
+
+            <p style="font-size:14px; color:#4b5563; padding:12px 6px;">
+              この期間の提出記録はありません。
+            </p>
+          </div>
+
+          <!-- 📋 未提出課題一覧画面（公式manaba未提出一覧 完全再現） -->
+          <div class="manaba-page-container" id="manaba-unsubmitted-view" style="display:none; padding:18px 24px; background:#fff; min-height:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #e5e7eb; padding-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; display:flex; align-items:center; justify-content:center; color:#9ca3af;">
+                  <i data-lucide="user" style="width:24px; height:24px;"></i>
+                </div>
+                <div>
+                  <h2 style="font-size:16px; margin:0; color:#1f2937;" id="manaba-unsubmitted-user-title">連城 観さんのマイページ</h2>
+                  <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button class="course-back-official-btn" onclick="closeManabaSubView()" style="font-size:11px; padding:2px 8px;">トップ</button>
+                    <button style="font-size:11px; padding:2px 8px; background:#7fb000; color:#fff; border:1px solid #659000; border-radius:4px; font-weight:700;">未提出課題</button>
+                  </div>
+                </div>
+              </div>
+              <button class="course-back-official-btn" onclick="closeManabaSubView()">マイページに戻る</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h1 style="font-size:16px; color:#333; margin:0; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-block; width:6px; height:16px; background:#7fb000; border-radius:2px;"></span>
+                未提出の課題一覧
+              </h1>
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#4b5563;">
+                <span>※非表示に設定中: 12件</span>
+                <select style="font-size:12px; padding:2px 6px; border:1px solid #d1d5db; border-radius:3px;">
+                  <option>全課題</option>
+                </select>
+                <select style="font-size:12px; padding:2px 6px; border:1px solid #d1d5db; border-radius:3px;">
+                  <option>受付終了まで: 全期間</option>
+                </select>
+                <a href="javascript:void(0);" style="color:#2563eb; text-decoration:none;">❯ 非表示にする課題を選択する</a>
+              </div>
+            </div>
+
+            <!-- 未提出課題テーブル -->
+            <table class="official-courses-table" style="width:100%; border-collapse:collapse; margin-top:8px;">
+              <thead>
+                <tr style="background:#eef7d9; border-top:1px solid #c2e28f; border-bottom:1px solid #c2e28f;">
+                  <th style="padding:8px 10px; font-size:12px; text-align:center; width:10%; color:#374151;">タイプ</th>
+                  <th style="padding:8px 10px; font-size:12px; text-align:left; width:34%; color:#374151;">タイトル</th>
+                  <th style="padding:8px 10px; font-size:12px; text-align:left; width:24%; color:#374151;">コース</th>
+                  <th style="padding:8px 10px; font-size:12px; text-align:center; width:16%; color:#374151;">受付開始日時</th>
+                  <th style="padding:8px 10px; font-size:12px; text-align:center; width:16%; color:#374151;">受付終了日時</th>
+                </tr>
+              </thead>
+              <tbody style="font-size:12px; color:#374151;">
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">アンケート</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">サイバーセキュリティ概論2026_リフレクション</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6; background:#fafafa;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">CS概論（ガイダンスPart1）理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">CS概論（ガイダンスPart2）理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6; background:#fafafa;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">小テスト</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">第2回CSイントロダクション理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">第3回CS歴史 理解度チェックテスト</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6; background:#fafafa;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">データセキュリティ1 理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">ネットワークセキュリティPart1 理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6; background:#fafafa;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">プロダクトセキュリティ1 理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                  <td style="padding:8px 10px; text-align:center; color:#2563eb;">ドリル</td>
+                  <td style="padding:8px 10px; color:#2563eb; font-weight:600;">セキュリティマネジメント1 理解度チェック</td>
+                  <td style="padding:8px 10px; color:#2563eb;">サイバーセキュリティ概論</td>
+                  <td style="padding:8px 10px; text-align:center;">2026-06-08 09:00</td>
+                  <td style="padding:8px 10px; text-align:center;">2027-03-31 23:59</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <!-- 🎓 コース詳細画面（千葉工大 公式完全再現） -->
@@ -1493,9 +1653,9 @@
 
             <!-- サブメニューリンク行（右寄せ） -->
             <div class="official-course-sublinks-row" id="course-top-sublinks-row">
-              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('ピアレビュー', '未実施のピアレビューはありません。', 'file-text')">📝 ピアレビュー (未実施:0件)</a>
-              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('個別指導', '個別指導コレクションはありません。', 'user')">👤 個別指導(コレクション)</a>
-              <a href="javascript:void(0);" class="sublink-item" onclick="showPushNotification('提出記録', '提出履歴: レポート1件受付中', 'clock')">📄 提出記録</a>
+              <a href="javascript:void(0);" class="sublink-item">📝 ピアレビュー (未実施:0件)</a>
+              <a href="javascript:void(0);" class="sublink-item">👤 個別指導(コレクション)</a>
+              <a href="javascript:void(0);" class="sublink-item" onclick="openManabaSubmissions()">📄 提出記録</a>
             </div>
 
             <!-- コースメインコンテンツ（2カラム構成：左72% / 右28%） -->
