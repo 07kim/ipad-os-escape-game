@@ -46,55 +46,119 @@ window.GAME_DATABASE = {
   metaApp: {
     title: "26__0094",
 
-    // 【1. 観測タブ用ファイル一覧】周回ごとに解放（1周目:2枚 / 2周目:4枚 / 3周目:6枚、最大6枚）
-    observationFiles: [
+    // 【1. 観測タブ用フォルダ ＆ ファイルデータ（周回解放対応）】
+    observationFolders: [
       {
-        id: "overview_01",
+        id: "obs_folder_root",
+        folderName: "観測",
         unlockLoop: 1,
-        fileName: "2126年_学友会基本規約.png",
-        title: "学友会基本規約",
-        image: "https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=1200",
-        desc: "2126年度 学友会執行委員会 保管資料"
+        files: [
+          {
+            id: "f_story_1",
+            fileName: "あらすじ.png",
+            title: "あらすじ",
+            image: "./あらすじ.png",
+            desc: "2126年 タイムリープ事件概要"
+          },
+          {
+            id: "f_relation_1",
+            fileName: "相関図.png",
+            title: "相関図",
+            image: "./相関図.png",
+            desc: "関係者・学友会相関図"
+          },
+          {
+            id: "f_route_a",
+            fileName: "順路A.png",
+            title: "順路A",
+            image: "./順路A.png",
+            desc: "大ホール・PCルーム 探索ルート"
+          },
+          {
+            id: "f_route_b",
+            fileName: "順路B.png",
+            title: "順路B",
+            image: "./順路B.png",
+            desc: "研修室1〜3 探索ルート"
+          },
+          {
+            id: "f_route_c",
+            fileName: "順路C.png",
+            title: "順路C",
+            image: "./順路C.png",
+            desc: "未来資料保管庫 探索ルート"
+          },
+          {
+            id: "f_route_d",
+            fileName: "順路D.png",
+            title: "順路D",
+            image: "./順路D.png",
+            desc: "役員室・セキュリティエリア 探索ルート"
+          },
+          {
+            id: "f_route_f",
+            fileName: "順路F.png",
+            title: "順路F",
+            image: "./順路F.png",
+            desc: "最上階タイムマシン到達ルート"
+          }
+        ]
       },
       {
-        id: "overview_02",
-        unlockLoop: 1,
-        fileName: "時間跳躍実験_初期概要.png",
-        title: "時間跳躍実験 初期概要",
-        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=1200",
-        desc: "量子力学研究室 タイムマシンプロトタイプ計画"
-      },
-      {
-        id: "overview_03",
+        id: "obs_folder_1",
+        folderName: "観測(1)",
         unlockLoop: 2,
-        fileName: "世界線分岐観測レポート.png",
-        title: "世界線分岐観測レポート",
-        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200",
-        desc: "歴史改変とタイムパラドックスの観測ログ"
+        files: [
+          {
+            id: "f_story_2",
+            fileName: "あらすじ(1).png",
+            title: "あらすじ(1)",
+            image: "./あらすじ(1).png",
+            desc: "第2周回 世界線分岐あらすじ"
+          },
+          {
+            id: "f_relation_2",
+            fileName: "相関図(1).png",
+            title: "相関図(1)",
+            image: "./相関図(1).png",
+            desc: "第2周回 改変後相関図"
+          },
+          {
+            id: "f_route_1",
+            fileName: "順路(1).png",
+            title: "順路(1)",
+            image: "./順路(1).png",
+            desc: "第2周回 調査順路マップ"
+          }
+        ]
       },
       {
-        id: "overview_04",
-        unlockLoop: 2,
-        fileName: "21世紀会計史_特異点抜粋.png",
-        title: "21世紀会計史 特異点抜粋",
-        image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1200",
-        desc: "2024〜2026年の市場データと資産推移"
-      },
-      {
-        id: "overview_05",
+        id: "obs_folder_2",
+        folderName: "観測(2)",
         unlockLoop: 3,
-        fileName: "UZWコーポレーション組織図.png",
-        title: "U.Z.W. 組織構造図",
-        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200",
-        desc: "巨大コングロマリット U.Z.W. 内部極秘資料"
-      },
-      {
-        id: "overview_06",
-        unlockLoop: 3,
-        fileName: "最終帰還シーケンス設計図.png",
-        title: "最終帰還シーケンス設計図",
-        image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200",
-        desc: "時空修復アンカー起動コード"
+        files: [
+          {
+            id: "f_story_3",
+            fileName: "あらすじ(2).png",
+            title: "あらすじ(2)",
+            image: "./あらすじ(2).png",
+            desc: "第3周回 最終決戦あらすじ"
+          },
+          {
+            id: "f_relation_3",
+            fileName: "相関図(2).png",
+            title: "相関図(2)",
+            image: "./相関図(2).png",
+            desc: "第3周回 完全真相相関図"
+          },
+          {
+            id: "f_route_2",
+            fileName: "順路(2).png",
+            title: "順路(2)",
+            image: "./順路(2).png",
+            desc: "第3周回 最終脱出順路マップ"
+          }
+        ]
       }
     ],
 

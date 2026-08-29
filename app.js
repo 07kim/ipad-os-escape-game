@@ -1539,71 +1539,88 @@ function switchMetaTab(tabId) {
   }
 }
 
-// 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー
-function renderMetaObservation(folder = 'root') {
-  metaObservationCurrentFolder = folder;
+// 📁 Apple純正 iPadOS「ファイル」アプリ風 フォルダSVGジェネレーター
+function generateIpadosFolderSvg() {
+  return `
+    <svg viewBox="0 0 100 80" class="ipados-folder-svg">
+      <defs>
+        <linearGradient id="folder-grad-back" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="100%" stop-color="#0284c7"/>
+        </linearGradient>
+        <linearGradient id="folder-grad-front" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#60a5fa"/>
+          <stop offset="100%" stop-color="#2563eb"/>
+        </linearGradient>
+      </defs>
+      <path d="M10,18 Q10,12 16,12 L38,12 Q44,12 48,18 L54,24 Q58,28 64,28 L84,28 Q90,28 90,34 L90,68 Q90,74 84,74 L16,74 Q10,74 10,68 Z" fill="url(#folder-grad-back)"/>
+      <path d="M10,28 Q10,24 16,24 L84,24 Q90,24 90,28 L90,68 Q90,74 84,74 L16,74 Q10,74 10,68 Z" fill="url(#folder-grad-front)" opacity="0.96"/>
+    </svg>
+  `;
+}
+
+// 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー（周回解放対応）
+function renderMetaObservation(folderId = 'root') {
+  metaObservationCurrentFolder = folderId;
   const container = document.getElementById('meta-observation-grid') || document.getElementById('meta-overview-grid');
   const countEl = document.getElementById('observation-file-count') || document.getElementById('overview-file-count');
   const pathEl = document.getElementById('meta-observation-path');
   if (!container) return;
 
   const currentLoop = Number(gameState.loop) || 1;
-  const maxVisible = currentLoop === 1 ? 2 : (currentLoop === 2 ? 4 : 6);
-  const allFiles = (window.GAME_DATABASE.metaApp && (window.GAME_DATABASE.metaApp.observationFiles || window.GAME_DATABASE.metaApp.overviewFiles)) || [];
-  const visibleFiles = allFiles.slice(0, maxVisible);
+  const allFolders = (window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders) || [];
+  // 現在の周回以下で解放されているフォルダのみ取得
+  const visibleFolders = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop);
 
-  if (folder === 'root') {
-    // 最上位階層: 「観測」フォルダを表示
+  if (folderId === 'root') {
+    // 最上位階層: 周回に応じたフォルダ一覧を表示
     if (pathEl) {
-      pathEl.innerHTML = `PC &gt; 内部ストレージ`;
+      pathEl.innerHTML = `<i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ`;
     }
     if (countEl) {
-      countEl.innerText = `1 folder`;
+      countEl.innerText = `${visibleFolders.length} フォルダ`;
     }
 
-    container.innerHTML = `
-      <div class="finder-item" onclick="renderMetaObservation('observation')" title="ダブルクリック/タップで開く">
+    container.innerHTML = visibleFolders.map(folder => `
+      <div class="finder-item" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
         <div class="finder-thumb-wrapper">
           <div class="finder-folder-icon">
-            <i data-lucide="folder"></i>
+            ${generateIpadosFolderSvg()}
           </div>
         </div>
-        <div class="finder-file-name">観測</div>
-        <div class="finder-file-desc">フォルダ (${visibleFiles.length} ファイル)</div>
-      </div>
-    `;
-  } else {
-    // 「観測」フォルダ内: 周回解放された観測ファイル一覧
-    if (pathEl) {
-      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;">PC &gt; 内部ストレージ</a> &gt; 観測`;
-    }
-    if (countEl) {
-      countEl.innerText = `${visibleFiles.length} items`;
-    }
-
-    let html = `
-      <div class="finder-item" onclick="renderMetaObservation('root')" title="上の階層へ戻る" style="opacity:0.85;">
-        <div class="finder-thumb-wrapper" style="background:#f1f5f9;">
-          <div class="finder-folder-icon" style="background:transparent; color:#64748b;">
-            <i data-lucide="corner-left-up"></i>
-          </div>
-        </div>
-        <div class="finder-file-name">.. (上へ戻る)</div>
-        <div class="finder-file-desc">親ディレクトリ</div>
-      </div>
-    `;
-
-    html += visibleFiles.map((file) => `
-      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
-        <div class="finder-thumb-wrapper">
-          <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
-        </div>
-        <div class="finder-file-name">${file.fileName}</div>
-        <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
+        <div class="finder-file-name">${folder.folderName}</div>
+        <div class="finder-file-desc">${folder.files ? folder.files.length : 0} 項目</div>
       </div>
     `).join('');
+  } else {
+    // フォルダ内表示: 選択されたフォルダ内のファイル一覧（上へ戻るボタンは排除しパンくずでナビゲート）
+    const targetFolder = allFolders.find(f => f.id === folderId) || visibleFolders[0];
+    const files = (targetFolder && targetFolder.files) || [];
 
-    container.innerHTML = html;
+    if (pathEl) {
+      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder ? targetFolder.folderName : '観測'}</strong>`;
+    }
+    if (countEl) {
+      countEl.innerText = `${files.length} 項目`;
+    }
+
+    if (files.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+          このフォルダにはファイルがありません。
+        </div>
+      `;
+    } else {
+      container.innerHTML = files.map(file => `
+        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
+          <div class="finder-thumb-wrapper">
+            <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
+          </div>
+          <div class="finder-file-name">${file.fileName}</div>
+          <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
+        </div>
+      `).join('');
+    }
   }
 
   safeCreateIcons(container);

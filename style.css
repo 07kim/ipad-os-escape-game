@@ -730,12 +730,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  color: #0284c7;
+  background: transparent;
 }
-.finder-folder-icon i {
-  width: 44px;
-  height: 44px;
+
+.ipados-folder-svg {
+  width: 72px;
+  height: 60px;
+  filter: drop-shadow(0 3px 6px rgba(37, 99, 235, 0.22));
+  transition: transform 0.2s ease;
+}
+.finder-item:hover .ipados-folder-svg {
+  transform: scale(1.06);
 }
 
 .finder-file-name {
