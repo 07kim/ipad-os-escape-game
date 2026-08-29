@@ -663,9 +663,9 @@ window.GAME_DATABASE = {
 
     // マイQRコード情報
     myQr: {
-      teamName: "学友会執行委員会 調査端末",
-      qrImage: "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT",
-      copyLinkUrl: "https://link.line.me/ti/p/cit_student_council_2126",
+      teamName: "連城 観",
+      qrImage: "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_PROFILE_2126_CIT_RENJO_MIRU",
+      copyLinkUrl: "https://link.line.me/ti/p/cit_renjo_miru_2126",
       desc: "QRコードやリンクを使って、友だち追加しましょう。"
     },
 
