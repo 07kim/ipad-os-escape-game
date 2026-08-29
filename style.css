@@ -315,10 +315,11 @@ body {
   flex: 1;
   width: 100%;
   height: 100%;
-  padding: 92px 40px 120px 40px; /* 上部にたっぷり余裕を持たせたiPadOSレイアウト */
+  padding: 40px 40px 140px 40px; /* ドック（下部）とステータスバーを避けた余白 */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center; /* 画面の上下中央（中間）にゆったり配置 */
+  align-items: center;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -326,10 +327,10 @@ body {
 .app-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 36px 24px;
-  align-content: start;
+  gap: 44px 32px; /* アイコン間の余白を広げてバランスよく配置 */
+  align-content: center;
   justify-items: center;
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto;
   width: 100%;
 }
@@ -342,13 +343,13 @@ body {
 }
 
 .app-icon {
-  width: 74px;
-  height: 74px;
-  border-radius: 16px;
+  width: 78px;
+  height: 78px;
+  border-radius: 18px;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   transition: transform 0.2s ease;
   background-color: #fff;
 }
