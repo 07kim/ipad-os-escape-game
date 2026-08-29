@@ -2192,9 +2192,7 @@ function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-resu
       }) : null;
 
       if (code && code.data) {
-        stopAllCameraStreams();
         callback(code.data, resultBox);
-        return;
       }
     }
     qrScanTimeout = requestAnimationFrame(tick);
@@ -2213,35 +2211,48 @@ function stopAllCameraStreams() {
   metaQrActive = false;
 }
 
+let metaQrCooldown = false;
+
 // メタQRの判定
 function handleMetaQrScan(data, resultBox) {
+  if (metaQrCooldown) return;
+  metaQrCooldown = true;
+
   const hint = window.GAME_DATABASE.metaApp.qrHints[data];
   if (hint) {
     if (gameState.unlockedHints.includes(data)) {
-      resultBox.innerText = "取得済みです。";
-      resultBox.className = "qr-result-box error";
+      if (resultBox) {
+        resultBox.innerText = "取得済みです。";
+        resultBox.className = "qr-result-box error";
+      }
       playSystemSound("error");
     } else {
       gameState.unlockedHints.push(data);
       saveStateToStorage();
       renderUnlockedHints();
-      resultBox.innerText = `成功: ${hint.title} を入手しました！`;
-      resultBox.className = "qr-result-box success";
+      if (resultBox) {
+        resultBox.innerText = `成功: ${hint.title} を入手しました！`;
+        resultBox.className = "qr-result-box success";
+      }
       playSystemSound("success");
       logWriteToGAS("QR_METADATA_UNLOCKED", `メタ情報取得: ${data}`);
     }
   } else {
-    resultBox.innerText = "無効なコードです。";
-    resultBox.className = "qr-result-box error";
+    if (resultBox) {
+      resultBox.innerText = "無効なコードです。";
+      resultBox.className = "qr-result-box error";
+    }
     playSystemSound("error");
   }
 
-  // 3秒後に再開
+  // 2秒後にクールダウン解除して再スキャン待機
   setTimeout(() => {
-    if (gameState.activeMetaTab === 'qr' && !activeStream) {
-      startQrScanner('meta-video', 'meta-canvas', handleMetaQrScan);
+    if (resultBox && gameState.activeMetaTab === 'qr') {
+      resultBox.innerText = "🔍 QRコードをスキャン枠に合わせてください...";
+      resultBox.className = "qr-result-box";
     }
-  }, 3000);
+    metaQrCooldown = false;
+  }, 2000);
 }
 
 // ==========================================================================
