@@ -3661,14 +3661,17 @@ body {
 .gsheet-container {
   background-color: #ffffff;
   position: absolute;
-  top: 24px; /* ステータスバー直下 */
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   z-index: 900;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  overflow: hidden;
 }
 
 .gsheet-app-header {
@@ -3922,10 +3925,14 @@ body {
 /* 4. グリッドテーブル */
 .gsheet-grid-viewport {
   flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
   overflow: auto;
   background: #ffffff;
   position: relative;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
 .gsheet-official-table {
@@ -3944,7 +3951,7 @@ body {
   font-weight: 600;
   color: #5f6368;
   font-size: 12px;
-  padding: 6px 14px;
+  padding: 6px 16px;
   text-align: center;
   position: sticky;
   top: 0;
@@ -3963,7 +3970,7 @@ body {
 
 .gsheet-official-table td {
   border: 1px solid #e0e0e0;
-  padding: 8px 14px;
+  padding: 8px 16px;
   white-space: nowrap;
   font-size: 13px;
   color: #1f1f1f;

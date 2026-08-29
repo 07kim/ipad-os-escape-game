@@ -641,10 +641,13 @@ function applyOperationalRestrictions() {
 
   function findScrollableParent(el) {
     while (el && el !== document.body && el !== document.documentElement) {
+      if (el.classList && el.classList.contains('gsheet-grid-viewport')) return el;
       const style = window.getComputedStyle(el);
       const overflowY = style.overflowY;
-      const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
-      if (isScrollable) return el;
+      const overflowX = style.overflowX;
+      const isScrollableY = (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+      const isScrollableX = (overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth;
+      if (isScrollableY || isScrollableX) return el;
       el = el.parentElement;
     }
     return null;
@@ -661,6 +664,11 @@ function applyOperationalRestrictions() {
     if (!scrollTarget) {
       // スクロール可能要素以外の場所（背景、ツールバー、Dock、ロック画面等）でのドラッグを全面禁止
       e.preventDefault();
+      return;
+    }
+
+    // スプレッドシート内は全方位スクロールを完全に許可
+    if (scrollTarget.classList && scrollTarget.classList.contains('gsheet-grid-viewport')) {
       return;
     }
 
@@ -685,6 +693,9 @@ function applyOperationalRestrictions() {
     if (!target) {
       e.preventDefault();
     } else {
+      if (target.classList && target.classList.contains('gsheet-grid-viewport')) {
+        return;
+      }
       const isAtTop = target.scrollTop <= 0;
       const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
       if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
@@ -3176,6 +3187,9 @@ function submitGForm() {
 
 function openGSpreadsheet(e) {
   if (e) e.preventDefault();
+  const modal = document.getElementById('hacking-modal');
+  if (modal) modal.scrollTop = 0;
+
   document.getElementById('gform-view').style.display = 'none';
   document.getElementById('gform-editor-view').style.display = 'none';
   document.getElementById('gsheet-view').style.display = 'flex';
@@ -3189,6 +3203,13 @@ function openGSpreadsheet(e) {
   gameState.isGSheetEditing = false;
 
   renderGSpreadsheet();
+
+  const viewport = document.querySelector('.gsheet-grid-viewport');
+  if (viewport) {
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+  }
+
   logWriteToGAS("HACKING_SPREADSHEET_OPEN", "偽スプレッドシートに侵入しました！");
 }
 
