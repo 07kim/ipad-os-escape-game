@@ -4483,17 +4483,33 @@ let phoneCallAudioTimer = null;
 function pressPhoneKey(key) {
   if (gameState.phoneInput.length < 15) {
     gameState.phoneInput += key;
-    document.getElementById('phone-display').innerText = gameState.phoneInput;
+    const display = document.getElementById('phone-display');
+    if (display) display.innerText = gameState.phoneInput;
     playSystemSound("dtmf");
+  }
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
   }
 }
 
-function clearPhoneKey() {
+function clearPhoneKey(withSound = true) {
   if (gameState.phoneInput && gameState.phoneInput.length > 0) {
     gameState.phoneInput = gameState.phoneInput.slice(0, -1);
     const display = document.getElementById('phone-display');
     if (display) display.innerText = gameState.phoneInput;
-    playSystemSound("dtmf");
+    if (withSound) playSystemSound("touch");
+  }
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+}
+
+function resetPhoneInputFull() {
+  gameState.phoneInput = "";
+  const display = document.getElementById('phone-display');
+  if (display) display.innerText = "";
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
   }
 }
 
@@ -4596,7 +4612,7 @@ function endPhoneCall(isSilent = false) {
 
   const overlay = document.getElementById('phone-calling-overlay');
   if (overlay) overlay.style.display = 'none';
-  clearPhoneKey();
+  resetPhoneInputFull();
 
   if (document.activeElement && typeof document.activeElement.blur === 'function') {
     document.activeElement.blur();
