@@ -17,48 +17,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.19.2">
-  <!-- キャッシュバイパス用インラインスタイル（CSSが古い場合の上書き） -->
+  <link rel="stylesheet" href="style.css?v=2.20.0">
   <style>
-    .home-screen {
-      flex: 0 0 auto;
-      padding: 40px 24px 16px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .app-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px 12px;
-      align-content: start;
-      height: auto;
-    }
-    .app-icon-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      padding-bottom: 4px;
-    }
-    .app-icon {
-      width: 72px;
-      height: 72px;
-      border-radius: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-      transition: transform 0.15s ease;
-      background-color: #fff;
-    }
-    .app-label {
-      font-size: 11px;
-      margin-top: 5px;
-      text-align: center;
-      color: #1c1c1e;
-      font-weight: 500;
-    }
     .lock-screen.hidden {
       transform: translateY(-100%);
       opacity: 0;
