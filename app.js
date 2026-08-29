@@ -1260,7 +1260,7 @@ function showLockScreen() {
 
     lockScreen.classList.remove('hidden');
     renderLockNotifications();
-    playSystemSound("dtmf");
+    playSystemSound("touch");
     logWriteToGAS("LOCK_TRIGGERED", "ロック画面が表示されました（背景をホーム画面に初期化）");
   }
 }
@@ -2718,7 +2718,7 @@ function sendCustomLinkMessage() {
   `;
   input.value = "";
   messageArea.scrollTop = messageArea.scrollHeight;
-  playSystemSound("dtmf");
+  playSystemSound("touch");
 
   // 2. 2秒後に「送信失敗」のリアルなシステムエラー表示
   setTimeout(() => {
@@ -4588,9 +4588,19 @@ function endPhoneCall(isSilent = false) {
     } catch (e) {}
   }
 
+  // AudioContextがsuspendedになっていれば即座に復帰
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+
   const overlay = document.getElementById('phone-calling-overlay');
   if (overlay) overlay.style.display = 'none';
   clearPhoneKey();
+
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
 
   // 切断ボタンまたはガイダンス終了時のみ、リアルな「ガチャッ」音を再生
   if (!isSilent) {
@@ -4755,18 +4765,8 @@ function generateWavDataUri(type) {
       }
       samples.push(sample * 0.85);
     }
-  } else if (type === "touch") {
-    // 📱 iOS標準風の軽快な上品タップ・クリック音（コッ/カチッ）
-    duration = 0.04;
-    const totalSamples = Math.floor(sampleRate * duration);
-    for (let i = 0; i < totalSamples; i++) {
-      const t = i / sampleRate;
-      let freq = 480 - (t / duration) * 320; // 480Hz -> 160Hzへ急速スイープ
-      let env = Math.exp(-t * 85);
-      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.45);
-    }
-  } else {
-    // dtmf / beep
+  } else if (type === "dtmf" || type === "beep") {
+    // ☎️ 電話キーパッドのプッシュ和音 (DTMF: 697Hz + 1209Hz)
     duration = 0.12;
     const totalSamples = Math.floor(sampleRate * duration);
     for (let i = 0; i < totalSamples; i++) {
@@ -4778,6 +4778,16 @@ function generateWavDataUri(type) {
         s = 0.5 * s + 0.5 * Math.sin(2 * Math.PI * 1209 * t);
       }
       samples.push(s * env * 0.65);
+    }
+  } else {
+    // 📱 デフォルト: iOS標準風の軽快な上品タップ・クリック音（コッ/カチッ）
+    duration = 0.04;
+    const totalSamples = Math.floor(sampleRate * duration);
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let freq = 480 - (t / duration) * 320; // 480Hz -> 160Hzへ急速スイープ
+      let env = Math.exp(-t * 85);
+      samples.push(Math.sin(2 * Math.PI * freq * t) * env * 0.45);
     }
   }
 
@@ -4821,7 +4831,7 @@ function generateWavDataUri(type) {
 }
 
 // 🔊 システム効果音再生（iPad / PC 完全両対応ハイブリッドエンジン）
-function playSystemSound(type) {
+function playSystemSound(type = "touch") {
   let playedWebAudio = false;
 
   // 1. Web Audio API での再生
@@ -5113,7 +5123,7 @@ function updateCalcDisplay() {
 }
 
 function calcInput(type, value) {
-  playSystemSound("dtmf");
+  playSystemSound("touch");
 
   if (type === 'num') {
     if (calcState.waitingForSecondOperand) {
@@ -6591,7 +6601,7 @@ function updateCompassUI(deg, pitch, roll) {
 }
 
 function toggleCompassTargetLock() {
-  playSystemSound("dtmf");
+  playSystemSound("touch");
   if (lockedCompassHeading === null) {
     lockedCompassHeading = currentCompassHeading;
   } else {
