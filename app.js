@@ -1075,9 +1075,8 @@ function updateAppUI() {
   if (document.getElementById('spec-storage') && spec.storage) document.getElementById('spec-storage').innerText = spec.storage;
   if (document.getElementById('spec-serial') && spec.serial) document.getElementById('spec-serial').innerText = spec.serial;
 
-  // メタアプリ：概要＆順路＆調査資料の更新
-  renderMetaOverview();
-  renderMetaRoute();
+  // メタアプリ：観測＆調査資料の更新
+  renderMetaObservation(metaObservationCurrentFolder);
   renderMetaEvidence();
 
   // メールリスト更新
