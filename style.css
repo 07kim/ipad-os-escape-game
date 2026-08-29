@@ -551,23 +551,42 @@ body {
   font-size: 15px;
 }
 
-/* --- ホームバー (最下部白い横線) --- */
+/* --- ホームバー (最下部白い横線 & 広大なタッチ判定エリア) --- */
 .home-bar {
   position: absolute;
-  bottom: 5px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
+  width: 200px;
   height: 5px;
   background-color: #ffffff;
   border-radius: 3px;
-  z-index: 1100;
+  z-index: 1200;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  touch-action: manipulation;
+}
+
+/* 広大なタッチヒットボックス（上下左右にタップ判定を拡張） */
+.home-bar::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  bottom: -15px;
+  left: -30px;
+  right: -30px;
+  background: transparent;
 }
 
 .home-bar:hover {
-  background-color: #e5e5ea;
+  background-color: #e2e8f0;
+  transform: translateX(-50%) scaleY(1.2);
+}
+
+.home-bar:active {
+  transform: translateX(-50%) scale(0.95);
+  background-color: #cbd5e1;
 }
 
 /* ==========================================================================

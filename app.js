@@ -183,6 +183,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // 画面上端からの下スワイプでロック画面（カバーシート）を呼び出し
     initTopSwipeForLockScreen();
 
+    // 画面最下部ホームバーの即時タッチ判定＆上フリックイベント
+    initHomeBarEvents();
+
     // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
 
@@ -1349,6 +1352,42 @@ function closeApp(appId) {
 }
 window.closeApp = closeApp;
 
+// 🏠 ホームバー操作（0ms即時反応 ＆ 最下部上フリックジェスチャー）
+function initHomeBarEvents() {
+  const homeBar = document.getElementById('home-bar');
+  if (homeBar) {
+    // タッチ開始で即時判定（300ms遅延ゼロ化）
+    homeBar.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      goHome();
+    }, { passive: true });
+  }
+
+  // 画面最下部エリア（下端50px）からの上フリックジェスチャーでホームに戻る
+  let bottomTouchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const touchY = e.touches[0].clientY;
+      const screenH = window.innerHeight;
+      if (touchY > screenH - 55) {
+        bottomTouchStartY = touchY;
+      } else {
+        bottomTouchStartY = 0;
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (bottomTouchStartY > 0 && e.changedTouches.length === 1) {
+      const deltaY = bottomTouchStartY - e.changedTouches[0].clientY;
+      if (deltaY > 25) {
+        goHome();
+      }
+    }
+    bottomTouchStartY = 0;
+  }, { passive: true });
+}
+
 function goHome() {
   // ロック中はホームに行けない
   const lockScreen = document.getElementById('lock-screen');
@@ -1661,7 +1700,7 @@ function renderMetaObservation(folderId = 'root') {
       container.innerHTML = files.map(file => `
         <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
           <div class="finder-thumb-wrapper">
-            <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
+            <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
           <div class="finder-file-name">${file.fileName}</div>
           <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
