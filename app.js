@@ -14,12 +14,37 @@ function safeCreateIcons(target = null) {
   }
 }
 
-// --- デバッグ用グローバルエラーハンドラー ---
+// 🔄 通信中・ロード中インジケータ表示コントローラ
+let loadingIndicatorTimer = null;
+function showNetworkLoadingIndicator(text = "ロード中…") {
+  const indicator = document.getElementById('network-loading-indicator');
+  const textEl = document.getElementById('network-loading-text');
+  if (indicator) {
+    if (textEl) textEl.innerText = text;
+    indicator.classList.add('show');
+    if (loadingIndicatorTimer) clearTimeout(loadingIndicatorTimer);
+    // 3秒後に自動で非表示（タイムアウト安全策）
+    loadingIndicatorTimer = setTimeout(() => {
+      hideNetworkLoadingIndicator();
+    }, 3000);
+  }
+}
+
+function hideNetworkLoadingIndicator() {
+  const indicator = document.getElementById('network-loading-indicator');
+  if (indicator) {
+    indicator.classList.remove('show');
+  }
+  if (loadingIndicatorTimer) {
+    clearTimeout(loadingIndicatorTimer);
+    loadingIndicatorTimer = null;
+  }
+}
+
+// --- グローバルエラーハンドラー（alertによる画面停止を防止） ---
 window.onerror = function(message, source, lineno, colno, error) {
-  const errMsg = `【JSエラー検知】\nメッセージ: ${message}\nファイル: ${source}\n行番号: ${lineno}:${colno}`;
-  console.error(errMsg, error);
-  alert(errMsg);
-  return false;
+  console.warn(`[JSエラー検知] ${message} at ${source}:${lineno}:${colno}`, error);
+  return true; // ブラウザの同期エラー中断を抑制
 };
 
 // --- グローバルステート管理 ---
@@ -2127,19 +2152,24 @@ function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-resu
       }
     });
 
-  function tick() {
+  let lastScanTime = 0;
+  function tick(timestamp) {
     if (video && video.readyState === video.HAVE_ENOUGH_DATA && canvas) {
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      canvas.height = video.videoHeight;
-      canvas.width = video.videoWidth;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = (typeof jsQR !== 'undefined') ? jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "dontInvert",
-      }) : null;
+      // 90ms（約11fps）ごとに間引き実行してCPU負荷を劇的に低減
+      if (!lastScanTime || timestamp - lastScanTime >= 90) {
+        lastScanTime = timestamp;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = (typeof jsQR !== 'undefined') ? jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        }) : null;
 
-      if (code && code.data) {
-        callback(code.data, resultBox);
+        if (code && code.data) {
+          callback(code.data, resultBox);
+        }
       }
     }
     qrScanTimeout = requestAnimationFrame(tick);
@@ -5001,15 +5031,22 @@ function playSystemSound(type = "touch") {
   }
 }
 
-// GASへの非同期通信ログ送信
+// GASへの非同期通信ログ送信（完全非ブロッキング ＆ 通信中インジケータ連動）
 function logWriteToGAS(logType, message) {
   console.log(`[LOG - ${logType}] ${message}`);
 
-  localStorage.setItem('mon_last_update', Date.now());
-  localStorage.setItem('mon_log_latest', `[${logType}] ${message}`);
+  try {
+    localStorage.setItem('mon_last_update', Date.now());
+    localStorage.setItem('mon_log_latest', `[${logType}] ${message}`);
+  } catch(e) {}
   
-  const gasUrl = localStorage.getItem('gas_url') || window.GAME_DATABASE.system.gasUrl;
+  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
   if (!gasUrl) return;
+
+  // フォーム送信や重要イベント時は通信中インジケータを表示
+  if (logType.includes('SUBMIT') || logType.includes('COLLECTED') || logType.includes('LOOP')) {
+    showNetworkLoadingIndicator("通信中…");
+  }
 
   const payload = {
     action: "write_log",
@@ -5018,13 +5055,6 @@ function logWriteToGAS(logType, message) {
     logType: logType,
     message: message
   };
-
-  fetch(gasUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  }).catch(err => console.warn("GAS log sending failed: ", err));
 
   const statusPayload = {
     action: "update_status",
@@ -5036,12 +5066,27 @@ function logWriteToGAS(logType, message) {
     }
   };
 
-  fetch(gasUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(statusPayload)
-  }).catch(err => console.warn("GAS status update failed: ", err));
+  // メインスレッドを妨げないよう非同期キューで送信
+  setTimeout(() => {
+    fetch(gasUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(() => {
+      setTimeout(hideNetworkLoadingIndicator, 400);
+    }).catch(err => {
+      console.warn("GAS log sending failed: ", err);
+      hideNetworkLoadingIndicator();
+    });
+
+    fetch(gasUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(statusPayload)
+    }).catch(err => console.warn("GAS status update failed: ", err));
+  }, 0);
 }
 
 // --- 運営画面からのリモートトリガー受信（ホットリロード ＆ 音響同期） ---

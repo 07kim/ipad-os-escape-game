@@ -110,6 +110,12 @@
           <div class="push-notif-desc" id="push-notif-desc">通知本文</div>
         </div>
       </div>
+      
+      <!-- 🔄 iPadOS風 通信中・ロード中インジケータ -->
+      <div class="network-loading-indicator" id="network-loading-indicator">
+        <div class="loading-spinner-mini"></div>
+        <span id="network-loading-text">ロード中…</span>
+      </div>
 
       <!-- フロストグラス調 iPadOS風モーダルダイアログ -->
       <div class="ipad-modal-overlay" id="ipad-modal-overlay" style="display:none;">
@@ -133,32 +139,40 @@
           <div class="lock-date" id="lock-date">9月4日</div>
         </div>
 
-        <div class="lock-footer">
-          <div class="swipe-to-unlock" id="swipe-to-unlock-btn" onclick="unlockScreen()">
-            <span class="swipe-arrow">→</span> タップしてロック解除
+        <div class="lock-notifications">
+          <div class="lock-notif-header">
+            <span>通知センター</span>
           </div>
+          <div class="lock-notif-list" id="lock-notif-list">
+            <!-- ロック画面通知カード群（app.jsから動的描画） -->
+          </div>
+        </div>
+
+        <div class="lock-footer" onclick="unlockScreen()">
+          <i data-lucide="chevron-up" class="lock-chevron"></i>
+          <span>上にスワイプしてロック解除</span>
         </div>
       </div>
 
       <!-- ========================================== -->
-      <!-- 3. ホーム画面 -->
+      <!-- 3. ホーム画面（スプリングボード） -->
       <!-- ========================================== -->
-      <div class="home-screen" id="home-screen">
-        <!-- アプリグリッド -->
+      <div class="springboard" id="springboard">
+        <!-- アプリアイコングリッド (4×n) -->
         <div class="app-grid">
           
           <div class="app-icon-wrapper" onclick="openApp('meta-app')">
             <div class="app-icon app-meta-icon">
-              <i data-lucide="folder-open"></i>
+              <i data-lucide="folder"></i>
             </div>
             <span class="app-name">26__0094</span>
           </div>
 
           <div class="app-icon-wrapper" onclick="openApp('browser-app')">
-            <div class="app-icon app-browser-icon">
-              <i data-lucide="globe"></i>
+            <div class="app-icon app-safari-icon">
+              <i data-lucide="compass"></i>
             </div>
-            <span class="app-name">Google</span>
+            <span class="app-name">Safari</span>
           </div>
 
           <div class="app-icon-wrapper" onclick="openApp('link-app')">
@@ -170,7 +184,7 @@
 
           <div class="app-icon-wrapper" onclick="openApp('manaba-app')">
             <div class="app-icon app-manaba-icon">
-              <span>m</span>
+              <img src="./manaba.jpg" class="app-icon-img" alt="manaba">
             </div>
             <span class="app-name">manaba</span>
           </div>
@@ -204,7 +218,9 @@
             <div class="dock-icon" onclick="openApp('meta-app')"><i data-lucide="folder-open"></i></div>
             <div class="dock-icon" onclick="openApp('browser-app')"><i data-lucide="globe"></i></div>
             <div class="dock-icon" onclick="openApp('link-app')"><i data-lucide="message-square"></i></div>
-            <div class="dock-icon manaba-dock-icon" onclick="openApp('manaba-app')">m</div>
+            <div class="dock-icon manaba-dock-icon" onclick="openApp('manaba-app')">
+              <img src="./manaba.jpg" class="dock-icon-img" alt="manaba">
+            </div>
           </div>
         </div>
       </div>

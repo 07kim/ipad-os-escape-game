@@ -371,11 +371,18 @@ body {
 .app-link-icon i { color: white; }
 
 .app-manaba-icon {
-  background-color: var(--manaba-green);
-  color: white;
-  font-family: serif;
-  font-size: 42px;
-  font-weight: bold;
+  background-color: #ffffff;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-icon-img, .dock-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .app-mail-icon {
@@ -450,11 +457,51 @@ body {
 }
 
 .manaba-dock-icon {
-  background-color: var(--manaba-green);
-  color: white;
-  font-family: serif;
-  font-size: 32px;
-  font-weight: bold;
+  background-color: #ffffff;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* 🔄 iPadOS風 ステータスバー通信中・ロード中インジケータ */
+.network-loading-indicator {
+  position: absolute;
+  top: 32px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3100;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.network-loading-indicator.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loading-spinner-mini {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* --- アプリケーションウィンドウ共通 --- */
