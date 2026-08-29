@@ -1673,17 +1673,134 @@ function renderMetaObservation(folderId = 'root') {
   safeCreateIcons(container);
 }
 
-// 🔍 フルスクリーン拡大プレビューモーダル開閉
-function openMetaLightbox(imgUrl, title) {
+// 🔍 フルスクリーン拡大プレビューモーダル（ギャラリーカルーセル・スワイプ・矢印送り対応）
+let currentLightboxGallery = [];
+let currentLightboxIndex = 0;
+let lightboxSwipeInitialized = false;
+
+function openMetaLightbox(imgUrl, title, galleryList = null) {
   const modal = document.getElementById('meta-lightbox-modal');
   const img = document.getElementById('lightbox-img');
-  const titleEl = document.getElementById('lightbox-title');
   if (!modal || !img) return;
 
-  img.src = imgUrl;
-  if (titleEl) titleEl.innerText = title || "プレビュー";
+  // ギャラリーリストの特定（現在開いているフォルダの全ファイル）
+  if (galleryList && galleryList.length > 0) {
+    currentLightboxGallery = galleryList;
+  } else {
+    const currentLoop = Number(gameState.loop) || 1;
+    const dbFolders = (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders);
+    const allFolders = (dbFolders && dbFolders.length > 0) ? dbFolders : DEFAULT_OBSERVATION_FOLDERS;
+    const visibleFolders = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop);
+    const targetFolder = allFolders.find(f => f.id === metaObservationCurrentFolder) || visibleFolders[0];
+    currentLightboxGallery = (targetFolder && targetFolder.files && targetFolder.files.length > 0) ? targetFolder.files : [{ fileName: title || 'プレビュー', image: imgUrl }];
+  }
+
+  // 現在の画像のインデックスを特定
+  const foundIdx = currentLightboxGallery.findIndex(item => item.image === imgUrl || item.fileName === title);
+  currentLightboxIndex = foundIdx !== -1 ? foundIdx : 0;
+
+  updateLightboxView();
   modal.style.display = 'flex';
+  safeCreateIcons(modal);
+
+  // スワイプ＆キーボードイベントの登録
+  initLightboxSwipe();
+
   logWriteToGAS("META_LIGHTBOX_OPEN", `プレビュー拡大: ${title || imgUrl}`);
+}
+
+function updateLightboxView() {
+  const img = document.getElementById('lightbox-img');
+  const titleEl = document.getElementById('lightbox-title');
+  const counterEl = document.getElementById('lightbox-counter');
+  const prevBtn = document.getElementById('lightbox-prev-btn');
+  const nextBtn = document.getElementById('lightbox-next-btn');
+  if (!img || currentLightboxGallery.length === 0) return;
+
+  const currentItem = currentLightboxGallery[currentLightboxIndex];
+  if (!currentItem) return;
+
+  img.style.opacity = '0.5';
+  img.src = currentItem.image;
+  img.onload = () => {
+    img.style.opacity = '1';
+  };
+
+  if (titleEl) titleEl.innerText = currentItem.fileName || currentItem.title || "プレビュー";
+  if (counterEl) {
+    if (currentLightboxGallery.length > 1) {
+      counterEl.style.display = 'inline-block';
+      counterEl.innerText = `${currentLightboxIndex + 1} / ${currentLightboxGallery.length}`;
+    } else {
+      counterEl.style.display = 'none';
+    }
+  }
+
+  if (prevBtn && nextBtn) {
+    if (currentLightboxGallery.length <= 1) {
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    } else {
+      prevBtn.style.display = 'flex';
+      nextBtn.style.display = 'flex';
+    }
+  }
+}
+
+function navigateMetaLightbox(direction) {
+  if (currentLightboxGallery.length <= 1) return;
+  currentLightboxIndex = (currentLightboxIndex + direction + currentLightboxGallery.length) % currentLightboxGallery.length;
+  updateLightboxView();
+}
+
+function initLightboxSwipe() {
+  if (lightboxSwipeInitialized) return;
+  lightboxSwipeInitialized = true;
+
+  const swipeArea = document.getElementById('lightbox-body-swipe-area') || document.getElementById('meta-lightbox-modal');
+  if (!swipeArea) return;
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  swipeArea.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  swipeArea.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - touchStartX;
+      const deltaY = e.changedTouches[0].clientY - touchStartY;
+
+      // 横スワイプ判定（40px以上の移動かつ縦より横の移動が大きい場合）
+      if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX < 0) {
+          // 左スワイプ -> 次の画像へ
+          navigateMetaLightbox(1);
+        } else {
+          // 右スワイプ -> 前の画像へ
+          navigateMetaLightbox(-1);
+        }
+      }
+    }
+  }, { passive: true });
+
+  // キーボード左右矢印キー対応
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('meta-lightbox-modal');
+    if (modal && modal.style.display !== 'none') {
+      if (e.key === 'ArrowRight') {
+        navigateMetaLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        navigateMetaLightbox(-1);
+      } else if (e.key === 'Escape') {
+        closeMetaLightbox();
+      }
+    }
+  });
 }
 
 function closeMetaLightbox() {

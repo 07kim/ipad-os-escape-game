@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.25.0">
+  <link rel="stylesheet" href="style.css?v=2.26.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -2311,14 +2311,24 @@
         </div>
       </div>
 
-  <!-- フルスクリーン拡大プレビューモーダル (概要/順路用) -->
+  <!-- フルスクリーン拡大プレビューモーダル (観測画像ギャラリー) -->
   <div class="modal-overlay" id="meta-lightbox-modal" style="display:none;" onclick="closeMetaLightbox()">
     <div class="lightbox-content-wrapper" onclick="event.stopPropagation()">
-      <button class="lightbox-close-btn" onclick="closeMetaLightbox()">✕</button>
+      <button class="lightbox-close-btn" onclick="closeMetaLightbox()" title="閉じる">✕</button>
+      
+      <!-- 左右ナビゲーション矢印ボタン -->
+      <button class="lightbox-nav-btn prev" id="lightbox-prev-btn" onclick="navigateMetaLightbox(-1)" title="前の画像へ">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button class="lightbox-nav-btn next" id="lightbox-next-btn" onclick="navigateMetaLightbox(1)" title="次の画像へ">
+        <i data-lucide="chevron-right"></i>
+      </button>
+
       <div class="lightbox-header">
         <span id="lightbox-title">プレビュー</span>
+        <span class="lightbox-counter" id="lightbox-counter"></span>
       </div>
-      <div class="lightbox-body">
+      <div class="lightbox-body" id="lightbox-body-swipe-area">
         <img id="lightbox-img" src="" alt="拡大プレビュー">
       </div>
     </div>
@@ -2397,7 +2407,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.25.0"></script>
-  <script src="app.js?v=2.25.0"></script>
+  <script src="data.js?v=2.26.0"></script>
+  <script src="app.js?v=2.26.0"></script>
 </body>
 </html>
