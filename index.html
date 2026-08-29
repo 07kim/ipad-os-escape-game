@@ -199,38 +199,25 @@
         <div class="meta-container">
           <!-- サイドメニュー -->
           <div class="meta-sidebar">
-            <button class="meta-tab-btn active" id="meta-tab-overview-btn" onclick="switchMetaTab('overview')"><i data-lucide="file-text"></i> 概要</button>
-            <button class="meta-tab-btn" id="meta-tab-route-btn" onclick="switchMetaTab('route')"><i data-lucide="map"></i> 順路</button>
+            <button class="meta-tab-btn active" id="meta-tab-observation-btn" onclick="switchMetaTab('observation')"><i data-lucide="eye"></i> 観測</button>
             <button class="meta-tab-btn" id="meta-tab-evidence-btn" onclick="switchMetaTab('evidence')"><i data-lucide="folder-archive"></i> 調査資料</button>
             <button class="meta-tab-btn" id="meta-tab-memo-btn" onclick="switchMetaTab('memo')"><i data-lucide="edit-3"></i> メモ</button>
           </div>
           <!-- コンテンツ表示エリア -->
           <div class="meta-content">
-            <!-- 1. 概要 (エクスプローラー風 ファイル管理ビュー) -->
-            <div class="meta-panel active" id="meta-panel-overview">
+            <!-- 1. 観測 (エクスプローラー風 ファイル管理ビュー) -->
+            <div class="meta-panel active" id="meta-panel-observation">
               <div class="explorer-address-bar">
                 <i data-lucide="hard-drive"></i>
-                <span class="explorer-path">PC &gt; 内部ストレージ &gt; 概要資料</span>
-                <span class="explorer-file-count" id="overview-file-count">0 items</span>
+                <span class="explorer-path" id="meta-observation-path">PC &gt; 内部ストレージ &gt; 観測</span>
+                <span class="explorer-file-count" id="observation-file-count">0 items</span>
               </div>
-              <div class="finder-grid" id="meta-overview-grid">
+              <div class="finder-grid" id="meta-observation-grid">
                 <!-- JSで動的レンダリング -->
               </div>
             </div>
 
-            <!-- 2. 順路 (アスペクト比維持 1枚最大表示マップ) -->
-            <div class="meta-panel" id="meta-panel-route">
-              <div class="panel-header-row">
-                <h2 id="meta-route-title">🗺️ 調査順路マップ</h2>
-                <span class="tap-zoom-hint"><i data-lucide="zoom-in"></i> タップで拡大</span>
-              </div>
-              <div class="route-map-container" onclick="openMetaLightbox(document.getElementById('meta-route-img').src, document.getElementById('meta-route-title').innerText)">
-                <img id="meta-route-img" class="route-fit-img" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600" alt="順路マップ">
-              </div>
-              <div class="route-note-box" id="meta-route-note">指定の調査エリアを探索せよ。</div>
-            </div>
-
-            <!-- 3. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
+            <!-- 2. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
             <div class="meta-panel" id="meta-panel-evidence">
               <div class="panel-header-row">
                 <h2>📦 調査資料・証拠アーカイブ</h2>

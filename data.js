@@ -46,8 +46,8 @@ window.GAME_DATABASE = {
   metaApp: {
     title: "26__0094",
 
-    // 【1. 概要タブ用ファイル一覧】周回ごとに解放（1周目:2枚 / 2周目:4枚 / 3周目:6枚、最大6枚）
-    overviewFiles: [
+    // 【1. 観測タブ用ファイル一覧】周回ごとに解放（1周目:2枚 / 2周目:4枚 / 3周目:6枚、最大6枚）
+    observationFiles: [
       {
         id: "overview_01",
         unlockLoop: 1,
@@ -97,28 +97,6 @@ window.GAME_DATABASE = {
         desc: "時空修復アンカー起動コード"
       }
     ],
-
-    // 【2. 順路タブ用マップ】周回連動（パターンA: 該当周回のマップ1枚をアスペクト比維持で最大表示）
-    routeMaps: {
-      1: {
-        loop: 1,
-        title: "大ホール ＆ 研修室1〜3 調査順路",
-        image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
-        note: "大ホールを出発し、研修室3・PCルームを探索せよ。"
-      },
-      2: {
-        loop: 2,
-        title: "未来資料保管庫 ＆ 役員室 調査順路",
-        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600",
-        note: "研修室4の未来資料と鵜沢の足取りを追跡せよ。"
-      },
-      3: {
-        loop: 3,
-        title: "U.Z.W.本社タワー ＆ 最終脱出ルート",
-        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600",
-        note: "セキュリティを突破し、最上階タイムマシンへ到達せよ。"
-      }
-    },
 
     // 【3. 調査資料タブ用アイテム】カード形式、QRコード読み取り対応、周回別テキスト変化対応、保持継続
     evidenceItems: [

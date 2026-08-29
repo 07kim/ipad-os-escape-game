@@ -58,7 +58,7 @@ let gameState = {
   manabaUser: null,
   addedFriends: ["committee_group"], // 初期友達（全体連絡グループのみ）
   activeApp: null,
-  activeMetaTab: "overview",
+  activeMetaTab: "observation",
   activeManabaTab: "mypage",
   activeGSheetTab: "名簿データ",
   currentBrowserPage: "home", // home, results, webpage
@@ -1508,7 +1508,10 @@ function performMasterReset() {
 // ==========================================================================
 // ① メタアプリ「26__0094」ロジック
 // ==========================================================================
+let metaObservationCurrentFolder = 'root';
+
 function switchMetaTab(tabId) {
+  if (tabId === 'overview') tabId = 'observation';
   gameState.activeMetaTab = tabId;
 
   document.querySelectorAll('.meta-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1528,10 +1531,8 @@ function switchMetaTab(tabId) {
   const inlineScanner = document.getElementById('meta-qr-inline-scanner');
   if (inlineScanner) inlineScanner.style.display = 'none';
 
-  if (tabId === 'overview') {
-    renderMetaOverview();
-  } else if (tabId === 'route') {
-    renderMetaRoute();
+  if (tabId === 'observation') {
+    renderMetaObservation(metaObservationCurrentFolder);
   } else if (tabId === 'evidence') {
     renderMetaEvidence();
   } else if (tabId === 'memo') {
@@ -1539,56 +1540,74 @@ function switchMetaTab(tabId) {
   }
 }
 
-// 📁 【概要】タブ描画: エクスプローラー風ファイル管理ビュー
-function renderMetaOverview() {
-  const container = document.getElementById('meta-overview-grid');
-  const countEl = document.getElementById('overview-file-count');
+// 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー
+function renderMetaObservation(folder = 'root') {
+  metaObservationCurrentFolder = folder;
+  const container = document.getElementById('meta-observation-grid') || document.getElementById('meta-overview-grid');
+  const countEl = document.getElementById('observation-file-count') || document.getElementById('overview-file-count');
+  const pathEl = document.getElementById('meta-observation-path');
   if (!container) return;
 
   const currentLoop = Number(gameState.loop) || 1;
   const maxVisible = currentLoop === 1 ? 2 : (currentLoop === 2 ? 4 : 6);
-
-  const allFiles = window.GAME_DATABASE.metaApp.overviewFiles || [];
+  const allFiles = (window.GAME_DATABASE.metaApp && (window.GAME_DATABASE.metaApp.observationFiles || window.GAME_DATABASE.metaApp.overviewFiles)) || [];
   const visibleFiles = allFiles.slice(0, maxVisible);
 
-  if (countEl) {
-    countEl.innerText = `${visibleFiles.length} items`;
-  }
+  if (folder === 'root') {
+    // 最上位階層: 「観測」フォルダを表示
+    if (pathEl) {
+      pathEl.innerHTML = `PC &gt; 内部ストレージ`;
+    }
+    if (countEl) {
+      countEl.innerText = `1 folder`;
+    }
 
-  container.innerHTML = visibleFiles.map((file, idx) => `
-    <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
-      <div class="finder-thumb-wrapper">
-        <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
+    container.innerHTML = `
+      <div class="finder-item" onclick="renderMetaObservation('observation')" title="ダブルクリック/タップで開く">
+        <div class="finder-thumb-wrapper">
+          <div class="finder-folder-icon">
+            <i data-lucide="folder"></i>
+          </div>
+        </div>
+        <div class="finder-file-name">観測</div>
+        <div class="finder-file-desc">フォルダ (${visibleFiles.length} ファイル)</div>
       </div>
-      <div class="finder-file-name">${file.fileName}</div>
-      <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
-    </div>
-  `).join('');
+    `;
+  } else {
+    // 「観測」フォルダ内: 周回解放された観測ファイル一覧
+    if (pathEl) {
+      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;">PC &gt; 内部ストレージ</a> &gt; 観測`;
+    }
+    if (countEl) {
+      countEl.innerText = `${visibleFiles.length} items`;
+    }
+
+    let html = `
+      <div class="finder-item" onclick="renderMetaObservation('root')" title="上の階層へ戻る" style="opacity:0.85;">
+        <div class="finder-thumb-wrapper" style="background:#f1f5f9;">
+          <div class="finder-folder-icon" style="background:transparent; color:#64748b;">
+            <i data-lucide="corner-left-up"></i>
+          </div>
+        </div>
+        <div class="finder-file-name">.. (上へ戻る)</div>
+        <div class="finder-file-desc">親ディレクトリ</div>
+      </div>
+    `;
+
+    html += visibleFiles.map((file) => `
+      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
+        <div class="finder-thumb-wrapper">
+          <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy">
+        </div>
+        <div class="finder-file-name">${file.fileName}</div>
+        <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
+  }
 
   safeCreateIcons(container);
-}
-
-// 🗺️ 【順路】タブ描画: マップ1枚最大表示 (アスペクト比維持)
-function renderMetaRoute() {
-  const currentLoop = Number(gameState.loop) || 1;
-  const routeData = (window.GAME_DATABASE.metaApp.routeMaps && window.GAME_DATABASE.metaApp.routeMaps[currentLoop]) || {
-    title: "調査順路マップ",
-    image: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600",
-    note: "指定の調査エリアを探索せよ。"
-  };
-
-  const titleEl = document.getElementById('meta-route-title');
-  const imgEl = document.getElementById('meta-route-img');
-  const noteEl = document.getElementById('meta-route-note');
-
-  if (titleEl) titleEl.innerText = `🗺️ 調査順路マップ`;
-  if (imgEl) {
-    imgEl.src = routeData.image;
-    imgEl.alt = "調査順路マップ";
-  }
-  if (noteEl) noteEl.innerText = routeData.note;
-
-  safeCreateIcons(document.getElementById('meta-panel-route'));
 }
 
 // 🔍 フルスクリーン拡大プレビューモーダル開閉
