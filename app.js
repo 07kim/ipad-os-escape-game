@@ -338,10 +338,14 @@ function executeRemoteAdminCommand(cmd) {
     p = Object.assign({}, p, p.params);
   }
 
-  // コマンドが古すぎる場合はスキップ（10分以上前）
+  // コマンドが古い場合はスキップ（30秒以上前の過去コマンドは再実行しない）
   const cmdTimestamp = p.timestamp || cmd.timestamp || 0;
   const cmdAge = cmdTimestamp ? (Date.now() - cmdTimestamp) : 0;
-  if (cmdAge > 600000) return;
+  if (cmdTimestamp && cmdAge > 30000) {
+    lastExecutedCommandId = cmd.id;
+    localStorage.setItem('last_exec_cmd_id', cmd.id);
+    return;
+  }
 
   console.log("⚡ 運営からの遠隔コマンドを受信・実行します:", cmd, p);
   lastExecutedCommandId = cmd.id;
@@ -362,10 +366,11 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行 ＆ 時刻09:04リセット ＆ 勝手にロック画面へ移行
+  // ③ 周回強制移行 ＆ 時刻09:04リセット
   if (isLoopChange) {
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
+      const isActualLoopChange = (nextLoop !== gameState.loop);
       gameState.loop = nextLoop;
       localStorage.setItem('game_loop', String(nextLoop));
       
@@ -377,12 +382,14 @@ function executeRemoteAdminCommand(cmd) {
       // 🔄 メタアプリ以外の全アプリ（manaba, 電卓, バブル, Safari, 電話, メール, LINK）を完全リセット！
       resetAllAppsForNewLoop();
 
-      // 通知は出さず、勝手にロック画面へ強制移行
-      showLockScreen();
+      // 明示的にforceLockが指定されている場合、または実際の周回移行時のみロック
+      if (p.forceLock === true || (isActualLoopChange && p.forceLock !== false)) {
+        showLockScreen();
+      }
       updateAppUI();
     }
   } else if (p.forceLock === true || p.lock === true) {
-    // ④ ロック画面強制
+    // ④ 明示的なロック画面強制指示
     showLockScreen();
   }
 
@@ -1300,7 +1307,7 @@ function showLockScreen() {
   }
 }
 
-// --- 画面上端からの下スワイプでロック画面を呼び出し（iPadOSジェスチャー） ---
+// --- 画面上端からの下スワイプでロック画面を呼び出し（iPadOSカバーシートジェスチャー：誤爆防止厳格化） ---
 function initTopSwipeForLockScreen() {
   let touchStartY = 0;
   let touchStartX = 0;
@@ -1309,8 +1316,8 @@ function initTopSwipeForLockScreen() {
   document.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length === 1) {
       const touch = e.touches[0];
-      // 画面上部75px以内でタッチ開始された場合のみ追跡
-      if (touch.clientY <= 75) {
+      // 画面最上部（ステータスバー付近: 28px以内）でタッチ開始された場合のみ追跡
+      if (touch.clientY <= 28) {
         touchStartY = touch.clientY;
         touchStartX = touch.clientX;
         isTrackingTopSwipe = true;
@@ -1326,8 +1333,8 @@ function initTopSwipeForLockScreen() {
     const deltaY = touch.clientY - touchStartY;
     const deltaX = Math.abs(touch.clientX - touchStartX);
 
-    // 下方向に60px以上スワイプかつ横ブレが少ない場合
-    if (deltaY > 60 && deltaX < 80) {
+    // 下方向に80px以上しっかりスワイプかつ横ブレが少ない場合のみロック画面呼び出し
+    if (deltaY >= 80 && deltaY > deltaX * 1.5) {
       isTrackingTopSwipe = false;
       showLockScreen();
     }
@@ -1337,15 +1344,15 @@ function initTopSwipeForLockScreen() {
     isTrackingTopSwipe = false;
   }, { passive: true });
 
-  // ステータスバー（PC用マウスクリック対応）
-  const statusBar = document.getElementById('status-bar');
+  // ステータスバー（PC用：明確に80px以上下ドラッグした場合のみ）
+  const statusBar = document.getElementById('status-bar') || document.querySelector('.status-bar');
   if (statusBar) {
     let mouseStartY = 0;
     statusBar.addEventListener('mousedown', (e) => {
       mouseStartY = e.clientY;
     });
     document.addEventListener('mouseup', (e) => {
-      if (mouseStartY > 0 && (e.clientY - mouseStartY) > 50) {
+      if (mouseStartY > 0 && (e.clientY - mouseStartY) >= 80) {
         showLockScreen();
       }
       mouseStartY = 0;
