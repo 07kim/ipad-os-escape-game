@@ -366,11 +366,10 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行 ＆ 時刻09:04リセット
+  // ③ 周回強制移行 ＆ 時刻09:04リセット ＆ ロック画面へ強制移行
   if (isLoopChange) {
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
-      const isActualLoopChange = (nextLoop !== gameState.loop);
       gameState.loop = nextLoop;
       localStorage.setItem('game_loop', String(nextLoop));
       
@@ -382,10 +381,8 @@ function executeRemoteAdminCommand(cmd) {
       // 🔄 メタアプリ以外の全アプリ（manaba, 電卓, バブル, Safari, 電話, メール, LINK）を完全リセット！
       resetAllAppsForNewLoop();
 
-      // 明示的にforceLockが指定されている場合、または実際の周回移行時のみロック
-      if (p.forceLock === true || (isActualLoopChange && p.forceLock !== false)) {
-        showLockScreen();
-      }
+      // 🔒 周回の切り替わりでは必ずロック画面へ強制移行
+      showLockScreen();
       updateAppUI();
     }
   } else if (p.forceLock === true || p.lock === true) {
