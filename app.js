@@ -3094,10 +3094,10 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
     } else if (urls && urls.length > 0) {
       const firstUrl = urls[0];
       const isGForm = firstUrl.includes('google.com/forms');
-      const ogpTitle = isGForm ? "2126年 メンタルヘルス・スキャン" : "共有リンク";
-      const ogpDesc = isGForm ? "学友会執行委員会 内部保管データ申請フォーム" : firstUrl;
+      const ogpTitle = isGForm ? "資料の取り扱いに関して" : "共有リンク";
+      const ogpDesc = isGForm ? "資料の保存・廃棄について、皆様のご意見を伺います。" : firstUrl;
       const ogpImg = isGForm 
-        ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600" 
+        ? "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=600" 
         : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600";
 
       ogpHtml = `
@@ -3339,8 +3339,8 @@ function openLinkInAppForm(formId) {
 
   // Googleフォーム公式完全準拠UI
   const formData = {
-    title: "部署業務の認知度",
-    description: "学友会執行委員会 内部保管データ申請フォーム\n※ 会の活動を左右する重要なフォームのため、必ず期限までに回答してください。"
+    title: "資料の取り扱いに関して",
+    description: "資料の保存・廃棄について、皆様のご意見を伺います。"
   };
 
   bodyEl.innerHTML = `
@@ -3349,46 +3349,53 @@ function openLinkInAppForm(formId) {
       <div class="gform-header">
         <div class="gform-header-bar"></div>
         <div>
-          <h1>${formData.title}</h1>
-          <p>${formData.description.replace(/\n/g, '<br>')}</p>
+          <h1 style="font-size:24px; font-weight:600; color:#202124; margin:0 0 10px 0;">${formData.title}</h1>
+          <p style="font-size:13.5px; color:#202124; margin:0 0 16px 0; line-height:1.6;">${formData.description.replace(/\n/g, '<br>')}</p>
         </div>
-        <div class="gform-account-bar">
-          <div style="display:flex; align-items:center; gap:6px;">
-            <i data-lucide="user-check" style="width:15px; height:15px; color:#1a73e8;"></i>
-            <span>学友会アカウント (<strong>cit_student@cit.ac.jp</strong>) で回答中</span>
-          </div>
-          <span style="font-size:11px; color:#1a73e8; cursor:pointer;">アカウントを切り替える</span>
-        </div>
-        <div class="gform-required-note">* 必須</div>
+        <div class="gform-required-note" style="color:#d93025; font-size:12px; margin-top:8px;">* 必須の質問です</div>
       </div>
 
-      <!-- 2. 質問1: 氏名 -->
+      <!-- 2. 質問1: メール -->
       <div class="gform-card">
-        <label class="gform-label">氏名 <span class="req">*</span></label>
+        <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">メール <span class="req" style="color:#d93025;">*</span></label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#202124; cursor:pointer;">
+          <input type="checkbox" id="inapp-form-email-check" checked disabled style="width:18px; height:18px; accent-color:#673ab7;">
+          <span>返信に表示するメールアドレスとして <strong>s23c1044kr@chibatech.ac.jp</strong> を記録する</span>
+        </label>
+      </div>
+
+      <!-- 3. 質問2: 氏名 -->
+      <div class="gform-card">
+        <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">氏名</label>
         <input type="text" class="gform-input" id="inapp-form-name" placeholder="回答を入力">
       </div>
 
-      <!-- 3. 質問2: 所属・学籍番号 -->
+      <!-- 4. 質問3: 意見（段落記述） -->
       <div class="gform-card">
-        <label class="gform-label">所属・学籍番号 <span class="req">*</span></label>
-        <input type="text" class="gform-input" id="inapp-form-dept" placeholder="回答を入力（例: M25b1046）">
+        <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block; line-height:1.6;">過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。</label>
+        <textarea class="gform-textarea" id="inapp-form-opinion" placeholder="回答を入力" style="min-height:80px;"></textarea>
       </div>
 
-      <!-- 4. 質問3: 部署業務への理解度（段落記述） -->
+      <!-- 5. 質問4: お手伝い作業（複数回答チェックボックス） -->
       <div class="gform-card">
-        <label class="gform-label">部署業務への理解度・意見 <span class="req">*</span></label>
-        <textarea class="gform-textarea" id="inapp-form-reason" placeholder="回答を入力"></textarea>
+        <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:12px; display:block; line-height:1.6;">資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)</label>
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:#202124;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" class="inapp-task-chk" value="資料の分別作業" style="width:18px; height:18px; accent-color:#673ab7;"> 資料の分別作業</label>
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" class="inapp-task-chk" value="指定場所までの運搬" style="width:18px; height:18px; accent-color:#673ab7;"> 指定場所までの運搬</label>
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" class="inapp-task-chk" value="デジタル化(スキャン等)の作業" style="width:18px; height:18px; accent-color:#673ab7;"> デジタル化(スキャン等)の作業</label>
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" class="inapp-task-chk" value="特になし" style="width:18px; height:18px; accent-color:#673ab7;"> 特になし</label>
+        </div>
       </div>
 
-      <!-- 5. アクションボタン行 -->
+      <!-- 6. アクションボタン行 -->
       <div class="gform-actions-row">
         <button class="gform-submit-btn" type="button" onclick="submitInAppForm()">送信</button>
         <button class="gform-clear-btn" type="button" onclick="clearInAppForm()">フォームをクリア</button>
       </div>
 
-      <!-- 6. Google公式フッター注記 -->
+      <!-- 7. Google公式フッター注記 -->
       <div class="gform-legal-footer">
-        <div>パスワードを Google フォームで送信しないでください。</div>
+        <div>Google フォームでパスワードを送信しないでください。</div>
         <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
         <div class="gform-branding">
           <span style="font-weight:700; color:#5f6368;">Google</span> フォーム
@@ -3412,16 +3419,15 @@ function openLinkInAppForm(formId) {
 
   overlay.style.display = 'flex';
   safeCreateIcons(overlay);
-  logWriteToGAS("LINK_INAPP_FORM_OPEN", "LINE風アプリ内オーバーレイでフォームを開きました。");
+  logWriteToGAS("LINK_INAPP_FORM_OPEN", "LINKアプリ内オーバーレイで資料取り扱いフォームを開きました。");
 }
 
 function clearInAppForm() {
   const nameEl = document.getElementById('inapp-form-name');
-  const deptEl = document.getElementById('inapp-form-dept');
-  const reasonEl = document.getElementById('inapp-form-reason');
+  const opinionEl = document.getElementById('inapp-form-opinion');
   if (nameEl) nameEl.value = '';
-  if (deptEl) deptEl.value = '';
-  if (reasonEl) reasonEl.value = '';
+  if (opinionEl) opinionEl.value = '';
+  document.querySelectorAll('.inapp-task-chk').forEach(c => c.checked = false);
 }
 
 function closeLinkInAppForm() {
@@ -3435,63 +3441,46 @@ function refreshLinkInAppForm() {
 
 function submitInAppForm() {
   const nameEl = document.getElementById('inapp-form-name');
-  const deptEl = document.getElementById('inapp-form-dept');
-  const reasonEl = document.getElementById('inapp-form-reason');
+  const opinionEl = document.getElementById('inapp-form-opinion');
   const name = nameEl ? nameEl.value.trim() : '';
-  const dept = deptEl ? deptEl.value.trim() : '';
-  const reason = reasonEl ? reasonEl.value.trim() : '';
+  const opinion = opinionEl ? opinionEl.value.trim() : '';
 
-  if (!name) {
-    alert("必須項目（氏名）を入力してください。");
-    return;
-  }
-
-  // GASへ回答データを送信（スプレッドシート反映）
-  const gasUrl = getResolvedGasUrl();
-  if (gasUrl) {
-    const payload = {
-      action: 'submit_form',
-      formTitle: '部署業務の認知度',
-      name: name,
-      dept: dept,
-      reason: reason,
-      timestamp: new Date().toISOString()
-    };
-    fetch(gasUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'no-cors'
-    }).catch(e => console.warn('フォーム送信GAS error:', e));
-  }
+  const selectedTasks = [];
+  document.querySelectorAll('.inapp-task-chk:checked').forEach(c => selectedTasks.push(c.value));
 
   // 送信完了画面に切り替え（Google Forms公式仕様）
   const bodyEl = document.getElementById('link-inapp-form-body');
   if (bodyEl) {
     bodyEl.innerHTML = `
       <div class="gform-container">
-        <div class="gform-header">
+        <div class="gform-header" style="padding:24px;">
           <div class="gform-header-bar"></div>
           <div>
-            <h1 style="font-size:28px;">部署業務の認知度</h1>
-            <p style="padding-bottom:24px;">回答を記録しました。</p>
+            <h1 style="font-size:24px; font-weight:600; color:#202124; margin:0 0 16px 0;">資料の取り扱いに関して</h1>
+            <p style="font-size:14px; color:#202124; margin:0 0 24px 0;">回答を記録しました。</p>
+          </div>
+          <div style="margin-top:16px;">
+            <a href="javascript:void(0)" onclick="openLinkInAppForm()" style="color:#1a73e8; font-size:14px; text-decoration:underline;">別の回答を送信</a>
           </div>
         </div>
-        <div style="margin-top:16px; padding:0 4px;">
-          <a href="javascript:void(0)" onclick="openLinkInAppForm('form_mental_scan')" style="color:#1a73e8; font-size:14px; text-decoration:underline;">別の回答を送信</a>
-        </div>
         <div class="gform-legal-footer" style="margin-top:48px;">
+          <div>Google フォームでパスワードを送信しないでください。</div>
           <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
           <div class="gform-branding">
             <span style="font-weight:700; color:#5f6368;">Google</span> フォーム
           </div>
         </div>
       </div>
+      <!-- 送信完了画面でも右下に編集ペンを表示 -->
+      <div class="gform-edit-fab" onclick="openHackingEditor()" title="フォームを編集">
+        <i data-lucide="edit-2"></i>
+      </div>
     `;
+    safeCreateIcons(bodyEl);
   }
 
   playSystemSound("success");
-  logWriteToGAS("FORM_SUBMITTED", `フォーム送信: ${name} / ${dept}`);
+  logWriteToGAS("FORM_SUBMITTED", `資料取り扱いフォーム送信: ${name || '無記名'}`);
 }
 
 // ==========================================================================
@@ -3512,7 +3501,7 @@ function openHackingForm() {
   if (descEl) descEl.innerText = form.description;
 
   safeCreateIcons(document.getElementById('gform-view'));
-  logWriteToGAS("HACKING_FORM_OPEN", "2126年メンタルヘルス・スキャンを表示しました。");
+  logWriteToGAS("HACKING_FORM_OPEN", "資料の取り扱いに関して フォームを表示しました。");
 }
 
 // 🟣 Googleフォーム公式風 編集画面を開く
@@ -3542,32 +3531,38 @@ function switchEditorTab(tabId) {
   safeCreateIcons(document.getElementById('gform-editor-view'));
 }
 
-// 🟣 Googleフォーム回答サブタブ（概要 / 質問 / 個別）のデータとコントローラ
+// 🟣 Googleフォーム回答サブタブ（要約 / 質問 / 個別）のデータとコントローラ
 const GFORM_RESPONSES_DATA = [
   {
-    name: "陣内 樹",
-    dept: "J-098（神崎研究室）",
-    reason: "神崎教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。",
-    timestamp: "2126/08/21 16:30:15"
+    id: 1,
+    name: "外園胡春",
+    email: "s2342098cl@chibatech.ac.jp",
+    opinion: "良い記録だけでなく、批判や反省点などのネガティブな経緯等も客観的に残すべきだと思います。また、保存に関しては大学の資料として残してもらえればいいかなと。資料が活かされるのは再発防止の時やこれから挑戦するときが多いので、客観性を重視したいと個人的には思います",
+    tasks: ["資料の分別作業", "デジタル化(スキャン等)の作業"],
+    timestamp: "2026/08/30 20:50"
   },
   {
-    name: "深澤 文哉",
-    dept: "F-042（執行委員会）",
-    reason: "学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。",
-    timestamp: "2126/08/21 17:15:42"
+    id: 2,
+    name: "比嘉俊希",
+    email: "s23a1058uw@chibatech.ac.jp",
+    opinion: "「もう使わないなら消してもいいのでは」と思うこともありますが、後々検証が必要になるかもしれないので残すのが無難かなと思っています。今後データが増えない保存用であれば、できる限り長持ちする物理媒体にまとめて一括保管しておくのが手っ取り早くていいんじゃないかなって あとはせっかくならみんなの写真とかもどこかに保存して、OBが見れるようにしたら嬉しい",
+    tasks: ["資料の分別作業", "指定場所までの運搬", "デジタル化(スキャン等)の作業"],
+    timestamp: "2026/08/30 20:55"
   },
   {
-    name: "犬飼 玲",
-    dept: "I-012（学内保安統制局）",
-    reason: "【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。",
-    timestamp: "2126/08/22 08:50:04"
+    id: 3,
+    name: "七瀬いろは",
+    email: "s2341013qr@chibatech.ac.jp",
+    opinion: "保存の精度や何を保存するかも大事ですが、何より誰かが使いやすいデータとして残すのが大事だと思います！フォルダ整理をしっかりするとか、AIを活かして検索しやすくするとか。こういう資料が活かされるケースを調べて、それに合わせてまとまった資料を作るのもいいんじゃないかと思います！全然私やりますよ！",
+    tasks: ["資料の分別作業"],
+    timestamp: "2026/08/30 20:59"
   }
 ];
 
 const GFORM_QUESTIONS_DEF = [
   { id: 'name', title: '氏名', key: 'name' },
-  { id: 'dept', title: '所属・学籍番号', key: 'dept' },
-  { id: 'reason', title: '部署業務への理解度・意見', key: 'reason' }
+  { id: 'opinion', title: '過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。', key: 'opinion' },
+  { id: 'tasks', title: '資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)', key: 'tasks' }
 ];
 
 let gformCurrentQuestionIndex = 0;
@@ -3612,21 +3607,79 @@ function nextGFormQuestion() {
   }
 }
 
+// 設問別回答カード表示（画像1, 2, 3準拠）
 function renderGFormQuestionView() {
   const qDef = GFORM_QUESTIONS_DEF[gformCurrentQuestionIndex];
   const container = document.getElementById('gform-question-content');
   if (!container || !qDef) return;
 
   let html = '';
-  GFORM_RESPONSES_DATA.forEach((resp) => {
-    html += `
-      <div class="response-answer-item" style="padding:12px 14px; margin-bottom:8px; background:#f8f9fa; border-radius:6px; border:1px solid #e8eaed;">
-        <div style="font-size:11px; color:#5f6368; margin-bottom:4px; font-weight:600;">回答者: ${resp.name}</div>
-        <div style="font-size:14px; color:#202124; line-height:1.6;">${resp[qDef.key]}</div>
-      </div>
-    `;
-  });
+
+  if (gformCurrentQuestionIndex === 0) {
+    // 設問1: 氏名 (七瀬、外園、比嘉)
+    const names = ["七瀬いろは", "外園胡春", "比嘉俊希"];
+    names.forEach(name => {
+      html += `
+        <div class="response-detail-card" style="padding:16px 20px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #dadce0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+          <div style="font-size:15px; color:#202124; margin-bottom:8px; font-weight:500;">${name}</div>
+          <div style="font-size:12px; color:#1a73e8; font-weight:500;">1 件の回答</div>
+        </div>
+      `;
+    });
+  } else if (gformCurrentQuestionIndex === 1) {
+    // 設問2: 意見 (比嘉、七瀬、外園)
+    const opinions = [
+      GFORM_RESPONSES_DATA[1].opinion,
+      GFORM_RESPONSES_DATA[2].opinion,
+      GFORM_RESPONSES_DATA[0].opinion
+    ];
+    opinions.forEach(op => {
+      html += `
+        <div class="response-detail-card" style="padding:16px 20px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #dadce0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+          <div style="font-size:14px; color:#202124; line-height:1.65; margin-bottom:10px;">${op}</div>
+          <div style="font-size:12px; color:#1a73e8; font-weight:500;">1 件の回答</div>
+        </div>
+      `;
+    });
+  } else if (gformCurrentQuestionIndex === 2) {
+    // 設問3: お手伝い (比嘉3種、外園2種、七瀬1種)
+    const allOptions = ["資料の分別作業", "指定場所までの運搬", "デジタル化(スキャン等)の作業", "特になし"];
+    const taskCombinations = [
+      GFORM_RESPONSES_DATA[1].tasks, // 比嘉
+      GFORM_RESPONSES_DATA[0].tasks, // 外園
+      GFORM_RESPONSES_DATA[2].tasks  // 七瀬
+    ];
+
+    taskCombinations.forEach(selected => {
+      let chkHtml = allOptions.map(opt => {
+        const isChecked = selected.includes(opt);
+        return `
+          <div style="display:flex; align-items:center; gap:8px; font-size:13.5px; color:${isChecked ? '#202124' : '#70757a'}; margin-bottom:6px;">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="width:16px; height:16px; accent-color:#5f6368;">
+            <span>${opt}</span>
+          </div>
+        `;
+      }).join('');
+
+      html += `
+        <div class="response-detail-card" style="padding:16px 20px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #dadce0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+          <div style="margin-bottom:12px;">${chkHtml}</div>
+          <div style="font-size:12px; color:#1a73e8; font-weight:500; border-top:1px solid #f1f3f4; padding-top:8px;">1 件の回答</div>
+        </div>
+      `;
+    });
+  }
+
+  // 下部ページャーバー
+  html += `
+    <div style="display:flex; justify-content:flex-end; gap:8px; padding-top:8px;">
+      <button class="gform-page-nav-btn" onclick="prevGFormQuestion()" style="padding:6px 12px; background:#fff; border:1px solid #dadce0; border-radius:4px; cursor:pointer;"><i data-lucide="chevron-left" style="width:16px; height:16px;"></i></button>
+      <button class="gform-page-nav-btn" onclick="nextGFormQuestion()" style="padding:6px 12px; background:#fff; border:1px solid #dadce0; border-radius:4px; cursor:pointer;"><i data-lucide="chevron-right" style="width:16px; height:16px;"></i></button>
+    </div>
+  `;
+
   container.innerHTML = html;
+  safeCreateIcons(container);
 }
 
 function prevGFormIndividual() {
@@ -3643,6 +3696,7 @@ function nextGFormIndividual() {
   }
 }
 
+// 個別回答シート表示（画像4, 5, 8準拠）
 function renderGFormIndividualView() {
   const resp = GFORM_RESPONSES_DATA[gformCurrentIndividualIndex];
   const counterEl = document.getElementById('gform-indiv-counter');
@@ -3650,41 +3704,59 @@ function renderGFormIndividualView() {
   const sheetEl = document.getElementById('gform-individual-sheet');
   if (!resp || !sheetEl) return;
 
-  if (counterEl) counterEl.innerText = `${gformCurrentIndividualIndex + 1} / ${GFORM_RESPONSES_DATA.length} 件`;
+  if (counterEl) counterEl.innerText = `${gformCurrentIndividualIndex + 1} / ${GFORM_RESPONSES_DATA.length} 個目`;
   if (timeEl) timeEl.innerText = resp.timestamp;
 
+  const allTasks = ["資料の分別作業", "指定場所までの運搬", "デジタル化(スキャン等)の作業", "特になし"];
+  const taskCheckboxesHtml = allTasks.map(t => {
+    const isChecked = (resp.tasks || []).includes(t);
+    return `
+      <label style="display:flex; align-items:center; gap:10px; font-size:13.5px; color:#202124; margin-bottom:8px;">
+        <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="width:18px; height:18px; accent-color:#673ab7;">
+        <span>${t}</span>
+      </label>
+    `;
+  }).join('');
+
   sheetEl.innerHTML = `
-    <div class="editor-header-card" style="border-top:8px solid #673ab7; padding:22px 24px;">
-      <h1 style="font-size:24px; color:#202124; margin:0 0 8px 0; font-weight:600;">部署業務の認知度</h1>
-      <p style="font-size:13px; color:#5f6368; margin:0;">回答日時: ${resp.timestamp}</p>
+    <div class="editor-header-card" style="border-top:8px solid #673ab7; padding:22px 24px; background:#fff; border-radius:8px; border:1px solid #dadce0;">
+      <div style="font-size:11px; color:#5f6368; margin-bottom:4px;">回答を編集できません</div>
+      <h1 style="font-size:24px; color:#202124; margin:0 0 8px 0; font-weight:600;">資料の取り扱いに関して</h1>
+      <p style="font-size:13px; color:#202124; margin:0 0 12px 0;">資料の保存・廃棄について、皆様のご意見を伺います。</p>
+      <div style="font-size:12px; color:#5f6368; border-top:1px solid #e0e0e0; padding-top:10px;">
+        このフォームの送信時に回答者のメールアドレス（<strong>${resp.email}</strong>）が記録されました。
+      </div>
     </div>
 
-    <div class="editor-question-card" style="padding:18px 22px;">
-      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">氏名 <span style="color:#d93025;">*</span></div>
-      <div style="font-size:14px; color:#202124; padding:10px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0;">
+    <div class="editor-question-card" style="padding:18px 22px; background:#fff; border-radius:8px; border:1px solid #dadce0;">
+      <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px;">氏名</div>
+      <div style="font-size:14px; color:#202124; padding:8px 0; border-bottom:1px dotted #9aa0a6;">
         ${resp.name}
       </div>
     </div>
 
-    <div class="editor-question-card" style="padding:18px 22px;">
-      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">所属・学籍番号 <span style="color:#d93025;">*</span></div>
-      <div style="font-size:14px; color:#202124; padding:10px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0;">
-        ${resp.dept}
+    <div class="editor-question-card" style="padding:18px 22px; background:#fff; border-radius:8px; border:1px solid #dadce0;">
+      <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; line-height:1.5;">過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。</div>
+      <div style="font-size:13.5px; color:#202124; padding:8px 0; line-height:1.65; border-bottom:1px dotted #9aa0a6;">
+        ${resp.opinion}
       </div>
     </div>
 
-    <div class="editor-question-card" style="padding:18px 22px;">
-      <div style="font-size:15px; font-weight:600; color:#202124; margin-bottom:10px;">部署業務への理解度・意見 <span style="color:#d93025;">*</span></div>
-      <div style="font-size:14px; color:#202124; padding:12px 14px; background:#f8f9fa; border-radius:4px; border:1px solid #dadce0; line-height:1.6;">
-        ${resp.reason}
+    <div class="editor-question-card" style="padding:18px 22px; background:#fff; border-radius:8px; border:1px solid #dadce0;">
+      <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:12px; line-height:1.5;">資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)</div>
+      <div style="display:flex; flex-direction:column;">
+        ${taskCheckboxesHtml}
       </div>
+    </div>
+
+    <div style="text-align:right; font-size:11px; color:#5f6368; padding:8px 4px;">
+      送信日時: ${resp.timestamp}
     </div>
   `;
 }
 
 function submitGForm() {
-  showIpadModal("アクセス権限エラー", "エラー：送信に必要なネットワーク権限が不足しています。\n学友会執行委員会またはU.Z.W.の編集者アカウントで実行してください。");
-  logWriteToGAS("HACKING_FORM_SUBMIT_FAILED", "メンタルヘルススキャンの送信を試みましたが、権限不足で弾かれました。");
+  submitInAppForm();
 }
 
 function openGSpreadsheet(e) {
@@ -3712,7 +3784,7 @@ function openGSpreadsheet(e) {
     viewport.scrollTop = 0;
   }
 
-  logWriteToGAS("HACKING_SPREADSHEET_OPEN", "偽スプレッドシートに侵入しました！");
+  logWriteToGAS("HACKING_SPREADSHEET_OPEN", "資料の取り扱いに関して（回答）スプレッドシートを開きました。");
 }
 
 function toggleGSheetEdit() {
@@ -3758,12 +3830,14 @@ function renderGSpreadsheet() {
   const rows = (ss.rows && ss.rows[currentTab]) || (ss.data && ss.data[currentTab]) || [];
   const isEditing = !!gameState.isGSheetEditing;
 
-  // 列記号 (A, B, C, D...)
+  const isFormResponses = (currentTab === "フォームの回答 1" || currentTab === "Form_Responses");
   const colLetters = headers.map((_, i) => String.fromCharCode(65 + i));
 
   let html = `<thead><tr><th class="gsheet-row-num"></th>`;
   headers.forEach((h, i) => {
-    html += `<th>${colLetters[i] || ''}<div style="color:#202124; font-weight:500; font-size:11px; margin-top:2px;">${h}</div></th>`;
+    const headerBg = isFormResponses ? 'background:#512da8; color:#ffffff;' : '';
+    const textStyle = isFormResponses ? 'color:#ffffff; font-weight:600;' : 'color:#202124; font-weight:500;';
+    html += `<th style="${headerBg}">${colLetters[i] || ''}<div style="${textStyle} font-size:11px; margin-top:2px; line-height:1.3;">${h}</div></th>`;
   });
   html += `</tr></thead><tbody>`;
 

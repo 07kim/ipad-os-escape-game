@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.52.0">
+  <link rel="stylesheet" href="style.css?v=2.53.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -522,38 +522,56 @@
       <!-- ④ 偽Googleフォーム & 偽スプレッドシート（ハッキング） -->
       <!-- ------------------------------------------ -->
       <div class="hacking-modal" id="hacking-modal" style="display:none; top:24px;">
-        <!-- ① 偽Googleフォーム (回答閲覧画面) -->
+        <!-- ① 偽Googleフォーム (回答画面) -->
         <div class="gform-container" id="gform-view">
           <div class="gform-header" style="position:relative;">
             <button onclick="closeHacking()" class="btn-icon" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;" title="閉じる"><i data-lucide="x" style="width:16px; height:16px;"></i></button>
             <div class="gform-header-bar"></div>
             <div>
-              <h1 id="gform-title">部署業務の認知度</h1>
-              <p id="gform-desc">この回答は記録されます。</p>
+              <h1 id="gform-title" style="font-size:24px; font-weight:600; color:#202124; margin:0 0 10px 0;">資料の取り扱いに関して</h1>
+              <p id="gform-desc" style="font-size:13.5px; color:#202124; margin:0 0 16px 0; line-height:1.6;">資料の保存・廃棄について、皆様のご意見を伺います。</p>
             </div>
-            <div class="gform-account-bar">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <i data-lucide="user-check" style="width:15px; height:15px; color:#1a73e8;"></i>
-                <span>学友会アカウント (<strong>cit_student@cit.ac.jp</strong>) で回答中</span>
-              </div>
-              <span style="font-size:11px; color:#1a73e8; cursor:pointer;">アカウントを切り替える</span>
+            <div class="gform-required-note" style="color:#d93025; font-size:12px; margin-top:8px;">* 必須の質問です</div>
+          </div>
+
+          <!-- 設問1: メール -->
+          <div class="gform-card">
+            <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">メール <span class="req" style="color:#d93025;">*</span></label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#202124; cursor:pointer;">
+              <input type="checkbox" checked disabled style="width:18px; height:18px; accent-color:#673ab7;">
+              <span>返信に表示するメールアドレスとして <strong>s23c1044kr@chibatech.ac.jp</strong> を記録する</span>
+            </label>
+          </div>
+
+          <!-- 設問2: 氏名 -->
+          <div class="gform-card">
+            <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">氏名</label>
+            <input type="text" class="gform-input" id="gform-input-user" placeholder="回答を入力">
+          </div>
+
+          <!-- 設問3: 意見 -->
+          <div class="gform-card">
+            <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block; line-height:1.6;">過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。</label>
+            <textarea class="gform-textarea" placeholder="回答を入力" style="min-height:80px;"></textarea>
+          </div>
+
+          <!-- 設問4: お手伝い -->
+          <div class="gform-card">
+            <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:12px; display:block; line-height:1.6;">資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)</label>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:#202124;">
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" style="width:18px; height:18px; accent-color:#673ab7;"> 資料の分別作業</label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" style="width:18px; height:18px; accent-color:#673ab7;"> 指定場所までの運搬</label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" style="width:18px; height:18px; accent-color:#673ab7;"> デジタル化(スキャン等)の作業</label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" style="width:18px; height:18px; accent-color:#673ab7;"> 特になし</label>
             </div>
-            <div class="gform-required-note">* 必須</div>
           </div>
-          <div class="gform-card">
-            <label class="gform-label">閲覧申請者 (セキュリティIDまたは本名) <span class="req">*</span></label>
-            <input type="text" class="gform-input" id="gform-input-user" placeholder="回答を入力（例: J-098）">
-          </div>
-          <div class="gform-card">
-            <label class="gform-label">閲覧目的・理由 <span class="req">*</span></label>
-            <textarea class="gform-textarea" placeholder="回答を入力"></textarea>
-          </div>
+
           <div class="gform-actions-row">
             <button class="gform-submit-btn" onclick="submitGForm()">送信</button>
-            <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input,textarea').forEach(i => i.value='')">フォームをクリア</button>
+            <button class="gform-clear-btn" type="button" onclick="this.closest('.gform-container').querySelectorAll('input[type=text],textarea').forEach(i => i.value=''); this.closest('.gform-container').querySelectorAll('input[type=checkbox]:not([disabled])').forEach(c => c.checked=false);">フォームをクリア</button>
           </div>
           <div class="gform-legal-footer">
-            <div>パスワードを Google フォームで送信しないでください。</div>
+            <div>Google フォームでパスワードを送信しないでください。</div>
             <div>このコンテンツは Google が作成または承認したものではありません。 <a href="#" style="color:#70757a; text-decoration:underline;">不正行為の報告</a> - <a href="#" style="color:#70757a; text-decoration:underline;">利用規約</a> - <a href="#" style="color:#70757a; text-decoration:underline;">プライバシー ポリシー</a></div>
             <div class="gform-branding"><span style="font-weight:700; color:#5f6368;">Google</span> フォーム</div>
           </div>
@@ -572,7 +590,7 @@
                 <button class="editor-back-btn" onclick="openHackingForm()" title="フォーム表示へ戻る"><i data-lucide="arrow-left"></i></button>
                 <svg class="gform-official-icon" viewBox="0 0 24 24" width="26" height="26" style="fill:#7248b9;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                 <div class="editor-title-container">
-                  <span class="editor-form-name" id="editor-file-title">部署業務の認知度</span>
+                  <span class="editor-form-name" id="editor-file-title">資料の取り扱いに関して</span>
                   <div class="editor-doc-actions">
                     <i data-lucide="folder" style="width:13px; height:13px; color:#5f6368;" title="マイドライブ"></i>
                     <i data-lucide="star" style="width:13px; height:13px; color:#5f6368;" title="スターを付ける"></i>
@@ -604,21 +622,22 @@
             <div class="editor-panel-content" id="editor-panel-questions" style="display:flex;">
               <div class="editor-header-card">
                 <div class="gform-header-bar"></div>
-                <h1 class="editor-form-title">部署業務の認知度</h1>
-                <p class="editor-form-desc">学友会執行委員会 内部保管データ申請フォーム（※管理者編集画面）</p>
+                <h1 class="editor-form-title" style="font-size:24px; font-weight:600; color:#202124; margin:0 0 8px 0;">資料の取り扱いに関して</h1>
+                <p class="editor-form-desc" style="font-size:13.5px; color:#5f6368; margin:0 0 16px 0;">資料の保存・廃棄について、皆様のご意見を伺います。</p>
+                <div style="font-size:12px; color:#5f6368; border-top:1px solid #e0e0e0; padding-top:12px;">このフォームでは、すべての回答者からのメールが自動的に収集されます。 <span style="color:#1a73e8; cursor:pointer;">設定を変更</span></div>
               </div>
 
-              <!-- 質問1 編集カード -->
+              <!-- 質問1 編集カード (氏名) -->
               <div class="editor-question-card active-edit-card">
                 <div class="editor-q-top-row">
                   <input type="text" class="editor-q-title-input" value="氏名" readonly>
                   <div class="editor-q-type-badge">
                     <i data-lucide="align-left" style="width:14px; height:14px; color:#5f6368;"></i>
-                    <span>記述式</span>
+                    <span>記述式 (短文)</span>
                   </div>
                 </div>
                 <div class="editor-q-preview-field">
-                  <input type="text" class="gform-input" disabled value="記述式テキスト">
+                  <input type="text" class="gform-input" disabled value="短文回答">
                 </div>
                 <div class="editor-q-bottom-tools">
                   <div class="q-tools-left"></div>
@@ -627,46 +646,22 @@
                     <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
                     <div class="q-tool-divider"></div>
                     <span style="font-size:12px; color:#5f6368;">必須</span>
-                    <input type="checkbox" checked disabled class="gform-switch-input">
+                    <input type="checkbox" disabled class="gform-switch-input">
                   </div>
                 </div>
               </div>
 
-              <!-- 質問2 編集カード -->
+              <!-- 質問2 編集カード (意見) -->
               <div class="editor-question-card">
                 <div class="editor-q-top-row">
-                  <input type="text" class="editor-q-title-input" value="所属・学籍番号" readonly>
-                  <div class="editor-q-type-badge">
-                    <i data-lucide="align-left" style="width:14px; height:14px; color:#5f6368;"></i>
-                    <span>記述式</span>
-                  </div>
-                </div>
-                <div class="editor-q-preview-field">
-                  <input type="text" class="gform-input" disabled value="例: M25b1046">
-                </div>
-                <div class="editor-q-bottom-tools">
-                  <div class="q-tools-left"></div>
-                  <div class="q-tools-right">
-                    <button class="q-tool-btn" title="コピーを作成"><i data-lucide="copy"></i></button>
-                    <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
-                    <div class="q-tool-divider"></div>
-                    <span style="font-size:12px; color:#5f6368;">必須</span>
-                    <input type="checkbox" checked disabled class="gform-switch-input">
-                  </div>
-                </div>
-              </div>
-
-              <!-- 質問3 編集カード -->
-              <div class="editor-question-card">
-                <div class="editor-q-top-row">
-                  <input type="text" class="editor-q-title-input" value="部署業務への理解度・意見" readonly>
+                  <input type="text" class="editor-q-title-input" value="過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。" readonly style="font-size:13.5px; line-height:1.5;">
                   <div class="editor-q-type-badge">
                     <i data-lucide="align-justify" style="width:14px; height:14px; color:#5f6368;"></i>
                     <span>段落</span>
                   </div>
                 </div>
                 <div class="editor-q-preview-field">
-                  <textarea class="gform-textarea" disabled style="height:48px;">長文回答テキスト</textarea>
+                  <textarea class="gform-textarea" disabled style="height:48px;">長文回答</textarea>
                 </div>
                 <div class="editor-q-bottom-tools">
                   <div class="q-tools-left"></div>
@@ -675,7 +670,34 @@
                     <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
                     <div class="q-tool-divider"></div>
                     <span style="font-size:12px; color:#5f6368;">必須</span>
-                    <input type="checkbox" checked disabled class="gform-switch-input">
+                    <input type="checkbox" disabled class="gform-switch-input">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 質問3 編集カード (お手伝い) -->
+              <div class="editor-question-card">
+                <div class="editor-q-top-row">
+                  <input type="text" class="editor-q-title-input" value="資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)" readonly style="font-size:13.5px; line-height:1.5;">
+                  <div class="editor-q-type-badge">
+                    <i data-lucide="check-square" style="width:14px; height:14px; color:#5f6368;"></i>
+                    <span>チェックボックス</span>
+                  </div>
+                </div>
+                <div class="editor-q-preview-field" style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:#5f6368; padding:8px 0;">
+                  <div><input type="checkbox" disabled> 資料の分別作業</div>
+                  <div><input type="checkbox" disabled> 指定場所までの運搬</div>
+                  <div><input type="checkbox" disabled> デジタル化(スキャン等)の作業</div>
+                  <div><input type="checkbox" disabled> 特になし</div>
+                </div>
+                <div class="editor-q-bottom-tools">
+                  <div class="q-tools-left"></div>
+                  <div class="q-tools-right">
+                    <button class="q-tool-btn" title="コピーを作成"><i data-lucide="copy"></i></button>
+                    <button class="q-tool-btn" title="削除"><i data-lucide="trash-2"></i></button>
+                    <div class="q-tool-divider"></div>
+                    <span style="font-size:12px; color:#5f6368;">必須</span>
+                    <input type="checkbox" disabled class="gform-switch-input">
                   </div>
                 </div>
               </div>
@@ -702,61 +724,108 @@
                   </div>
                 </div>
 
-                <!-- サブタブ (概要 / 質問 / 個別) -->
+                <!-- サブタブ (要約 / 質問 / 個別) -->
                 <div class="responses-sub-nav">
-                  <button class="responses-sub-tab active" id="btn-resp-summary" onclick="switchResponsesSubTab('summary')">概要</button>
+                  <button class="responses-sub-tab active" id="btn-resp-summary" onclick="switchResponsesSubTab('summary')">要約</button>
                   <button class="responses-sub-tab" id="btn-resp-question" onclick="switchResponsesSubTab('question')">質問</button>
                   <button class="responses-sub-tab" id="btn-resp-individual" onclick="switchResponsesSubTab('individual')">個別</button>
                 </div>
               </div>
 
-              <!-- ① 概要サブタブ表示 (#responses-view-summary) -->
+              <!-- ① 要約サブタブ表示 (#responses-view-summary) -->
               <div id="responses-view-summary" style="display:flex; flex-direction:column; gap:16px; width:100%;">
-                <!-- 質問1 集計カード -->
+                <!-- 回答状況: メール -->
+                <div class="response-detail-card">
+                  <div class="response-card-title-row">
+                    <h3>回答状況</h3>
+                  </div>
+                  <div style="font-size:13px; font-weight:600; color:#5f6368; margin-bottom:8px;">メール</div>
+                  <div class="response-answers-list">
+                    <div class="response-answer-item">s2342098cl@chibatech.ac.jp</div>
+                    <div class="response-answer-item">s23a1058uw@chibatech.ac.jp</div>
+                    <div class="response-answer-item">s2341013qr@chibatech.ac.jp</div>
+                  </div>
+                </div>
+
+                <!-- 質問1 集計カード (氏名) -->
                 <div class="response-detail-card">
                   <div class="response-card-title-row">
                     <h3>氏名</h3>
                     <span class="response-card-count">3 件の回答</span>
                   </div>
                   <div class="response-answers-list">
-                    <div class="response-answer-item">陣内 樹</div>
-                    <div class="response-answer-item">深澤 文哉</div>
-                    <div class="response-answer-item">犬飼 玲</div>
+                    <div class="response-answer-item">比嘉俊希</div>
+                    <div class="response-answer-item">外園胡春</div>
+                    <div class="response-answer-item">七瀬いろは</div>
                   </div>
                 </div>
 
-                <!-- 質問2 集計カード -->
+                <!-- 質問2 集計カード (意見) -->
                 <div class="response-detail-card">
                   <div class="response-card-title-row">
-                    <h3>所属・学籍番号</h3>
+                    <h3 style="line-height:1.5;">過去の自治会運営記録や関連資料について、どのような取り扱いが望ましいと考えますか？自由に意見を書いてください。</h3>
                     <span class="response-card-count">3 件の回答</span>
                   </div>
                   <div class="response-answers-list">
-                    <div class="response-answer-item">J-098（神崎研究室）</div>
-                    <div class="response-answer-item">F-042（執行委員会）</div>
-                    <div class="response-answer-item">I-012（学内保安統制局）</div>
+                    <div class="response-answer-item" style="line-height:1.6; font-size:13.5px;">
+                      「もう使わないなら消してもいいのでは」と思うこともありますが、後々検証が必要になるかもしれないので残すのが無難かなと思っています。今後データが増えない保存用であれば、できる限り長持ちする物理媒体にまとめて一括保管しておくのが手っ取り早くていいんじゃないかなって あとはせっかくならみんなの写真とかもどこかに保存して、OBが見れるようにしたら嬉しい
+                    </div>
+                    <div class="response-answer-item" style="line-height:1.6; font-size:13.5px;">
+                      良い記録だけでなく、批判や反省点などのネガティブな経緯等も客観的に残すべきだと思います。また、保存に関しては大学の資料として残してもらえればいいかなと。資料が活かされるのは再発防止の時やこれから挑戦するときが多いので、客観性を重視したいと個人的には思います
+                    </div>
+                    <div class="response-answer-item" style="line-height:1.6; font-size:13.5px;">
+                      保存の精度や何を保存するかも大事ですが、何より誰かが使いやすいデータとして残すのが大事だと思います！フォルダ整理をしっかりするとか、AIを活かして検索しやすくするとか。こういう資料が活かされるケースを調べて、それに合わせてまとまった資料を作るのもいいんじゃないかと思います！全然私やりますよ！
+                    </div>
                   </div>
                 </div>
 
-                <!-- 質問3 集計カード -->
+                <!-- 質問3 集計カード (お手伝い 水平棒グラフ) -->
                 <div class="response-detail-card">
-                  <div class="response-card-title-row">
-                    <h3>部署業務への理解度・意見</h3>
-                    <span class="response-card-count">3 件の回答</span>
+                  <div class="response-card-title-row" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="line-height:1.5;">資料の整理や運搬作業について、お手伝い可能なことはありますか(複数回答可)</h3>
+                    <button class="btn-copy-chart" style="background:none; border:none; color:#1a73e8; font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;" onclick="showPushNotification('Googleフォーム', 'グラフをコピーしました', 'copy')">
+                      <i data-lucide="copy" style="width:14px; height:14px;"></i> グラフをコピー
+                    </button>
                   </div>
-                  <div class="response-answers-list">
-                    <div class="response-answer-item">
-                      <div class="response-item-header"><strong>陣内 樹:</strong></div>
-                      神崎教授の研究室から持ち出された機密データ暗号の解除要請。名簿データおよび実験ログのパスコード照会。
+                  <span class="response-card-count" style="display:block; margin-bottom:16px;">3 件の回答</span>
+                  
+                  <!-- 水平棒グラフコンテナ -->
+                  <div class="gform-chart-container" style="display:flex; flex-direction:column; gap:14px; padding:10px 0;">
+                    <!-- 項目1: 資料の分別作業 (3件 100%) -->
+                    <div class="chart-row" style="display:flex; align-items:center; gap:12px;">
+                      <div style="width:160px; font-size:12px; color:#5f6368; text-align:right; flex-shrink:0;">資料の分別作業</div>
+                      <div style="flex:1; background:#f1f3f4; height:24px; border-radius:3px; position:relative; overflow:hidden;">
+                        <div style="width:100%; height:100%; background:#5c6bc0; border-radius:3px; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; color:#fff; font-size:11px; font-weight:600;">3 (100%)</div>
+                      </div>
                     </div>
-                    <div class="response-answer-item">
-                      <div class="response-item-header"><strong>深澤 文哉:</strong></div>
-                      学友会予算執行状況および役員名簿の緊急照会。ループ発生に伴うシステム復旧スケジュールの確認。
+                    <!-- 項目2: 指定場所までの運搬 (1件 33.3%) -->
+                    <div class="chart-row" style="display:flex; align-items:center; gap:12px;">
+                      <div style="width:160px; font-size:12px; color:#5f6368; text-align:right; flex-shrink:0;">指定場所までの運搬</div>
+                      <div style="flex:1; background:#f1f3f4; height:24px; border-radius:3px; position:relative; overflow:hidden;">
+                        <div style="width:33.3%; height:100%; background:#5c6bc0; border-radius:3px; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; color:#fff; font-size:11px; font-weight:600;">1 (33.3%)</div>
+                      </div>
                     </div>
-                    <div class="response-answer-item">
-                      <div class="response-item-header"><strong>犬飼 玲:</strong></div>
-                      【統制局】2026年跳躍者の所持端末の初期化・回収手続き。U.Z.W.最高管理者プロトコルの執行。
+                    <!-- 項目3: デジタル化(スキャン等)の作業 (2件 66.7%) -->
+                    <div class="chart-row" style="display:flex; align-items:center; gap:12px;">
+                      <div style="width:160px; font-size:12px; color:#5f6368; text-align:right; flex-shrink:0;">デジタル化(スキャン等)の作業</div>
+                      <div style="flex:1; background:#f1f3f4; height:24px; border-radius:3px; position:relative; overflow:hidden;">
+                        <div style="width:66.7%; height:100%; background:#5c6bc0; border-radius:3px; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; color:#fff; font-size:11px; font-weight:600;">2 (66.7%)</div>
+                      </div>
                     </div>
+                    <!-- 項目4: 特になし (0件 0%) -->
+                    <div class="chart-row" style="display:flex; align-items:center; gap:12px;">
+                      <div style="width:160px; font-size:12px; color:#5f6368; text-align:right; flex-shrink:0;">特になし</div>
+                      <div style="flex:1; background:#f1f3f4; height:24px; border-radius:3px; position:relative; overflow:hidden; display:flex; align-items:center; padding-left:8px; color:#5f6368; font-size:11px; font-weight:600;">
+                        0 (0%)
+                      </div>
+                    </div>
+                  </div>
+                  <!-- グラフX軸目盛り -->
+                  <div style="display:flex; margin-left:172px; justify-content:space-between; font-size:11px; color:#9aa0a6; border-top:1px solid #dadce0; padding-top:4px; margin-top:6px;">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
                   </div>
                 </div>
               </div>
@@ -765,10 +834,10 @@
               <div id="responses-view-question" style="display:none; flex-direction:column; gap:16px; width:100%;">
                 <div class="response-detail-card">
                   <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #dadce0; padding-bottom:12px; margin-bottom:14px;">
-                    <select id="gform-question-select" onchange="onSelectGFormQuestion(this.value)" style="font-size:14px; padding:6px 12px; border:1px solid #dadce0; border-radius:4px; background:#fff; color:#202124; font-weight:600; cursor:pointer;">
+                    <select id="gform-question-select" onchange="onSelectGFormQuestion(this.value)" style="font-size:14px; padding:6px 12px; border:1px solid #dadce0; border-radius:4px; background:#fff; color:#202124; font-weight:600; cursor:pointer; max-width:320px;">
                       <option value="0">1 / 3 氏名</option>
-                      <option value="1">2 / 3 所属・学籍番号</option>
-                      <option value="2">3 / 3 部署業務への理解度・意見</option>
+                      <option value="1">2 / 3 過去の自治会運営記録や関連資料について、...</option>
+                      <option value="2">3 / 3 資料の整理や運搬作業について、お手伝い...</option>
                     </select>
                     <div style="display:flex; align-items:center; gap:8px;">
                       <button class="gform-page-nav-btn" onclick="prevGFormQuestion()">◀ 前の質問</button>
@@ -2407,7 +2476,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.52.0"></script>
-  <script src="app.js?v=2.52.0"></script>
+  <script src="data.js?v=2.53.0"></script>
+  <script src="app.js?v=2.53.0"></script>
 </body>
 </html>
