@@ -297,19 +297,6 @@ function fetchLatestDataFromSpreadsheet() {
           }
 
           updateAppUI();
-
-          if (gameState.activeChatContact) {
-            const linkApp = document.getElementById('app-link-app');
-            if (linkApp && linkApp.style.display !== 'none') {
-              openLinkChat(gameState.activeChatContact);
-            }
-          }
-          if (gameState.activeMailId) {
-            const mailApp = document.getElementById('app-mail-app');
-            if (mailApp && mailApp.style.display !== 'none') {
-              openMailDetail(gameState.activeMailId);
-            }
-          }
         }
       }
 
@@ -2983,7 +2970,8 @@ function renderLinkChatList() {
   });
 }
 
-function openLinkChat(contactId) {
+function openLinkChat(contactId, forceScrollToBottom = false) {
+  const isRoomChanged = (gameState.activeChatContact !== contactId);
   gameState.activeChatContact = contactId;
   renderLinkChatList();
 
@@ -3002,6 +2990,11 @@ function openLinkChat(contactId) {
 
   const messageArea = document.getElementById('link-messages-container');
   if (!messageArea) return;
+
+  // 📜 現在のスクロール位置を記憶（ユーザーが上を読んでいる最中なら勝手に下に飛ばさない）
+  const prevScrollTop = messageArea.scrollTop;
+  const isNearBottom = (messageArea.scrollHeight - messageArea.scrollTop - messageArea.clientHeight) < 60;
+
   messageArea.innerHTML = "";
 
   const messages = window.GAME_DATABASE.linkApp.chats[contactId] || [];
@@ -3135,7 +3128,13 @@ function openLinkChat(contactId) {
   }
 
   safeCreateIcons(messageArea);
-  messageArea.scrollTop = messageArea.scrollHeight;
+
+  // 📜 ユーザーが上を読んでいる最中ならスクロール位置を維持、部屋変更時または一番下にいる時は下へスクロール
+  if (isRoomChanged || forceScrollToBottom || isNearBottom) {
+    messageArea.scrollTop = messageArea.scrollHeight;
+  } else {
+    messageArea.scrollTop = prevScrollTop;
+  }
   logWriteToGAS("LINK_CHAT_OPEN", `LINKトークを開きました: ${contactId}`);
 }
 
