@@ -51,9 +51,9 @@ window.onerror = function(message, source, lineno, colno, error) {
 let gameState = {
   loop: 1,
   teamId: "チームA",
-  clockStartISO: "2126-08-22T09:04:00",
+  clockStartISO: "2126-09-04T09:04:00",
   clockSetTime: Date.now(), // 設定されたタイミングの現実タイムスタンプ
-  timerRunning: false, // スタートするまでは時が進まない
+  timerRunning: false, // スタートするまでは時が進まない（09:04で静止待機）
   unlockedHints: [],
   manabaUser: null,
   addedFriends: ["committee_group"], // 初期友達（全体連絡グループのみ）
@@ -416,10 +416,13 @@ function executeRemoteAdminCommand(cmd) {
       const currentTeam = myTeam;
       const gasUrl = localStorage.getItem('gas_url');
       
-      // 端末識別子とGAS設定以外を完全消去
+      // 端末識別子とGAS設定以外を完全消去 ＆ 09:04静止待機に設定
       localStorage.clear();
       localStorage.setItem('team_id', currentTeam);
       localStorage.setItem('game_loop', '1');
+      localStorage.setItem('game_timer_running', 'false');
+      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+      localStorage.setItem('fake_clock_set_time', String(Date.now()));
       if (gasUrl) localStorage.setItem('gas_url', gasUrl);
 
       playSystemSound("fanfare");
@@ -879,8 +882,11 @@ function handleStorageEvent(e) {
 // --- 嘘の時計ロジック ---
 function getFormattedFakeTime() {
   try {
-    const elapsed = gameState.timerRunning ? (Date.now() - (gameState.clockSetTime || Date.now())) : 0;
-    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T09:04:00');
+    if (!gameState.timerRunning) {
+      return '09:04';
+    }
+    const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
+    const startMs = Date.parse(gameState.clockStartISO || '2126-09-04T09:04:00');
     const fakeCurrent = new Date(startMs + elapsed);
     const hh = String(fakeCurrent.getHours()).padStart(2, '0');
     const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
@@ -895,13 +901,24 @@ function startFakeClock() {
   let lastDateStr = "";
 
   function updateClock() {
-    const elapsed = gameState.timerRunning ? (Date.now() - gameState.clockSetTime) : 0;
-    const startMs = Date.parse(gameState.clockStartISO || '2126-08-22T09:04:00');
-    const fakeCurrent = new Date(startMs + elapsed);
+    let clockStr = "09:04";
+    let dateStr = "9月4日";
+    let manabaDateStr = "2026-09-04 (Fri)";
 
-    const hh = String(fakeCurrent.getHours()).padStart(2, '0');
-    const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
-    const clockStr = `${hh}:${mm}`;
+    if (gameState.timerRunning) {
+      const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
+      const startMs = Date.parse(gameState.clockStartISO || '2126-09-04T09:04:00');
+      const fakeCurrent = new Date(startMs + elapsed);
+
+      const hh = String(fakeCurrent.getHours()).padStart(2, '0');
+      const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
+      clockStr = `${hh}:${mm}`;
+
+      const month = fakeCurrent.getMonth() + 1;
+      const day = fakeCurrent.getDate();
+      dateStr = `${month}月${day}日`;
+      manabaDateStr = `2026-09-04 (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][fakeCurrent.getDay()]})`;
+    }
 
     if (clockStr !== lastClockStr) {
       lastClockStr = clockStr;
@@ -911,10 +928,6 @@ function startFakeClock() {
       if (lockClock) lockClock.innerText = clockStr;
     }
 
-    // 日付表示 (ロック画面 - 曜日非表示)
-    const month = fakeCurrent.getMonth() + 1;
-    const day = fakeCurrent.getDate();
-    const dateStr = `${month}月${day}日`;
     if (dateStr !== lastDateStr) {
       lastDateStr = dateStr;
       const lockDate = document.getElementById('lock-date');
@@ -922,11 +935,12 @@ function startFakeClock() {
       
       const mDateEl = document.getElementById('manaba-header-date');
       if (mDateEl) {
-        mDateEl.innerText = `2026-08-22 (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][fakeCurrent.getDay()]})`;
+        mDateEl.innerText = manabaDateStr;
       }
     }
   }
 
+  // 起動時に最速で即時09:04を描画
   updateClock();
   setInterval(updateClock, 1000);
 }
@@ -1649,9 +1663,14 @@ function saveStaffConfig() {
 function performMasterReset() {
   if (confirm("⚠️ 【確認】このiPadの全データを消去し、1周目の初期状態（ロック画面）に戻しますか？")) {
     const currentTeam = gameState.teamId || 'iPad-01';
+    const gasUrl = localStorage.getItem('gas_url');
     localStorage.clear();
     localStorage.setItem('team_id', currentTeam);
     localStorage.setItem('game_loop', '1');
+    localStorage.setItem('game_timer_running', 'false');
+    localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(Date.now()));
+    if (gasUrl) localStorage.setItem('gas_url', gasUrl);
     setTimeout(() => {
       location.reload();
     }, 400);
