@@ -7,6 +7,7 @@
   <!-- Google Fonts & Lucide Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="data.js?v=2.36.0"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -789,13 +790,14 @@
       initLoopSyncListener();
       // 起動時に即時疎通確認
       checkGasConnection();
-      // 3.5秒おきに高頻度でGAS疎通確認 ＆ 周回・リセット同期
-      setInterval(checkGasConnection, 3500);
+      // 2.0秒おきに超高頻度でGAS疎通確認 ＆ 周回・リセット同期
+      setInterval(checkGasConnection, 2000);
     });
 
     // 🌀 周回表示の更新 ＆ 送信状態の自動リセット（周回が変わったら未送信に戻す）
     function updateLoopBadge(loopNum, isInitial = false) {
       const newLoop = parseInt(loopNum || 1, 10);
+      if (isNaN(newLoop) || newLoop < 1 || newLoop > 3) return;
       const isLoopChanged = (!isInitial && newLoop !== currentGlobalLoop);
 
       currentGlobalLoop = newLoop;
@@ -842,8 +844,6 @@
           console.log("🌀 StorageEvent経由で周回変更を検知:", e.newValue);
           updateLoopBadge(e.newValue);
         }
-      });
-    }
       });
     }
 
@@ -896,7 +896,7 @@
       const start = Date.now();
       try {
         const testUrl = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
-        const res = await fetch(testUrl, { signal: AbortSignal.timeout(15000) });
+        const res = await fetch(testUrl, { signal: AbortSignal.timeout(5000) });
         const latency = Date.now() - start;
         
         if (res.ok) {
@@ -905,12 +905,16 @@
           gasLatencyMs = latency;
           updateConnectionUI('ok', `GAS接続正常`, `${latency}ms`);
 
-          // GASから最新コマンドや周回情報を受信して同期
-          if (json && json.data) {
-            if (json.data.latestCommand) {
-              const cmd = json.data.latestCommand;
+          // GASから最新コマンドや周回情報を受信して同期（全階層を網羅）
+          if (json) {
+            const d = json.data || json;
+            
+            // 1. 最新コマンド（リセット・周回）
+            if (d.latestCommand) {
+              const cmd = d.latestCommand;
+              const p = cmd.params || {};
               if (cmd.type === 'master_reset' || cmd.type === 'reset_actor_triggers') {
-                const cmdTime = (cmd.params && cmd.params.timestamp) || cmd.timestamp || 0;
+                const cmdTime = p.timestamp || cmd.timestamp || 0;
                 const lastProcessedReset = parseInt(localStorage.getItem('actor_last_processed_reset') || '0', 10);
                 if (cmdTime > lastProcessedReset) {
                   localStorage.setItem('actor_last_processed_reset', String(cmdTime));
@@ -919,24 +923,28 @@
                   updateLoopBadge(1, false);
                   showToast("🚀【ゲームスタート】演者ツールを初期化しました", false, 4000);
                 }
-              } else if (cmd.params && cmd.params.loop !== undefined && cmd.params.loop !== null) {
-                updateLoopBadge(cmd.params.loop);
+              } else if (p.loop !== undefined && p.loop !== null && p.loop !== "") {
+                updateLoopBadge(p.loop);
               }
             }
-            if (json.data.system && json.data.system.loop) {
-              updateLoopBadge(json.data.system.loop);
+
+            // 2. システム周回ステータス
+            if (d.system && d.system.loop) {
+              updateLoopBadge(d.system.loop);
+            } else if (d.loop) {
+              updateLoopBadge(d.loop);
             }
           }
         } else {
-          // 404や500等の場合
-          gasConnectionStatus = 'ok'; // no-corsまたはローカル有効
+          // HTTPエラー時
+          gasConnectionStatus = 'ok';
           updateConnectionUI('ok', `ローカル通信有効`, `${latency}ms`);
         }
       } catch(e) {
         const latency = Date.now() - start;
-        // CORSやタイムアウトでも、同一iPad・同一LAN内のBroadcastChannel/localStorageローカル通信は常時有効
+        // タイムアウトやCORS時でもローカル有効
         gasConnectionStatus = 'ok';
-        updateConnectionUI('ok', `ローカル通信待機中`, `${latency}ms`);
+        updateConnectionUI('ok', `ローカル通信有効`, `${latency}ms`);
       } finally {
         isCheckingGas = false;
       }

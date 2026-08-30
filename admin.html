@@ -1052,6 +1052,12 @@
         } catch(e) {}
       }
 
+      // ☁️ GASクラウド側にも周回変更を即座に送信
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (gasUrl) {
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=update_loop&loop=${targetLoop}` : `${gasUrl}?action=update_loop&loop=${targetLoop}`).catch(() => {});
+      }
+
       showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（${prevLoop}周目実績: ${formatMs(prevDuration)}）`);
     }
 
