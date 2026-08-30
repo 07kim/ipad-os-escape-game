@@ -873,43 +873,163 @@ window.GAME_DATABASE = {
         ]
       },
 
-      // ② 森野 航（重要：応用物理学科・応用量子力学の中にタイムマシン起動ヒント）
+      // ② 森野 航（応用物理学科・重要：タイムマシン起動ヒント）
       "M25b1150": {
         pass: "0511b52M",
         name: "森野 航",
         department: "応用物理学科",
         studentId: "M25b1150",
         timetable: {
-          "Mon": ["", "応用量子力学", "", "", ""],
-          "Tue": ["", "", "量子力学特論", "", ""],
-          "Wed": ["熱統計力学", "", "", "", ""],
-          "Thu": ["", "", "", "電磁気学演習", ""],
-          "Fri": ["", "", "", "", "先端物理実験"]
+          "Mon": [
+            "", // 1限
+            "", // 2限
+            { name: "統計熱力学 応物3年", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_thermo" }, // 3限
+            { name: "統計熱力学 応物3年", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_thermo" }, // 4限
+            "", // 5限
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" }, // 6限
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" }, // 7限
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" }, // 8限
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" }, // 9限
+            "" // 10限
+          ],
+          "Tue": [
+            "", // 1限
+            "", // 2限
+            "", // 3限
+            "", // 4限
+            { name: "物質量子科学", teacher: "北村 界生", room: "611講義室 / 津田沼キャンパス", badge: "2単位定員有", id: "c_matter_quantum" }, // 5限
+            { name: "物質量子科学", teacher: "北村 界生", room: "611講義室 / 津田沼キャンパス", badge: "2単位定員有", id: "c_matter_quantum" }, // 6限
+            { name: "超伝導材料工学", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_supercond" }, // 7限
+            { name: "超伝導材料工学", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_supercond" }, // 8限
+            "", // 9限
+            "" // 10限
+          ],
+          "Wed": [
+            "", // 1限
+            "", // 2限
+            { name: "無機物性化学", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_inorganic" }, // 3限
+            { name: "無機物性化学", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_inorganic" }, // 4限
+            "", // 5限
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_app_phys_exp" }, // 6限
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" }, // 7限
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" }, // 8限
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" }, // 9限
+            "" // 10限
+          ],
+          "Thu": [
+            "", // 1限
+            { name: "キャリアデザイン３ 応", teacher: "福原 遥", room: "625講義室 / 津田沼キャンパス", badge: "1単位複数回", id: "c_career" }, // 2限
+            { name: "キャリアデザイン３ 応", teacher: "福原 遥", room: "625講義室 / 津田沼キャンパス", badge: "1単位複数回", id: "c_career" }, // 3限
+            "", // 4限
+            "", // 5限
+            "", // 6限
+            "", // 7限
+            "", // 8限
+            "", // 9限
+            "" // 10限
+          ],
+          "Fri": [
+            "", // 1限
+            "", // 2限
+            { name: "電気電子力学", teacher: "神宮司 彩音", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_elec_mech" }, // 3限
+            { name: "電気電子力学", teacher: "神宮司 彩音", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_elec_mech" }, // 4限
+            "", // 5限
+            { name: "結晶構造物理学", teacher: "天本 弥招", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_crystal" }, // 6限
+            { name: "結晶構造物理学", teacher: "天本 弥招", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_crystal" }, // 7限
+            { name: "システム環境管理", teacher: "北村 界生", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_sys_env" }, // 8限
+            { name: "システム環境管理", teacher: "北村 界生", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_sys_env" }, // 9限
+            "" // 10限
+          ]
         },
         courses: [
-          { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "2026 前期 月曜 2限", room: "新習志野校舎6号館301" },
-          { id: "c_quantum_adv", name: "量子力学特論", teacher: "高橋 誠", term: "2026 前期 火曜 3限", room: "新習志野校舎6号館202" },
-          { id: "c_thermo", name: "熱統計力学", teacher: "小林 浩二", term: "2026 前期 水曜 1限", room: "新習志野校舎5号館101" }
+          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "2026 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "2026 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "2026 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "2026 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
+          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "2026 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "2026 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "2026 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "2026 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
         ]
       },
 
-      // ③ 陣内 樹（先端情報工学科）
+      // ③ 陣内 樹（応用物理学科・同一時間割）
       "M25b1046": {
         pass: "6401b52M",
         name: "陣内 樹",
-        department: "先端情報工学科",
+        department: "応用物理学科",
         studentId: "M25b1046",
         timetable: {
-          "Mon": ["", "", "分散システム論", "", ""],
-          "Tue": ["データベース工学", "", "", "", ""],
-          "Wed": ["", "暗号プロトコル", "", "", ""],
-          "Thu": ["", "", "", "人工知能概論", ""],
-          "Fri": ["ネットワーク工学", "", "", "", ""]
+          "Mon": [
+            "",
+            "",
+            { name: "統計熱力学 応物3年", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_thermo" },
+            { name: "統計熱力学 応物3年", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_thermo" },
+            "",
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" },
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" },
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" },
+            { name: "応用量子力学", teacher: "野沢 夢佳", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_quantum" },
+            ""
+          ],
+          "Tue": [
+            "",
+            "",
+            "",
+            "",
+            { name: "物質量子科学", teacher: "北村 界生", room: "611講義室 / 津田沼キャンパス", badge: "2単位定員有", id: "c_matter_quantum" },
+            { name: "物質量子科学", teacher: "北村 界生", room: "611講義室 / 津田沼キャンパス", badge: "2単位定員有", id: "c_matter_quantum" },
+            { name: "超伝導材料工学", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_supercond" },
+            { name: "超伝導材料工学", teacher: "黒田 一馬", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_supercond" },
+            "",
+            ""
+          ],
+          "Wed": [
+            "",
+            "",
+            { name: "無機物性化学", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_inorganic" },
+            { name: "無機物性化学", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_inorganic" },
+            "",
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_app_phys_exp" },
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" },
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" },
+            { name: "応用物理実験３", teacher: "藤野 陸", room: "626講義室（製図室）/ 津田沼", badge: "2単位複数回", id: "c_app_phys_exp" },
+            ""
+          ],
+          "Thu": [
+            "",
+            { name: "キャリアデザイン３ 応", teacher: "福原 遥", room: "625講義室 / 津田沼キャンパス", badge: "1単位複数回", id: "c_career" },
+            { name: "キャリアデザイン３ 応", teacher: "福原 遥", room: "625講義室 / 津田沼キャンパス", badge: "1単位複数回", id: "c_career" },
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          "Fri": [
+            "",
+            "",
+            { name: "電気電子力学", teacher: "神宮司 彩音", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_elec_mech" },
+            { name: "電気電子力学", teacher: "神宮司 彩音", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_elec_mech" },
+            "",
+            { name: "結晶構造物理学", teacher: "天本 弥招", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_crystal" },
+            { name: "結晶構造物理学", teacher: "天本 弥招", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_crystal" },
+            { name: "システム環境管理", teacher: "北村 界生", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_sys_env" },
+            { name: "システム環境管理", teacher: "北村 界生", room: "625講義室 / 津田沼キャンパス", badge: "2単位複数回", id: "c_sys_env" },
+            ""
+          ]
         },
         courses: [
-          { id: "c_distributed", name: "分散システム論", teacher: "藤田 剛", term: "2026 前期 月曜 3限", room: "津田沼校舎2号館" },
-          { id: "c_crypto", name: "暗号プロトコル", teacher: "山本 隆", term: "2026 前期 水曜 2限", room: "津田沼校舎2号館" },
-          { id: "c_network", name: "ネットワーク工学", teacher: "松本 淳", term: "2026 前期 金曜 1限", room: "津田沼校舎4号館" }
+          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "2026 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "2026 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "2026 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "2026 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
+          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "2026 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "2026 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "2026 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "2026 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -1378,5 +1498,6 @@ window.GAME_DATABASE = {
 window.INITIAL_GAME_DATABASE = {
   linkApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.linkApp)),
   mailApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.mailApp)),
-  hacking: JSON.parse(JSON.stringify(window.GAME_DATABASE.hacking))
+  hacking: JSON.parse(JSON.stringify(window.GAME_DATABASE.hacking)),
+  manaba: JSON.parse(JSON.stringify(window.GAME_DATABASE.manaba))
 };

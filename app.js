@@ -107,7 +107,11 @@ function loadGameDatabase() {
         if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.hacking) {
           window.GAME_DATABASE.hacking = window.INITIAL_GAME_DATABASE.hacking;
         }
-        console.log("Loaded game database from LocalStorage cache (synchronized latest form card & hacking data).");
+        // manaba時間割データも最新マスタに同期
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.manaba) {
+          window.GAME_DATABASE.manaba = window.INITIAL_GAME_DATABASE.manaba;
+        }
+        console.log("Loaded game database from LocalStorage cache (synchronized latest form card, hacking & manaba data).");
         return;
       }
     } catch (e) {
@@ -4074,48 +4078,68 @@ function renderManabaPortal() {
   if (welcomeNameEl) welcomeNameEl.innerText = `${user.name}さんのマイページ`;
   if (userIdEl) userIdEl.innerText = user.studentId || gameState.manabaUser;
 
-  // 2. 曜日時間割（月〜土 1〜7限 + 他）のレンダリング
+  // 2. 曜日時間割（月〜金/土 1〜10限 + 他）のレンダリング
   const timetableBody = document.getElementById('manaba-official-timetable-body');
 
   if (timetableBody) {
     timetableBody.innerHTML = "";
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     
-    for (let period = 1; period <= 7; period++) {
-      let rowHtml = `<tr><td class="col-period">${period}</td>`;
+    // 時限数を判定（最大10限）
+    const maxPeriod = 10;
+    
+    for (let period = 1; period <= maxPeriod; period++) {
+      let rowHtml = `<tr><td class="col-period" style="font-weight:700; color:#5f6368; background:#f8f9fa; text-align:center;">${period}</td>`;
       days.forEach(day => {
         const periodIdx = period - 1;
-        const courseName = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
-        if (courseName) {
+        const rawCourse = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
+        
+        if (rawCourse) {
+          const isObj = typeof rawCourse === 'object';
+          const courseName = isObj ? rawCourse.name : rawCourse;
+          const courseId = isObj ? (rawCourse.id || rawCourse.name) : rawCourse;
+          const teacher = isObj ? rawCourse.teacher : '';
+          const room = isObj ? rawCourse.room : '';
+          const badge = isObj ? rawCourse.badge : '';
+
           rowHtml += `
-            <td class="has-course" onclick="openManabaCourse('${courseName}')" title="${courseName}">
-              <a href="javascript:void(0);" class="timetable-course-link">${courseName}</a>
+            <td class="has-course" onclick="openManabaCourse('${courseId}')" title="${courseName}" style="vertical-align:top; padding:8px 8px; background:#fff; border:1px solid #e0e0e0; cursor:pointer;">
+              <div style="font-weight:700; font-size:13px; color:#202124; margin-bottom:4px; line-height:1.35;">${courseName}</div>
+              ${teacher ? `<div style="font-size:11.5px; color:#5f6368; margin-bottom:3px;">${teacher}</div>` : ''}
+              ${room ? `<div style="font-size:11px; color:#70757a; margin-bottom:5px; line-height:1.25;">${room}</div>` : ''}
+              ${badge ? `<span style="display:inline-block; font-size:10px; font-weight:600; background:#e8eaed; color:#3c4043; padding:2px 5px; border-radius:3px; border:1px solid #dadce0;">${badge}</span>` : ''}
             </td>
           `;
         } else {
-          rowHtml += `<td class="empty-cell"></td>`;
+          rowHtml += `<td class="empty-cell" style="background:#fff; border:1px solid #e0e0e0; min-height:48px;"></td>`;
         }
       });
       rowHtml += `</tr>`;
       timetableBody.innerHTML += rowHtml;
     }
 
-    // 「他」限目
-    let extraRowHtml = `<tr><td class="col-period">他</td>`;
-    days.forEach(day => {
-      const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][7]) || "";
-      if (extraCourse) {
-        extraRowHtml += `
-          <td class="has-course" onclick="openManabaCourse('${extraCourse}')">
-            <a href="javascript:void(0);" class="timetable-course-link">${extraCourse}</a>
-          </td>
-        `;
-      } else {
-        extraRowHtml += `<td class="empty-cell"></td>`;
-      }
-    });
-    extraRowHtml += `</tr>`;
-    timetableBody.innerHTML += extraRowHtml;
+    // 「他」限目（もし存在する場合）
+    let hasExtra = days.some(day => user.timetable && user.timetable[day] && user.timetable[day][10]);
+    if (hasExtra) {
+      let extraRowHtml = `<tr><td class="col-period" style="font-weight:700; color:#5f6368; background:#f8f9fa; text-align:center;">他</td>`;
+      days.forEach(day => {
+        const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][10]) || "";
+        if (extraCourse) {
+          const isObj = typeof extraCourse === 'object';
+          const courseName = isObj ? extraCourse.name : extraCourse;
+          const courseId = isObj ? (extraCourse.id || extraCourse.name) : extraCourse;
+          extraRowHtml += `
+            <td class="has-course" onclick="openManabaCourse('${courseId}')" style="vertical-align:top; padding:8px 8px; background:#fff; border:1px solid #e0e0e0; cursor:pointer;">
+              <a href="javascript:void(0);" class="timetable-course-link" style="font-weight:700; font-size:13px; color:#1a73e8;">${courseName}</a>
+            </td>
+          `;
+        } else {
+          extraRowHtml += `<td class="empty-cell" style="background:#fff; border:1px solid #e0e0e0;"></td>`;
+        }
+      });
+      extraRowHtml += `</tr>`;
+      timetableBody.innerHTML += extraRowHtml;
+    }
   }
 
   // 3. 「その他の曜日」テーブルのレンダリング
