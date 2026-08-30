@@ -2393,7 +2393,7 @@ function renderMemoTabs() {
     </button>
   `;
 
-  safeCreateIcons(tabsContainer);
+  safeCreateIcons(bar);
 }
 
 // タブ選択
