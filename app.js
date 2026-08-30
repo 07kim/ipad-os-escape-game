@@ -1724,22 +1724,63 @@ function switchMetaTab(tabId) {
   }
 }
 
-// 📁 Apple純正 iPadOS「ファイル」アプリ風 フォルダSVGジェネレーター
+// 📁 Apple純正 iPadOS「ファイル」アプリ風 中身が入ったリアルなフォルダSVGジェネレーター
 function generateIpadosFolderSvg() {
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" class="ipados-folder-svg" width="82" height="68" style="display:block; margin:0 auto;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 85" class="ipados-folder-svg" width="86" height="72" style="display:block; margin:0 auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.12));">
       <defs>
+        <!-- 背面グラデーション -->
         <linearGradient id="folderBackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#0284c7"/>
+          <stop offset="100%" stop-color="#0369a1"/>
+        </linearGradient>
+        <!-- 前面フラップグラデーション -->
+        <linearGradient id="folderFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="60%" stop-color="#0ea5e9"/>
           <stop offset="100%" stop-color="#0284c7"/>
         </linearGradient>
-        <linearGradient id="folderFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#60a5fa"/>
-          <stop offset="100%" stop-color="#2563eb"/>
+        <!-- 書類1（奥側の書類） -->
+        <linearGradient id="paperGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#f8fafc"/>
+        </linearGradient>
+        <!-- 書類2（手前側の写真・データ書類） -->
+        <linearGradient id="paperGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#f1f5f9"/>
         </linearGradient>
       </defs>
-      <path d="M 8 16 C 8 10 14 10 18 10 L 36 10 C 42 10 46 16 50 16 L 82 16 C 88 16 92 20 92 26 L 92 66 C 92 72 88 74 82 74 L 18 74 C 12 74 8 72 8 66 Z" fill="url(#folderBackGrad)" />
-      <path d="M 8 26 C 8 22 14 22 18 22 L 82 22 C 88 22 92 24 92 28 L 92 66 C 92 72 88 74 82 74 L 18 74 C 12 74 8 72 8 66 Z" fill="url(#folderFrontGrad)" />
+
+      <!-- 1. 背面タブ付きフォルダベース -->
+      <path d="M 10 18 C 10 12 15 12 19 12 L 36 12 C 41 12 45 18 49 18 L 81 18 C 86 18 90 22 90 27 L 90 70 C 90 76 86 78 80 78 L 20 78 C 14 78 10 76 10 70 Z" fill="url(#folderBackGrad)" />
+
+      <!-- 2. 中身の書類1（奥側の書類・少し傾いた紙） -->
+      <g transform="rotate(-6 35 30)">
+        <rect x="20" y="8" width="34" height="42" rx="3" fill="url(#paperGrad1)" stroke="#cbd5e1" stroke-width="0.8" />
+        <!-- 書類の罫線 -->
+        <line x1="25" y1="14" x2="46" y2="14" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="25" y1="19" x2="42" y2="19" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round" />
+        <line x1="25" y1="23" x2="48" y2="23" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round" />
+      </g>
+
+      <!-- 3. 中身の書類2（手前側の画像・写真付き書類） -->
+      <g transform="rotate(4 60 32)">
+        <rect x="42" y="6" width="36" height="44" rx="3" fill="url(#paperGrad2)" stroke="#cbd5e1" stroke-width="0.8" />
+        <!-- 写真・グラフのサムネイル風エリア -->
+        <rect x="46" y="11" width="28" height="17" rx="2" fill="#38bdf8" opacity="0.35" />
+        <circle cx="52" cy="16" r="2.2" fill="#0284c7" />
+        <path d="M 48 25 L 55 19 L 62 24 L 70 18 L 70 26 L 48 26 Z" fill="#0284c7" opacity="0.8" />
+        <!-- 罫線 -->
+        <line x1="46" y1="33" x2="72" y2="33" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="46" y1="38" x2="64" y2="38" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round" />
+      </g>
+
+      <!-- 4. 前面フラップ（手前に開いて中身をしっかり抱えているフォルダポケット） -->
+      <path d="M 8 30 C 8 25 13 25 18 25 L 82 25 C 87 25 92 27 92 32 L 92 70 C 92 76 87 78 81 78 L 19 78 C 13 78 8 76 8 70 Z" fill="url(#folderFrontGrad)" />
+      
+      <!-- 前面フラップの上端ハイライト光沢 -->
+      <path d="M 12 26 L 88 26" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-linecap="round" />
     </svg>
   `;
 }
