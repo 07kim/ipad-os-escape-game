@@ -445,17 +445,19 @@ function executeRemoteAdminCommand(cmd) {
     const text = cmd.text || p.text;
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
-    const msgTime = formatChatTime(cmd.time || p.time || getFormattedFakeTime());
+    
+    // 🕒 送信時刻は現実時間ではなく、常にこのiPadの世界線時刻（09:04からのバーチャル時間）を採用
+    const msgTime = getFormattedFakeTime();
 
     if (text) {
       addActorMessageToLinkChat(actor, text, msgTime, triggerId);
 
       // J（陣内）からの送信でF（深澤）の自動返信が指定されている場合
-      // まず陣内のメッセージが画面に完全反映された後、2.5秒後に深澤が「おけ」と返信
+      // 人間らしい自然なチャット間隔として18秒後（15〜20秒）に深澤が「おけ」と返信・通知
       if (autoReplySender && autoReplyText) {
         setTimeout(() => {
-          addActorMessageToLinkChat(autoReplySender, autoReplyText, formatChatTime(getFormattedFakeTime()), triggerId ? triggerId + "_autoreply" : "");
-        }, 2500);
+          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime(), triggerId ? triggerId + "_autoreply" : "");
+        }, 18000);
       }
     }
     return;
