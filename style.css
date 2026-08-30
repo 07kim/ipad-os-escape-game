@@ -2380,6 +2380,28 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
+/* 📅 LINE風 日付セパレーター（ピル型バッジ） */
+.chat-date-separator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px 0 8px 0;
+  width: 100%;
+}
+
+.chat-date-badge {
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 12px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 /* グループチャット行レイアウト（アイコン＋名前＋吹き出し） */
 .chat-message-row {
   display: flex;

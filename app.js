@@ -508,6 +508,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   const cleanTime = formatChatTime(timeStr);
   window.GAME_DATABASE.linkApp.chats[targetRoom].push({
     sender: senderInfo.id,
+    date: "今日",
     text: text,
     time: cleanTime,
     _addedAt: Date.now()
@@ -3014,7 +3015,20 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
     "renjo": { name: "連城 観", avatar: "L", avatarClass: "avatar-default" }
   };
 
-  filteredMessages.forEach(msg => {
+  let lastMessageDate = null;
+
+  filteredMessages.forEach((msg, idx) => {
+    // 📅 LINE風 日付セパレーター判定（初期メッセージ=9月1日、演者メッセージ=今日）
+    const msgDate = msg.date || (idx === 0 ? "9月1日" : "今日");
+    if (msgDate && msgDate !== lastMessageDate) {
+      lastMessageDate = msgDate;
+      messageArea.innerHTML += `
+        <div class="chat-date-separator">
+          <span class="chat-date-badge">${msgDate}</span>
+        </div>
+      `;
+    }
+
     const isMe = msg.sender === "me" || msg.sender === "yada";
     const meta = SENDER_METAS[msg.sender] || { name: msg.sender || "メンバー", avatar: (msg.sender || "M")[0].toUpperCase(), avatarClass: "avatar-default" };
     

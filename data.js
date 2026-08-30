@@ -716,6 +716,7 @@ window.GAME_DATABASE = {
       "committee_group": [
         { 
           sender: "fukasawa", 
+          date: "9月1日",
           text: "【リマインド】\nお疲れ様です。\n情報の保管についてのフォームの期限が、本日12時までとなっています。\n会の活動を左右する重要なフォームのため、よく考えたうえで必ず期限までに回答するようよろしくお願いいたします。\nhttps://docs.google.com/forms/d/e/1FAIpQLSdXFpfSG-_MGeEeG93qxvv3w05Kn0r1nFUc9SjUxPA-Jsx0Nw/viewform?usp=dialog", 
           time: "9:03",
           ogpCard: {
