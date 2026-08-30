@@ -1137,7 +1137,7 @@ const DEFAULT_LOCK_NOTIFICATIONS = {
 // --- アプリ種別に応じた通知アプリアイコンHTML生成 ---
 function getNotificationAppIconHtml(appName, iconName) {
   if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square' || iconName === 'LINK.png') {
-    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.png" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
+    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.png?v=2.47.0" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
   } else if (appName === 'メール' || iconName === 'mail') {
     return `<div class="notif-app-icon mail-icon"><img src="./mail.png" style="width:100%; height:100%; object-fit:cover;" alt="メール"></div>`;
   } else if (appName === 'カレンダー' || iconName === 'calendar') {
@@ -1212,7 +1212,7 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   const iconEl = document.getElementById('push-notif-icon');
   if (iconEl) {
     if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.png') {
-      iconEl.innerHTML = '<img src="./LINK.png" style="width:24px; height:24px; border-radius:6px; object-fit:cover; display:block;" alt="LINK">';
+      iconEl.innerHTML = '<img src="./LINK.png?v=2.47.0" style="width:24px; height:24px; border-radius:6px; object-fit:cover; display:block;" alt="LINK">';
     } else if (app === 'メール' || icon === 'mail') {
       iconEl.innerHTML = '<img src="./mail.png" style="width:24px; height:24px; border-radius:6px; object-fit:cover; display:block;" alt="メール">';
     } else {
