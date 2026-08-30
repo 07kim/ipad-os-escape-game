@@ -3502,6 +3502,30 @@ function submitInAppForm() {
   logWriteToGAS("FORM_SUBMITTED", `資料取り扱いフォーム送信: ${name || '無記名'}`);
 }
 
+// 🟢 LINK専用 LINE風ポップアップダイアログ表示
+function showLinkDialog(title, message, btnText = "確認") {
+  const modal = document.getElementById('link-dialog-modal');
+  if (!modal) return;
+  
+  const titleEl = document.getElementById('link-dialog-title');
+  const msgEl = document.getElementById('link-dialog-msg');
+  const btnEl = document.getElementById('link-dialog-btn');
+
+  if (titleEl) titleEl.innerText = title;
+  if (msgEl) msgEl.innerText = message;
+  if (btnEl) btnEl.innerText = btnText;
+
+  modal.style.display = 'flex';
+  playSystemSound("touch");
+  logWriteToGAS("LINK_DIALOG_SHOWN", `LINKダイアログ表示: ${title}`);
+}
+
+function closeLinkDialog() {
+  const modal = document.getElementById('link-dialog-modal');
+  if (modal) modal.style.display = 'none';
+  playSystemSound("touch");
+}
+
 // ==========================================================================
 // ④ 偽Googleフォーム & 編集画面 & 偽スプレッドシート（ハッキング）
 // ==========================================================================

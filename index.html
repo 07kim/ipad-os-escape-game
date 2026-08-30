@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.61.0">
+  <link rel="stylesheet" href="style.css?v=2.62.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -398,9 +398,9 @@
                 <span class="contact-member-count" id="chat-member-count"></span>
               </div>
               <div class="link-header-tools">
-                <button class="link-tool-icon-btn" onclick="showPushNotification('LINK通話', '現在、回線暗号化プロトコルの不一致により通話できません。', 'phone-off')" title="音声通話"><i data-lucide="phone"></i></button>
-                <button class="link-tool-icon-btn" onclick="showPushNotification('LINKビデオ', 'ビデオ通話機能はオフラインです。', 'video-off')" title="ビデオ通話"><i data-lucide="video"></i></button>
-                <button class="link-tool-icon-btn" onclick="showPushNotification('トーク設定', 'グループトーク設定（通知: オン / 暗号化: 有効）', 'menu')" title="メニュー"><i data-lucide="menu"></i></button>
+                <button class="link-tool-icon-btn" onclick="showLinkDialog('無料通話', '相手が応答しないか、ネットワークの状態が不安定なため通話を開始できませんでした。')" title="音声通話"><i data-lucide="phone"></i></button>
+                <button class="link-tool-icon-btn" onclick="showLinkDialog('ビデオ通話', 'ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話"><i data-lucide="video"></i></button>
+                <button class="link-tool-icon-btn" onclick="showLinkDialog('トーク設定', 'グループ設定の変更は現在制限されています。')" title="メニュー"><i data-lucide="menu"></i></button>
               </div>
             </div>
             <div class="link-messages" id="link-messages-container">
@@ -409,7 +409,7 @@
               </div>
             </div>
             <div class="link-input-bar">
-              <button class="link-tool-icon-btn" style="color:#64748b;" onclick="showPushNotification('LINK', '画像やファイルの送信は制限されています。', 'plus')" title="添付"><i data-lucide="plus"></i></button>
+              <button class="link-tool-icon-btn" style="color:#64748b;" onclick="showLinkDialog('ファイル送信', '写真やファイルの送信は現在制限されています。')" title="添付"><i data-lucide="plus"></i></button>
               <input type="text" id="link-input-text" placeholder="メッセージを入力..." onkeydown="handleLinkInputKey(event)">
               <button class="link-send-btn" onclick="sendCustomLinkMessage()"><i data-lucide="send"></i></button>
             </div>
@@ -483,11 +483,11 @@
                   <i data-lucide="link"></i>
                   <span>リンクをコピー</span>
                 </button>
-                <button class="line-myqr-btn" onclick="showPushNotification('共有', 'マイQRコードの共有メニューを開きました', 'share-2')">
+                <button class="line-myqr-btn" onclick="showLinkDialog('マイQRコード', 'QRコードの共有メニューを開きました。')">
                   <i data-lucide="share-2"></i>
                   <span>シェア</span>
                 </button>
-                <button class="line-myqr-btn" onclick="showPushNotification('保存完了', 'マイQRコード画像を写真に保存しました', 'download')">
+                <button class="line-myqr-btn" onclick="showLinkDialog('写真に保存', 'マイQRコード画像を写真に保存しました。')">
                   <i data-lucide="download"></i>
                   <span>保存</span>
                 </button>
@@ -496,6 +496,19 @@
                   <span>更新</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🟢 LINK専用 LINE風 ポップアップダイアログ (通知・エラーアラート) -->
+        <div class="modal-overlay" id="link-dialog-modal" style="display:none;" onclick="closeLinkDialog()">
+          <div class="link-dialog-card" onclick="event.stopPropagation()">
+            <div class="link-dialog-body">
+              <h3 class="link-dialog-title" id="link-dialog-title">無料通話</h3>
+              <p class="link-dialog-msg" id="link-dialog-msg">相手が応答しないか、ネットワークの状態が不安定なため通話を開始できませんでした。</p>
+            </div>
+            <div class="link-dialog-footer">
+              <button class="link-dialog-btn" onclick="closeLinkDialog()" id="link-dialog-btn">確認</button>
             </div>
           </div>
         </div>
@@ -2476,7 +2489,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.61.0"></script>
-  <script src="app.js?v=2.61.0"></script>
+  <script src="data.js?v=2.62.0"></script>
+  <script src="app.js?v=2.62.0"></script>
 </body>
 </html>
