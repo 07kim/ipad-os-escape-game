@@ -1377,5 +1377,6 @@ window.GAME_DATABASE = {
 // （LocalStorageキャッシュが古い場合でも、常にdata.jsの最新定義が使われる）
 window.INITIAL_GAME_DATABASE = {
   linkApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.linkApp)),
-  mailApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.mailApp))
+  mailApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.mailApp)),
+  hacking: JSON.parse(JSON.stringify(window.GAME_DATABASE.hacking))
 };

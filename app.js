@@ -795,7 +795,14 @@ function loadStateFromStorage() {
   try {
     const customRows = JSON.parse(localStorage.getItem('game_custom_gsheet_rows') || 'null');
     if (customRows && window.GAME_DATABASE && window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.spreadsheet) {
-      window.GAME_DATABASE.hacking.spreadsheet.rows = customRows;
+      // 古い回答データ（2126年の陣内樹など）が含まれている場合は最新マスタを優先してキャッシュ破棄
+      const formResp = customRows['Form_Responses'] || customRows['フォームの回答 1'];
+      const isOldData = formResp && formResp.some(r => r.includes("陣内 樹") || r.includes("2126/08/21 16:30:15") || r.length < 5);
+      if (isOldData) {
+        localStorage.removeItem('game_custom_gsheet_rows');
+      } else {
+        window.GAME_DATABASE.hacking.spreadsheet.rows = customRows;
+      }
     }
   } catch (e) {}
 
@@ -3771,6 +3778,12 @@ function openGSpreadsheet(e) {
   if (e) e.preventDefault();
   const modal = document.getElementById('hacking-modal');
   if (modal) modal.scrollTop = 0;
+
+  // 常に最新マスタのForm_Responsesデータを優先して反映
+  if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.hacking && window.INITIAL_GAME_DATABASE.hacking.spreadsheet) {
+    if (!window.GAME_DATABASE.hacking) window.GAME_DATABASE.hacking = {};
+    window.GAME_DATABASE.hacking.spreadsheet = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.hacking.spreadsheet));
+  }
 
   document.getElementById('gform-view').style.display = 'none';
   document.getElementById('gform-editor-view').style.display = 'none';
