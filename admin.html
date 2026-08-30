@@ -600,8 +600,16 @@
 
   <!-- ⏱️ ＆ 📡 公演タイマー・クラウド連携 一体型コントロールバー -->
   <div class="admin-top-banner">
-    <!-- 左側：タイマー（トータル ＆ 現在周回 ＆ 1~3周目ラップ ＆ 操作ボタン） -->
+    <!-- 左側：タイマー（全体ステータス ＆ トータル ＆ 現在周回 ＆ 1~3周目ラップ ＆ 操作ボタン） -->
     <div class="top-timer-group">
+      <!-- 🌟 0. 全体進行ステータス（スタート前・1周目・2周目・3周目） -->
+      <div class="timer-badge-chip" id="global-game-status-chip" style="min-width:145px; padding:4px 12px; border-radius:8px; border:1.5px solid rgba(148, 163, 184, 0.4); background:rgba(15,23,42,0.8);">
+        <span class="timer-chip-label" style="font-size:10px; color:#94a3b8; margin-bottom:1px;">全体ステータス</span>
+        <span class="timer-chip-digits" id="global-game-status-text" style="font-size:12px; font-weight:900; color:#94a3b8; letter-spacing:0.3px;">⏱️ スタート前（待機中）</span>
+      </div>
+
+      <div class="timer-section-divider"></div>
+
       <!-- 1. トータル公演時間 -->
       <div class="timer-badge-chip total-chip" title="公演開始からのトータル経過時間">
         <span class="timer-chip-label"><i data-lucide="clock" style="width:12px; height:12px; color:#38bdf8;"></i> トータル</span>
@@ -621,7 +629,7 @@
         <div class="top-lap-pill active" id="lap-card-1">
           <span class="lap-name">1周目</span>
           <span class="lap-val" id="lap-time-1">00:00</span>
-          <span class="lap-tag" id="lap-status-1">進行中</span>
+          <span class="lap-tag" id="lap-status-1">待機</span>
         </div>
         <div class="top-lap-pill" id="lap-card-2">
           <span class="lap-name">2周目</span>
@@ -1078,6 +1086,35 @@
       if (loopDigitsEl) loopDigitsEl.innerText = formatMs(loopMs);
       if (loopNameEl) loopNameEl.innerText = `${adminTimerState.currentLoop}周目`;
 
+      // 🌟 全体進行ステータスバッジの更新
+      const statusChip = document.getElementById('global-game-status-chip');
+      const statusText = document.getElementById('global-game-status-text');
+      if (statusText) {
+        if (!adminTimerState.isRunning && adminTimerState.totalElapsedBeforePause === 0 && (!adminTimerState.totalStartTime)) {
+          statusText.innerText = "⏱️ スタート前（待機中）";
+          statusText.style.color = "#94a3b8";
+          if (statusChip) statusChip.style.borderColor = "rgba(148, 163, 184, 0.4)";
+        } else if (!adminTimerState.isRunning) {
+          statusText.innerText = `⏸️ ${adminTimerState.currentLoop}周目（一時停止）`;
+          statusText.style.color = "#fbbf24";
+          if (statusChip) statusChip.style.borderColor = "rgba(251, 191, 36, 0.6)";
+        } else {
+          if (adminTimerState.currentLoop === 1) {
+            statusText.innerText = "🌀 1周目 進行中";
+            statusText.style.color = "#38bdf8";
+            if (statusChip) statusChip.style.borderColor = "rgba(56, 189, 248, 0.7)";
+          } else if (adminTimerState.currentLoop === 2) {
+            statusText.innerText = "🌀 2周目 進行中";
+            statusText.style.color = "#fb923c";
+            if (statusChip) statusChip.style.borderColor = "rgba(251, 146, 60, 0.7)";
+          } else if (adminTimerState.currentLoop === 3) {
+            statusText.innerText = "🔥 3周目（クライマックス）";
+            statusText.style.color = "#f87171";
+            if (statusChip) statusChip.style.borderColor = "rgba(248, 113, 113, 0.7)";
+          }
+        }
+      }
+
       // ラップタイムカード更新
       for (let l = 1; l <= 3; l++) {
         const cardEl = document.getElementById(`lap-card-${l}`);
@@ -1089,8 +1126,13 @@
         if (l === adminTimerState.currentLoop) {
           cardEl.className = 'top-lap-pill active';
           if (statusEl) {
-            statusEl.innerText = adminTimerState.isRunning ? '進行中 ⏱️' : '一時停止 ⏸️';
-            statusEl.style.color = '#38bdf8';
+            if (!adminTimerState.isRunning && adminTimerState.totalElapsedBeforePause === 0 && (!adminTimerState.totalStartTime)) {
+              statusEl.innerText = '待機';
+              statusEl.style.color = '#94a3b8';
+            } else {
+              statusEl.innerText = adminTimerState.isRunning ? '進行中 ⏱️' : '一時停止 ⏸️';
+              statusEl.style.color = '#38bdf8';
+            }
           }
           if (timeEl) timeEl.innerText = formatMs(loopMs);
         } else if (l < adminTimerState.currentLoop) {
