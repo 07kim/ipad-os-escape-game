@@ -97,9 +97,17 @@ function loadGameDatabase() {
           window.GAME_DATABASE.linkApp.contactsLoop3 = window.INITIAL_GAME_DATABASE.linkApp.contactsLoop3;
           if (cachedChats && cachedChats['committee_group']) {
             window.GAME_DATABASE.linkApp.chats = cachedChats;
+            // 初期投稿（1通目）のリマインドフォームカード情報は常に最新マスタの内容に同期
+            if (window.INITIAL_GAME_DATABASE.linkApp.chats && window.INITIAL_GAME_DATABASE.linkApp.chats['committee_group']) {
+              window.GAME_DATABASE.linkApp.chats['committee_group'][0] = window.INITIAL_GAME_DATABASE.linkApp.chats['committee_group'][0];
+            }
           }
         }
-        console.log("Loaded game database from LocalStorage cache (preserved linkApp chat history).");
+        // ハッキング用フォーム＆スプレッドシートデータも最新マスタに同期
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.hacking) {
+          window.GAME_DATABASE.hacking = window.INITIAL_GAME_DATABASE.hacking;
+        }
+        console.log("Loaded game database from LocalStorage cache (synchronized latest form card & hacking data).");
         return;
       }
     } catch (e) {

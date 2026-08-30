@@ -696,11 +696,11 @@ window.GAME_DATABASE = {
     // 友達一覧 (1〜2周目の初期状態)
     // 連絡先一覧（全体連絡グループ一本化）
     contacts: [
-      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】メンタルヘルス・スキャン..." }
+      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】お疲れ様です。情報の保管についての..." }
     ],
     // 3周目の変化後（同一グループ）
     contactsLoop3: [
-      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】メンタルヘルス・スキャン..." }
+      { id: "committee_group", name: "学友会執行委員会・連絡網", icon: "users", isGroup: true, desc: "【リマインド】お疲れ様です。情報の保管についての..." }
     ],
 
     // マイQRコード情報
