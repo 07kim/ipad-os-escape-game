@@ -1113,6 +1113,13 @@
       currentActorCode = null;
     }
 
+    // 🔗 依存トリガー（1通目）が送信済みかどうかの確実な判定
+    function isDependencySatisfied(depId) {
+      if (!depId) return true;
+      const loopKey = getTrigKey(depId);
+      return !!(sentTriggers[loopKey] || sentTriggers[depId] || confirmedTriggers[loopKey] || confirmedTriggers[depId]);
+    }
+
     // トリガーリストの描画
     function renderTriggers(actor) {
       const container = document.getElementById('trigger-buttons-container');
@@ -1120,10 +1127,9 @@
 
       actor.triggers.forEach((tr) => {
         const loopKey = getTrigKey(tr.id);
-        const isSent = !!sentTriggers[loopKey];
-        const isConfirmed = !!confirmedTriggers[loopKey];
-        const depKey = tr.dependsOn ? getTrigKey(tr.dependsOn) : null;
-        const isSequentialLocked = depKey && !sentTriggers[depKey];
+        const isSent = !!(sentTriggers[loopKey] || sentTriggers[tr.id]);
+        const isConfirmed = !!(confirmedTriggers[loopKey] || confirmedTriggers[tr.id]);
+        const isSequentialLocked = tr.dependsOn ? !isDependencySatisfied(tr.dependsOn) : false;
         
         // 🔒 周回ロック判定（該当周回以外は発動不可）
         const allowedLoops = tr.allowedLoops || [1, 2, 3];
@@ -1221,7 +1227,7 @@
       }
 
       // 🔒 2. 順序ロックチェック（1通目を送る前に2通目を押した時）
-      if (tr.dependsOn && !sentTriggers[tr.dependsOn]) {
+      if (tr.dependsOn && !isDependencySatisfied(tr.dependsOn)) {
         if (btn) {
           btn.classList.add('shake');
           setTimeout(() => btn.classList.remove('shake'), 400);
