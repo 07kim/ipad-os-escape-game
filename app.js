@@ -987,15 +987,18 @@ function initBatterySync() {
   }
 }
 
-// 🔄 周回切り替え時にLINKアプリのチャットデータ・友達リスト・未読状態を初期データへ復元する
+// 🔄 周回切り替え時にLINKアプリのチャットデータ・友達リスト・未読状態をその周回の初期データへ復元する
 function resetLinkAppForLoop() {
   if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
-    // INITIAL_GAME_DATABASEから完全クローンして上書き復元
+    // INITIAL_GAME_DATABASEから完全クローンして上書き復元（前の周回のメッセージを完全クリア）
     window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
     try {
       localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
     } catch(e) {}
   }
+
+  // 以前の周回で受信した動的ロック画面通知もクリア
+  gameState.dynamicLockNotifications = [];
 
   // 未読バッジの初期化（3周目は0件、1・2周目は初期1件）
   const badge = document.getElementById('dock-link-badge');

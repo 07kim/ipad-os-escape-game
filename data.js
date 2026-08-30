@@ -1333,9 +1333,9 @@ window.GAME_DATABASE = {
 
   // --- 進行統制シーン別プリセット（admin.html用） ---
   adminPresets: [
-    { id: "s1_start", stage: "S1", name: "1周目 開始（ゲームスタート）", loop: 1, clockISO: "2126-08-22T09:04:00", alertMsg: "", sound: "boot", forceLock: false, color: "#007aff", desc: "周回=1、時刻=09:04、全端末のロックを解除して探索スタート" },
-    { id: "s2_loop", stage: "S2", name: "1→2周目 ループ強制発生", loop: 2, clockISO: "2126-08-22T09:04:00", alertMsg: "【時間ループ発生】\n時空ゲートの変調により、時間が巻き戻されました。", sound: "distortion", forceLock: true, color: "#ff9500", desc: "全画面警告→強制ロック→周回=2へ切り替え（歴史改変発生）" },
-    { id: "s3_loop", stage: "S3", name: "2→3周目 世界線崩壊ループ", loop: 3, clockISO: "2126-08-22T09:04:00", alertMsg: "【警告：世界線崩壊】\nタイムパラドックスにより世界線が致命的に歪みました。", sound: "alarm", forceLock: true, color: "#ff3b30", desc: "全画面警告→強制ロック→周回=3へ切り替え（U.Z.W.支配世界）" },
+    { id: "s1_start", stage: "S1", name: "1周目 開始（ゲームスタート）", loop: 1, clockISO: "2126-09-04T09:04:00", alertMsg: "", sound: "boot", forceLock: false, color: "#007aff", desc: "周回=1、時刻=09:04、全端末のロックを解除して探索スタート" },
+    { id: "s2_loop", stage: "S2", name: "1→2周目 ループ強制発生", loop: 2, clockISO: "2126-09-04T09:04:00", alertMsg: "【時間ループ発生】\n時空ゲートの変調により、時間が巻き戻されました。", sound: "distortion", forceLock: true, color: "#ff9500", desc: "全画面警告→強制ロック→周回=2へ切り替え（歴史改変発生）" },
+    { id: "s3_loop", stage: "S3", name: "2→3周目 世界線崩壊ループ", loop: 3, clockISO: "2126-09-04T09:04:00", alertMsg: "【警告：世界線崩壊】\nタイムパラドックスにより世界線が致命的に歪みました。", sound: "alarm", forceLock: true, color: "#ff3b30", desc: "全画面警告→強制ロック→周回=3へ切り替え（U.Z.W.支配世界）" },
     { id: "e1_hack", stage: "E1", name: "不正アクセス緊急警報", loop: 3, clockISO: null, alertMsg: "【緊急警報】\n学内ネットワークへの不正侵入を検知。セキュリティロックを実行中。", sound: "alarm", forceLock: false, color: "#e74c3c", desc: "全画面赤色アラートを鳴らし、クライマックスの緊迫感を演出" },
     { id: "e2_time10", stage: "E2", name: "残り時間10分アナウンス", loop: null, clockISO: null, alertMsg: "【残り時間10分】\n時空ゲート閉鎖まであと10分です。速やかに帰還準備を完了してください。", sound: "alert", forceLock: false, color: "#f39c12", desc: "残り10分のラストスパートを促すアナウンス" },
     { id: "e3_clear", stage: "E3", name: "脱出成功（ゲームクリア）", loop: null, clockISO: null, alertMsg: "【脱出成功】\n時空ゲート同期完了！2024年の世界線への帰還に成功しました！", sound: "fanfare", forceLock: false, color: "#2ecc71", desc: "クリアファンファーレと脱出成功演出" },
