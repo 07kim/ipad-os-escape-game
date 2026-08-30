@@ -1131,41 +1131,12 @@ function getNotificationAppIconHtml(appName, iconName) {
   }
 }
 
-// --- ロック画面の日常通知レンダリング（タップで該当アプリへ直行アクセス） ---
+// --- ロック画面の通知レンダリング（通知センター非表示化） ---
 function renderLockNotifications() {
   const container = document.getElementById('lock-notif-list') || document.getElementById('lock-notifications-list');
-  if (!container) return;
-
-  const currentLoop = Number(gameState.loop) || 1;
-  const dbNotifs = (window.GAME_DATABASE && window.GAME_DATABASE.lockNotifications && window.GAME_DATABASE.lockNotifications[currentLoop]);
-  const baseNotifs = (dbNotifs && dbNotifs.length > 0) ? dbNotifs : (DEFAULT_LOCK_NOTIFICATIONS[currentLoop] || DEFAULT_LOCK_NOTIFICATIONS[1]);
-  
-  // リアルタイム受信通知 ＋ 基本日常通知をマージ
-  const dynamicNotifs = gameState.dynamicLockNotifications || [];
-  const allNotifs = [...dynamicNotifs, ...baseNotifs];
-
-  container.innerHTML = "";
-
-  allNotifs.forEach((n) => {
-    const card = document.createElement('div');
-    card.className = 'notification-card';
-    card.style.marginBottom = '8px';
-    card.innerHTML = `
-      <div class="notif-header">
-        <div class="notif-app-badge">
-          ${getNotificationAppIconHtml(n.app, n.icon)}
-          <span>${n.app}</span>
-        </div>
-        <span class="notif-time">${n.time}</span>
-      </div>
-      <div class="notif-title">${n.title}</div>
-      <div class="notif-body">${n.body}</div>
-    `;
-    card.onclick = () => handleLockNotificationClick(n);
-    container.appendChild(card);
-  });
-
-  safeCreateIcons(container);
+  if (container) {
+    container.innerHTML = "";
+  }
 }
 
 // ロック画面通知タップ時のシームレスアクセス処理（タップで即座にアプリを開く）
