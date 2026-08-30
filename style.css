@@ -893,22 +893,30 @@ body {
   color: #334155;
 }
 
-/* 🔍 フルスクリーン拡大ライトボックス (観測画像ギャラリー) */
-.modal-overlay.lightbox-overlay-container {
-  padding: 10px 68px; /* 左右に外側矢印ボタン用のスペースを確保 */
-  position: absolute;
+/* 🔳 全画面モーダルオーバーレイ共通定義 */
+.modal-overlay {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 3200;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3500;
   display: flex;
   justify-content: center;
   align-items: center;
   animation: fadeIn 0.2s ease;
+}
+
+/* 🔍 フルスクリーン拡大ライトボックス (観測画像ギャラリー) */
+.modal-overlay.lightbox-overlay-container {
+  padding: 10px 68px; /* 左右に外側矢印ボタン用のスペースを確保 */
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 3200;
 }
 
 .lightbox-content-wrapper {

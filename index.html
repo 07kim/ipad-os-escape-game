@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.39.0">
+  <link rel="stylesheet" href="style.css?v=2.40.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -210,9 +210,15 @@
 
             <!-- 2. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
             <div class="meta-panel" id="meta-panel-evidence">
-              <div class="panel-header-row">
-                <h2>📦 調査資料・証拠アーカイブ</h2>
-                <span class="loop-badge" id="evidence-count-badge">0件 記録済み</span>
+              <div class="panel-header-row" style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <h2>📦 調査資料・証拠アーカイブ</h2>
+                  <span class="loop-badge" id="evidence-count-badge">0件 記録済み</span>
+                </div>
+                <button class="nav-btn" onclick="openMetaEvidenceQrScanner()" style="padding:7px 14px; font-size:13px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.3); cursor:pointer;">
+                  <i data-lucide="qr-code" style="width:16px; height:16px;"></i>
+                  <span>QR読取</span>
+                </button>
               </div>
               <p class="panel-subtext">探索で入手したアイテムや証拠資料がカード形式で記録されます。</p>
 
@@ -2398,7 +2404,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.39.0"></script>
-  <script src="app.js?v=2.39.0"></script>
+  <script src="data.js?v=2.40.0"></script>
+  <script src="app.js?v=2.40.0"></script>
 </body>
 </html>
