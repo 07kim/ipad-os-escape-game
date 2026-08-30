@@ -1398,14 +1398,30 @@
         type: "master_reset",
         name: "公演前マスターリセット",
         params: {
+          loop: 1,
+          resetActors: true,
           timestamp: Date.now()
         }
-      }, "🚨 全30台の一括マスターリセットを実行しました！");
+      }, "🚨 全30台 ＆ 演者ツールの一括マスターリセットを実行しました！");
+
+      // 演者ツール用リセットフラグをLocalStorageに記録
+      localStorage.setItem('admin_reset_trigger_time', Date.now());
+      localStorage.setItem('game_loop', '1');
 
       const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
       if (gasUrl) {
-        // GAS側シートも全初期化
+        // GAS側シートも全初期化 ＆ 演者トリガークリア
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_actor_triggers` : `${gasUrl}?action=reset_actor_triggers`).catch(() => {});
+      }
+
+      // 演者ツールへも周回リセットシグナルを送信
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'master_reset', payload: { loop: 1, resetActors: true } });
+          bc.postMessage({ type: 'reset_actor_triggers', payload: { loop: 1 } });
+        } catch(e) {}
       }
 
       // ローカルモニタリングデータも初期化
