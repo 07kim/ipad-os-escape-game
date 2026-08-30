@@ -90,19 +90,18 @@ function loadGameDatabase() {
       // スキーマの整合性を検証
       if (parsed && parsed.browser && parsed.linkApp && parsed.manaba && parsed.metaApp) {
         window.GAME_DATABASE = parsed;
-        // ⚠️ LINK・メールの定義は常にdata.jsの最新定義で上書き（古いキャッシュが混入しないよう）
-        if (window.INITIAL_GAME_DATABASE) {
-          if (window.INITIAL_GAME_DATABASE.linkApp) {
-            window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
-          }
-          if (window.INITIAL_GAME_DATABASE.mailApp) {
-            window.GAME_DATABASE.mailApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.mailApp));
+        // 基本マスタ構造を最新化しつつ、追加されたチャットメッセージ履歴は確実に保持
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.linkApp) {
+          const cachedChats = (parsed.linkApp && parsed.linkApp.chats) ? parsed.linkApp.chats : null;
+          window.GAME_DATABASE.linkApp.contacts = window.INITIAL_GAME_DATABASE.linkApp.contacts;
+          window.GAME_DATABASE.linkApp.contactsLoop3 = window.INITIAL_GAME_DATABASE.linkApp.contactsLoop3;
+          if (cachedChats && cachedChats['committee_group']) {
+            window.GAME_DATABASE.linkApp.chats = cachedChats;
           }
         }
-        console.log("Loaded game database from LocalStorage cache (linkApp & mailApp refreshed from data.js).");
+        console.log("Loaded game database from LocalStorage cache (preserved linkApp chat history).");
         return;
       }
-      console.warn("Cache data is missing core properties. Falling back to data.js.");
     } catch (e) {
       console.warn("Failed to parse game_db_cache, falling back to data.js");
     }
@@ -556,7 +555,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     }
 
     playSystemSound("notif");
-    showPushNotification("LINK", `${senderInfo.name}: ${text}`, "message-circle", () => {
+    showPushNotification("LINK", senderInfo.name, text, "message-circle", () => {
       openApp('link-app');
       openLinkChat('committee_group');
     });
