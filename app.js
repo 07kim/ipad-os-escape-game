@@ -547,7 +547,24 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     }
 
     playSystemSound("notif");
-    showPushNotification(`LINK: ${senderInfo.name}`, text, "message-square");
+    showPushNotification("LINK", `${senderInfo.name}: ${text}`, "message-circle", () => {
+      openApp('link-app');
+      openLinkChat('committee_group');
+    });
+
+    // 📱 ロック画面の通知センターにもリアルタイムに追加
+    if (!gameState.dynamicLockNotifications) gameState.dynamicLockNotifications = [];
+    gameState.dynamicLockNotifications.unshift({
+      id: "dyn_msg_" + Date.now(),
+      app: "LINK",
+      icon: "message-circle",
+      title: senderInfo.name,
+      body: text,
+      time: cleanTime,
+      targetApp: "link",
+      contactId: "committee_group"
+    });
+    renderLockNotifications();
 
     const msgContainer = document.getElementById('link-messages-container');
     if (msgContainer) {
@@ -1083,6 +1100,24 @@ function updateAppUI() {
   renderMailList();
 }
 
+// ロック画面用 デフォルト日常通知定義（データ未取得時の完全保護）
+const DEFAULT_LOCK_NOTIFICATIONS = {
+  1: [
+    { id: "ln1", app: "LINK", icon: "message-circle", title: "深澤 文哉", body: "大ホールの施錠連絡忘れてただろ。ちゃんと施錠してから部屋出てくれよな。", time: "只今", targetApp: "link", contactId: "fukasawa" },
+    { id: "ln2", app: "メール", icon: "mail", title: "学友会執行委員会 事務局", body: "【重要】本日の研修会および施設利用について", time: "10分前", targetApp: "mail", mailId: "m1" },
+    { id: "ln3", app: "カレンダー", icon: "calendar", title: "予定のリマインダー", body: "10:00 執行部引き継ぎ定例会議（研修室2）", time: "30分前", targetApp: "manaba" }
+  ],
+  2: [
+    { id: "ln1", app: "LINK", icon: "message-circle", title: "陣内 樹", body: "パソコン研修室1に忘れたかも…パスワードはJNNITMNRね！", time: "只今", targetApp: "link", contactId: "jinnai" },
+    { id: "ln2", app: "メール", icon: "mail", title: "学友会執行委員会 事務局", body: "【重要】時間軸再同期に伴う注意喚起", time: "5分前", targetApp: "mail", mailId: "m1" },
+    { id: "ln3", app: "LINK", icon: "message-circle", title: "深澤 文哉", body: "怪しいURL見つけたからLINKで送るね！", time: "1分前", targetApp: "link", contactId: "fukasawa" }
+  ],
+  3: [
+    { id: "ln1", app: "LINK", icon: "message-circle", title: "犬飼 玲（U.Z.W.）", body: "鵜沢向希様。あなたの持つスマートフォンは重大な機密です。回収に応じなさい。", time: "只今", targetApp: "link", contactId: "inukai" },
+    { id: "ln2", app: "システム警報", icon: "alert-triangle", title: "U.Z.W. セキュリティ統括部", body: "学内ネットワークへの外部ハッキング攻撃を検知。警戒レベル引き上げ。", time: "3分前", targetApp: "browser", pageId: "campus_hack_alert" }
+  ]
+};
+
 // --- アプリ種別に応じた通知アプリアイコンHTML生成 ---
 function getNotificationAppIconHtml(appName, iconName) {
   if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square') {
@@ -1101,10 +1136,17 @@ function renderLockNotifications() {
   const container = document.getElementById('lock-notif-list') || document.getElementById('lock-notifications-list');
   if (!container) return;
 
-  const notifs = (window.GAME_DATABASE && window.GAME_DATABASE.lockNotifications && window.GAME_DATABASE.lockNotifications[gameState.loop]) || [];
+  const currentLoop = Number(gameState.loop) || 1;
+  const dbNotifs = (window.GAME_DATABASE && window.GAME_DATABASE.lockNotifications && window.GAME_DATABASE.lockNotifications[currentLoop]);
+  const baseNotifs = (dbNotifs && dbNotifs.length > 0) ? dbNotifs : (DEFAULT_LOCK_NOTIFICATIONS[currentLoop] || DEFAULT_LOCK_NOTIFICATIONS[1]);
+  
+  // リアルタイム受信通知 ＋ 基本日常通知をマージ
+  const dynamicNotifs = gameState.dynamicLockNotifications || [];
+  const allNotifs = [...dynamicNotifs, ...baseNotifs];
+
   container.innerHTML = "";
 
-  notifs.forEach((n) => {
+  allNotifs.forEach((n) => {
     const card = document.createElement('div');
     card.className = 'notification-card';
     card.style.marginBottom = '8px';
