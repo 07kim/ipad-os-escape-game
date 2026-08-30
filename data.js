@@ -797,7 +797,7 @@ window.GAME_DATABASE = {
 
   // --- LMS 「manaba」用コンテンツ (千葉工業大学を再現) ---
   manaba: {
-    maintenanceNotice: "2026-08-10 システムメンテナンス復旧のお知らせ。一部時間割が変更されています。",
+    maintenanceNotice: "26-08-10 システムメンテナンス復旧のお知らせ。一部時間割が変更されています。",
     users: {
       // 🌟 連城 観（端末の持ち主・L / パスワード記録）
       "s23c1044kr": {
@@ -868,17 +868,17 @@ window.GAME_DATABASE = {
           ]
         },
         courses: [
-          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "2026 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" },
-          { id: "c_ai_systems", name: "知能システム工学応用", teacher: "橘 航平", term: "2026 前期 月曜 6-7限", room: "623講義室 / 津田沼キャンパス" },
-          { id: "c_consumer_behavior", name: "消費者行動データ解析", teacher: "遠藤 隼人", term: "2026 前期 月曜 8-9限", room: "623講義室 / 津田沼キャンパス" },
-          { id: "c_crypto_token", name: "暗号経済・トークンエコノミー論", teacher: "桐生 創", term: "2026 前期 火曜 5-6限", room: "611講義室 / 津田沼キャンパス" },
-          { id: "c_sec_gov", name: "情報安全ガバナンス特論", teacher: "沢村 拓海", term: "2026 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_nextgen_data", name: "次世代データアーキテクチャ", teacher: "神谷 宗佑", term: "2026 前期 水曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_rev_science_pbl", name: "革命科学創成実践PBL３", teacher: "宇野 翔太", term: "2026 前期 水曜 6-9限", room: "626講義室（演習室）/ 津田沼" },
-          { id: "c_career_design", name: "キャリアデザイン", teacher: "望月 葵", term: "2026 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_dist_infra", name: "分散インフラ基盤論", teacher: "篠原 蓮", term: "2026 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_fast_product", name: "高速プロダクト検証論", teacher: "柊木 颯人", term: "2026 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_future_society", name: "未来社会システムデザイン", teacher: "長谷川 怜", term: "2026 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
+          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "26 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" },
+          { id: "c_ai_systems", name: "知能システム工学応用", teacher: "橘 航平", term: "26 前期 月曜 6-7限", room: "623講義室 / 津田沼キャンパス" },
+          { id: "c_consumer_behavior", name: "消費者行動データ解析", teacher: "遠藤 隼人", term: "26 前期 月曜 8-9限", room: "623講義室 / 津田沼キャンパス" },
+          { id: "c_crypto_token", name: "暗号経済・トークンエコノミー論", teacher: "桐生 創", term: "26 前期 火曜 5-6限", room: "611講義室 / 津田沼キャンパス" },
+          { id: "c_sec_gov", name: "情報安全ガバナンス特論", teacher: "沢村 拓海", term: "26 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_nextgen_data", name: "次世代データアーキテクチャ", teacher: "神谷 宗佑", term: "26 前期 水曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_rev_science_pbl", name: "革命科学創成実践PBL３", teacher: "宇野 翔太", term: "26 前期 水曜 6-9限", room: "626講義室（演習室）/ 津田沼" },
+          { id: "c_career_design", name: "キャリアデザイン", teacher: "望月 葵", term: "26 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_dist_infra", name: "分散インフラ基盤論", teacher: "篠原 蓮", term: "26 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_fast_product", name: "高速プロダクト検証論", teacher: "柊木 颯人", term: "26 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_future_society", name: "未来社会システムデザイン", teacher: "長谷川 怜", term: "26 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -896,7 +896,7 @@ window.GAME_DATABASE = {
           "Fri": ["", "", "分散インフラ基盤論", "分散インフラ基盤論", "", "高速プロダクト検証論", "高速プロダクト検証論", "未来社会システムデザイン", "未来社会システムデザイン", ""]
         },
         courses: [
-          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "2026 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" }
+          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "26 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -913,7 +913,7 @@ window.GAME_DATABASE = {
           "Fri": ["", "", "分散インフラ基盤論", "分散インフラ基盤論", "", "高速プロダクト検証論", "高速プロダクト検証論", "未来社会システムデザイン", "未来社会システムデザイン", ""]
         },
         courses: [
-          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "2026 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" }
+          { id: "c_di_integration", name: "デジタルイノベーション統合特論", teacher: "高橋 巧", term: "26 前期 月曜 3-4限", room: "621講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -930,7 +930,7 @@ window.GAME_DATABASE = {
           "Fri": ["", "", "", "", "情報倫理"]
         },
         courses: [
-          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "2026 前期 月曜 1限", room: "津田沼校舎1号館" }
+          { id: "c_literacy", name: "基礎情報リテラシー", teacher: "佐藤 健一", term: "26 前期 月曜 1限", room: "津田沼校舎1号館" }
         ]
       },
 
@@ -1003,14 +1003,14 @@ window.GAME_DATABASE = {
           ]
         },
         courses: [
-          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "2026 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "2026 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "2026 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "2026 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
-          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "2026 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "2026 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "2026 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "2026 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
+          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "26 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "26 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "26 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "26 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
+          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "26 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "26 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "26 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "26 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -1083,14 +1083,14 @@ window.GAME_DATABASE = {
           ]
         },
         courses: [
-          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "2026 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "2026 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "2026 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "2026 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
-          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "2026 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "2026 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "2026 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
-          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "2026 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
+          { id: "c_quantum", name: "応用量子力学", teacher: "野沢 夢佳", term: "26 前期 月曜 6-9限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_thermo", name: "統計熱力学 応物3年", teacher: "黒田 一馬", term: "26 前期 月曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_supercond", name: "超伝導材料工学", teacher: "黒田 一馬", term: "26 前期 火曜 7-8限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_app_phys_exp", name: "応用物理実験３", teacher: "藤野 陸", term: "26 前期 水曜 6-9限", room: "625/626講義室 / 津田沼" },
+          { id: "c_career", name: "キャリアデザイン３ 応", teacher: "福原 遥", term: "26 前期 木曜 2-3限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_elec_mech", name: "電気電子力学", teacher: "神宮司 彩音", term: "26 前期 金曜 3-4限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_crystal", name: "結晶構造物理学", teacher: "天本 弥招", term: "26 前期 金曜 6-7限", room: "625講義室 / 津田沼キャンパス" },
+          { id: "c_sys_env", name: "システム環境管理", teacher: "北村 界生", term: "26 前期 金曜 8-9限", room: "625講義室 / 津田沼キャンパス" }
         ]
       },
 
@@ -1163,19 +1163,19 @@ window.GAME_DATABASE = {
           ]
         },
         courses: [
-          { id: "c_french", name: "言語と文化1フランス語", teacher: "小林 健太", term: "2026 前期 月曜 1-2限", room: "215講義室 / 新習志野キャンパス" },
-          { id: "c_analysis_linear", name: "解析・線形代数基礎", teacher: "水野 創太", term: "2026 前期 月曜 3-4限", room: "212講義室 / 新習志野キャンパス" },
-          { id: "c_media_exp_design", name: "メディア表現デザイン演習", teacher: "日野 結衣", term: "2026 前期 月曜 6-8限", room: "221演習室 / 新習志野キャンパス" },
-          { id: "c_eng_reading", name: "英語理解", teacher: "スミス J.", term: "2026 前期 火曜 1-2限", room: "312講義室 / 新習志野キャンパス" },
-          { id: "c_brain_media_intro", name: "頭脳メディア工学概論", teacher: "一ノ瀬 航", term: "2026 前期 火曜 3-4限", room: "211講義室 / 新習志野キャンパス" },
-          { id: "c_sports_science", name: "スポーツ科学", teacher: "渡辺 誠", term: "2026 前期 火曜 6-7限", room: "体育館 / 新習志野キャンパス" },
-          { id: "c_first_year", name: "初年次教育", teacher: "望月 葵", term: "2026 前期 水曜 1-2限", room: "111講義室 / 新習志野キャンパス" },
-          { id: "c_media_math", name: "メディア情報数理", teacher: "坪井 隆", term: "2026 前期 水曜 3-4限", room: "213講義室 / 新習志野キャンパス" },
-          { id: "c_prog_basic_exp", name: "計算機プログラミング基礎演習", teacher: "榊原 悠人", term: "2026 前期 水曜 6-7限", room: "225実習室 / 新習志野キャンパス" },
-          { id: "c_eng_exp", name: "英語表現", teacher: "ブラウン R.", term: "2026 前期 木曜 1-2限", room: "314講義室 / 新習志野キャンパス" },
-          { id: "c_info_physics", name: "情報物理学", teacher: "城ヶ崎 玲", term: "2026 前期 木曜 3-4限", room: "214講義室 / 新習志野キャンパス" },
-          { id: "c_percept_cog_comm", name: "知覚・認知コミュニケーション", teacher: "有馬 拓海", term: "2026 前期 金曜 3-4限", room: "215講義室 / 新習志野キャンパス" },
-          { id: "c_digi_media_intro", name: "デジタルメディア創成入門", teacher: "遠藤 隼人", term: "2026 前期 金曜 6-7限", room: "212講義室 / 新習志野キャンパス" }
+          { id: "c_french", name: "言語と文化1フランス語", teacher: "小林 健太", term: "26 前期 月曜 1-2限", room: "215講義室 / 新習志野キャンパス" },
+          { id: "c_analysis_linear", name: "解析・線形代数基礎", teacher: "水野 創太", term: "26 前期 月曜 3-4限", room: "212講義室 / 新習志野キャンパス" },
+          { id: "c_media_exp_design", name: "メディア表現デザイン演習", teacher: "日野 結衣", term: "26 前期 月曜 6-8限", room: "221演習室 / 新習志野キャンパス" },
+          { id: "c_eng_reading", name: "英語理解", teacher: "スミス J.", term: "26 前期 火曜 1-2限", room: "312講義室 / 新習志野キャンパス" },
+          { id: "c_brain_media_intro", name: "頭脳メディア工学概論", teacher: "一ノ瀬 航", term: "26 前期 火曜 3-4限", room: "211講義室 / 新習志野キャンパス" },
+          { id: "c_sports_science", name: "スポーツ科学", teacher: "渡辺 誠", term: "26 前期 火曜 6-7限", room: "体育館 / 新習志野キャンパス" },
+          { id: "c_first_year", name: "初年次教育", teacher: "望月 葵", term: "26 前期 水曜 1-2限", room: "111講義室 / 新習志野キャンパス" },
+          { id: "c_media_math", name: "メディア情報数理", teacher: "坪井 隆", term: "26 前期 水曜 3-4限", room: "213講義室 / 新習志野キャンパス" },
+          { id: "c_prog_basic_exp", name: "計算機プログラミング基礎演習", teacher: "榊原 悠人", term: "26 前期 水曜 6-7限", room: "225実習室 / 新習志野キャンパス" },
+          { id: "c_eng_exp", name: "英語表現", teacher: "ブラウン R.", term: "26 前期 木曜 1-2限", room: "314講義室 / 新習志野キャンパス" },
+          { id: "c_info_physics", name: "情報物理学", teacher: "城ヶ崎 玲", term: "26 前期 木曜 3-4限", room: "214講義室 / 新習志野キャンパス" },
+          { id: "c_percept_cog_comm", name: "知覚・認知コミュニケーション", teacher: "有馬 拓海", term: "26 前期 金曜 3-4限", room: "215講義室 / 新習志野キャンパス" },
+          { id: "c_digi_media_intro", name: "デジタルメディア創成入門", teacher: "遠藤 隼人", term: "26 前期 金曜 6-7限", room: "212講義室 / 新習志野キャンパス" }
         ]
       },
 
@@ -1248,19 +1248,19 @@ window.GAME_DATABASE = {
           ]
         },
         courses: [
-          { id: "c_french", name: "言語と文化1フランス語", teacher: "小林 健太", term: "2026 前期 月曜 1-2限", room: "215講義室 / 新習志野キャンパス" },
-          { id: "c_analysis_linear", name: "解析・線形代数基礎", teacher: "水野 創太", term: "2026 前期 月曜 3-4限", room: "212講義室 / 新習志野キャンパス" },
-          { id: "c_media_exp_design", name: "メディア表現デザイン演習", teacher: "日野 結衣", term: "2026 前期 月曜 6-8限", room: "221演習室 / 新習志野キャンパス" },
-          { id: "c_eng_reading", name: "英語理解", teacher: "スミス J.", term: "2026 前期 火曜 1-2限", room: "312講義室 / 新習志野キャンパス" },
-          { id: "c_brain_media_intro", name: "頭脳メディア工学概論", teacher: "一ノ瀬 航", term: "2026 前期 火曜 3-4限", room: "211講義室 / 新習志野キャンパス" },
-          { id: "c_sports_science", name: "スポーツ科学", teacher: "渡辺 誠", term: "2026 前期 火曜 6-7限", room: "体育館 / 新習志野キャンパス" },
-          { id: "c_first_year", name: "初年次教育", teacher: "望月 葵", term: "2026 前期 水曜 1-2限", room: "111講義室 / 新習志野キャンパス" },
-          { id: "c_media_math", name: "メディア情報数理", teacher: "坪井 隆", term: "2026 前期 水曜 3-4限", room: "213講義室 / 新習志野キャンパス" },
-          { id: "c_prog_basic_exp", name: "計算機プログラミング基礎演習", teacher: "榊原 悠人", term: "2026 前期 水曜 6-7限", room: "225実習室 / 新習志野キャンパス" },
-          { id: "c_eng_exp", name: "英語表現", teacher: "ブラウン R.", term: "2026 前期 木曜 1-2限", room: "314講義室 / 新習志野キャンパス" },
-          { id: "c_info_physics", name: "情報物理学", teacher: "城ヶ崎 玲", term: "2026 前期 木曜 3-4限", room: "214講義室 / 新習志野キャンパス" },
-          { id: "c_percept_cog_comm", name: "知覚・認知コミュニケーション", teacher: "有馬 拓海", term: "2026 前期 金曜 3-4限", room: "215講義室 / 新習志野キャンパス" },
-          { id: "c_digi_media_intro", name: "デジタルメディア創成入門", teacher: "遠藤 隼人", term: "2026 前期 金曜 6-7限", room: "212講義室 / 新習志野キャンパス" }
+          { id: "c_french", name: "言語と文化1フランス語", teacher: "小林 健太", term: "26 前期 月曜 1-2限", room: "215講義室 / 新習志野キャンパス" },
+          { id: "c_analysis_linear", name: "解析・線形代数基礎", teacher: "水野 創太", term: "26 前期 月曜 3-4限", room: "212講義室 / 新習志野キャンパス" },
+          { id: "c_media_exp_design", name: "メディア表現デザイン演習", teacher: "日野 結衣", term: "26 前期 月曜 6-8限", room: "221演習室 / 新習志野キャンパス" },
+          { id: "c_eng_reading", name: "英語理解", teacher: "スミス J.", term: "26 前期 火曜 1-2限", room: "312講義室 / 新習志野キャンパス" },
+          { id: "c_brain_media_intro", name: "頭脳メディア工学概論", teacher: "一ノ瀬 航", term: "26 前期 火曜 3-4限", room: "211講義室 / 新習志野キャンパス" },
+          { id: "c_sports_science", name: "スポーツ科学", teacher: "渡辺 誠", term: "26 前期 火曜 6-7限", room: "体育館 / 新習志野キャンパス" },
+          { id: "c_first_year", name: "初年次教育", teacher: "望月 葵", term: "26 前期 水曜 1-2限", room: "111講義室 / 新習志野キャンパス" },
+          { id: "c_media_math", name: "メディア情報数理", teacher: "坪井 隆", term: "26 前期 水曜 3-4限", room: "213講義室 / 新習志野キャンパス" },
+          { id: "c_prog_basic_exp", name: "計算機プログラミング基礎演習", teacher: "榊原 悠人", term: "26 前期 水曜 6-7限", room: "225実習室 / 新習志野キャンパス" },
+          { id: "c_eng_exp", name: "英語表現", teacher: "ブラウン R.", term: "26 前期 木曜 1-2限", room: "314講義室 / 新習志野キャンパス" },
+          { id: "c_info_physics", name: "情報物理学", teacher: "城ヶ崎 玲", term: "26 前期 木曜 3-4限", room: "214講義室 / 新習志野キャンパス" },
+          { id: "c_percept_cog_comm", name: "知覚・認知コミュニケーション", teacher: "有馬 拓海", term: "26 前期 金曜 3-4限", room: "215講義室 / 新習志野キャンパス" },
+          { id: "c_digi_media_intro", name: "デジタルメディア創成入門", teacher: "遠藤 隼人", term: "26 前期 金曜 6-7限", room: "212講義室 / 新習志野キャンパス" }
         ]
       },
     },
@@ -1271,7 +1271,7 @@ window.GAME_DATABASE = {
         id: "c_quantum",
         name: "応用量子力学",
         teacher: "神崎 恭介",
-        term: "2026 前期 月曜 2限",
+        term: "26 前期 月曜 2限",
         room: "新習志野校舎6号館301",
         news: [
           { title: "【重要】第11回 時空トンネリング変調周波数に関する補足資料", date: "2026-08-20" },
@@ -1299,7 +1299,7 @@ window.GAME_DATABASE = {
         id: "c_uiux",
         name: "UI・UXの入門",
         teacher: "神崎 恭介",
-        term: "2026 前期 水曜 3限",
+        term: "26 前期 水曜 3限",
         room: "津田沼校舎2号館401",
         news: [
           { title: "第6回 ユーザビリティテスト課題の提出期限について", date: "2026-08-18" },
@@ -1320,7 +1320,7 @@ window.GAME_DATABASE = {
         id: "c_literacy",
         name: "基礎情報リテラシー",
         teacher: "佐藤 健一",
-        term: "2026 前期 月曜 1限",
+        term: "26 前期 月曜 1限",
         room: "津田沼校舎1号館",
         news: [{ title: "第5回課題の提出について", date: "2026-07-15" }],
         materials: [{ id: 1, title: "第1回: 大学のネットワーク利用案内", file: "literacy_01.pdf", content: "「学内Wi-Fiの設定とmanabaの使い方。」" }]
@@ -1329,7 +1329,7 @@ window.GAME_DATABASE = {
         id: "c_distributed",
         name: "分散システム論",
         teacher: "藤田 剛",
-        term: "2026 前期 月曜 3限",
+        term: "26 前期 月曜 3限",
         room: "津田沼校舎2号館",
         news: [{ title: "中間レポート課題のお知らせ", date: "2026-07-20" }],
         materials: [{ id: 1, title: "第1回: 分散アルゴリズムと合意形成", file: "dist_01.pdf", content: "「Paxos / Raftアルゴリズムの基礎。」" }]
@@ -1338,7 +1338,7 @@ window.GAME_DATABASE = {
         id: "c_quantum_adv",
         name: "量子力学特論",
         teacher: "高橋 誠",
-        term: "2026 前期 火曜 3限",
+        term: "26 前期 火曜 3限",
         room: "新習志野校舎6号館202",
         news: [{ title: "第4回 演習問題解答の掲載", date: "2026-07-18" }],
         materials: [{ id: 1, title: "第1回: 量子場と対称性の破れ", file: "quantum_adv_01.pdf", content: "「自発的対称性の破れと南部・ゴールドストーン粒子。」" }]
@@ -1347,7 +1347,7 @@ window.GAME_DATABASE = {
         id: "c_thermo",
         name: "熱統計力学",
         teacher: "小林 浩二",
-        term: "2026 前期 水曜 1限",
+        term: "26 前期 水曜 1限",
         room: "新習志野校舎5号館101",
         news: [{ title: "小テスト実施のお知らせ", date: "2026-07-12" }],
         materials: [{ id: 1, title: "第1回: カノニカル分布と自由エネルギー", file: "thermo_01.pdf", content: "「分配関数の計算手法と巨視的物理量の導出。」" }]
@@ -1356,7 +1356,7 @@ window.GAME_DATABASE = {
         id: "c_crypto",
         name: "暗号プロトコル",
         teacher: "山本 隆",
-        term: "2026 前期 水曜 2限",
+        term: "26 前期 水曜 2限",
         room: "津田沼校舎2号館",
         news: [{ title: "公開鍵暗号に関する補足資料", date: "2026-07-22" }],
         materials: [{ id: 1, title: "第1回: 楕円曲線暗号の基礎", file: "crypto_01.pdf", content: "「ECDSA署名プロトコルとゼロ知識証明。」" }]
@@ -1365,7 +1365,7 @@ window.GAME_DATABASE = {
         id: "c_network",
         name: "ネットワーク工学",
         teacher: "松本 淳",
-        term: "2026 前期 金曜 1限",
+        term: "26 前期 金曜 1限",
         room: "津田沼校舎4号館",
         news: [{ title: "パケットキャプチャ演習について", date: "2026-07-25" }],
         materials: [{ id: 1, title: "第1回: TCP/IPプロトコルスタック", file: "network_01.pdf", content: "「ルーティングプロトコルと輻輳制御。」" }]
@@ -1374,7 +1374,7 @@ window.GAME_DATABASE = {
         id: "c_media",
         name: "メディア表現基礎",
         teacher: "渡辺 裕子",
-        term: "2026 前期 月曜 1限",
+        term: "26 前期 月曜 1限",
         room: "津田沼校舎2号館102",
         news: [{ title: "中間課題スライド提出について", date: "2026-07-14" }],
         materials: [{ id: 1, title: "第1回: 映像・グラフィック基礎", file: "media_01.pdf", content: "「色彩構成とタイポグラフィの基礎。」" }]
@@ -1383,7 +1383,7 @@ window.GAME_DATABASE = {
         id: "c_cognitive",
         name: "認知心理学",
         teacher: "中村 慎一",
-        term: "2026 前期 木曜 2限",
+        term: "26 前期 木曜 2限",
         room: "津田沼校舎3号館201",
         news: [{ title: "第3回 課題レポートについて", date: "2026-07-19" }],
         materials: [{ id: 1, title: "第1回: 視覚認知とアフォーダンス", file: "cognitive_01.pdf", content: "「ギブソンの生態心理学と認知的インタフェース。」" }]
@@ -1392,7 +1392,7 @@ window.GAME_DATABASE = {
         id: "c_electromag",
         name: "電磁気学演習",
         teacher: "佐々木 健",
-        term: "2026 前期 木曜 4限",
+        term: "26 前期 木曜 4限",
         room: "新習志野校舎4号館201",
         news: [{ title: "演習課題の提出について", date: "2026-07-16" }],
         materials: [{ id: 1, title: "第1回: マクスウェル方程式の微分形式", file: "electromag_01.pdf", content: "「電磁ポテンシャルとゲージ変換の基礎。」" }]
@@ -1401,7 +1401,7 @@ window.GAME_DATABASE = {
         id: "c_phys_exp",
         name: "先端物理実験",
         teacher: "高橋 誠",
-        term: "2026 前期 金曜 5限",
+        term: "26 前期 金曜 5限",
         room: "新習志野実験棟101",
         news: [{ title: "実験安全講習の受講確認", date: "2026-07-10" }],
         materials: [{ id: 1, title: "第1回: 光電子分光実験ガイダンス", file: "phys_exp_01.pdf", content: "「超伝導素子の特性測定と極低温実験手順。」" }]
@@ -1410,7 +1410,7 @@ window.GAME_DATABASE = {
         id: "c_database",
         name: "データベース工学",
         teacher: "吉田 聡",
-        term: "2026 前期 火曜 1限",
+        term: "26 前期 火曜 1限",
         room: "津田沼校舎2号館302",
         news: [{ title: "SQL演習環境のログイン情報", date: "2026-07-15" }],
         materials: [{ id: 1, title: "第1回: リレーショナルモデルと正規化", file: "database_01.pdf", content: "「ACID特性とトランザクション分離レベル。」" }]
@@ -1419,7 +1419,7 @@ window.GAME_DATABASE = {
         id: "c_ai",
         name: "人工知能概論",
         teacher: "井上 拓哉",
-        term: "2026 前期 木曜 4限",
+        term: "26 前期 木曜 4限",
         room: "津田沼校舎1号館401",
         news: [{ title: "第2回 機械学習レポート課題", date: "2026-07-21" }],
         materials: [{ id: 1, title: "第1回: ディープラーニングの基礎理論", file: "ai_01.pdf", content: "「ニューラルネットワークの順伝播と誤差逆伝播法。」" }]
@@ -1428,7 +1428,7 @@ window.GAME_DATABASE = {
         id: "c_color",
         name: "色彩心理学",
         teacher: "加藤 恵子",
-        term: "2026 前期 火曜 2限",
+        term: "26 前期 火曜 2限",
         room: "津田沼校舎3号館102",
         news: [{ title: "色彩配色カードの持参について", date: "2026-07-13" }],
         materials: [{ id: 1, title: "第1回: 表色系と色の三属性", file: "color_01.pdf", content: "「マンセル表色系と色彩感情効果の心理実験。」" }]
@@ -1437,7 +1437,7 @@ window.GAME_DATABASE = {
         id: "c_interactive",
         name: "インタラクティブデザイン",
         teacher: "渡辺 裕子",
-        term: "2026 前期 金曜 5限",
+        term: "26 前期 金曜 5限",
         room: "津田沼校舎2号館405",
         news: [{ title: "展示制作の中間発表について", date: "2026-07-28" }],
         materials: [{ id: 1, title: "第1回: フィジカルコンピューティング基礎", file: "interactive_01.pdf", content: "「センサー入力とリアルタイムフィードバックの演出。」" }]
@@ -1446,7 +1446,7 @@ window.GAME_DATABASE = {
         id: "c_english",
         name: "アカデミック英語",
         teacher: "Smith John",
-        term: "2026 前期 月曜 3限",
+        term: "26 前期 月曜 3限",
         room: "津田沼校舎3号館",
         news: [{ title: "Presentation assignment guidelines", date: "2026-07-17" }],
         materials: [{ id: 1, title: "Unit 1: Academic Paper Reading", file: "english_01.pdf", content: "「Reading comprehension and technical terminology.」" }]

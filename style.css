@@ -533,9 +533,35 @@ body {
 .manaba-dock-icon,
 .link-dock-icon {
   background-color: #ffffff;
-  overflow: hidden;
   padding: 0;
   position: relative;
+  overflow: visible;
+}
+
+.manaba-dock-icon img,
+.link-dock-icon img {
+  border-radius: 14px;
+}
+
+.dock-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 11px;
+  background: #ff3b30;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  border: 2px solid #ffffff;
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* 🔄 iPadOS風 ステータスバー通信中・ロード中インジケータ */

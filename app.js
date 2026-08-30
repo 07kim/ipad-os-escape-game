@@ -4173,8 +4173,8 @@ function renderManabaPortal() {
         otherBody.innerHTML += `
           <tr onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
             <td><a href="javascript:void(0);" class="other-course-name">${c.name}</a></td>
-            <td>2026</td>
-            <td>${c.term || '2026 前期'}</td>
+            <td>26</td>
+            <td>${c.term || '26 前期'}</td>
             <td>${c.teacher || '担当教員'}</td>
           </tr>
         `;
@@ -4187,14 +4187,14 @@ function renderManabaPortal() {
   if (listBody) {
     listBody.innerHTML = "";
     const courses = user.courses && user.courses.length > 0 ? user.courses : [
-      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "2026 前期 月曜 2限" }
+      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "26 前期 月曜 2限" }
     ];
     courses.forEach(c => {
       listBody.innerHTML += `
         <tr onclick="openManabaCourse('${c.id}')" style="cursor:pointer;">
           <td><a href="javascript:void(0);" class="other-course-name">${c.name}</a></td>
-          <td>2026</td>
-          <td>${c.term || '2026 前期'}</td>
+          <td>26</td>
+          <td>${c.term || '26 前期'}</td>
           <td>${c.teacher || '神崎 恭介'}</td>
         </tr>
       `;
@@ -4206,7 +4206,7 @@ function renderManabaPortal() {
   if (thumbGrid) {
     thumbGrid.innerHTML = "";
     const courses = user.courses && user.courses.length > 0 ? user.courses : [
-      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "2026 前期 月曜 2限" }
+      { id: "c_quantum", name: "応用量子力学", teacher: "神崎 恭介", term: "26 前期 月曜 2限" }
     ];
     courses.forEach(c => {
       thumbGrid.innerHTML += `
@@ -4219,7 +4219,7 @@ function renderManabaPortal() {
             <div class="thumb-card-title">${c.name}</div>
             <div class="thumb-card-meta">
               <div>担当: ${c.teacher || '神崎 恭介'}</div>
-              <div>${c.term || '2026 前期'}</div>
+              <div>${c.term || '26 前期'}</div>
             </div>
           </div>
         </div>
@@ -4374,12 +4374,12 @@ function openManabaCourse(courseIdOrName) {
         id: userMatch.id || `c_${Date.now()}`,
         name: userMatch.name,
         teacher: userMatch.teacher || "佐藤 健一",
-        term: userMatch.term || "2026 前期",
+        term: userMatch.term || "26 前期",
         room: userMatch.room || "津田沼校舎1号館",
         code: "24" + Math.floor(100000 + Math.random() * 900000),
         news: [
-          { date: "2026-08-20", title: `【受講者連絡】${userMatch.name} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
-          { date: "2026-08-05", title: `${userMatch.name}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
+          { date: "26-08-20", title: `【受講者連絡】${userMatch.name} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
+          { date: "26-08-05", title: `${userMatch.name}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
         ],
         materials: [
           { id: 1, title: `第1回: ${userMatch.name} ガイダンス`, file: `${userMatch.name}_01.pdf`, content: `【${userMatch.name} 第1回講義資料】\n\nシラバス説明と評価基準について。` }
@@ -5238,7 +5238,7 @@ function makePhoneCall() {
     if (!ov || ov.style.display === 'none') return;
 
     document.getElementById('phone-calling-status').innerText = "ガイダンス応答";
-    const guidanceText = "おかけになった電話番号は、現在使われておりません。または時間線の不整合により接続できません。番号をお確かめになって、もう一度お掛け直しください。";
+    const guidanceText = "おかけになった電話番号は、現在使われておりません。番号をお確かめになって、もう一度お掛け直しください。";
     document.getElementById('phone-audio-subtitles').innerText = `「${guidanceText}」`;
     
     // Web Speech API で音声合成アナウンス（日本語女性トーン）
