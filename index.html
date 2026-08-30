@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.45.0">
+  <link rel="stylesheet" href="style.css?v=2.46.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -128,7 +128,7 @@
 
           <div class="app-icon-wrapper" onclick="openApp('link-app')">
             <div class="app-icon app-link-icon">
-              <i data-lucide="message-square"></i>
+              <img src="./LINK.png" class="app-icon-img" alt="LINK">
             </div>
             <span class="app-name">LINK</span>
           </div>
@@ -168,7 +168,10 @@
           <div class="dock">
             <div class="dock-icon" onclick="openApp('meta-app')"><i data-lucide="folder-open"></i></div>
             <div class="dock-icon" onclick="openApp('browser-app')"><i data-lucide="globe"></i></div>
-            <div class="dock-icon" onclick="openApp('link-app')"><i data-lucide="message-square"></i></div>
+            <div class="dock-icon link-dock-icon" onclick="openApp('link-app')">
+              <img src="./LINK.png" class="dock-icon-img" alt="LINK">
+              <span class="dock-badge" id="dock-link-badge" style="display:none;">1</span>
+            </div>
             <div class="dock-icon manaba-dock-icon" onclick="openApp('manaba-app')">
               <img src="./manaba.jpg" class="dock-icon-img" alt="manaba">
             </div>
@@ -2404,7 +2407,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.45.0"></script>
-  <script src="app.js?v=2.45.0"></script>
+  <script src="data.js?v=2.46.0"></script>
+  <script src="app.js?v=2.46.0"></script>
 </body>
 </html>

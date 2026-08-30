@@ -440,9 +440,12 @@ body {
 .app-safari-icon i { color: #007aff; }
 
 .app-link-icon {
-  background-color: #34c759;
+  background-color: #ffffff;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.app-link-icon i { color: white; }
 
 .app-manaba-icon {
   background-color: #ffffff;
@@ -525,10 +528,12 @@ body {
   color: #333;
 }
 
-.manaba-dock-icon {
+.manaba-dock-icon,
+.link-dock-icon {
   background-color: #ffffff;
   overflow: hidden;
   padding: 0;
+  position: relative;
 }
 
 /* 🔄 iPadOS風 ステータスバー通信中・ロード中インジケータ */
