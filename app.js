@@ -5262,16 +5262,16 @@ function makePhoneCall() {
     if (!ov || ov.style.display === 'none') return;
 
     document.getElementById('phone-calling-status').innerText = "ガイダンス応答";
-    const guidanceText = "おかけになった電話番号は、現在使われておりません。番号をお確かめになって、もう一度お掛け直しください。";
+    const guidanceText = "おかけになった電話は、電波の届かない場所にあるか、電源が入っていないためかかりません。もう一度お掛け直しください。";
     document.getElementById('phone-audio-subtitles').innerText = `「${guidanceText}」`;
     
     // Web Speech API で音声合成アナウンス（日本語女性トーン）
     speakGuidanceAudio(guidanceText);
 
-    // 6.5秒後に自動切断（ガチャッと切断）
+    // 7.0秒後に自動切断（ガチャッと切断）
     const timer2 = setTimeout(() => {
       endPhoneCall(false);
-    }, 6500);
+    }, 7000);
     phoneCallTimers.push(timer2);
   }, 3000);
   phoneCallTimers.push(phoneCallAudioTimer);
