@@ -2193,6 +2193,136 @@ let canvasLineWidth = 2;
 let canvasIsEraser = false;
 let memoCanvasInitialized = false;
 
+// --- カメラ/QRコード読み取り統合ロジック（iOS Safari / iPadOS 完全最適化版） ---
+let activeStream = null;
+let qrScanTimeout = null;
+
+function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-result') {
+  stopAllCameraStreams();
+
+  const video = document.getElementById(videoId);
+  const canvas = document.getElementById(canvasId);
+  const resultBox = document.getElementById(resultBoxId);
+  
+  if (resultBox) {
+    resultBox.innerText = "📷 カメラを起動しています...";
+    resultBox.className = "qr-result-box";
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (resultBox) {
+      resultBox.innerText = "⚠️ この端末はカメラAPIに対応していません。手動入力をご利用ください。";
+      resultBox.className = "qr-result-box error";
+    }
+    return;
+  }
+
+  // 🍎 iOS Safari 必須プロパティの設定
+  if (video) {
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.playsInline = true;
+    video.muted = true;
+    video.autoplay = true;
+  }
+
+  // 📷 多段階カメラストリーム取得（背面カメラ優先 ➔ 汎用カメラフォールバック）
+  function tryGetCamera(constraints) {
+    return navigator.mediaDevices.getUserMedia(constraints);
+  }
+
+  const primaryConstraints = {
+    video: {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1280, max: 1920 },
+      height: { ideal: 720, max: 1080 }
+    },
+    audio: false
+  };
+
+  const fallbackConstraints = {
+    video: { facingMode: "environment" },
+    audio: false
+  };
+
+  const ultimateFallbackConstraints = {
+    video: true,
+    audio: false
+  };
+
+  tryGetCamera(primaryConstraints)
+    .catch(() => tryGetCamera(fallbackConstraints))
+    .catch(() => tryGetCamera(ultimateFallbackConstraints))
+    .then(stream => {
+      activeStream = stream;
+      if (video) {
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          video.play().catch(e => console.warn("Video play error:", e));
+        };
+        // 即時playも呼び出し
+        video.play().catch(() => {});
+      }
+      if (resultBox) {
+        resultBox.innerText = "🔍 QRコードをスキャン枠に合わせてください...";
+        resultBox.className = "qr-result-box";
+      }
+      
+      let lastScanTime = 0;
+      function tick(timestamp) {
+        if (video && canvas && video.readyState >= 2) { // HAVE_CURRENT_DATA以上
+          // 80ms（約12fps）ごとに解析してCPU負荷を劇的に低減
+          if (!lastScanTime || timestamp - lastScanTime >= 80) {
+            lastScanTime = timestamp;
+            const vw = video.videoWidth || 640;
+            const vh = video.videoHeight || 480;
+            if (vw > 0 && vh > 0) {
+              const ctx = canvas.getContext("2d", { willReadFrequently: true });
+              canvas.width = vw;
+              canvas.height = vh;
+              ctx.drawImage(video, 0, 0, vw, vh);
+              try {
+                const imageData = ctx.getImageData(0, 0, vw, vh);
+                const code = (typeof jsQR !== 'undefined') ? jsQR(imageData.data, imageData.width, imageData.height, {
+                  inversionAttempts: "dontInvert",
+                }) : null;
+
+                if (code && code.data) {
+                  callback(code.data, resultBox);
+                }
+              } catch (scanErr) {
+                // コンテキストエラーを抑制
+              }
+            }
+          }
+        }
+        qrScanTimeout = requestAnimationFrame(tick);
+      }
+
+      qrScanTimeout = requestAnimationFrame(tick);
+    })
+    .catch(err => {
+      console.warn("📷 カメラアクセス失敗/拒否:", err);
+      if (resultBox) {
+        resultBox.innerText = "📷 カメラへのアクセスが許可されていません（ブラウザの設定でカメラを許可してください）";
+        resultBox.className = "qr-result-box error";
+      }
+    });
+}
+
+function stopAllCameraStreams() {
+  if (qrScanTimeout) {
+    cancelAnimationFrame(qrScanTimeout);
+    qrScanTimeout = null;
+  }
+  if (activeStream) {
+    try {
+      activeStream.getTracks().forEach(track => track.stop());
+    } catch(e) {}
+    activeStream = null;
+  }
+}
+
 // メモ帳初期化 (起動時およびタブ表示時)
 function initMetaMemo() {
   if (!gameState.memoTabs || !Array.isArray(gameState.memoTabs) || gameState.memoTabs.length === 0) {
@@ -2488,88 +2618,7 @@ function clearCurrentCanvas() {
   }
 }
 
-// --- カメラ/QRコード読み取り統合ロジック ---
-let activeStream = null;
-let qrScanTimeout = null;
 
-function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-result') {
-  stopAllCameraStreams();
-
-  const video = document.getElementById(videoId);
-  const canvas = document.getElementById(canvasId);
-  const resultBox = document.getElementById(resultBoxId);
-  
-  if (resultBox) {
-    resultBox.innerText = "カメラを起動しています...";
-    resultBox.className = "qr-result-box";
-  }
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    if (resultBox) {
-      resultBox.innerText = "⚠️ この端末はカメラAPIに対応していません。手動入力をご利用ください。";
-      resultBox.className = "qr-result-box error";
-    }
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-    .then(stream => {
-      activeStream = stream;
-      if (video) {
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true);
-        video.play();
-      }
-      if (resultBox) {
-        resultBox.innerText = "🔍 QRコードをスキャン枠に合わせてください...";
-        resultBox.className = "qr-result-box";
-      }
-      
-      qrScanTimeout = requestAnimationFrame(tick);
-    })
-    .catch(err => {
-      console.warn("カメラアクセス失敗/拒否:", err);
-      if (resultBox) {
-        resultBox.innerText = "📷 カメラへのアクセスが許可されていません（手動入力をご利用ください）";
-        resultBox.className = "qr-result-box error";
-      }
-    });
-
-  let lastScanTime = 0;
-  function tick(timestamp) {
-    if (video && video.readyState === video.HAVE_ENOUGH_DATA && canvas) {
-      // 90ms（約11fps）ごとに間引き実行してCPU負荷を劇的に低減
-      if (!lastScanTime || timestamp - lastScanTime >= 90) {
-        lastScanTime = timestamp;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = (typeof jsQR !== 'undefined') ? jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        }) : null;
-
-        if (code && code.data) {
-          callback(code.data, resultBox);
-        }
-      }
-    }
-    qrScanTimeout = requestAnimationFrame(tick);
-  }
-}
-
-function stopAllCameraStreams() {
-  if (qrScanTimeout) {
-    cancelAnimationFrame(qrScanTimeout);
-    qrScanTimeout = null;
-  }
-  if (activeStream) {
-    activeStream.getTracks().forEach(track => track.stop());
-    activeStream = null;
-  }
-  metaQrActive = false;
-}
 
 let metaQrCooldown = false;
 
