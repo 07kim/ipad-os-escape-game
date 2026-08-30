@@ -1136,8 +1136,8 @@ const DEFAULT_LOCK_NOTIFICATIONS = {
 
 // --- アプリ種別に応じた通知アプリアイコンHTML生成 ---
 function getNotificationAppIconHtml(appName, iconName) {
-  if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square' || iconName === 'LINK.png') {
-    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.png?v=2.47.0" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
+  if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square' || iconName === 'LINK.png' || iconName === 'LINK') {
+    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.png?v=2.48.0" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
   } else if (appName === 'メール' || iconName === 'mail') {
     return `<div class="notif-app-icon mail-icon"><img src="./mail.png" style="width:100%; height:100%; object-fit:cover;" alt="メール"></div>`;
   } else if (appName === 'カレンダー' || iconName === 'calendar') {
@@ -1209,16 +1209,19 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   const descEl = document.getElementById('push-notif-desc');
   if (descEl) descEl.innerText = cleanBody;
   
-  const iconEl = document.getElementById('push-notif-icon');
-  if (iconEl) {
-    if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.png') {
-      iconEl.innerHTML = '<img src="./LINK.png?v=2.47.0" style="width:24px; height:24px; border-radius:6px; object-fit:cover; display:block;" alt="LINK">';
+  const iconWrap = document.getElementById('push-notif-icon-wrap');
+  if (iconWrap) {
+    if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.png' || icon === 'LINK') {
+      iconWrap.innerHTML = '<img src="./LINK.png?v=2.48.0" id="push-notif-icon" class="push-notif-img" alt="LINK">';
+      iconWrap.style.background = '#ffffff';
     } else if (app === 'メール' || icon === 'mail') {
-      iconEl.innerHTML = '<img src="./mail.png" style="width:24px; height:24px; border-radius:6px; object-fit:cover; display:block;" alt="メール">';
+      iconWrap.innerHTML = '<img src="./mail.png" id="push-notif-icon" class="push-notif-img" alt="メール">';
+      iconWrap.style.background = '#ffffff';
     } else {
-      iconEl.innerHTML = `<i data-lucide="${icon}" style="width:20px; height:20px;"></i>`;
+      iconWrap.innerHTML = `<i data-lucide="${icon}" id="push-notif-icon" style="width:20px; height:20px; color:#fff;"></i>`;
+      iconWrap.style.background = 'var(--system-blue)';
       if (typeof lucide !== 'undefined') {
-        lucide.createIcons({ roots: [iconEl] });
+        lucide.createIcons({ roots: [iconWrap] });
       }
     }
   }

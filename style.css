@@ -303,7 +303,9 @@ body {
 }
 
 .notif-app-icon.link-icon {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: #ffffff;
+  overflow: hidden;
+  padding: 0;
 }
 
 .notif-app-icon.mail-icon {
@@ -7848,13 +7850,22 @@ body {
 .push-notif-icon-wrap {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: var(--system-blue);
-  color: #fff;
+  border-radius: 9px;
+  background: #ffffff;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.push-notif-icon-wrap img,
+.push-notif-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .push-notif-body {
