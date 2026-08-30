@@ -241,9 +241,6 @@ function fetchLatestDataFromSpreadsheet() {
     return;
   }
 
-  // 通信中の微かなパルスアニメーション
-  updateWifiStatusIndicator('syncing');
-
   const startTime = Date.now();
   const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
   
@@ -601,20 +598,15 @@ function sendDeviceStatusHeartbeat() {
   localStorage.setItem('mon_last_update', String(Date.now()));
 }
 
-// 📶 左上Wi-Fiアイコンによるスプレッドシート（GAS）接続状態の隠しインジケーター
+// 📶 左上Wi-Fiアイコンによるスプレッドシート（GAS）接続状態の隠しインジケーター（不要な再描画・全画面点滅を完全防止）
+let lastWifiIndicatorStatus = null;
 function updateWifiStatusIndicator(status) {
+  if (status === 'syncing') return; // 点滅防止
+  if (status === lastWifiIndicatorStatus) return; // 状態変化がない時はDOM操作・アイコン再生成を一切しない
+
+  lastWifiIndicatorStatus = status;
   const wrapper = document.getElementById('sb-wifi-wrapper');
   if (!wrapper) return;
-
-  if (status === 'syncing') {
-    const icon = wrapper.querySelector('.wifi-icon');
-    if (icon) {
-      icon.classList.remove('syncing');
-      void icon.offsetWidth; // リフロー
-      icon.classList.add('syncing');
-    }
-    return;
-  }
 
   if (status === 'connected') {
     // 🟢 正常接続時：通常のWi-Fiアイコン（白色・クリア点灯）
@@ -624,9 +616,7 @@ function updateWifiStatusIndicator(status) {
     wrapper.innerHTML = `<i data-lucide="wifi-off" class="wifi-icon disconnected"></i>`;
   }
 
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
+  safeCreateIcons(wrapper);
 }
 
 function updateStaffSyncUI() {
@@ -2128,7 +2118,7 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
     const errToast = document.getElementById('evidence-scanner-error-toast');
     if (errToast) {
       errToast.style.display = 'flex';
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons(errToast);
     }
     if (statusBox) {
       statusBox.innerText = "⚠️ 該当する調査資料がありません";
@@ -2403,7 +2393,7 @@ function renderMemoTabs() {
     </button>
   `;
 
-  if (window.lucide) lucide.createIcons();
+  safeCreateIcons(tabsContainer);
 }
 
 // タブ選択
@@ -3421,7 +3411,7 @@ function openLinkInAppForm(formId) {
   }, { passive: true });
 
   overlay.style.display = 'flex';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  safeCreateIcons(overlay);
   logWriteToGAS("LINK_INAPP_FORM_OPEN", "LINE風アプリ内オーバーレイでフォームを開きました。");
 }
 
