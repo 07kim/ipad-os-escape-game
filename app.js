@@ -3777,10 +3777,10 @@ function openGSpreadsheet(e) {
   document.getElementById('gsheet-view').style.display = 'flex';
 
   const ss = window.GAME_DATABASE.hacking.spreadsheet;
-  if (ss && ss.sheets && ss.sheets.includes("フォームの回答 1")) {
-    gameState.activeGSheetTab = "フォームの回答 1";
+  if (ss && ss.sheets && (ss.sheets.includes("Form_Responses") || ss.sheets.includes("フォームの回答 1"))) {
+    gameState.activeGSheetTab = ss.sheets.includes("Form_Responses") ? "Form_Responses" : "フォームの回答 1";
   } else if (!gameState.activeGSheetTab) {
-    gameState.activeGSheetTab = (ss && ss.sheets && ss.sheets.length > 0) ? ss.sheets[0] : "フォームの回答 1";
+    gameState.activeGSheetTab = (ss && ss.sheets && ss.sheets.length > 0) ? ss.sheets[0] : "Form_Responses";
   }
   gameState.isGSheetEditing = false;
 
@@ -3833,29 +3833,58 @@ function renderGSpreadsheet() {
   const table = document.getElementById('gsheet-table');
   if (!table) return;
 
-  const currentTab = gameState.activeGSheetTab || ss.sheets[0] || "名簿データ";
+  const currentTab = gameState.activeGSheetTab || ss.sheets[0] || "Form_Responses";
   const headers = (ss.headers && ss.headers[currentTab]) || [];
   const rows = (ss.rows && ss.rows[currentTab]) || (ss.data && ss.data[currentTab]) || [];
   const isEditing = !!gameState.isGSheetEditing;
 
-  const isFormResponses = (currentTab === "フォームの回答 1" || currentTab === "Form_Responses");
+  const isFormResponses = (currentTab === "Form_Responses" || currentTab === "フォームの回答 1");
   const colLetters = headers.map((_, i) => String.fromCharCode(65 + i));
 
-  let html = `<thead><tr><th class="gsheet-row-num"></th>`;
+  let html = `<thead>`;
+  
+  // Form_Responses 上部ピルバー（画像準拠デザイン）
+  if (isFormResponses) {
+    html += `
+      <tr style="background:#f8f9fa;">
+        <th colspan="${headers.length + 1}" style="padding:6px 12px; text-align:left; background:#e8eaed; border-bottom:1px solid #dadce0;">
+          <div style="display:inline-flex; align-items:center; gap:8px; background:#512da8; color:#ffffff; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,0.15);">
+            <span>Form_Responses</span>
+            <span style="font-size:10px; opacity:0.85;">▼</span>
+            <span style="margin-left:6px; opacity:0.75; font-size:11px;">|</span>
+            <i data-lucide="table" style="width:12px; height:12px; opacity:0.9;"></i>
+            <i data-lucide="zap" style="width:12px; height:12px; opacity:0.9;"></i>
+          </div>
+        </th>
+      </tr>
+    `;
+  }
+
+  html += `<tr><th class="gsheet-row-num" style="${isFormResponses ? 'background:#4a148c; color:#fff;' : ''}"></th>`;
   headers.forEach((h, i) => {
-    const headerBg = isFormResponses ? 'background:#512da8; color:#ffffff;' : '';
-    const textStyle = isFormResponses ? 'color:#ffffff; font-weight:600;' : 'color:#202124; font-weight:500;';
-    html += `<th style="${headerBg}">${colLetters[i] || ''}<div style="${textStyle} font-size:11px; margin-top:2px; line-height:1.3;">${h}</div></th>`;
+    const headerBg = isFormResponses ? 'background:#4a148c; color:#ffffff; border-right:1px solid rgba(255,255,255,0.2);' : '';
+    const textStyle = isFormResponses ? 'color:#ffffff; font-weight:600; display:flex; justify-content:space-between; align-items:center;' : 'color:#202124; font-weight:500;';
+    const arrowHtml = isFormResponses ? `<span style="font-size:10px; opacity:0.8; margin-left:6px;">▼</span>` : '';
+    
+    html += `
+      <th style="${headerBg} padding:8px 12px; min-width:140px;">
+        <div style="font-size:10px; opacity:0.7; margin-bottom:2px;">${colLetters[i] || ''}</div>
+        <div style="${textStyle} font-size:12px; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">
+          <span>${h}</span>
+          ${arrowHtml}
+        </div>
+      </th>
+    `;
   });
   html += `</tr></thead><tbody>`;
 
   rows.forEach((row, rIdx) => {
-    html += `<tr><td class="gsheet-row-num">${rIdx + 1}</td>`;
+    html += `<tr><td class="gsheet-row-num" style="text-align:center; font-size:11px; color:#5f6368; background:#f8f9fa;">${rIdx + 1}</td>`;
     row.forEach((cell, cIdx) => {
       const colName = colLetters[cIdx] || 'A';
       const cellName = `${colName}${rIdx + 1}`;
       const editableAttr = isEditing ? 'contenteditable="true" onblur="handleCellEdit(this, \'' + currentTab + '\', ' + rIdx + ', ' + cIdx + ')"' : '';
-      html += `<td class="gsheet-cell" data-cell="${cellName}" onclick="selectGSheetCell(this, '${cellName}')" ${editableAttr}>${cell}</td>`;
+      html += `<td class="gsheet-cell" data-cell="${cellName}" onclick="selectGSheetCell(this, '${cellName}')" ${editableAttr} style="font-size:12.5px; line-height:1.5; padding:8px 12px; vertical-align:top;">${cell}</td>`;
     });
     html += `</tr>`;
   });
