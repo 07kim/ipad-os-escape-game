@@ -1192,30 +1192,38 @@ function handleLockNotificationClick(n) {
 }
 
 // --- iPadOS風 オリジナル通知システム ---
+// --- iPadOS風 オリジナル通知システム ---
 let currentPushAction = null;
+let pushBannerTimer = null;
 
 function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   const banner = document.getElementById('push-notification-banner');
   if (!banner) return;
 
   const appEl = document.getElementById('push-notif-app');
-  if (appEl) appEl.innerText = app;
+  if (appEl) appEl.innerText = app || "通知";
   const titleEl = document.getElementById('push-notif-title');
-  if (titleEl) titleEl.innerText = title;
+  if (titleEl) titleEl.innerText = title || "";
+
+  // 📝 本文の長文トリミング（2行で見やすくなるよう最大65文字に制限）
+  let cleanBody = (body || "").trim();
+  if (cleanBody.length > 65) {
+    cleanBody = cleanBody.slice(0, 65) + "…";
+  }
   const descEl = document.getElementById('push-notif-desc');
-  if (descEl) descEl.innerText = body;
+  if (descEl) descEl.innerText = cleanBody;
   
   const iconEl = document.getElementById('push-notif-icon');
   if (iconEl) {
     if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square') {
-      iconEl.setAttribute('data-lucide', 'message-circle');
-      iconEl.style.color = '#22c55e';
+      iconEl.innerHTML = '<i data-lucide="message-circle" style="width:20px; height:20px; color:#22c55e;"></i>';
     } else {
-      iconEl.setAttribute('data-lucide', icon);
-      iconEl.style.color = '';
+      iconEl.innerHTML = `<i data-lucide="${icon}" style="width:20px; height:20px;"></i>`;
+    }
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons({ roots: [iconEl] });
     }
   }
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   // デフォルトタップアクション（LINK通知なら自動でLINKアプリを開く）
   if (onClick) {
@@ -1232,7 +1240,8 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   banner.classList.add('show');
   playSystemSound("notif");
 
-  setTimeout(() => {
+  if (pushBannerTimer) clearTimeout(pushBannerTimer);
+  pushBannerTimer = setTimeout(() => {
     banner.classList.remove('show');
   }, 4500);
 }
@@ -1240,8 +1249,20 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
 function handleBannerClick() {
   const banner = document.getElementById('push-notification-banner');
   if (banner) banner.classList.remove('show');
-  if (currentPushAction) {
-    currentPushAction();
+  if (pushBannerTimer) clearTimeout(pushBannerTimer);
+
+  const action = currentPushAction;
+  currentPushAction = null;
+
+  // ⚡ UIスレッドのブロック・フリーズを防止するため、バナーが引っ込むアニメーションと非同期で実行
+  if (action) {
+    setTimeout(() => {
+      try {
+        action();
+      } catch (err) {
+        console.warn('通知タップアクション実行エラー:', err);
+      }
+    }, 40);
   }
 }
 
