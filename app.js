@@ -134,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // LocalStorage変更イベント購読（運営画面＋演者ツールからのリアルタイム変更をキャッチ）
     window.addEventListener('storage', handleStorageEvent);
 
-    // 🎭 BroadcastChannelリスナー（同一ブラウザ内のactor.htmlからの即時受信）
+    // 🎭 BroadcastChannelリスナー（同一ブラウザ内のactor.html / admin.htmlからの即時受信）
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         const actorChannel = new BroadcastChannel('escape_game_channel');
@@ -144,8 +144,15 @@ window.addEventListener('DOMContentLoaded', () => {
           if (type === 'actor_message' && payload) {
             console.log('🎭 BroadcastChannel経由で演者メッセージを受信:', payload);
             executeRemoteAdminCommand(payload);
+          } else if (type === 'loop_change' && payload && payload.loop) {
+            console.log('🌀 BroadcastChannel経由で周回変更を受信:', payload.loop);
+            triggerLoopTransition(payload.loop);
+          } else if (type === 'preset' && payload && payload.loop) {
+            console.log('🎬 BroadcastChannel経由でプリセットを受信:', payload.loop);
+            triggerLoopTransition(payload.loop);
           } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
-            // リセット指示はBroadcastChannel経由でも対応
+            console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
+            performMasterReset();
           }
         };
         console.log('✅ BroadcastChannelリスナーを起動しました (escape_game_channel)');
@@ -365,24 +372,11 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行 ＆ 時刻09:04リセット ＆ ロック画面へ強制移行
+  // ③ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04静止待機を完全徹底）
   if (isLoopChange) {
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
-      gameState.loop = nextLoop;
-      localStorage.setItem('game_loop', String(nextLoop));
-      
-      // 時刻を 09:04 に強制リセット
-      const loopClockISO = "2126-09-04T09:04:00";
-      localStorage.setItem('fake_clock_start_iso', loopClockISO);
-      gameState.clockStartISO = loopClockISO;
-
-      // 🔄 メタアプリ以外の全アプリ（manaba, 電卓, バブル, Safari, 電話, メール, LINK）を完全リセット！
-      resetAllAppsForNewLoop();
-
-      // 🔒 周回の切り替わりでは必ずロック画面へ強制移行
-      showLockScreen();
-      updateAppUI();
+      triggerLoopTransition(nextLoop);
     }
   } else if (p.forceLock === true || p.lock === true) {
     // ④ 明示的なロック画面強制指示
@@ -842,10 +836,10 @@ function saveStateToStorage() {
 
 // --- 運営画面など外部からの同期制御 ---
 function handleStorageEvent(e) {
-  if (e.key === 'game_loop_trigger') {
+  if (e.key === 'game_loop_trigger' || e.key === 'game_loop') {
     // 周回変更
-    const newLoop = parseInt(localStorage.getItem('game_loop') || '1');
-    if (gameState.loop !== newLoop) {
+    const newLoop = parseInt(localStorage.getItem('game_loop') || e.newValue || '1', 10);
+    if (!isNaN(newLoop) && gameState.loop !== newLoop) {
       triggerLoopTransition(newLoop);
     }
   } else if (e.key === 'game_alert_trigger') {
@@ -1043,46 +1037,58 @@ function resetAllAppsForNewLoop() {
   gameState.activeApp = null;
 }
 
-// --- 周回（ループ）の強制切り替え演出 ---
+// --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ ロック画面 ＆ 09:04静止待機を完全徹底） ---
 function triggerLoopTransition(nextLoop) {
-  // 効果音（ブラウザのAudio制限対策としてエラーハンドリング）
+  const targetLoop = parseInt(nextLoop || 1, 10);
+  if (isNaN(targetLoop)) return;
+
+  // 効果音
   playSystemSound("beep");
 
-  // 1. 強制的にロック画面をフェードイン
-  const lockScreen = document.getElementById('lock-screen');
-  lockScreen.classList.remove('hidden');
-  
-  // 2. 状態更新
-  gameState.loop = nextLoop;
+  // 1. 開いている全アプリウィンドウを確実に非表示にし、背景を「ホーム画面」に完全初期化
+  closeAllWindowsSilent();
+  gameState.activeApp = null;
+
+  // 2. メタアプリ以外の全アプリ（manaba, Safari, 電話, メール, LINK等）を完全初期化
+  resetAllAppsForNewLoop();
+
+  // 3. 状態更新
+  gameState.loop = targetLoop;
   saveStateToStorage();
-  localStorage.setItem('game_loop', String(nextLoop));
+  localStorage.setItem('game_loop', String(targetLoop));
 
-  // 時刻を 09:04 にリセット
+  // 4. 時刻を 09:04（9月4日）に完全固定・静止待機に設定（ロック解除されるまでタイマー停止・静止）
   const loopClockISO = "2126-09-04T09:04:00";
-  localStorage.setItem('fake_clock_start_iso', loopClockISO);
+  gameState.timerRunning = false;
   gameState.clockStartISO = loopClockISO;
+  gameState.clockSetTime = Date.now();
+  localStorage.setItem('game_timer_running', 'false');
+  localStorage.setItem('fake_clock_start_iso', loopClockISO);
+  localStorage.setItem('fake_clock_set_time', String(Date.now()));
 
-  // 📡 演者ツール（actor.html）へ周回移行を即時通知
+  // 5. 時計表示（ロック画面 ＆ ステータスバー）を即座に「09:04」「9月4日」に強制描画
+  const statusTime = document.getElementById('status-time');
+  if (statusTime) statusTime.innerText = "09:04";
+  const lockClock = document.getElementById('lock-clock');
+  if (lockClock) lockClock.innerText = "09:04";
+  const lockDate = document.getElementById('lock-date');
+  if (lockDate) lockDate.innerText = "9月4日";
+
+  // 6. 前面にロック画面を全画面表示
+  showLockScreen();
+
+  // 7. 演者ツール（actor.html）へ周回移行を即時通知
   if (typeof BroadcastChannel !== 'undefined') {
     try {
       const bc = new BroadcastChannel('escape_game_channel');
-      bc.postMessage({ type: 'loop_change', payload: { loop: nextLoop } });
+      bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop } });
     } catch(e) {}
   }
 
-  // 3. メタアプリ以外の全アプリを完全初期化
-  resetAllAppsForNewLoop();
-
-  // 4. コンテンツUI更新
+  // 8. コンテンツUI更新（ニュース・マスタデータの周回別表示切り替え）
   updateAppUI();
 
-  // 5. ロック画面の日常通知を更新
-  renderLockNotifications();
-
-  // 6. プッシュ通知でさりげなく新着通知演出
-  showPushNotification("LINK", "新着メッセージを受信しました", "message-square", "LINK");
-
-  logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${nextLoop} へ移行しました。`);
+  logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${targetLoop} へ移行しました（ホーム初期化・ロック画面・09:04静止待機）。`);
 }
 
 // --- アプリUIの周回ごとの更新 ---
