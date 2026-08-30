@@ -5300,76 +5300,110 @@ body {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+  background: #ffffff;
 }
 
 .official-timetable-grid thead th {
-  background: #dcebc0;
-  border: 1px solid #a3c960;
-  font-size: 11px;
+  background: #dcedc8;
+  border: 1.5px solid #8bc34a;
+  font-size: 13px;
   font-weight: 700;
-  color: #333333;
-  padding: 4px;
+  color: #2e7d32;
+  padding: 6px 4px;
   text-align: center;
 }
 
 .official-timetable-grid thead th.col-period {
-  width: 24px;
+  width: 32px;
 }
 
 .official-timetable-grid tbody td {
-  border: 1px solid #cce29d;
-  height: 52px;
+  border: 1.5px solid #8bc34a;
+  height: 64px;
   vertical-align: top;
-  padding: 4px;
-  font-size: 10px;
+  padding: 6px;
+  font-size: 11px;
   background: #ffffff;
+  position: relative;
 }
 
-.official-timetable-grid tbody td.period-num {
-  background: #f7faf0;
+.official-timetable-grid tbody td.col-period {
+  background: #ffffff;
   text-align: center;
-  font-weight: 700;
-  color: #555555;
+  font-weight: 500;
+  color: #424242;
   vertical-align: middle;
   padding: 0;
+  font-size: 13px;
 }
 
 .official-timetable-grid tbody td.has-course {
-  background: #fbfdf9;
+  background: #ffffff;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.12s ease;
 }
 
 .official-timetable-grid tbody td.has-course:hover {
-  background: #eef8db;
+  background: #f1f8e9;
 }
 
-.timetable-course-item {
+.manaba-course-block {
   display: flex;
   flex-direction: column;
-  height: 100%;
   justify-content: space-between;
+  min-height: 52px;
+  gap: 4px;
 }
 
-.timetable-course-item a {
-  color: #0272c1;
-  text-decoration: none;
+.manaba-course-block + .manaba-course-block {
+  border-top: 1px dotted #8bc34a;
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.manaba-course-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.manaba-course-title {
+  color: #0055aa;
   font-weight: 700;
-  line-height: 1.25;
-  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  text-decoration: none;
+  word-break: break-word;
 }
 
-.timetable-course-item a:hover {
+.manaba-course-title:hover {
   text-decoration: underline;
 }
 
-.timetable-course-icons {
+.manaba-star-icon {
+  color: #cfd8dc;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.manaba-icon-row {
   display: flex;
   align-items: center;
-  gap: 2px;
-  font-size: 10px;
-  color: #a0a0a0;
-  margin-top: 2px;
+  gap: 3px;
+  font-size: 11px;
+  color: #b0bec5;
+  margin-top: auto;
+  user-select: none;
+}
+
+.manaba-icon-row span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
 }
 
 /* その他の曜日テーブル */

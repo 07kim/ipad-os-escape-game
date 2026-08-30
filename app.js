@@ -4078,40 +4078,51 @@ function renderManabaPortal() {
   if (welcomeNameEl) welcomeNameEl.innerText = `${user.name}さんのマイページ`;
   if (userIdEl) userIdEl.innerText = user.studentId || gameState.manabaUser;
 
-  // 2. 曜日時間割（月〜金/土 1〜10限 + 他）のレンダリング
+  // 2. 曜日時間割（月〜土 1〜10限 + 他）のレンダリング
   const timetableBody = document.getElementById('manaba-official-timetable-body');
 
   if (timetableBody) {
     timetableBody.innerHTML = "";
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     
-    // 時限数を判定（最大10限）
+    // 最大時限数（1〜10限）
     const maxPeriod = 10;
     
     for (let period = 1; period <= maxPeriod; period++) {
-      let rowHtml = `<tr><td class="col-period" style="font-weight:700; color:#5f6368; background:#f8f9fa; text-align:center;">${period}</td>`;
+      let rowHtml = `<tr><td class="col-period">${period}</td>`;
       days.forEach(day => {
         const periodIdx = period - 1;
         const rawCourse = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
         
         if (rawCourse) {
-          const isObj = typeof rawCourse === 'object';
-          const courseName = isObj ? rawCourse.name : rawCourse;
-          const courseId = isObj ? (rawCourse.id || rawCourse.name) : rawCourse;
-          const teacher = isObj ? rawCourse.teacher : '';
-          const room = isObj ? rawCourse.room : '';
-          const badge = isObj ? rawCourse.badge : '';
+          const coursesList = Array.isArray(rawCourse) ? rawCourse : [rawCourse];
+          
+          let cellInnerHtml = "";
+          coursesList.forEach(cItem => {
+            const isObj = typeof cItem === 'object';
+            const courseName = isObj ? cItem.name : cItem;
+            const courseId = isObj ? (cItem.id || cItem.name) : cItem;
 
-          rowHtml += `
-            <td class="has-course" onclick="openManabaCourse('${courseId}')" title="${courseName}" style="vertical-align:top; padding:8px 8px; background:#fff; border:1px solid #e0e0e0; cursor:pointer;">
-              <div style="font-weight:700; font-size:13px; color:#202124; margin-bottom:4px; line-height:1.35;">${courseName}</div>
-              ${teacher ? `<div style="font-size:11.5px; color:#5f6368; margin-bottom:3px;">${teacher}</div>` : ''}
-              ${room ? `<div style="font-size:11px; color:#70757a; margin-bottom:5px; line-height:1.25;">${room}</div>` : ''}
-              ${badge ? `<span style="display:inline-block; font-size:10px; font-weight:600; background:#e8eaed; color:#3c4043; padding:2px 5px; border-radius:3px; border:1px solid #dadce0;">${badge}</span>` : ''}
-            </td>
-          `;
+            cellInnerHtml += `
+              <div class="manaba-course-block" onclick="openManabaCourse('${courseId}')" title="${courseName}">
+                <div class="manaba-course-top">
+                  <a href="javascript:void(0);" class="manaba-course-title">${courseName}</a>
+                  <span class="manaba-star-icon">★</span>
+                </div>
+                <div class="manaba-icon-row">
+                  <span title="お知らせ">📢</span>
+                  <span title="小テスト">✏️</span>
+                  <span title="レポート">📄</span>
+                  <span title="掲示板">💬</span>
+                  <span title="プロジェクト">👥</span>
+                </div>
+              </div>
+            `;
+          });
+
+          rowHtml += `<td class="has-course">${cellInnerHtml}</td>`;
         } else {
-          rowHtml += `<td class="empty-cell" style="background:#fff; border:1px solid #e0e0e0; min-height:48px;"></td>`;
+          rowHtml += `<td class="empty-cell"></td>`;
         }
       });
       rowHtml += `</tr>`;
@@ -4121,7 +4132,7 @@ function renderManabaPortal() {
     // 「他」限目（もし存在する場合）
     let hasExtra = days.some(day => user.timetable && user.timetable[day] && user.timetable[day][10]);
     if (hasExtra) {
-      let extraRowHtml = `<tr><td class="col-period" style="font-weight:700; color:#5f6368; background:#f8f9fa; text-align:center;">他</td>`;
+      let extraRowHtml = `<tr><td class="col-period">他</td>`;
       days.forEach(day => {
         const extraCourse = (user.timetable && user.timetable[day] && user.timetable[day][10]) || "";
         if (extraCourse) {
@@ -4129,12 +4140,20 @@ function renderManabaPortal() {
           const courseName = isObj ? extraCourse.name : extraCourse;
           const courseId = isObj ? (extraCourse.id || extraCourse.name) : extraCourse;
           extraRowHtml += `
-            <td class="has-course" onclick="openManabaCourse('${courseId}')" style="vertical-align:top; padding:8px 8px; background:#fff; border:1px solid #e0e0e0; cursor:pointer;">
-              <a href="javascript:void(0);" class="timetable-course-link" style="font-weight:700; font-size:13px; color:#1a73e8;">${courseName}</a>
+            <td class="has-course">
+              <div class="manaba-course-block" onclick="openManabaCourse('${courseId}')" title="${courseName}">
+                <div class="manaba-course-top">
+                  <a href="javascript:void(0);" class="manaba-course-title">${courseName}</a>
+                  <span class="manaba-star-icon">★</span>
+                </div>
+                <div class="manaba-icon-row">
+                  <span>📢</span><span>✏️</span><span>📄</span><span>💬</span><span>👥</span>
+                </div>
+              </div>
             </td>
           `;
         } else {
-          extraRowHtml += `<td class="empty-cell" style="background:#fff; border:1px solid #e0e0e0;"></td>`;
+          extraRowHtml += `<td class="empty-cell"></td>`;
         }
       });
       extraRowHtml += `</tr>`;
