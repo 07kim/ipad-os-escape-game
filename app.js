@@ -1890,7 +1890,6 @@ function renderMetaObservation(folderId = 'root') {
             <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
           <div class="finder-file-name">${file.fileName}</div>
-          <div class="finder-file-desc">${file.desc || '画像ファイル'}</div>
         </div>
       `).join('');
     }
