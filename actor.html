@@ -905,15 +905,24 @@
           gasLatencyMs = latency;
           updateConnectionUI('ok', `GAS接続正常`, `${latency}ms`);
 
-          // GASから最新コマンドや周回情報を受信して同期（全階層を網羅）
+          // GASから最新コマンドや周回情報を受信して同期（全階層・全パターンを完全網羅）
           if (json) {
             const d = json.data || json;
-            
-            // 1. 最新コマンド（リセット・周回）
+            let detectedLoop = null;
+
+            // 1. 最新運営コマンド（リセット・周回変更）
             if (d.latestCommand) {
               const cmd = d.latestCommand;
-              const p = cmd.params || {};
-              if (cmd.type === 'master_reset' || cmd.type === 'reset_actor_triggers') {
+              let p = cmd.params || {};
+              if (typeof p === 'string') {
+                try { p = JSON.parse(p); } catch(e) {}
+              }
+              if (p.params && typeof p.params === 'object') {
+                p = Object.assign({}, p, p.params);
+              }
+
+              // リセット判定
+              if (cmd.type === 'master_reset' || cmd.type === 'reset_actor_triggers' || p.type === 'master_reset' || p.action === 'reset_actor_triggers') {
                 const cmdTime = p.timestamp || cmd.timestamp || 0;
                 const lastProcessedReset = parseInt(localStorage.getItem('actor_last_processed_reset') || '0', 10);
                 if (cmdTime > lastProcessedReset) {
@@ -923,16 +932,37 @@
                   updateLoopBadge(1, false);
                   showToast("🚀【ゲームスタート】演者ツールを初期化しました", false, 4000);
                 }
-              } else if (p.loop !== undefined && p.loop !== null && p.loop !== "") {
-                updateLoopBadge(p.loop);
+              }
+
+              if (p.loop !== undefined && p.loop !== null && p.loop !== "") {
+                detectedLoop = p.loop;
+              } else if (cmd.loop) {
+                detectedLoop = cmd.loop;
               }
             }
 
-            // 2. システム周回ステータス
-            if (d.system && d.system.loop) {
-              updateLoopBadge(d.system.loop);
-            } else if (d.loop) {
-              updateLoopBadge(d.loop);
+            // 2. システム設定 ＆ 稼働中iPad端末（30台）の進行状況からの周回検出
+            if (!detectedLoop) {
+              if (d.system && d.system.loop) {
+                detectedLoop = d.system.loop;
+              } else if (d.loop) {
+                detectedLoop = d.loop;
+              } else if (d.devicesStatus && Array.isArray(d.devicesStatus) && d.devicesStatus.length > 0) {
+                // 稼働中のiPad端末の最新周回を拾う
+                const loops = d.devicesStatus.map(dev => parseInt(dev.loop || dev.loopNum || 1, 10)).filter(num => !isNaN(num) && num >= 1);
+                if (loops.length > 0) {
+                  detectedLoop = Math.max(...loops);
+                }
+              }
+            }
+
+            if (detectedLoop !== null && detectedLoop !== undefined) {
+              updateLoopBadge(detectedLoop);
+            }
+
+            const connDetail = document.getElementById('conn-detail');
+            if (connDetail) {
+              connDetail.textContent = `GASサーバー通信正常 (${latency}ms) / 同期周回: ${currentGlobalLoop}周目`;
             }
           }
         } else {
