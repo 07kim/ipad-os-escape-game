@@ -5705,11 +5705,11 @@ body {
   color: #666666;
 }
 
-/* 2. コース内メニューバー（立体ボタンの横並び） */
+/* 2. コース内メニューバー（本家iPad完全再現：立体ボタンの横並び） */
 .official-course-menubar {
-  background: #f7f7f7;
-  border-bottom: 1px solid #e0e0e0;
-  padding: 5px 18px;
+  background: #ebebeb;
+  border-bottom: 1px solid #cccccc;
+  padding: 4px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -5718,45 +5718,45 @@ body {
 .course-menu-buttons-left, .course-menu-buttons-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .course-menu-btn {
-  background: linear-gradient(to bottom, #ffffff 0%, #f4f4f4 40%, #e2e2e2 95%, #ffffff);
-  border: 1px solid #999999;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f7f7f7 45%, #e8e8e8 100%);
+  border: 1px solid #b0b0b0;
+  border-radius: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 14px;
   cursor: pointer;
-  color: #323232;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: #333333;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
 }
 
 .course-menu-btn:hover {
-  background: #e6e6e6;
+  background: #e2e2e2;
 }
 
 .course-menu-btn.active-green {
-  background: linear-gradient(to bottom, #a0cc2a 0%, #7da617 100%);
-  color: #ffffff;
-  border-color: #648a0a;
+  background: linear-gradient(to bottom, #ffffff 0%, #f7f7f7 45%, #e8e8e8 100%);
+  color: #333333;
+  border-color: #b0b0b0;
 }
 
 .menu-unread-badge {
-  background: #e65100;
+  background: #d32f2f;
   color: #ffffff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 8px;
+  padding: 1px 5px;
+  margin-left: 3px;
+  line-height: 1;
 }
 
 /* サムネイルビュー・リストビュー スタイル */
@@ -6213,16 +6213,17 @@ body {
 }
 
 .course-card-box {
-  border: 1px solid #84cc16;
-  border-radius: 4px;
+  border: 1px solid #b8d88e;
+  border-radius: 3px;
   overflow: hidden;
   background: #ffffff;
 }
 
 .course-card-box-header {
-  background: linear-gradient(to right, #7fb000 0%, #9ec91d 100%);
-  padding: 5px 10px;
-  color: #ffffff;
+  background: #dcf0be;
+  border-bottom: 1px solid #c2e28f;
+  padding: 6px 12px;
+  color: #2e5b0e;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -6239,24 +6240,30 @@ body {
 }
 
 .card-header-title h3 {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
+  color: #2e5b0e;
   margin: 0;
 }
 
 .btn-create-thread {
-  background: linear-gradient(to bottom, #ffffff 0%, #ececec 100%);
-  border: 1px solid #666666;
-  border-radius: 3px;
-  font-size: 10px;
+  background: linear-gradient(to bottom, #f7fbe8 0%, #e2f0bf 100%);
+  border: 1px solid #a2c668;
+  border-radius: 2px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
   cursor: pointer;
-  color: #333333;
+  color: #386100;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+}
+
+.btn-create-thread:hover {
+  background: #d8ebb0;
 }
 
 .course-card-box-body {
-  padding: 8px 10px;
+  padding: 8px 12px;
 }
 
 /* コースニュース テーブル */
