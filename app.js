@@ -123,13 +123,9 @@ function loadGameDatabase() {
 // --- 起動処理 ---
 window.addEventListener('DOMContentLoaded', () => {
   try {
-    // 🔒 接続登録（命名）チェック（未命名ならバッジを表示し、フラグをセット。ただしゲームは起動する）
+    // 🔒 接続登録（命名）チェック
     const isRegistered = localStorage.getItem('device_registered') === '1';
     window._deviceRegistered = isRegistered;
-    const unregBadge = document.getElementById('unregistered-badge');
-    if (unregBadge) {
-      unregBadge.style.display = isRegistered ? 'none' : 'inline-block';
-    }
     console.log('📱 端末登録状況 (device_registered):', isRegistered ? '設定済み' : '未設定');
 
     // キャッシュDBの読み込み
