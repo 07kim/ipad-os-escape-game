@@ -335,9 +335,26 @@ function readAllDevicesStatus(ss) {
   var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
   var result = [];
 
+  // 24時間以内に接続実績がある端末のみを返す（スプレッドシートのダミー行・古い行を除外）
+  var cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24時間前
+
   for (var i = 0; i < data.length; i++) {
+    var teamId = data[i][0];
+    var lastSeenStr = data[i][7];
+
+    // teamIdが空の行はスキップ
+    if (!teamId || String(teamId).trim() === '') continue;
+
+    // lastSeenが設定されていない行はスキップ（一度も接続していない）
+    if (!lastSeenStr || String(lastSeenStr).trim() === '') continue;
+
+    // lastSeenをパースして24時間以内かチェック
+    var lastSeenDate = new Date(lastSeenStr);
+    if (isNaN(lastSeenDate.getTime())) continue; // 日時として解釈できない行はスキップ
+    if (lastSeenDate < cutoff) continue; // 24時間以上前の端末はスキップ
+
     result.push({
-      teamId: data[i][0],
+      teamId: teamId,
       teamName: data[i][1],
       loop: data[i][2],
       hintsCount: data[i][3],
