@@ -4471,39 +4471,54 @@ function openManabaCourse(courseIdOrName) {
   if (teacherEl) teacherEl.innerText = course.teacher;
   if (termEl) termEl.innerText = course.term || "2026 前期 月曜 2限";
 
+  // 講義が独自資料を持つか（応用量子力学、21世紀会計史、UIUX等）
+  const isCustomCourse = (course.id === 'c_quantum' || course.id === 'c_accounting' || course.id === 'c_uiux' || (course.materials && course.materials.length > 2));
+  gameState._isCurrentCourseExpired = !isCustomCourse;
+
   // コースニュース テーブル生成
   const newsTable = document.getElementById('manaba-course-news-table');
   if (newsTable) {
     newsTable.innerHTML = "";
-    const newsList = course.news && course.news.length > 0 ? course.news : [
-      {
-        date: "2026-08-20",
-        title: `【成績保留者】${course.name} 成績保留の対応について`,
-        content: `成績保留の学生は、各自の学番を確認し、以下に示した対応をとってください。対応がない場合は不可となります。\n\n対応A：最終試験を受験する 実施日（9月1日11:00〜12:00＠1号館12階1210オフィス）\n対応B：成果レポート1：ユーザビリティテスト（内容は第7回授業資料を確認すること）を提出する\n対応C：成果レポート2： KA法（内容は第12回授業資料を確認すること）を提出する\n\n・提出先：manaba ＞ レポート ＞ 保留対応提出先\n・締切り：8月28日（金）23:55\n\nなお、何か不明な点や意見などがある場合は、manabaの個別指導コレクションからお知らせください。メールには送らないようにしてください。`
-      },
-      {
-        date: "2026-07-10",
-        title: `${course.name}｜期末試験座席案内`,
-        content: `期末試験の座席配置を公開しました。\n各自、学生証を持参の上、指定の座席に着席してください。\n筆記用具および指定の関数電卓以外の持ち込みは禁止です。`
-      },
-      {
-        date: "2026-06-16",
-        title: `${course.name}｜配付資料を公開しました`,
-        content: `第11回の講義資料を公開しました。\n変調周波数パラメータおよび超伝導共振器の駆動手順について記載されています。\n各自復習を行ってください。`
-      }
-    ];
+    if (isCustomCourse) {
+      const newsList = course.news && course.news.length > 0 ? course.news : [
+        {
+          date: "2026-08-20",
+          title: `【成績保留者】${course.name} 成績保留の対応について`,
+          content: `成績保留の学生は、各自の学番を確認し、以下に示した対応をとってください。対応がない場合は不可となります。\n\n対応A：最終試験を受験する 実施日（9月1日11:00〜12:00＠1号館12階1210オフィス）\n対応B：成果レポート1：ユーザビリティテスト（内容は第7回授業資料を確認すること）を提出する\n対応C：成果レポート2： KA法（内容は第12回授業資料を確認すること）を提出する\n\n・提出先：manaba ＞ レポート ＞ 保留対応提出先\n・締切り：8月28日（金）23:55\n\nなお、何か不明な点や意見などがある場合は、manabaの個別指導コレクションからお知らせください。メールには送らないようにしてください。`
+        },
+        {
+          date: "2026-07-10",
+          title: `${course.name}｜期末試験座席案内`,
+          content: `期末試験の座席配置を公開しました。\n各自、学生証を持参の上、指定の座席に着席してください。\n筆記用具および指定の関数電卓以外の持ち込みは禁止です。`
+        }
+      ];
 
-    gameState._currentCourseNewsList = newsList;
-    gameState._currentCourseObj = course;
-
-    newsList.forEach((item, idx) => {
-      newsTable.innerHTML += `
-        <tr onclick="openManabaCourseNewsDetail(${idx})" style="cursor:pointer;">
-          <td><a href="javascript:void(0);">◆ ${item.title}</a></td>
-          <td class="news-td-date">${item.date}</td>
+      gameState._currentCourseNewsList = newsList;
+      newsList.forEach((item, idx) => {
+        newsTable.innerHTML += `
+          <tr onclick="openManabaCourseNewsDetail(${idx})" style="cursor:pointer;">
+            <td><a href="javascript:void(0);">◆ ${item.title}</a></td>
+            <td class="news-td-date">${item.date}</td>
+          </tr>
+        `;
+      });
+    } else {
+      // 空の通常授業：ニュースはありません。
+      gameState._currentCourseNewsList = [];
+      newsTable.innerHTML = `
+        <tr>
+          <td colspan="2" style="padding:16px; color:#555; font-size:13px; border:none;">ニュースはありません。</td>
         </tr>
       `;
-    });
+    }
+  }
+
+  // スレッド（更新順）
+  const bbsBox = document.getElementById('manaba-course-bbs-box');
+  if (bbsBox) {
+    if (!isCustomCourse) {
+      bbsBox.innerHTML = `<div style="padding:16px; color:#555; font-size:13px;">スレッドはありません。</div>`;
+    }
   }
 
   // コンテンツカード（更新順）生成
@@ -4511,36 +4526,55 @@ function openManabaCourse(courseIdOrName) {
   if (cardGrid) {
     cardGrid.innerHTML = "";
     
-    // 1. 授業動画カード
-    cardGrid.innerHTML += `
-      <div class="content-card-item" onclick="showIpadModal('講義アーカイブ動画', '【第11回 講義アーカイブ】\n映像データは現在ストリーミングサーバーから同期中です。\n\n▶ 内容: 高周波共鳴回路と量子変調の実験実演\n▶ 講師: 神崎 恭介 教授\n▶ 収録時間: 45分\n\n（※講義資料PDFおよびメモをご確認ください）')">
-        <div class="content-card-icon">
-          <div class="card-icon-line"></div>
-          <div class="card-icon-line"></div>
-          <div class="card-icon-line"></div>
+    if (isCustomCourse) {
+      // 1. 授業動画カード
+      cardGrid.innerHTML += `
+        <div class="content-card-item" onclick="showIpadModal('講義アーカイブ動画', '【第11回 講義アーカイブ】\n映像データは現在ストリーミングサーバーから同期中です。\n\n▶ 内容: 高周波共鳴回路と量子変調の実験実演\n▶ 講師: 神崎 恭介 教授\n▶ 収録時間: 45分\n\n（※講義資料PDFおよびメモをご確認ください）')">
+          <div class="content-card-icon">
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+          </div>
+          <div class="content-card-info">
+            <span class="content-card-title">授業動画</span>
+            <span class="content-card-date">2026-07-14 12:56</span>
+          </div>
         </div>
-        <div class="content-card-info">
-          <span class="content-card-title">授業動画</span>
-          <span class="content-card-date">2026-07-14 12:56</span>
-        </div>
-      </div>
-    `;
+      `;
 
-    // 2. 授業資料カード（タップで授業資料ページを開く）
-    cardGrid.innerHTML += `
-      <div class="content-card-item" onclick="openManabaCoursePageView(0)">
-        <div class="content-card-icon">
-          <div class="card-icon-line"></div>
-          <div class="card-icon-line"></div>
-          <div class="card-icon-line"></div>
+      // 2. 授業資料カード（タップで授業資料ページを開く）
+      cardGrid.innerHTML += `
+        <div class="content-card-item" onclick="openManabaCoursePageView(0)">
+          <div class="content-card-icon">
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+          </div>
+          <div class="content-card-info">
+            <span class="content-card-title">授業資料</span>
+            <span class="content-card-date">2026-07-14 09:02</span>
+          </div>
         </div>
-        <div class="content-card-info">
-          <span class="content-card-title">授業資料</span>
-          <span class="content-card-date">2026-07-14 09:02</span>
+      `;
+    } else {
+      // 空の通常授業：授業コンテンツカード
+      cardGrid.innerHTML += `
+        <div class="content-card-item" onclick="openManabaCoursePageView(0)" style="cursor:pointer;">
+          <div class="content-card-icon">
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+            <div class="card-icon-line"></div>
+          </div>
+          <div class="content-card-info">
+            <span class="content-card-title" style="color:#0272c1; text-decoration:underline;">授業コンテンツ</span>
+            <span class="content-card-date">2026-07-05 22:48</span>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   }
+
+  gameState._currentCourseObj = course;
 
   // メニューバーの「📖 コースコンテンツ」ボタンにイベントバインド
   const courseContentsBtn = document.querySelector('.course-menu-btn.active-green');
@@ -4624,7 +4658,13 @@ function switchCourseSubTab(tabKey) {
     },
     report: {
       title: "レポート一覧",
-      html: `
+      html: (gameState._isCurrentCourseExpired) ? `
+        <div class="description vspacing" style="margin-top: 15px;">
+          <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+            このコースには現在レポートはありません。
+          </p>
+        </div>
+      ` : `
         <div class="description vspacing" style="margin-top: 15px;">
           <table class="course-news-official-table" style="width:100%; border:1px solid #d4d4d4; background:#fff; border-collapse:collapse;">
             <thead>
@@ -4694,22 +4734,51 @@ function switchCourseSubTab(tabKey) {
 
 function openManabaCoursePageView(pageIdx) {
   const course = gameState._currentCourseObj || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {};
+  const isCustomCourse = (course.id === 'c_quantum' || course.id === 'c_accounting' || course.id === 'c_uiux' || (course.materials && course.materials.length > 2));
   const materials = course.materials || [];
   
-  // 0番目は「スケジュール」、1番目以降は「第1回〜第13回」の各講義資料
-  const coursePages = [
-    { title: "スケジュール", type: "schedule", date: "2026-04-14 05:24", ver: "1.2版" },
-    ...materials.map((m, idx) => ({
-      title: m.title || `第${idx + 1}回 講義資料`,
-      type: "material",
-      date: `2026-0${Math.min(4 + Math.floor(idx / 4), 7)}-${String(10 + (idx % 4) * 7).padStart(2, '0')}`,
-      time: `2026-0${Math.min(4 + Math.floor(idx / 4), 7)}-${String(10 + (idx % 4) * 7).padStart(2, '0')} 08:30:00`,
-      ver: "1.0版",
-      file: m.file || `${course.name || 'Lecture'}_${idx + 1}.pdf`,
-      content: m.content,
-      matId: m.id || (idx + 1)
-    }))
-  ];
+  let coursePages = [];
+
+  if (isCustomCourse) {
+    // 0番目は「スケジュール」、1番目以降は「第1回〜第13回」の各講義資料
+    coursePages = [
+      { title: "スケジュール", type: "schedule", date: "2026-04-14 05:24", ver: "1.2版" },
+      ...materials.map((m, idx) => ({
+        title: m.title || `第${idx + 1}回 講義資料`,
+        type: "material",
+        date: `2026-0${Math.min(4 + Math.floor(idx / 4), 7)}-${String(10 + (idx % 4) * 7).padStart(2, '0')}`,
+        time: `2026-0${Math.min(4 + Math.floor(idx / 4), 7)}-${String(10 + (idx % 4) * 7).padStart(2, '0')} 08:30:00`,
+        ver: "1.0版",
+        file: m.file || `${course.name || 'Lecture'}_${idx + 1}.pdf`,
+        content: m.content,
+        matId: m.id || (idx + 1)
+      }))
+    ];
+  } else {
+    // 🌟 空の通常授業：全13回の「公開期間終了」ページ（画像5準拠）
+    const defaultThemes = [
+      "1  ガイダンス",
+      "2  データサイエンスと機械学習",
+      "3  正規分布・平均・分散",
+      "4. 最小二乗法と回帰分析",
+      "5. 分類アルゴリズムの基礎（勾配ベクトルとヘッセ行列）",
+      "6. 分類アルゴリズムの基礎（ヘッセ行列と正定値）",
+      "7. リフレクション",
+      "8. 最尤推定法",
+      "9. パーセプトロン",
+      "10. ロジスティック回帰と漸化式",
+      "11. 教師なし学習（K平均法）",
+      "12. ベイズ推定",
+      "13. 期末試験"
+    ];
+    coursePages = defaultThemes.map((title, idx) => ({
+      title: title,
+      type: "expired",
+      date: "2026-04-11 22:17",
+      time: "2026-08-01 00:00:00",
+      ver: "1.5版"
+    }));
+  }
 
   const pIdx = (pageIdx !== undefined && pageIdx >= 0 && pageIdx < coursePages.length) ? pageIdx : 0;
   gameState._currentCoursePageIdx = pIdx;
@@ -4735,11 +4804,13 @@ function openManabaCoursePageView(pageIdx) {
   const limitEl = document.getElementById('course-page-limit-notice');
 
   if (titleEl) titleEl.innerText = pageData.title;
-  if (verEl) verEl.innerText = `${pageData.date} - ${course.teacher || '担当教員'} - ${pageData.ver}`;
+  if (verEl) verEl.innerText = `${pageData.date} - ${course.teacher || '森 信一郎'} - ${pageData.ver}`;
   
   if (limitEl) {
     if (pageData.type === 'schedule') {
       limitEl.style.display = 'none';
+    } else if (pageData.type === 'expired') {
+      limitEl.style.display = 'none'; // expired内独自ヘッダーで描画
     } else {
       limitEl.style.display = 'block';
       limitEl.innerText = `公開期間: ${pageData.time} ～`;
@@ -4749,7 +4820,35 @@ function openManabaCoursePageView(pageIdx) {
   // 本文エリアのレンダリング
   const contentBody = document.getElementById('course-page-dynamic-content');
   if (contentBody) {
-    if (pageData.type === 'schedule') {
+    if (pageData.type === 'expired') {
+      // 🌟 画像5完全再現：公開期間終了画面
+      contentBody.innerHTML = `
+        <div class="manaba-expired-container" style="padding:4px 0 20px 0;">
+          <div style="font-size:12.5px; color:#333; margin-bottom:8px;">
+            公開期間: ～ ${pageData.time}
+          </div>
+          <div style="font-size:13.5px; color:#222; margin-bottom:24px; font-weight:500;">
+            公開期間が終了したページです。現在閲覧できません。
+          </div>
+          <div style="background:#eaf3d6; height:24px; border-radius:3px; display:flex; align-items:center; justify-content:flex-end; padding:0 8px; margin-bottom:16px;">
+            <span style="font-size:11px; color:#5c9a00; cursor:pointer;">▲</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px;">
+            <div style="font-size:11px; color:#666;">
+              ${pageData.date} - ${course.teacher || '担当教員'} - ${pageData.ver}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button style="padding:3px 10px; font-size:11px; background:#f5f5f5; border:1px solid #ccc; border-radius:3px; color:#333; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                <i data-lucide="edit-3" style="width:12px; height:12px;"></i> メモ
+              </button>
+              <button style="padding:3px 12px; font-size:11px; background:#fff; border:1px solid #bbb; border-radius:4px; color:#333; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer;">
+                <i data-lucide="message-square" style="width:12px; height:12px;"></i> コメントを書く
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (pageData.type === 'schedule') {
       let tbodyHtml = "";
       materials.forEach((m, idx) => {
         const num = idx + 1;
@@ -4806,6 +4905,7 @@ function openManabaCoursePageView(pageIdx) {
         </p>
       `;
     }
+    safeCreateIcons(contentBody);
   }
 
   // 目次サイドバーのレンダリング
@@ -4816,7 +4916,7 @@ function openManabaCoursePageView(pageIdx) {
       const isCur = idx === pIdx;
       sidebarUl.innerHTML += `
         <li class="${isCur ? 'current' : ''}" onclick="openManabaCoursePageView(${idx})">
-          <span style="color:${isCur ? '#5c9a00' : '#0272c1'}; font-size:10px;">▶</span>
+          <span style="color:${isCur ? '#5c9a00' : '#d97706'}; font-size:10px;">${isCur ? '▶' : '▶'}</span>
           <span>${item.title}</span>
         </li>
       `;
