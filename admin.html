@@ -2247,11 +2247,11 @@
           <div class="admin-panel">
             <div class="admin-panel-title">
               <i data-lucide="cloud" style="width:20px; height:20px; color:var(--primary);"></i>
-              <span>GAS クラウド連携・同期設定</span>
+              <span>GAS クラウド連携</span>
             </div>
 
             <!-- 接続ステータス表示 -->
-            <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:12px;">
               <div id="admin-status-dot" style="width:12px; height:12px; border-radius:50%; background:#94a3b8; flex-shrink:0;"></div>
               <div style="flex:1;">
                 <div style="font-size:11px; color:#94a3b8; font-weight:700;">現在のクラウド接続状態</div>
@@ -2262,26 +2262,37 @@
               </button>
             </div>
 
-            <!-- GAS URL入力 -->
-            <div class="form-group" style="margin-bottom:12px;">
-              <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                <i data-lucide="link" style="width:13px; height:13px; color:var(--primary);"></i> Google Apps Script (GAS) デプロイURL:
-              </label>
-              <textarea id="admin-gas-url-input" rows="3"
-                placeholder="https://script.google.com/macros/s/..."
-                style="width:100%; padding:10px 12px; font-size:12px; font-family:ui-monospace, monospace; border:1.5px solid var(--border-color); border-radius:8px; resize:vertical; box-sizing:border-box; color:#1e293b; background:#fcfdfe; line-height:1.5;">
-              </textarea>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-              <button class="btn btn-primary" onclick="saveAdminGasUrl()" style="flex:1; padding:10px; font-size:13px; font-weight:800;">
-                <i data-lucide="save" style="width:14px; height:14px;"></i> URLを保存して接続テスト
-              </button>
-              <button class="nav-btn" onclick="document.getElementById('admin-gas-url-input').value=''; localStorage.removeItem('gas_url'); showToast('GAS URLをクリアしました', true);" style="padding:10px 14px; font-size:12px; color:#64748b;" title="URL入力をクリア">
-                <i data-lucide="trash" style="width:14px; height:14px;"></i> クリア
-              </button>
-            </div>
+            <!-- 上級設定（折りたたみ） -->
+            <details style="margin-top:4px;">
+              <summary style="font-size:12px; color:#64748b; font-weight:700; cursor:pointer; padding:6px 0; user-select:none;">
+                🔧 上級設定（GAS デプロイURL変更）
+              </summary>
+              <div style="margin-top:10px; padding:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                <p style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.5;">
+                  通常は自動設定されています。URLを変更する場合のみ入力してください。
+                </p>
+                <!-- GAS URL入力 -->
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="link" style="width:13px; height:13px; color:var(--primary);"></i> Google Apps Script (GAS) デプロイURL:
+                  </label>
+                  <textarea id="admin-gas-url-input" rows="3"
+                    placeholder="https://script.google.com/macros/s/..."
+                    style="width:100%; padding:10px 12px; font-size:12px; font-family:ui-monospace, monospace; border:1.5px solid var(--border-color); border-radius:8px; resize:vertical; box-sizing:border-box; color:#1e293b; background:#fcfdfe; line-height:1.5;">
+                  </textarea>
+                </div>
+                <div style="display:flex; gap:10px;">
+                  <button class="btn btn-primary" onclick="saveAdminGasUrl()" style="flex:1; padding:10px; font-size:13px; font-weight:800;">
+                    <i data-lucide="save" style="width:14px; height:14px;"></i> URLを保存して接続テスト
+                  </button>
+                  <button class="nav-btn" onclick="document.getElementById('admin-gas-url-input').value=''; localStorage.removeItem('gas_url'); showToast('GAS URLをクリアしました', true);" style="padding:10px 14px; font-size:12px; color:#64748b;" title="URL入力をクリア">
+                    <i data-lucide="trash" style="width:14px; height:14px;"></i> クリア
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
+
 
           <!-- ② ローカルストレージ管理 -->
           <div class="admin-panel">
@@ -2341,7 +2352,7 @@
               </div>
               <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
                 <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">2</span>
-                <span>下ボタンを押して<strong>2段階確認</strong>を完了する</span>
+                <span>下ボタンを押してワンクリックで全端末を初期化</span>
               </div>
               <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
                 <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">3</span>
@@ -4302,30 +4313,8 @@
     }
 
     // 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログ消去 / 2段階オリジナルモーダルガード）
-    async function executeGlobalMasterReset() {
-      // 1段階目
-      const ok1 = await showCustomConfirm({
-        title: "🚨 全iPad一括完全初期化 (1/2)",
-        subtitle: "公演前・公演後の全端末リセット",
-        message: "全iPad端末のメモ・入力・進行状況・ログイン情報を完全消去し、1周目・09:04待機画面へ初期化します。\n\n次の公演へ向けたセットアップを実行しますか？",
-        confirmText: "次へ進む（確認へ）",
-        cancelText: "キャンセル",
-        type: "danger",
-        icon: "trash-2"
-      });
-      if (!ok1) return;
-
-      // 2段階目（最終確認）
-      const ok2 = await showCustomConfirm({
-        title: "⚠️ 最終確認：本当に全データを消去しますか？ (2/2)",
-        subtitle: "この操作は取り消せません",
-        message: "【警告】全30台のiPadのローカルストレージおよびクラウド上の全ログがクリアされます。\n\n本当に全iPadを一斉完全初期化しますか？",
-        confirmText: "🧹 全データを消去して初期化",
-        cancelText: "中止する",
-        type: "danger",
-        icon: "alert-triangle"
-      });
-      if (!ok2) return;
+    function executeGlobalMasterReset() {
+      // 確認なし・ワンクリックで即実行
 
       // 1. タイマー初期化
       resetAdminTimerSilent();
@@ -4360,7 +4349,9 @@
       });
       if (!ok) return;
 
-      const gasUrl = document.getElementById('gas-url-input')?.value?.trim() || localStorage.getItem('admin_gas_url') || '';
+      const gasUrl = (localStorage.getItem('gas_url') || '').trim()
+        || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
+        || 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
       if (!gasUrl) {
         showToast("⚠️ GAS URLが設定されていません。", "error");
         return;
