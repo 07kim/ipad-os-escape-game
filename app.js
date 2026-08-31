@@ -6487,6 +6487,7 @@ window.addEventListener('storage', (e) => {
           localStorage.setItem('manaba_user', info.studentName);
         }
         if (typeof updateAppUI === 'function') updateAppUI();
+        if (typeof sendDeviceStatusHeartbeat === 'function') sendDeviceStatusHeartbeat();
       }
     } catch(err) {}
   } else if (e.key === 'admin_reload_trigger') {
