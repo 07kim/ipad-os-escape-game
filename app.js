@@ -1881,8 +1881,9 @@ function showStaffModal() {
   if (badgeEl) badgeEl.innerText = currentDevId;
 
   // 2. 代名詞（チーム名・プレイヤー名など）
+  // ⚠️ localStorage に保存済みの値のみを使用。GAME_DATABASE のデフォルト値（チームA等）は使わない
   const userEl = document.getElementById('staff-user-name');
-  const currentAlias = localStorage.getItem('game_team_name') || (window.GAME_DATABASE?.system?.teamId) || gameState.manabaUser || currentDevId;
+  const currentAlias = localStorage.getItem('game_team_name') || '';
   if (userEl) userEl.value = currentAlias;
 
   // 1〜30 のボタングリッドを生成
