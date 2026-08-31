@@ -2094,8 +2094,158 @@
     </div>
   </div>
 
-  <!-- ⚙️ タブ4: システム設定・転換 (項目5で実装) -->
-  <div class="admin-tab-pane" id="pane-system"></div>
+  <!-- ⚙️ タブ4: システム設定・転換 -->
+  <div class="admin-tab-pane" id="pane-system">
+    <div style="padding: 20px;">
+
+      <!-- 2カラムレイアウト -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start;">
+
+        <!-- ─── 左カラム ─── -->
+        <div>
+
+          <!-- ① GAS接続設定 -->
+          <div class="admin-panel">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <i data-lucide="cloud" style="width:18px; height:18px; color:var(--primary);"></i>
+              <span style="font-size:14px; font-weight:800; color:#0f172a;">GAS クラウド接続設定</span>
+            </div>
+
+            <!-- 接続ステータス表示 -->
+            <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:14px;">
+              <div id="admin-status-dot" style="width:10px; height:10px; border-radius:50%; background:#94a3b8; flex-shrink:0;"></div>
+              <div id="admin-status-text" style="font-size:12px; color:#64748b; font-weight:600;">⏳ 未確認</div>
+              <button class="nav-btn" onclick="testGasPing()" style="margin-left:auto; padding:4px 10px; font-size:11px; font-weight:700;">
+                <i data-lucide="wifi" style="width:12px; height:12px;"></i> 疎通テスト
+              </button>
+            </div>
+
+            <!-- GAS URL入力 -->
+            <div class="form-group" style="margin-bottom:10px;">
+              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">
+                <i data-lucide="link" style="width:12px; height:12px;"></i> GAS デプロイURL:
+              </label>
+              <textarea id="admin-gas-url-input" rows="3"
+                placeholder="https://script.google.com/macros/s/..."
+                style="width:100%; padding:9px 10px; font-size:11.5px; font-family:monospace; border:1.5px solid var(--border-color); border-radius:8px; resize:vertical; box-sizing:border-box; color:#334155;">
+              </textarea>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-primary" onclick="saveAdminGasUrl()" style="flex:1; padding:9px; font-size:12.5px; font-weight:800;">
+                <i data-lucide="save" style="width:13px; height:13px;"></i> 保存 & 疎通テスト
+              </button>
+              <button class="nav-btn" onclick="document.getElementById('admin-gas-url-input').value=''; localStorage.removeItem('gas_url'); showToast('GAS URLをクリアしました', true);" style="padding:9px 12px; font-size:12px;" title="URLをクリア">
+                <i data-lucide="x" style="width:13px; height:13px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ② ローカルストレージ管理 -->
+          <div class="admin-panel" style="margin-top:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <i data-lucide="database" style="width:18px; height:18px; color:#8b5cf6;"></i>
+              <span style="font-size:14px; font-weight:800; color:#0f172a;">ローカルストレージ管理</span>
+              <span style="font-size:11px; color:#64748b; margin-left:4px;">管理PC側のキャッシュ</span>
+            </div>
+
+            <!-- LS状態リスト -->
+            <div id="system-ls-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-height:180px; overflow-y:auto;">
+              <div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px 0;">
+                ⏳ 読み込み中...
+              </div>
+            </div>
+
+            <!-- 操作ボタン -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="nav-btn" onclick="renderSystemLsState()" style="padding:6px 12px; font-size:11.5px; font-weight:700;">
+                <i data-lucide="refresh-cw" style="width:12px; height:12px;"></i> 更新
+              </button>
+              <button class="nav-btn" onclick="clearAdminLsKey('admin_sound_trigger')" style="padding:6px 12px; font-size:11.5px; font-weight:700; color:#b45309;">
+                <i data-lucide="volume-x" style="width:12px; height:12px;"></i> 音響キャッシュ消去
+              </button>
+              <button class="nav-btn" onclick="clearAdminLsKey('admin_alert_trigger')" style="padding:6px 12px; font-size:11.5px; font-weight:700; color:#b45309;">
+                <i data-lucide="bell-off" style="width:12px; height:12px;"></i> アラートキャッシュ消去
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ─── 右カラム ─── -->
+        <div>
+
+          <!-- ③ 公演転換セットアップ -->
+          <div class="admin-panel" style="border:1.5px solid #fecaca; background:#fffbfb;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <i data-lucide="refresh-ccw" style="width:18px; height:18px; color:#ef4444;"></i>
+              <span style="font-size:14px; font-weight:800; color:#b91c1c;">公演転換セットアップ</span>
+            </div>
+            <p style="font-size:12px; color:#991b1b; margin-bottom:14px; line-height:1.6; padding:10px 12px; background:#fee2e2; border-radius:8px; border-left:3px solid #ef4444;">
+              ⚠️ 次公演の開始前 / 公演終了後に使用します。<br>
+              全端末のメモ・入力・周回・ログイン情報を完全消去し、<br>
+              09:04待機画面へリセットします。<strong>（2段階確認あり）</strong>
+            </p>
+
+            <!-- 手順ガイド -->
+            <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
+                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">1</span>
+                全iPadが待機状態であることを確認
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
+                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">2</span>
+                下ボタンを押して2段階確認を完了する
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
+                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">3</span>
+                全端末の初期化完了を端末モニタリングで確認
+              </div>
+            </div>
+
+            <button class="btn" onclick="executeGlobalMasterReset()"
+              style="width:100%; padding:13px 16px; font-size:13px; font-weight:800; background:#fef2f2; color:#b91c1c; border:2px solid #fecaca; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;"
+              onmouseover="this.style.background='#fee2e2'; this.style.borderColor='#f87171';"
+              onmouseout="this.style.background='#fef2f2'; this.style.borderColor='#fecaca';">
+              <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
+              🚨 全iPad & データを一括完全初期化
+            </button>
+          </div>
+
+          <!-- ④ システム情報 -->
+          <div class="admin-panel" style="margin-top:16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <i data-lucide="info" style="width:18px; height:18px; color:#0ea5e9;"></i>
+              <span style="font-size:14px; font-weight:800; color:#0f172a;">システム情報</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;" id="system-info-panel">
+              <!-- JSで動的生成 -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ─── 下段全幅: GASエンドポイント一覧 ─── -->
+      <div class="admin-panel" style="margin-top:16px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+          <i data-lucide="terminal" style="width:18px; height:18px; color:#10b981;"></i>
+          <span style="font-size:14px; font-weight:800; color:#0f172a;">GAS エンドポイント一覧</span>
+          <span style="font-size:11px; color:#64748b; margin-left:4px;">各アクションのURLをコピーして直接テストできます</span>
+          <button class="nav-btn" onclick="renderGasEndpoints()" style="margin-left:auto; padding:4px 10px; font-size:11px;">
+            <i data-lucide="refresh-cw" style="width:11px; height:11px;"></i> 更新
+          </button>
+        </div>
+        <div id="gas-endpoints-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:8px;">
+          <div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px; grid-column:1/-1;">
+            ⏳ GAS URLを設定すると、エンドポイント一覧が表示されます
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 
   <!-- 🛡️ オリジナル安全確認ポップアップモーダル（ブラウザ標準confirmの完全置換） -->
   <div id="admin-confirm-modal" class="custom-modal-backdrop">
@@ -4040,6 +4190,162 @@
       showToast('🛑 全iPad SE 緊急停止指示を送信しました', true);
       showAudioFeedback(`🛑 緊急全停止を配信しました (${new Date().toLocaleTimeString('ja-JP')})`);
     }
+
+    // ===== ⚙️ システム設定タブ JS =====
+
+    // --- ローカルストレージ状態リスト ---
+    // 管理画面で監視する主要キー一覧
+    const SYSTEM_LS_KEYS = [
+      { key: 'gas_url',               label: 'GAS デプロイURL',          icon: 'cloud' },
+      { key: 'game_loop',             label: '現在の周回数',              icon: 'refresh-cw' },
+      { key: 'admin_sound_trigger',   label: '音響トリガー（直近）',       icon: 'volume-2' },
+      { key: 'admin_alert_trigger',   label: 'アラートトリガー（直近）',   icon: 'bell' },
+      { key: 'admin_reset_trigger_time', label: '最終リセット実行時刻',   icon: 'clock' },
+      { key: 'admin_current_scene',   label: '現在のシーン番号',           icon: 'layers' },
+      { key: 'admin_flow_timer_running', label: 'タイマー稼働状態',       icon: 'timer' },
+      { key: 'admin_flow_start_time', label: 'タイマー開始時刻',          icon: 'play' },
+    ];
+
+    function renderSystemLsState() {
+      const container = document.getElementById('system-ls-list');
+      if (!container) return;
+
+      const rows = SYSTEM_LS_KEYS.map(item => {
+        const raw = localStorage.getItem(item.key);
+        let displayVal = raw;
+        let valStyle = 'color:#334155;';
+        let badge = '';
+
+        if (raw === null || raw === '') {
+          displayVal = '（未設定）';
+          valStyle = 'color:#94a3b8;';
+        } else if (item.key === 'gas_url') {
+          // URLは短縮表示
+          displayVal = raw.length > 40 ? raw.substring(0, 40) + '…' : raw;
+        } else if (item.key === 'admin_reset_trigger_time' || item.key === 'admin_flow_start_time') {
+          const ms = parseInt(raw);
+          if (!isNaN(ms)) {
+            displayVal = new Date(ms).toLocaleString('ja-JP');
+          }
+        } else if (item.key === 'admin_flow_timer_running') {
+          displayVal = raw === 'true' ? '▶ 稼働中' : '⏸ 停止中';
+          valStyle = raw === 'true' ? 'color:#16a34a; font-weight:700;' : 'color:#64748b;';
+        }
+
+        return `
+          <div style="display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <i data-lucide="${item.icon}" style="width:13px; height:13px; color:#94a3b8; flex-shrink:0;"></i>
+            <div style="font-size:11.5px; font-weight:700; color:#475569; flex-shrink:0; min-width:120px;">${item.label}</div>
+            <div style="font-size:11px; font-family:monospace; ${valStyle}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${displayVal}</div>
+            ${raw !== null && raw !== '' ? `<button onclick="clearAdminLsKey('${item.key}')" title="クリア" style="background:none; border:none; cursor:pointer; color:#94a3b8; padding:2px; flex-shrink:0;"><i data-lucide="x" style="width:11px;height:11px;"></i></button>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = rows || '<div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px 0;">データなし</div>';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function clearAdminLsKey(key) {
+      localStorage.removeItem(key);
+      showToast(`🗑️ "${key}" を消去しました`);
+      renderSystemLsState();
+    }
+
+    // --- GASエンドポイント一覧 ---
+    const GAS_ACTIONS = [
+      { action: 'get_status',          label: '端末状態取得',       color: '#0ea5e9', icon: 'tablet' },
+      { action: 'get_data',            label: '全データ取得',        color: '#8b5cf6', icon: 'database' },
+      { action: 'send_command',        label: 'コマンド送信',        color: '#10b981', icon: 'send' },
+      { action: 'update_status',       label: 'ステータス更新',      color: '#f59e0b', icon: 'edit-3' },
+      { action: 'update_loop',         label: '周回数更新',          color: '#f97316', icon: 'refresh-cw' },
+      { action: 'master_reset',        label: 'マスターリセット',    color: '#ef4444', icon: 'trash-2' },
+      { action: 'reset_actor_triggers', label: '演者トリガーリセット', color: '#ef4444', icon: 'zap-off' },
+      { action: 'ping',                label: '疎通確認 (Ping)',     color: '#64748b', icon: 'wifi' },
+    ];
+
+    function renderGasEndpoints() {
+      const container = document.getElementById('gas-endpoints-list');
+      if (!container) return;
+
+      const base = (localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || '').trim();
+      if (!base) {
+        container.innerHTML = '<div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px; grid-column:1/-1;">⏳ GAS URLを設定すると、エンドポイント一覧が表示されます</div>';
+        return;
+      }
+
+      const sep = base.includes('?') ? '&' : '?';
+      const cards = GAS_ACTIONS.map(ep => {
+        const url = `${base}${sep}action=${ep.action}`;
+        return `
+          <div style="padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="${ep.icon}" style="width:14px; height:14px; color:${ep.color}; flex-shrink:0;"></i>
+            <div style="flex:1; overflow:hidden;">
+              <div style="font-size:12px; font-weight:700; color:#334155;">${ep.label}</div>
+              <div style="font-size:10.5px; font-family:monospace; color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${ep.action}</div>
+            </div>
+            <div style="display:flex; gap:4px; flex-shrink:0;">
+              <button onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('✅ URLをコピーしました'));" title="URLをコピー" style="padding:4px 7px; font-size:10.5px; font-weight:700; background:#fff; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; color:#475569;">📋</button>
+              <a href="${url}" target="_blank" rel="noopener" style="padding:4px 7px; font-size:10.5px; font-weight:700; background:#fff; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; color:#475569; text-decoration:none;" title="新しいタブで開く">🔗</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = cards;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // --- システム情報パネル ---
+    function renderSystemInfo() {
+      const panel = document.getElementById('system-info-panel');
+      if (!panel) return;
+
+      const db = window.GAME_DATABASE;
+      const rows = [
+        { label: 'ゲームタイトル', value: '2126年iPadOS型 脱出ゲーム', icon: 'gamepad-2' },
+        { label: 'チームID',       value: db?.system?.teamId || '（未設定）', icon: 'users' },
+        { label: 'GAS接続',        value: localStorage.getItem('gas_url') ? '✅ URL設定済み' : '⚠️ 未設定', icon: 'cloud' },
+        { label: 'ブラウザ',       value: navigator.userAgent.split(' ').slice(-1)[0] || '不明', icon: 'monitor' },
+        { label: 'ページ読込時刻', value: new Date().toLocaleString('ja-JP'), icon: 'clock' },
+        { label: 'localStorage容量', value: (() => {
+          try {
+            let total = 0;
+            for (let k in localStorage) {
+              if (localStorage.hasOwnProperty(k)) total += localStorage[k].length * 2;
+            }
+            return `${Math.round(total / 1024)} KB`;
+          } catch(e) { return '不明'; }
+        })(), icon: 'hard-drive' },
+      ];
+
+      panel.innerHTML = rows.map(r => `
+        <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+          <i data-lucide="${r.icon}" style="width:13px; height:13px; color:#94a3b8; flex-shrink:0;"></i>
+          <div style="font-size:11.5px; font-weight:700; color:#475569; flex-shrink:0; min-width:110px;">${r.label}</div>
+          <div style="font-size:11.5px; color:#334155; flex:1;">${r.value}</div>
+        </div>
+      `).join('');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // タブ切り替え時にシステムタブを自動初期化するフック
+    const _origSwitchTab = window.switchAdminTab;
+    window.addEventListener('DOMContentLoaded', () => {
+      // タブボタンへの拡張（systemタブ表示時にデータ更新）
+      document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.tab === 'system') {
+            setTimeout(() => {
+              renderSystemLsState();
+              renderGasEndpoints();
+              renderSystemInfo();
+            }, 80);
+          }
+        });
+      });
+    });
 
   </script>
 </body>
