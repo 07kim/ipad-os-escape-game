@@ -3321,7 +3321,11 @@
       try { renderPresetButtons(); } catch(e) { console.error("renderPresetButtons error:", e); }
       try { initAdminTimer(); } catch(e) { console.error("initAdminTimer error:", e); }
       try {
-        const savedGasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || "";
+        const defaultGasUrl = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec";
+        const savedGasUrl = localStorage.getItem('gas_url') || defaultGasUrl;
+        if (!localStorage.getItem('gas_url') && defaultGasUrl) {
+          localStorage.setItem('gas_url', defaultGasUrl);
+        }
         const urlInput = document.getElementById('admin-gas-url-input');
         if (urlInput) urlInput.value = savedGasUrl;
       } catch(e) {}
