@@ -2739,6 +2739,16 @@
           else pane.classList.remove('active');
         }
       });
+
+      // 各タブ専用の初期化・データ更新処理
+      if (tabKey === 'system') {
+        if (typeof renderSystemLsState === 'function') renderSystemLsState();
+        if (typeof renderGasEndpoints === 'function') renderGasEndpoints();
+        if (typeof renderSystemInfo === 'function') renderSystemInfo();
+      } else if (tabKey === 'monitor') {
+        if (typeof refreshMonitoringDashboard === 'function') refreshMonitoringDashboard();
+      }
+
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
@@ -3319,9 +3329,6 @@
       // ⏱️ 公演タイマーも初期化
       resetAdminTimer();
     }
-
-    // --- 30台モニタリングダッシュボード ---
-    function setMonitorFilter(filterType) {
     // ===== 📊 端末モニタリング（動的アクセス一覧・ソート・2ペイン詳細） =====
     let monitorSortKey = 'id'; // 'id' | 'score' | 'time'
     let monitorSortOrder = 'desc'; // 'desc' | 'asc'
@@ -4329,24 +4336,6 @@
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-
-    // タブ切り替え時にシステムタブを自動初期化するフック
-    const _origSwitchTab = window.switchAdminTab;
-    window.addEventListener('DOMContentLoaded', () => {
-      // タブボタンへの拡張（systemタブ表示時にデータ更新）
-      document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (btn.dataset.tab === 'system') {
-            setTimeout(() => {
-              renderSystemLsState();
-              renderGasEndpoints();
-              renderSystemInfo();
-            }, 80);
-          }
-        });
-      });
-    });
-
   </script>
 </body>
 </html>
