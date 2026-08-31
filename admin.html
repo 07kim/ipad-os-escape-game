@@ -666,8 +666,183 @@
       gap: 6px;
       transition: all 0.2s ease;
     }
-    .btn-hero-reset:hover {
+    /* 🎬 進行統制パネル用スタイル */
+    .flow-steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .flow-step-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .flow-step-card:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .flow-step-card.active {
+      border-color: var(--primary);
+      background: #f0f9ff;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .flow-step-card.next {
+      border-color: #84cc16;
+      background: #f7fee7;
+      animation: nextStepPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes nextStepPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(132, 204, 22, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(132, 204, 22, 0.15); }
+    }
+
+    .flow-step-card.done {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      opacity: 0.85;
+    }
+
+    .flow-step-card.locked {
+      background: #f8fafc;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .flow-step-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .flow-step-num-badge {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .flow-step-card.active .flow-step-num-badge {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .flow-step-card.next .flow-step-num-badge {
+      background: #84cc16;
+      color: #ffffff;
+    }
+
+    .flow-step-card.done .flow-step-num-badge {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .flow-step-title-block h3 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+
+    .flow-step-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .flow-step-status-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    /* NEXT大型ボタン */
+    .flow-next-hero-btn {
+      width: 100%;
+      height: 52px;
+      font-size: 15px;
+      font-weight: 800;
+      background: #10b981;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .flow-next-hero-btn:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+
+    .flow-sub-actions-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* 定型文クイックアラートボタングリッド */
+    .quick-alerts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .quick-alert-btn {
+      padding: 8px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+
+    .quick-alert-btn:hover {
       background: #e2e8f0;
+      color: #0f172a;
+      border-color: #94a3b8;
     }
 
     /* タブペイン制御 */
@@ -788,108 +963,166 @@
   <!-- 🎬 タブ1: ⏱️ 進行統制 (メイン) -->
   <div class="admin-tab-pane active" id="pane-flow">
     <div class="container">
-    
-    <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
-    <div>
-      <!-- 🎬 シーン別進行プリセットパネル（最上部） -->
-      <div class="card">
-        <div class="card-title"><i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行プリセット（全30台クラウド一斉同期）</div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">ボタンを押すと、Googleスプレッドシート経由で全稼働中iPad（30台）へ周回切り替え・演出が一括配信されます。</p>
-        
-        <div class="preset-grid" id="preset-buttons-container"></div>
-      </div>
-
-      <!-- 🔊 効果音・サイレン遠隔再生パネル -->
-      <div class="card">
-        <div class="card-title"><i data-lucide="volume-2" style="color:var(--warning);"></i> 効果音・サイレン遠隔再生（クラウド配信）</div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">クリックした瞬間に全iPad端末で大迫力のWeb Audio APIシンセサウンドが鳴り響きます。</p>
-        
-        <div class="sound-grid">
-          <button class="sound-btn" onclick="triggerRemoteSound('alarm')">
-            <i data-lucide="alert-triangle" style="color:var(--danger); width:24px; height:24px;"></i>
-            <span>非常サイレン</span>
-          </button>
-          <button class="sound-btn" onclick="triggerRemoteSound('distortion')">
-            <i data-lucide="zap" style="color:#af52de; width:24px; height:24px;"></i>
-            <span>時空歪み音</span>
-          </button>
-          <button class="sound-btn" onclick="triggerRemoteSound('fanfare')">
-            <i data-lucide="award" style="color:var(--success); width:24px; height:24px;"></i>
-            <span>ファンファーレ</span>
-          </button>
-          <button class="sound-btn" onclick="triggerRemoteSound('notif')">
-            <i data-lucide="bell" style="color:var(--primary); width:24px; height:24px;"></i>
-            <span>プッシュ通知音</span>
-          </button>
-          <button class="sound-btn" onclick="triggerRemoteSound('ringback')">
-            <i data-lucide="phone-call" style="color:#0284c7; width:24px; height:24px;"></i>
-            <span>電話コール音</span>
-          </button>
-          <button class="sound-btn" onclick="triggerRemoteSound('error')">
-            <i data-lucide="x-octagon" style="color:#64748b; width:24px; height:24px;"></i>
-            <span>エラー・銃声</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 右カラム：チーム進捗モニタリング ＆ 緊急指令送信 -->
-    <div>
-      <!-- 📊 iPad 30台 進行モニタリングダッシュボード -->
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-          <div class="card-title" style="margin-bottom:0;"><i data-lucide="activity" style="color:var(--success);"></i> iPad 30台 リアルタイム進行モニタリング</div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <div style="background:#f1f5f9; padding:2px; border-radius:6px; display:flex; gap:2px;">
-              <button class="nav-btn admin-view-tab-btn active" id="view-tab-grid" onclick="switchMonitorView('grid')" style="padding:4px 8px; font-size:11px; border:none;"><i data-lucide="layout-grid"></i> グリッド</button>
-              <button class="nav-btn admin-view-tab-btn" id="view-tab-ranking" onclick="switchMonitorView('ranking')" style="padding:4px 8px; font-size:11px; border:none;"><i data-lucide="trophy"></i> 🏆 ランキング</button>
+      
+      <!-- 左カラム：全5ステップ進行パネル -->
+      <div>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="card-title" style="margin-bottom:0;">
+              <i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行統制（全iPad一括同期）
             </div>
-            <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:4px 8px; font-size:11px;"><i data-lucide="refresh-cw"></i> 最新情報に更新</button>
+            <span id="flow-current-status-badge" style="font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; background:#e0f2fe; color:#0369a1;">
+              01. 待機中
+            </span>
+          </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+            ステップに沿って進行をワンクリックで配信します。全稼働iPadへ即座に周回切替やコンテンツ解放が同期されます。
+          </p>
+
+          <!-- 全5ステップカード一覧 -->
+          <div class="flow-steps-container">
+            <!-- 01. 待機 -->
+            <div class="flow-step-card done" id="flow-card-1" onclick="handleStepCardClick(1)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">01</div>
+                <div class="flow-step-title-block">
+                  <h3>オープニング待機</h3>
+                  <div class="flow-step-desc">09:04固定・操作ロック待機状態</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-1" style="background:#e2e8f0; color:#475569;">
+                待機完了
+              </div>
+            </div>
+
+            <!-- 02. 1周目開始 -->
+            <div class="flow-step-card active" id="flow-card-2" onclick="handleStepCardClick(2)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">02</div>
+                <div class="flow-step-title-block">
+                  <h3>1周目スタート（ゲーム開始）</h3>
+                  <div class="flow-step-desc">ロック解除・09:04から計時開始・1周目解禁</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-2" style="background:#0284c7; color:#fff;">
+                ★ 進行中
+              </div>
+            </div>
+
+            <!-- 03. 2周目突入 -->
+            <div class="flow-step-card next" id="flow-card-3" onclick="handleStepCardClick(3)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">03</div>
+                <div class="flow-step-title-block">
+                  <h3>2周目突入（タイムループ）</h3>
+                  <div class="flow-step-desc">09:04へ巻き戻し・1周目ラップ確定・2周目解禁</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-3" style="background:#84cc16; color:#fff;">
+                ▶ NEXT
+              </div>
+            </div>
+
+            <!-- 04. 3周目突入 -->
+            <div class="flow-step-card locked" id="flow-card-4" onclick="handleStepCardClick(4)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">04</div>
+                <div class="flow-step-title-block">
+                  <h3>3周目突入（最終決戦フェーズ）</h3>
+                  <div class="flow-step-desc">09:04へ巻き戻し・2周目ラップ確定・3周目解禁</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-4" style="background:#f1f5f9; color:#94a3b8;">
+                🔒 未到達
+              </div>
+            </div>
+
+            <!-- 05. ゲーム終了 -->
+            <div class="flow-step-card locked" id="flow-card-5" onclick="handleStepCardClick(5)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">05</div>
+                <div class="flow-step-title-block">
+                  <h3>ゲーム終了（ログ集計 ＆ アンケート）</h3>
+                  <div class="flow-step-desc">タイマー停止・アンケート表示・ログ確定</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-5" style="background:#f1f5f9; color:#94a3b8;">
+                🔒 未到達
+              </div>
+            </div>
+          </div>
+
+          <!-- NEXT大型進行ボタン -->
+          <button class="flow-next-hero-btn" id="btn-flow-next-hero" onclick="advanceToNextScene()">
+            <i data-lucide="fast-forward" style="width:20px; height:20px;"></i>
+            <span id="text-flow-next-hero">▶ 次のシーンへ進行 (03. 2周目突入)</span>
+          </button>
+
+          <!-- サブ操作：ロールバック ＆ 手動アンロック -->
+          <div class="flow-sub-actions-row">
+            <button class="nav-btn" onclick="rollbackToPreviousScene()" style="padding:6px 12px; font-size:12px; font-weight:700; color:#b91c1c; border-color:#fecaca;" title="1つ前のシーン状態へ全iPadを安全に戻します">
+              <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> ◀ 前のシーンに戻す (ロールバック)
+            </button>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#64748b; cursor:pointer;">
+              <input type="checkbox" id="flow-manual-unlock-toggle" onchange="toggleManualSceneUnlock(this.checked)">
+              <span>🔓 任意シーンの直接選択を許可</span>
+            </label>
           </div>
         </div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">30台のiPadの周回（1〜3周目）、manabaログイン、入手ヒント数、進行度ランキングをリアルタイムで一覧監視します。</p>
-        
-        <!-- 絞り込み ＆ 検索バー -->
-        <div id="monitor-filter-bar" style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
-          <div style="display:flex; gap:4px;">
-            <button class="nav-btn admin-filter-btn active" onclick="setMonitorFilter('all')" id="filter-all" style="padding:3px 8px; font-size:11px;">全30台</button>
-            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('1')" id="filter-1" style="padding:3px 8px; font-size:11px;">1周目</button>
-            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('2')" id="filter-2" style="padding:3px 8px; font-size:11px;">2周目</button>
-            <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('3')" id="filter-3" style="padding:3px 8px; font-size:11px;">3周目</button>
+      </div>
+
+      <!-- 右カラム：全画面緊急アラート ＆ 定型文クイックボタン -->
+      <div>
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="radio" style="color:var(--danger);"></i> 全画面 緊急アラート送信（指示割込）
           </div>
-          <input type="text" id="monitor-search-input" placeholder="🔍 端末名・ユーザー名で検索..." oninput="renderMonitoringCards()" 
-                 style="flex:1; min-width:140px; padding:4px 10px; font-size:12px; border:1px solid var(--border-color); border-radius:6px;">
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+            全iPadの画面全体をジャックして強制表示します。アナウンスや緊急指示に使用します。
+          </p>
+
+          <!-- 1タップ定型文クイックボタン群 -->
+          <div style="font-size:11.5px; font-weight:800; color:#475569; margin-bottom:6px;">
+            💡 定型文クイック入力（1タップ）:
+          </div>
+          <div class="quick-alerts-grid">
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【全体指示】全員前方のスクリーンに注目してください。')">
+              <span>📢 スクリーンに注目</span>
+            </button>
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【保安局より指示】直ちに端末の操作をやめてください。')">
+              <span>⚠️ 端末操作をやめて</span>
+            </button>
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【時間警告】残り時間わずかです！調査メモを最終確認してください。')">
+              <span>⏱️ 残り時間わずか</span>
+            </button>
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【保安局より緊急指示】直ちに大ホール中央へ集合してください。')">
+              <span>📍 大ホールへ集合</span>
+            </button>
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【重要】manabaのマイページに新しいお知らせが届いています。')">
+              <span>🏫 manabaを確認</span>
+            </button>
+            <button class="quick-alert-btn" onclick="setQuickAlertText('【ヒント】メールの受信トレイに添付ファイルが届いています。')">
+              <span>✉️ メールを確認</span>
+            </button>
+          </div>
+
+          <!-- 入力欄 ＆ 送信ボタン -->
+          <div class="form-group" style="margin-top:10px;">
+            <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">表示メッセージ本文:</label>
+            <textarea id="remote-alert-text" rows="3" placeholder="【保安局より緊急指示】直ちに大ホールへ集合してください。" style="width:100%; padding:10px; font-size:13px; border:1.5px solid var(--border-color); border-radius:8px;"></textarea>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+            <button class="btn btn-danger" onclick="sendCustomRemoteAlert()" style="padding:12px 20px; font-size:14px; font-weight:800;">
+              <i data-lucide="send"></i> 🚨 全iPadへ緊急アラート送信
+            </button>
+            <button class="nav-btn" onclick="document.getElementById('remote-alert-text').value=''" style="padding:8px 12px; font-size:12px;">
+              クリア
+            </button>
+          </div>
         </div>
-
-        <!-- グリッド表示コンテナ -->
-        <div class="team-monitor-grid" id="team-monitor-container" style="max-height:480px; overflow-y:auto; padding-right:4px;"></div>
-
-        <!-- 🏆 ランキング表示コンテナ -->
-        <div id="team-ranking-container" style="display:none; max-height:480px; overflow-y:auto; padding-right:4px;"></div>
       </div>
 
-      <!-- 📢 全画面緊急アラート送信 -->
-      <div class="card">
-        <div class="card-title"><i data-lucide="radio" style="color:var(--danger);"></i> 全画面 緊急アラート送信（指示割込）</div>
-        
-        <div class="form-group">
-          <label>表示メッセージ（全iPad端末の画面全体をジャックして強制表示）</label>
-          <textarea id="remote-alert-text" rows="3" placeholder="【保安局より緊急指示】直ちに大ホールへ集合してください。"></textarea>
-        </div>
-
-        <button class="btn btn-danger" onclick="sendCustomRemoteAlert()"><i data-lucide="send"></i> 全30台の端末へ緊急アラート送信</button>
-      </div>
-
-      <!-- 🚨 全30台 一斉マスターデータリセット（公演前初期化） -->
-      <div class="card" style="border:1.5px solid #fecaca; background:#fff5f5;">
-        <div class="card-title" style="color:#b91c1c;"><i data-lucide="rotate-ccw" style="color:#ef4444;"></i> 公演前 一括マスターデータリセット</div>
-        <p style="font-size:12px; color:#7f1d1d; margin-bottom:12px;">
-          本番公演の開始前やテスト終了後に、<strong>稼働中の全30台のiPadを一斉に初期状態（1周目・ロック画面・データ全消去）へ戻し、スプレッドシートのログも完全クリア</strong>します。
-        </p>
-        <button class="btn btn-danger" style="background:#dc2626;" onclick="executeGlobalMasterReset()">
-          <i data-lucide="trash-2"></i> 🚨 全30台を一斉に初期化リセット（本番前クリア）
-        </button>
-      </div>
     </div>
   </div> <!-- /#pane-flow -->
 
@@ -1307,6 +1540,181 @@
         }
       });
       if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // ===== 🎬 進行統制（5ステップ進行・ロールバック・定型文）ロジック =====
+    let currentFlowStep = 1;
+    let manualSceneUnlock = false;
+
+    const FLOW_STEP_CONFIG = {
+      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態" },
+      2: { name: "1周目スタート", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁" },
+      3: { name: "2周目突入（タイムループ）", loop: 2, desc: "09:04へ巻き戻し・1周目ラップ確定・2周目解禁" },
+      4: { name: "3周目突入（最終決戦）", loop: 3, desc: "09:04へ巻き戻し・2周目ラップ確定・3周目解禁" },
+      5: { name: "ゲーム終了（集計・アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定" }
+    };
+
+    function initFlowState() {
+      try {
+        const savedStep = localStorage.getItem('admin_flow_step');
+        if (savedStep) currentFlowStep = parseInt(savedStep, 10) || 1;
+      } catch(e) {}
+      updateFlowStepsUI();
+    }
+
+    function updateFlowStepsUI() {
+      // 1. 各ステップカードのUI状態更新
+      for (let s = 1; s <= 5; s++) {
+        const cardEl = document.getElementById(`flow-card-${s}`);
+        const tagEl = document.getElementById(`flow-tag-${s}`);
+        if (!cardEl || !tagEl) continue;
+
+        cardEl.className = 'flow-step-card';
+
+        if (s < currentFlowStep) {
+          cardEl.classList.add('done');
+          tagEl.innerText = '完了 ✓';
+          tagEl.style.background = '#e2e8f0';
+          tagEl.style.color = '#475569';
+        } else if (s === currentFlowStep) {
+          cardEl.classList.add('active');
+          tagEl.innerText = '★ 進行中';
+          tagEl.style.background = '#0284c7';
+          tagEl.style.color = '#ffffff';
+        } else if (s === currentFlowStep + 1) {
+          cardEl.classList.add('next');
+          tagEl.innerText = '▶ NEXT';
+          tagEl.style.background = '#84cc16';
+          tagEl.style.color = '#ffffff';
+        } else {
+          cardEl.classList.add(manualSceneUnlock ? 'next' : 'locked');
+          tagEl.innerText = manualSceneUnlock ? '選択可' : '🔒 未到達';
+          tagEl.style.background = '#f1f5f9';
+          tagEl.style.color = '#94a3b8';
+        }
+      }
+
+      // 2. 最上部ステータスバッジ
+      const statusBadge = document.getElementById('flow-current-status-badge');
+      if (statusBadge) {
+        statusBadge.innerText = `0${currentFlowStep}. ${FLOW_STEP_CONFIG[currentFlowStep]?.name || ''}`;
+      }
+
+      // 3. NEXT大型ボタンの更新
+      const nextBtnText = document.getElementById('text-flow-next-hero');
+      const nextBtn = document.getElementById('btn-flow-next-hero');
+      if (nextBtn && nextBtnText) {
+        if (currentFlowStep >= 5) {
+          nextBtnText.innerText = "🏁 全シーン進行完了（公演終了）";
+          nextBtn.style.background = "#64748b";
+          nextBtn.disabled = true;
+        } else {
+          const nextNum = currentFlowStep + 1;
+          nextBtnText.innerText = `▶ 次のシーンへ進行 (0${nextNum}. ${FLOW_STEP_CONFIG[nextNum]?.name || ''})`;
+          nextBtn.style.background = "#10b981";
+          nextBtn.disabled = false;
+        }
+      }
+
+      try {
+        localStorage.setItem('admin_flow_step', String(currentFlowStep));
+      } catch(e) {}
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // ▶ NEXTボタンクリック：次のシーンへ安全に進行
+    function advanceToNextScene() {
+      if (currentFlowStep >= 5) return;
+      const nextStep = currentFlowStep + 1;
+
+      if (nextStep === 5) {
+        const ok = confirm("🏁【ゲーム終了確認】\nタイマーを停止し、全iPadをゲーム終了（ログ集計・アンケート画面）へ移行しますか？");
+        if (!ok) return;
+      }
+
+      executeFlowStep(nextStep);
+    }
+
+    // ◀ ロールバックボタンクリック：1つ前のシーンへ戻す
+    function rollbackToPreviousScene() {
+      if (currentFlowStep <= 1) {
+        showToast("⚠️ 既に最初のシーン（01. 待機中）です");
+        return;
+      }
+      const prevStep = currentFlowStep - 1;
+      const ok = confirm(`◀【シーン巻き戻し確認】\n全iPadを「0${prevStep}. ${FLOW_STEP_CONFIG[prevStep]?.name}」の状態へ戻しますか？`);
+      if (!ok) return;
+
+      executeFlowStep(prevStep);
+    }
+
+    // ステップカードクリック時のハンドラ
+    function handleStepCardClick(stepNum) {
+      if (!manualSceneUnlock && stepNum !== currentFlowStep + 1 && stepNum !== currentFlowStep) {
+        showToast("🔒 ロックされています。「▶ 次のシーンへ進行」を押すか、「任意シーン直接選択」をONにしてください");
+        return;
+      }
+      if (stepNum === currentFlowStep) return;
+      executeFlowStep(stepNum);
+    }
+
+    // 手動アンロックトグル
+    function toggleManualSceneUnlock(checked) {
+      manualSceneUnlock = checked;
+      updateFlowStepsUI();
+      showToast(checked ? "🔓 任意シーンの直接選択を許可しました" : "🔒 シーン順送り制限を有効化しました");
+    }
+
+    // シーン実行（クラウド送信 ＆ タイマー・周回同期）
+    function executeFlowStep(stepNum) {
+      currentFlowStep = stepNum;
+      updateFlowStepsUI();
+
+      const config = FLOW_STEP_CONFIG[stepNum];
+      if (!config) return;
+
+      // 周回切替とタイマー連動
+      if (stepNum === 1) {
+        // 01. 待機
+        resetAdminTimerSilent();
+        triggerInitialMasterResetForShow();
+      } else if (stepNum === 2) {
+        // 02. 1周目開始
+        if (!adminTimerState.isRunning) startAdminTimer();
+        onAdminLoopChanged(1);
+      } else if (stepNum === 3) {
+        // 03. 2周目突入
+        onAdminLoopChanged(2);
+      } else if (stepNum === 4) {
+        // 04. 3周目突入
+        onAdminLoopChanged(3);
+      } else if (stepNum === 5) {
+        // 05. ゲーム終了
+        pauseAdminTimer();
+      }
+
+      // 📡 全iPadへシーン切替コマンドを配信
+      sendCloudAdminCommand({
+        id: "SCENE_STEP_" + stepNum + "_" + Date.now(),
+        type: "scene_flow_step",
+        name: `0${stepNum}. ${config.name}`,
+        params: {
+          step: stepNum,
+          loop: config.loop,
+          timestamp: Date.now()
+        }
+      }, `🎬 【0${stepNum}. ${config.name}】を全稼働iPadへ配信・同期しました！`);
+    }
+
+    // 💡 定型文クイック入力
+    function setQuickAlertText(text) {
+      const textarea = document.getElementById('remote-alert-text');
+      if (textarea) {
+        textarea.value = text;
+        textarea.focus();
+        showToast("💡 定型文を入力欄にセットしました。「全iPadへ緊急アラート送信」を押すと配信されます");
+      }
     }
 
     function formatMs(ms) {
@@ -2112,6 +2520,13 @@
         }, 300);
       }, 3500);
     }
+
+    // 初期化実行
+    window.addEventListener('DOMContentLoaded', () => {
+      initAdminTimer();
+      initFlowState();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
   </script>
 </body>
 </html>
