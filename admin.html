@@ -2352,7 +2352,7 @@
               </div>
               <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
                 <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">2</span>
-                <span>下ボタンを押してワンクリックで全端末を初期化</span>
+                <span>下ボタンを押して<strong>2段階確認</strong>を完了する（iPad側の許可は不要）</span>
               </div>
               <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
                 <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">3</span>
@@ -4313,8 +4313,30 @@
     }
 
     // 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログ消去 / 2段階オリジナルモーダルガード）
-    function executeGlobalMasterReset() {
-      // 確認なし・ワンクリックで即実行
+    async function executeGlobalMasterReset() {
+      // 1段階目
+      const ok1 = await showCustomConfirm({
+        title: "🚨 全iPad一括完全初期化 (1/2)",
+        subtitle: "公演前・公演後の全端末リセット",
+        message: "全iPad端末のメモ・入力・進行状況・ログイン情報を完全消去し、1周目・09:04待機画面へ初期化します。\n\n次の公演へ向けたセットアップを実行しますか？",
+        confirmText: "次へ進む（確認へ）",
+        cancelText: "キャンセル",
+        type: "danger",
+        icon: "trash-2"
+      });
+      if (!ok1) return;
+
+      // 2段階目（最終確認）
+      const ok2 = await showCustomConfirm({
+        title: "⚠️ 最終確認：本当に全データを消去しますか？ (2/2)",
+        subtitle: "この操作は取り消せません",
+        message: "【警告】全30台のiPadのローカルストレージおよびクラウド上の全ログがクリアされます。\n\n本当に全iPadを一斉完全初期化しますか？",
+        confirmText: "🧹 全データを消去して初期化",
+        cancelText: "中止する",
+        type: "danger",
+        icon: "alert-triangle"
+      });
+      if (!ok2) return;
 
       // 1. タイマー初期化
       resetAdminTimerSilent();
