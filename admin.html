@@ -967,7 +967,23 @@
       startTimerInterval();
       updateTimerButtonsUI(true);
       saveAdminTimerState();
-      showToast("⏱️ 公演タイマーを開始しました！（1周目進行中）");
+
+      // 📡 全iPadへゲームスタート＆09:04から時間始動シグナルを即時配信
+      localStorage.setItem('game_timer_running', 'true');
+      localStorage.setItem('fake_clock_set_time', String(now));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'game_start', payload: { startTime: now } });
+        } catch(e) {}
+      }
+
+      sendCloudAdminCommand({
+        id: "GAME_START_" + now,
+        type: "game_start",
+        name: "ゲームスタート（09:04から時間進行開始）",
+        params: { startTime: now, timestamp: now }
+      }, "⏱️ 公演タイマーを開始しました！（全iPadの時計が09:04から一斉に動き始めました）");
     }
 
     function pauseAdminTimer() {
@@ -984,6 +1000,14 @@
       updateTimerButtonsUI(false);
       renderTimerUI();
       saveAdminTimerState();
+
+      localStorage.setItem('game_timer_running', 'false');
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'timer_pause', payload: {} });
+        } catch(e) {}
+      }
       showToast("⏸️ 公演タイマーを一時停止しました");
     }
 
@@ -1005,7 +1029,16 @@
       updateTimerButtonsUI(false);
       renderTimerUI();
       saveAdminTimerState();
-      showToast("🔄 公演タイマーをリセットしました（1周目初期状態）");
+
+      localStorage.setItem('game_timer_running', 'false');
+      localStorage.setItem('fake_clock_set_time', String(Date.now()));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'master_reset', payload: { loop: 1 } });
+        } catch(e) {}
+      }
+      showToast("🔄 公演タイマーをリセットしました（1周目・09:04固定状態）");
     }
 
     // 周回が変更されたときに自動でラップを切り替え
@@ -1043,12 +1076,14 @@
         saveAdminTimerState();
       }
 
-      // 📡 演者ツール（actor.html）および全iPadへ周回変更を即時同期
+      // 📡 演者ツール（actor.html）および全iPadへ周回変更＆新周回09:04巻き戻しを即時同期
       localStorage.setItem('game_loop', String(targetLoop));
+      localStorage.setItem('fake_clock_set_time', String(now));
+      localStorage.setItem('game_timer_running', 'true');
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const bc = new BroadcastChannel('escape_game_channel');
-          bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop } });
+          bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop, startTime: now } });
         } catch(e) {}
       }
 
@@ -1058,7 +1093,7 @@
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=update_loop&loop=${targetLoop}` : `${gasUrl}?action=update_loop&loop=${targetLoop}`).catch(() => {});
       }
 
-      showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（${prevLoop}周目実績: ${formatMs(prevDuration)}）`);
+      showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（全iPadが09:04へ巻き戻り）`);
     }
 
     function startTimerInterval() {

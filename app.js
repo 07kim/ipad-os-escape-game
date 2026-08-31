@@ -368,25 +368,38 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04静止待機を完全徹底）
+  // ③ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04巻き戻しを完全徹底）
   if (isLoopChange) {
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
-      triggerLoopTransition(nextLoop);
+      const loopStartTime = p.startTime || p.timestamp || Date.now();
+      triggerLoopTransition(nextLoop, loopStartTime, true);
     }
   } else if (p.forceLock === true || p.lock === true) {
     // ④ 明示的なロック画面強制指示
     showLockScreen();
   }
 
-  // ⑤ 時計強制同期（周回変化以外の場合）
+  // ⑤ ゲームスタート（タイマー開始シグナル）
+  if (type === 'game_start' || p.action === 'game_start' || cmd.action === 'game_start') {
+    const startMs = p.startTime || p.timestamp || Date.now();
+    gameState.timerRunning = true;
+    gameState.clockSetTime = startMs;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    localStorage.setItem('game_timer_running', 'true');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(startMs));
+    console.log(`⏱️ GMよりゲームスタートシグナルを受信しました（開始基準: ${startMs}）。09:04から時間が進みます。`);
+  }
+
+  // ⑥ 時計強制同期（周回変化以外の場合）
   if (p.clockISO && !isLoopChange) {
     localStorage.setItem('fake_clock_start_iso', p.clockISO);
     gameState.clockStartISO = p.clockISO;
     updateAppUI();
   }
 
-  // ⑥ 個別・全体 遠隔リロード（画面フリーズ・キャッシュリフレッシュ）
+  // ⑦ 個別・全体 遠隔リロード（画面フリーズ・キャッシュリフレッシュ）
   if (type === 'device_reload' || type === 'reload' || p.action === 'reload' || cmd.action === 'reload') {
     const target = cmd.target || p.target || 'ALL';
     const myTeam = gameState.teamId || 'iPad-01';
@@ -400,7 +413,7 @@ function executeRemoteAdminCommand(cmd) {
     }
   }
 
-  // ⑦ 公演終了後の一斉データ完全消去＆初期化（マスターリセット）
+  // ⑧ 公演終了後の一斉データ完全消去＆初期化（マスターリセット）
   if (type === 'master_reset' || p.action === 'master_reset' || cmd.action === 'master_reset') {
     const target = cmd.target || p.target || 'ALL';
     const myTeam = gameState.teamId || 'iPad-01';
@@ -414,7 +427,7 @@ function executeRemoteAdminCommand(cmd) {
       localStorage.setItem('team_id', currentTeam);
       localStorage.setItem('game_loop', '1');
       localStorage.setItem('game_timer_running', 'false');
-      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
       localStorage.setItem('fake_clock_set_time', String(Date.now()));
       if (gasUrl) localStorage.setItem('gas_url', gasUrl);
 
@@ -757,7 +770,7 @@ function applyOperationalRestrictions() {
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
   gameState.teamId = localStorage.getItem('team_id') || 'チームA';
-  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2126-09-04T09:04:00';
+  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2026-09-04T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
   gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
   
@@ -882,7 +895,7 @@ function getFormattedFakeTime() {
       return '09:04';
     }
     const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-    const startMs = Date.parse(gameState.clockStartISO || '2126-09-04T09:04:00');
+    const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:04:00');
     const fakeCurrent = new Date(startMs + elapsed);
     const hh = String(fakeCurrent.getHours()).padStart(2, '0');
     const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
@@ -903,7 +916,7 @@ function startFakeClock() {
 
     if (gameState.timerRunning) {
       const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-      const startMs = Date.parse(gameState.clockStartISO || '2126-09-04T09:04:00');
+      const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:04:00');
       const fakeCurrent = new Date(startMs + elapsed);
 
       const hh = String(fakeCurrent.getHours()).padStart(2, '0');
@@ -1038,7 +1051,7 @@ function resetAllAppsForNewLoop() {
 }
 
 // --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ ロック画面 ＆ 09:04静止待機を完全徹底） ---
-function triggerLoopTransition(nextLoop) {
+function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true) {
   const targetLoop = parseInt(nextLoop || 1, 10);
   if (isNaN(targetLoop)) return;
 
@@ -1057,18 +1070,19 @@ function triggerLoopTransition(nextLoop) {
   saveStateToStorage();
   localStorage.setItem('game_loop', String(targetLoop));
 
-  // 4. 時刻を 09:04（9月4日）に完全固定・静止待機に設定（ロック解除されるまでタイマー停止・静止）
-  const loopClockISO = "2126-09-04T09:04:00";
-  gameState.timerRunning = false;
+  // 4. 時刻を 09:04（9月4日）に完全固定・巻き戻し
+  const loopClockISO = "2026-09-04T09:04:00";
+  const startTime = loopStartTime || Date.now();
   gameState.clockStartISO = loopClockISO;
-  gameState.clockSetTime = Date.now();
-  localStorage.setItem('game_timer_running', 'false');
+  gameState.clockSetTime = startTime;
+  gameState.timerRunning = startTimer;
+  localStorage.setItem('game_timer_running', startTimer ? 'true' : 'false');
   localStorage.setItem('fake_clock_start_iso', loopClockISO);
-  localStorage.setItem('fake_clock_set_time', String(Date.now()));
+  localStorage.setItem('fake_clock_set_time', String(startTime));
 
   // 5. 時計表示（ロック画面 ＆ ステータスバー）を即座に「09:04」「9月4日」に強制描画
-  const statusTime = document.getElementById('status-time');
-  if (statusTime) statusTime.innerText = "09:04";
+  const sbClock = document.getElementById('sb-clock');
+  if (sbClock) sbClock.innerText = "09:04";
   const lockClock = document.getElementById('lock-clock');
   if (lockClock) lockClock.innerText = "09:04";
   const lockDate = document.getElementById('lock-date');
@@ -1081,14 +1095,14 @@ function triggerLoopTransition(nextLoop) {
   if (typeof BroadcastChannel !== 'undefined') {
     try {
       const bc = new BroadcastChannel('escape_game_channel');
-      bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop } });
+      bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop, startTime: startTime } });
     } catch(e) {}
   }
 
   // 8. コンテンツUI更新（ニュース・マスタデータの周回別表示切り替え）
   updateAppUI();
 
-  logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${targetLoop} へ移行しました（ホーム初期化・ロック画面・09:04静止待機）。`);
+  logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${targetLoop} へ移行しました（ホーム初期化・ロック画面・09:04巻き戻し）。`);
 }
 
 // --- アプリUIの周回ごとの更新 ---
@@ -1455,14 +1469,6 @@ function unlockScreen() {
     lockScreen.classList.add('hidden');
     playSystemSound("notif");
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
-
-    // 🚀 ロック解除でゲーム開始（時間が進み始める）
-    if (!gameState.timerRunning) {
-      gameState.timerRunning = true;
-      gameState.clockSetTime = Date.now();
-      localStorage.setItem('game_timer_running', 'true');
-      localStorage.setItem('fake_clock_set_time', gameState.clockSetTime.toString());
-    }
   }
 }
 
