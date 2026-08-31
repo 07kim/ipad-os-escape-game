@@ -4214,12 +4214,12 @@
         }
       }, `✅ 【${newDeviceId}】の代名詞（チーム名）を「${newTeam || '未設定'}」に更新しました！`);
 
-      // 2. GASスプレッドシートへ直接ステータス更新を送信（即時クラウド同期）
+      // 2. GASスプレッドシートへ直接ステータス更新を送信（即時クラウド同期 & B列上書き）
       const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
       if (gasUrl) {
         const updateUrl = gasUrl.includes('?') 
-          ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&registered=${newTeam ? 1 : 0}&_t=${Date.now()}`
-          : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&registered=${newTeam ? 1 : 0}&_t=${Date.now()}`;
+          ? `${gasUrl}&action=update_device_name&oldTeamId=${encodeURIComponent(oldDeviceId)}&newTeamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&_t=${Date.now()}`
+          : `${gasUrl}?action=update_device_name&oldTeamId=${encodeURIComponent(oldDeviceId)}&newTeamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&_t=${Date.now()}`;
         fetch(updateUrl).catch(() => {});
       }
 

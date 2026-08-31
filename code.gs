@@ -51,7 +51,7 @@ function doGet(e) {
       var hintsCount = Number(p.hints || 0);
       var manaba = p.manaba ? decodeURIComponent(p.manaba) : "未ログイン";
       var loopNum = Number(p.loop || 1);
-      var teamName = p.teamName ? decodeURIComponent(p.teamName) : "";
+      var teamName = p.teamName !== undefined ? decodeURIComponent(p.teamName) : "";
       var registeredVal = p.registered !== undefined ? Number(p.registered) : 0;
       
       updateTeamStatus(ss, p.teamId, loopNum, {
@@ -62,6 +62,16 @@ function doGet(e) {
       });
 
       return renderJson({ success: true, message: "ステータスを更新しました (GET)" });
+    }
+
+    // 3b. 管理番号・代名詞（チーム名）の直接上書き更新 (GET / 確実上書き)
+    if (action === "update_device_name") {
+      var oldDevId = e.parameter.oldTeamId || e.parameter.teamId || "iPad-01";
+      var newDevId = e.parameter.newTeamId || e.parameter.teamId || oldDevId;
+      var newTeamName = e.parameter.teamName !== undefined ? decodeURIComponent(e.parameter.teamName) : "";
+      
+      updateDeviceNameDirect(ss, oldDevId, newDevId, newTeamName);
+      return renderJson({ success: true, message: "B列のチーム名・管理番号を上書きしました！" });
     }
 
     // 4. GM運営コマンドの送信 (GET)
@@ -419,15 +429,15 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   var hintsCount = (statusData && statusData.hintsCount !== undefined) ? statusData.hintsCount : 0;
   var manaba = (statusData && statusData.manabaUser) ? statusData.manabaUser : "未ログイン";
   var battery = (statusData && statusData.battery) ? statusData.battery : "100%";
-  var teamName = (statusData && statusData.teamName) ? statusData.teamName : "";
+  var teamName = (statusData && statusData.teamName !== undefined) ? statusData.teamName : "";
   
-  var registeredStr = (statusData && (statusData.registered === 1 || statusData.registered === true)) ? "設定済み" : "未設定";
+  var registeredStr = (statusData && (statusData.registered === 1 || statusData.registered === true || (teamName && teamName !== "未設定"))) ? "設定済み" : "未設定";
 
   if (targetRow === -1) {
     // 該当行がない場合は新規追加
     sheet.appendRow([
       teamId,
-      teamName || "未設定",
+      teamName || "",
       Number(loopNum || 1),
       hintsCount,
       manaba,
@@ -437,7 +447,8 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
       registeredStr
     ]);
   } else {
-    if (teamName) {
+    // B列（チーム名）を常に確実に上書き（チームAなどの古い値を上書き）
+    if (statusData && statusData.teamName !== undefined) {
       sheet.getRange(targetRow, 2).setValue(teamName);
     }
     sheet.getRange(targetRow, 3, 1, 7).setValues([[
@@ -449,6 +460,50 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
       nowStr,
       registeredStr
     ]]);
+  }
+}
+
+// 6b. 管理番号・代名詞（チーム名）の直接ピンポイント上書き更新
+function updateDeviceNameDirect(ss, oldTeamId, newTeamId, newTeamName) {
+  var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
+  if (!sheet) return;
+
+  var lastRow = sheet.getLastRow();
+  var targetRow = -1;
+
+  if (lastRow > 1) {
+    var teamIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < teamIds.length; i++) {
+      var rowId = teamIds[i][0];
+      if (rowId === oldTeamId || rowId === newTeamId) {
+        targetRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
+  var registeredStr = (newTeamName && newTeamName !== "未設定") ? "設定済み" : "未設定";
+
+  if (targetRow !== -1) {
+    // A列（端末ID）とB列（チーム名・代名詞）を直接上書き！
+    sheet.getRange(targetRow, 1).setValue(newTeamId);
+    sheet.getRange(targetRow, 2).setValue(newTeamName);
+    sheet.getRange(targetRow, 8).setValue(nowStr);
+    sheet.getRange(targetRow, 9).setValue(registeredStr);
+  } else {
+    // 行が存在しない場合は新規追加
+    sheet.appendRow([
+      newTeamId,
+      newTeamName,
+      1,
+      0,
+      "未ログイン",
+      "100%",
+      "接続中",
+      nowStr,
+      registeredStr
+    ]);
   }
 }
 
