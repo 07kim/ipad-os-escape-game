@@ -808,6 +808,290 @@
       border-color: #94a3b8;
     }
 
+    /* 📊 端末モニタリングタブ専用スタイル（2ペイン・動的アクセス管理） */
+    .monitor-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .monitor-summary-banner {
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .monitor-summary-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .summary-stat-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .summary-stat-badge.main {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .summary-stat-badge.loop1 { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
+    .summary-stat-badge.loop2 { background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+    .summary-stat-badge.loop3 { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
+    .summary-stat-badge.login { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+
+    .monitor-two-columns {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .monitor-two-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 左ペイン：動的縦一覧 ＆ コントロール */
+    .monitor-left-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .monitor-sort-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sort-btn-group {
+      display: flex;
+      gap: 4px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 8px;
+    }
+
+    .sort-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sort-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .sort-order-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #334155;
+    }
+    .sort-order-btn:hover {
+      background: #f8fafc;
+    }
+
+    .device-items-scroll-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 560px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .dynamic-device-item {
+      padding: 10px 12px;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .dynamic-device-item:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transform: translateY(-1px);
+    }
+    .dynamic-device-item.active-selected {
+      border-color: var(--primary);
+      background: #f0f9ff;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+
+    .dev-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dev-item-id {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      color: #0f172a;
+    }
+    .dev-item-loop-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .dev-item-loop-tag.loop-1 { background: #e0f2fe; color: #0369a1; }
+    .dev-item-loop-tag.loop-2 { background: #fef08a; color: #854d0e; }
+    .dev-item-loop-tag.loop-3 { background: #fbcfe8; color: #9d174d; }
+
+    .dev-item-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: #334155;
+    }
+    .dev-item-user {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dev-item-screen {
+      font-size: 10.5px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dev-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: #94a3b8;
+      border-top: 1px dashed #f1f5f9;
+      padding-top: 4px;
+    }
+
+    /* 右ペイン：詳細インサイト ＆ 個別サポート */
+    .monitor-right-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .right-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .right-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .detail-info-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .detail-info-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .detail-info-val {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .timeline-item {
+      font-size: 11.5px;
+      color: #334155;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .timeline-time {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+    }
+
     /* タブペイン制御 */
     .admin-tab-pane {
       display: none;
@@ -997,6 +1281,14 @@
               <span>🔓 任意シーンの直接選択を許可</span>
             </label>
           </div>
+
+          <!-- 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログクリア） -->
+          <div style="margin-top:12px; padding-top:12px; border-top:1px dashed #fecaca; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:#991b1b; font-weight:600;">※次公演セットアップ用：全iPadのメモ・入力・周回を完全消去</span>
+            <button class="nav-btn" onclick="executeGlobalMasterReset()" style="padding:6px 12px; font-size:11.5px; font-weight:700; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;" title="全iPadのメモ・入力・周回を完全初期化">
+              <i data-lucide="trash-2" style="width:13px; height:13px;"></i> 🚨 全iPad ＆ データを一括完全初期化
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1055,8 +1347,161 @@
     </div>
   </div> <!-- /#pane-flow -->
 
-  <!-- 📊 タブ2: 端末モニタリング (項目3で実装) -->
-  <div class="admin-tab-pane" id="pane-monitor"></div>
+  <!-- 📊 タブ2: 端末モニタリング（動的アクセス管理 ＆ 2ペイン詳細） -->
+  <div class="admin-tab-pane" id="pane-monitor">
+    <div class="monitor-wrapper">
+      
+      <!-- 1. 全体進捗サマリーバー -->
+      <div class="monitor-summary-banner">
+        <div class="monitor-summary-left">
+          <span class="summary-stat-badge main" id="summary-active-count">
+            <i data-lucide="tablet" style="width:14px; height:14px;"></i> 現在アクセス中: 0台
+          </span>
+          <span class="summary-stat-badge loop1" id="summary-loop1-count">1周目: 0台</span>
+          <span class="summary-stat-badge loop2" id="summary-loop2-count">2周目: 0台</span>
+          <span class="summary-stat-badge loop3" id="summary-loop3-count">3周目: 0台</span>
+          <span class="summary-stat-badge login" id="summary-login-count">👤 ログイン済: 0台</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:6px 12px; font-size:11.5px; font-weight:700;">
+            <i data-lucide="refresh-cw" style="width:13px; height:13px;"></i> 最新状況を更新
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 2カラム分割構造（左: 一覧 / 右: 詳細インサイト） -->
+      <div class="monitor-two-columns">
+        
+        <!-- 左ペイン：ソート・絞り込み・検索 ＆ 動的縦スクロール一覧 -->
+        <div class="monitor-left-card">
+          <!-- ソート項目 ＆ 昇順/降順トグル -->
+          <div class="monitor-sort-controls">
+            <div class="sort-btn-group">
+              <button class="sort-btn active" id="sort-btn-id" onclick="setMonitorSort('id')">📱 端末順</button>
+              <button class="sort-btn" id="sort-btn-score" onclick="setMonitorSort('score')">🏆 進捗順</button>
+              <button class="sort-btn" id="sort-btn-time" onclick="setMonitorSort('time')">⏱️ 通信順</button>
+            </div>
+            <button class="sort-order-btn" id="btn-sort-order-toggle" onclick="toggleMonitorSortOrder()">
+              <i data-lucide="arrow-down-narrow-wide" style="width:13px; height:13px;"></i>
+              <span id="text-sort-order">降順 ⬇</span>
+            </button>
+          </div>
+
+          <!-- 周回絞り込み ＆ 検索バー -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <div style="display:flex; gap:3px;">
+              <button class="nav-btn admin-filter-btn active" onclick="setMonitorFilter('all')" id="filter-all" style="padding:4px 8px; font-size:11px;">全接続</button>
+              <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('1')" id="filter-1" style="padding:4px 8px; font-size:11px;">1周</button>
+              <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('2')" id="filter-2" style="padding:4px 8px; font-size:11px;">2周</button>
+              <button class="nav-btn admin-filter-btn" onclick="setMonitorFilter('3')" id="filter-3" style="padding:4px 8px; font-size:11px;">3周</button>
+            </div>
+            <input type="text" id="monitor-search-input" placeholder="🔍 端末・氏名・学番・画面名で検索..." oninput="renderDynamicMonitoringList()" 
+                   style="flex:1; min-width:130px; padding:5px 8px; font-size:11.5px; border:1px solid var(--border-color); border-radius:6px;">
+          </div>
+
+          <!-- 動的デバイス縦スクロール一覧 -->
+          <div class="device-items-scroll-list" id="dynamic-devices-container">
+            <div style="padding:20px; text-align:center; color:#94a3b8; font-size:12px;">
+              📡 接続端末を待機中...<br>(iPadがアクセスすると自動表示されます)
+            </div>
+          </div>
+        </div>
+
+        <!-- 右ペイン：選択中端末の詳細インサイト ＆ 個別サポート -->
+        <div class="monitor-right-card" id="monitor-detail-pane">
+          <!-- 選択端末ヘッダー -->
+          <div class="right-detail-header">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h2 id="detail-dev-title" style="font-family:'Orbitron', monospace; font-size:18px; font-weight:900; color:#0f172a;">
+                  iPad-01
+                </h2>
+                <span id="detail-dev-loop-tag" class="dev-item-loop-tag loop-1" style="font-size:11px; padding:3px 8px;">
+                  1周目
+                </span>
+                <span id="detail-dev-status-tag" style="font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; padding:3px 8px; border-radius:4px;">
+                  🟢 稼働中 (3秒前)
+                </span>
+              </div>
+              <div style="font-size:12px; color:#475569; margin-top:3px;" id="detail-dev-user-sub">
+                👤 ログイン名: 連城 観 (s23c1044kr)
+              </div>
+            </div>
+
+            <!-- 個別遠隔リロードボタン -->
+            <button class="nav-btn" onclick="sendRemoteDeviceReload(currentSelectedDeviceId)" style="background:#0284c7; color:#fff; border:none; font-weight:700; padding:8px 14px; cursor:pointer;" title="このiPadの画面を強制リロード">
+              <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> 🔄 この端末を遠隔リロード
+            </button>
+          </div>
+
+          <!-- 端末ステータスグリッド -->
+          <div class="right-detail-grid">
+            <div class="detail-info-box">
+              <span class="detail-info-label">📍 現在開いている画面</span>
+              <span class="detail-info-val" id="detail-dev-screen" style="color:var(--primary);">🏫 manaba（講義資料）</span>
+            </div>
+            <div class="detail-info-box">
+              <span class="detail-info-label">💡 ヒント入手 ＆ 進捗</span>
+              <span class="detail-info-val" id="detail-dev-hints">3 / 5 件 (60%)</span>
+            </div>
+            <div class="detail-info-box">
+              <span class="detail-info-label">🏆 会内進行順位</span>
+              <span class="detail-info-val" id="detail-dev-rank">1 位 / 24台中</span>
+            </div>
+          </div>
+
+          <!-- 個別ヒント・指示送信フォーム -->
+          <div>
+            <div style="font-size:12.5px; font-weight:800; color:#1e293b; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="message-square" style="width:14px; height:14px; color:var(--primary);"></i>
+              この端末だけに個別ヒント・指示を送信（画面ジャック割込）
+            </div>
+
+            <!-- 個別定型文クイックボタン群 -->
+            <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">💡 個別定型文（1タップ入力）:</div>
+            <div class="quick-alerts-grid" style="margin-bottom:8px;">
+              <button class="quick-alert-btn" onclick="setIndividualQuickMsg('【ヒント】manabaのコースニュースを確認してください。')">
+                <span>💡 manabaのニュースを見て</span>
+              </button>
+              <button class="quick-alert-btn" onclick="setIndividualQuickMsg('【ヒント】ブラウザの検索履歴を確認してください。')">
+                <span>💡 検索履歴を確認して</span>
+              </button>
+              <button class="quick-alert-btn" onclick="setIndividualQuickMsg('【ヒント】メールの受信トレイを確認してください。')">
+                <span>💡 受信メールを確認して</span>
+              </button>
+              <button class="quick-alert-btn" onclick="setIndividualQuickMsg('【ヒント】写真アプリのメモアルバムを確認してください。')">
+                <span>💡 写真のメモを確認して</span>
+              </button>
+            </div>
+
+            <!-- 入力欄 ＆ 送信 -->
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="individual-alert-input" placeholder="例: 【ヒント】第11回講義資料に周波数の記載があります" 
+                     style="flex:1; padding:8px 12px; font-size:12.5px; border:1.5px solid var(--border-color); border-radius:8px;">
+              <button class="btn btn-primary" onclick="sendIndividualAlertFromPane()" style="padding:8px 16px; font-size:13px; font-weight:700; white-space:nowrap;">
+                <i data-lucide="send"></i> 個別送信
+              </button>
+            </div>
+          </div>
+
+          <!-- 端末アクション履歴（タイムライン） -->
+          <div>
+            <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+              <i data-lucide="history" style="width:13px; height:13px;"></i> 📜 端末アクション履歴（行動タイムライン）
+            </div>
+            <div class="timeline-list" id="detail-dev-timeline">
+              <div class="timeline-item"><span class="timeline-time">09:14:20</span> 講義資料PDFを閲覧</div>
+              <div class="timeline-item"><span class="timeline-time">09:08:15</span> manabaログイン (連城 観)</div>
+              <div class="timeline-item"><span class="timeline-time">09:04:00</span> 端末ロック解除</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div> <!-- /#pane-monitor -->
 
   <!-- 🔊 タブ3: 音響・演出 (項目4で実装) -->
   <div class="admin-tab-pane" id="pane-audio"></div>
@@ -2002,17 +2447,44 @@
 
     // --- 30台モニタリングダッシュボード ---
     function setMonitorFilter(filterType) {
+    // ===== 📊 端末モニタリング（動的アクセス一覧・ソート・2ペイン詳細） =====
+    let monitorSortKey = 'id'; // 'id' | 'score' | 'time'
+    let monitorSortOrder = 'desc'; // 'desc' | 'asc'
+    let currentSelectedDeviceId = 'iPad-01';
+
+    function setMonitorFilter(filterType) {
       monitorFilter = filterType;
       document.querySelectorAll('.admin-filter-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`filter-${filterType}`);
       if (activeBtn) activeBtn.classList.add('active');
-      renderMonitoringCards();
+      renderDynamicMonitoringList();
+    }
+
+    function setMonitorSort(sortKey) {
+      monitorSortKey = sortKey;
+      ['id', 'score', 'time'].forEach(k => {
+        const btn = document.getElementById(`sort-btn-${k}`);
+        if (btn) {
+          if (k === sortKey) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      renderDynamicMonitoringList();
+    }
+
+    function toggleMonitorSortOrder() {
+      monitorSortOrder = (monitorSortOrder === 'desc') ? 'asc' : 'desc';
+      const textEl = document.getElementById('text-sort-order');
+      if (textEl) {
+        textEl.innerText = (monitorSortOrder === 'desc') ? '降順 ⬇' : '昇順 ⬆';
+      }
+      renderDynamicMonitoringList();
     }
 
     function refreshMonitoringDashboard() {
       const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
       if (!gasUrl) {
-        renderMonitoringCards();
+        renderDynamicMonitoringList();
         return;
       }
 
@@ -2022,186 +2494,285 @@
         .then(json => {
           if (json && json.success && json.devices) {
             latestDevicesData = json.devices;
-            renderMonitoringCards();
           } else {
-            // フォールバック: action=get_data で取得
             fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
               .then(r => r.json())
               .then(d => {
-                if (d && d.data && d.data.devicesStatus) {
-                  latestDevicesData = d.data.devicesStatus;
-                }
-                renderMonitoringCards();
+                if (d && d.data && d.data.devicesStatus) latestDevicesData = d.data.devicesStatus;
               })
-              .catch(() => renderMonitoringCards());
+              .finally(() => renderDynamicMonitoringList());
+            return;
           }
+          renderDynamicMonitoringList();
         })
         .catch(() => {
-          // さらにフォールバック
-          fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
-            .then(r => r.json())
-            .then(d => {
-              if (d && d.data && d.data.devicesStatus) {
-                latestDevicesData = d.data.devicesStatus;
-              }
-              renderMonitoringCards();
-            })
-            .catch(() => renderMonitoringCards());
+          renderDynamicMonitoringList();
         });
     }
 
-    function renderMonitoringCards() {
-      const container = document.getElementById('team-monitor-container');
+    // 🌟 動的アクセス一覧の描画（アクセス中の端末のみを生成・流動的管理）
+    function renderDynamicMonitoringList() {
+      const container = document.getElementById('dynamic-devices-container');
       if (!container) return;
 
       const searchKeyword = (document.getElementById('monitor-search-input')?.value || "").toLowerCase().trim();
 
-      // 30台のデバイスマップ
-      const deviceMap = {};
-      for (let i = 1; i <= 30; i++) {
-        const padId = `iPad-${String(i).padStart(2, '0')}`;
-        deviceMap[padId] = {
-          id: padId,
-          name: padId,
-          loop: 1,
-          hints: 0,
-          manaba: "未ログイン",
-          lastSeen: "--:--",
-          isActive: false
-        };
-      }
+      // アクセス実績のあるデバイスマップを構築（未接続の空枠30個は作らない流動的仕様）
+      const devicesMap = {};
 
-      // GASから取得した最新ステータスで上書き
+      // 1. 最新データからデバイスを展開
       latestDevicesData.forEach(d => {
-        if (deviceMap[d.id]) {
-          deviceMap[d.id].loop = d.loop;
-          deviceMap[d.id].hints = d.hintsCount;
-          deviceMap[d.id].manaba = d.manaba;
-          deviceMap[d.id].lastSeen = d.lastSeen;
-          deviceMap[d.id].isActive = true;
-        } else {
-          // カスタムユーザー名の端末
-          deviceMap[d.id] = {
-            id: d.id,
-            name: d.id,
-            loop: d.loop,
-            hints: d.hintsCount,
-            manaba: d.manaba,
-            lastSeen: d.lastSeen,
+        const id = d.id || d.name || 'Unknown';
+        devicesMap[id] = {
+          id: id,
+          name: d.name || id,
+          loop: parseInt(d.loop, 10) || 1,
+          hints: parseInt(d.hintsCount || d.hints, 10) || 0,
+          manaba: d.manaba || "未ログイン",
+          screen: d.screen || d.currentScreen || "ホーム画面",
+          lastSeen: d.lastSeen || "3秒前",
+          score: parseInt(d.score, 10) || (parseInt(d.loop, 10) || 1) * 1000 + (parseInt(d.hints, 10) || 0) * 100,
+          lastSeenMs: d.lastSeenMs || Date.now(),
+          isActive: true
+        };
+      });
+
+      // テスト用に空の場合、稼働中のモックデータを表示（動作確認用）
+      if (Object.keys(devicesMap).length === 0) {
+        for (let i = 1; i <= 6; i++) {
+          const padId = `iPad-${String(i).padStart(2, '0')}`;
+          const users = ["連城 観 (s23c1044kr)", "月島 拓真 (s23c1088tm)", "風早 律 (s23c1012hr)", "未ログイン", "鳴海 悠 (s23c1099ny)", "白石 紬 (s23c1055st)"];
+          const screens = ["🏫 manaba (講義資料PDF)", "💬 LINK チャット", "🌐 検索ブラウザ", "🔒 ロック画面", "✉️ メーラー (受信トレイ)", "📷 写真メモ"];
+          devicesMap[padId] = {
+            id: padId,
+            name: padId,
+            loop: (i <= 2) ? 2 : 1,
+            hints: (i === 1) ? 4 : (i === 2 ? 3 : 1),
+            manaba: users[i - 1] || "未ログイン",
+            screen: screens[i - 1] || "ホーム画面",
+            lastSeen: `${i * 3}秒前`,
+            score: (i <= 2 ? 2000 : 1000) + (i * 120),
+            lastSeenMs: Date.now() - (i * 3000),
             isActive: true
           };
         }
-      });
-
-      const devices = Object.values(deviceMap);
-
-      // ログイン状態判定ヘルパー
-      function isDeviceLoggedIn(d) {
-        if (!d.manaba) return false;
-        const m = String(d.manaba).trim();
-        return m !== "未ログイン" && m !== "-" && m !== "未" && m !== "";
       }
 
-      // 絞り込み ＆ 検索
-      const filtered = devices.filter(d => {
+      let devices = Object.values(devicesMap);
+
+      // 1. サマリーバーの集計・更新
+      const totalCount = devices.length;
+      const loop1Count = devices.filter(d => d.loop === 1).length;
+      const loop2Count = devices.filter(d => d.loop === 2).length;
+      const loop3Count = devices.filter(d => d.loop === 3).length;
+      const loginCount = devices.filter(d => d.manaba && !d.manaba.includes("未ログイン") && d.manaba !== "-").length;
+
+      const sumActiveEl = document.getElementById('summary-active-count');
+      const sumL1El = document.getElementById('summary-loop1-count');
+      const sumL2El = document.getElementById('summary-loop2-count');
+      const sumL3El = document.getElementById('summary-loop3-count');
+      const sumLoginEl = document.getElementById('summary-login-count');
+
+      if (sumActiveEl) sumActiveEl.innerHTML = `<i data-lucide="tablet" style="width:14px; height:14px;"></i> 現在アクセス中: ${totalCount}台`;
+      if (sumL1El) sumL1El.innerText = `1周目: ${loop1Count}台`;
+      if (sumL2El) sumL2El.innerText = `2周目: ${loop2Count}台`;
+      if (sumL3El) sumL3El.innerText = `3周目: ${loop3Count}台`;
+      if (sumLoginEl) sumLoginEl.innerText = `👤 ログイン済: ${loginCount}台`;
+
+      // 2. 絞り込み ＆ 複合検索
+      let filtered = devices.filter(d => {
         if (monitorFilter !== 'all' && String(d.loop) !== String(monitorFilter)) return false;
-        if (searchKeyword && !d.name.toLowerCase().includes(searchKeyword) && !d.id.toLowerCase().includes(searchKeyword)) return false;
+        if (searchKeyword) {
+          const matchId = d.id.toLowerCase().includes(searchKeyword);
+          const matchName = d.name.toLowerCase().includes(searchKeyword);
+          const matchUser = (d.manaba || "").toLowerCase().includes(searchKeyword);
+          const matchScreen = (d.screen || "").toLowerCase().includes(searchKeyword);
+          if (!matchId && !matchName && !matchUser && !matchScreen) return false;
+        }
         return true;
       });
 
-      // ★ ログイン済みが上（ログイン順・通信順）、未ログインは下へソート
+      // 3. ソート（昇順 / 降順）
       filtered.sort((a, b) => {
-        const aLog = isDeviceLoggedIn(a);
-        const bLog = isDeviceLoggedIn(b);
-        if (aLog !== bLog) {
-          return aLog ? -1 : 1; // ログイン済みが上
+        let comp = 0;
+        if (monitorSortKey === 'id') {
+          comp = a.id.localeCompare(b.id, undefined, { numeric: true });
+        } else if (monitorSortKey === 'score') {
+          comp = (a.score || 0) - (b.score || 0);
+        } else if (monitorSortKey === 'time') {
+          comp = (a.lastSeenMs || 0) - (b.lastSeenMs || 0);
         }
-        if (aLog && bLog) {
-          // ログイン済み同士: 最終通信/ログイン日時の降順
-          return (b.lastSeen || "").localeCompare(a.lastSeen || "");
-        }
-        // 未ログイン同士: 通信中優先 ＆ 端末ID昇順
-        if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
-        return a.id.localeCompare(b.id, undefined, { numeric: true });
+        return (monitorSortOrder === 'desc') ? -comp : comp;
       });
 
+      // 4. 左ペインの描画
       container.innerHTML = "";
       if (filtered.length === 0) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:12px;">該当する端末が見つかりません</div>`;
+        container.innerHTML = `<div style="padding:30px; text-align:center; color:#94a3b8; font-size:12px;">該当するアクセス端末がありません</div>`;
         return;
       }
 
-      filtered.forEach(d => {
-        const loopColors = {
-          1: { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd', name: '1周目' },
-          2: { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa', name: '2周目' },
-          3: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca', name: '3周目' }
-        };
-        const color = loopColors[d.loop] || loopColors[1];
-        const isLogged = isDeviceLoggedIn(d);
-        const activeClass = isLogged ? 'logged-in' : (d.isActive ? 'active-device' : '');
+      // 選択中端末がまだない場合、先頭を選択
+      if (!currentSelectedDeviceId || !devicesMap[currentSelectedDeviceId]) {
+        currentSelectedDeviceId = filtered[0].id;
+      }
 
-        container.innerHTML += `
-          <div class="team-monitor-card ${activeClass}" onclick="openDeviceDetailModal('${d.id}')" style="cursor:pointer;" title="クリックして ${d.name} の詳細・個別操作を開く">
-            <div class="team-card-header">
-              <span class="team-id-badge">
-                <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${d.isActive ? '#22c55e' : '#cbd5e1'};"></span>
-                ${d.name}
-              </span>
-              <span class="team-loop-tag" style="background:${color.bg}; color:${color.text}; border:1px solid ${color.border};">${color.name}</span>
+      filtered.forEach(d => {
+        const isSelected = (d.id === currentSelectedDeviceId);
+        const loopClasses = { 1: 'loop-1', 2: 'loop-2', 3: 'loop-3' };
+        const loopClass = loopClasses[d.loop] || 'loop-1';
+        const isLogged = d.manaba && !d.manaba.includes("未ログイン") && d.manaba !== "-";
+
+        const itemEl = document.createElement('div');
+        itemEl.className = `dynamic-device-item ${isSelected ? 'active-selected' : ''}`;
+        itemEl.onclick = () => selectMonitoringDevice(d.id);
+        itemEl.innerHTML = `
+          <div class="dev-item-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>
+              <span class="dev-item-id">${d.id}</span>
             </div>
-            <div class="team-user-row" title="${d.manaba}">
-              <span style="font-size:11px;">${isLogged ? '👤' : '🔒'}</span>
-              <span style="color:${isLogged ? '#047857' : '#94a3b8'}; font-weight:${isLogged ? '700' : '500'};">${d.manaba}</span>
-            </div>
-            <div class="team-sub-row">
-              <span>💡 情報: <strong>${d.hints}</strong></span>
-              <span style="color:#94a3b8; font-size:9px;">${d.lastSeen}</span>
-            </div>
+            <span class="dev-item-loop-tag ${loopClass}">${d.loop}周目</span>
+          </div>
+          <div class="dev-item-body">
+            <span class="dev-item-user" style="color:${isLogged ? '#047857' : '#94a3b8'};">
+              ${isLogged ? '👤' : '🔒'} ${d.manaba}
+            </span>
+            <span class="dev-item-screen" title="${d.screen}">
+              ${d.screen}
+            </span>
+          </div>
+          <div class="dev-item-footer">
+            <span>💡 ヒント: <strong>${d.hints} 件</strong></span>
+            <span>最終: ${d.lastSeen}</span>
           </div>
         `;
+        container.appendChild(itemEl);
       });
 
-      renderRankingTable(devices);
+      // 5. 右ペイン詳細の更新
+      renderSelectedDeviceDetail(devicesMap[currentSelectedDeviceId]);
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    // ===== 📱 端末詳細モーダル管理 =====
-    let currentSelectedDeviceId = null;
-
-    function openDeviceDetailModal(deviceId) {
+    // 🌟 右ペインの選択端末切り替え
+    function selectMonitoringDevice(deviceId) {
       currentSelectedDeviceId = deviceId;
-      const overlay = document.getElementById('device-modal-overlay');
-      if (!overlay) return;
+      renderDynamicMonitoringList();
+    }
 
-      // 該当デバイスデータの取得
-      const deviceMap = {};
-      for (let i = 1; i <= 30; i++) {
-        const padId = `iPad-${String(i).padStart(2, '0')}`;
-        deviceMap[padId] = {
-          id: padId,
-          name: padId,
-          loop: 1,
-          hints: 0,
-          manaba: "未ログイン",
-          lastSeen: "--:--",
-          isActive: false
-        };
+    function renderSelectedDeviceDetail(device) {
+      if (!device) return;
+
+      const titleEl = document.getElementById('detail-dev-title');
+      const loopTagEl = document.getElementById('detail-dev-loop-tag');
+      const statusTagEl = document.getElementById('detail-dev-status-tag');
+      const userSubEl = document.getElementById('detail-dev-user-sub');
+      const screenEl = document.getElementById('detail-dev-screen');
+      const hintsEl = document.getElementById('detail-dev-hints');
+      const rankEl = document.getElementById('detail-dev-rank');
+
+      if (titleEl) titleEl.innerText = device.id;
+      if (loopTagEl) {
+        loopTagEl.className = `dev-item-loop-tag loop-${device.loop}`;
+        loopTagEl.innerText = `${device.loop}周目`;
       }
-      latestDevicesData.forEach(d => {
-        if (deviceMap[d.id]) {
-          Object.assign(deviceMap[d.id], d);
-        } else {
-          deviceMap[d.id] = d;
+      if (statusTagEl) {
+        statusTagEl.innerText = `🟢 稼働中 (${device.lastSeen})`;
+      }
+      if (userSubEl) {
+        userSubEl.innerHTML = `👤 ログイン名: <strong>${device.manaba}</strong>`;
+      }
+      if (screenEl) {
+        screenEl.innerText = device.screen || "ホーム画面";
+      }
+      if (hintsEl) {
+        hintsEl.innerText = `${device.hints} 件 入手済`;
+      }
+      if (rankEl) {
+        rankEl.innerText = `進捗スコア: ${device.score} pts`;
+      }
+    }
+
+    // 💡 個別ヒント定型文の入力
+    function setIndividualQuickMsg(msg) {
+      const input = document.getElementById('individual-alert-input');
+      if (input) {
+        input.value = msg;
+        input.focus();
+        showToast("💡 個別ヒントを入力欄にセットしました。「個別送信」でこの端末だけに届きます");
+      }
+    }
+
+    // 📨 選択中端末だけに個別ヒント送信
+    function sendIndividualAlertFromPane() {
+      const input = document.getElementById('individual-alert-input');
+      const text = input ? input.value.trim() : "";
+      if (!text) {
+        alert("送信メッセージを入力してください。");
+        return;
+      }
+      if (!currentSelectedDeviceId) {
+        alert("端末が選択されていません。");
+        return;
+      }
+
+      sendCloudAdminCommand({
+        id: "ALERT_INDIVIDUAL_" + Date.now(),
+        type: "alert",
+        name: `個別アラート (${currentSelectedDeviceId})`,
+        params: {
+          target: currentSelectedDeviceId,
+          alertMsg: text,
+          sound: "alert",
+          timestamp: Date.now()
         }
-      });
+      }, `📨 【${currentSelectedDeviceId}】へ個別ヒント「${text}」を送信しました！`);
 
-      const d = deviceMap[deviceId] || { id: deviceId, name: deviceId, loop: 1, hints: 0, manaba: "未ログイン", lastSeen: "--:--" };
+      if (input) input.value = "";
+    }
 
-      // ランキング計算
-      const allDevs = Object.values(deviceMap);
-      allDevs.sort((a, b) => (b.loop * 100 + (b.hints || 0)) - (a.loop * 100 + (a.hints || 0)));
-      const rankIdx = allDevs.findIndex(item => item.id === deviceId);
-      const rankText = rankIdx >= 0 ? `${rankIdx + 1} 位 (全${allDevs.length}台中)` : "--";
+    // 🔄 選択端末の個別遠隔リロード
+    function sendRemoteDeviceReload(deviceId) {
+      if (!deviceId) return;
+      const ok = confirm(`🔄【遠隔リロード確認】\n「${deviceId}」の画面を強制リロードしますか？\n（入力データは保持されます）`);
+      if (!ok) return;
+
+      sendCloudAdminCommand({
+        id: "RELOAD_" + deviceId + "_" + Date.now(),
+        type: "reload",
+        name: `個別リロード (${deviceId})`,
+        params: {
+          target: deviceId,
+          timestamp: Date.now()
+        }
+      }, `🔄 【${deviceId}】へ遠隔リロード指示を送信しました！`);
+    }
+
+    // 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログ消去）
+    function executeGlobalMasterReset() {
+      const ok1 = confirm("🚨【本番前・後 一括初期化の確認 (1/2)】\n全iPad端末のメモ・入力・進行状況・ログイン情報を完全消去し、1周目・09:04待機画面へ初期化しますか？");
+      if (!ok1) return;
+
+      const ok2 = confirm("⚠️【最終確認 (2/2)】\nこの操作は取り消せません。本当に全iPadを一斉クリアしますか？");
+      if (!ok2) return;
+
+      // 1. タイマー初期化
+      resetAdminTimerSilent();
+
+      // 2. 進行ステップを01（待機中）へ
+      currentFlowStep = 1;
+      updateFlowStepsUI();
+
+      // 3. 全端末一括リセット配信
+      triggerInitialMasterResetForShow();
+
+      // 4. モニタリングデータクリア
+      latestDevicesData = [];
+      renderDynamicMonitoringList();
+
+      showToast("🧹 全iPad ＆ クラウドデータを一括完全初期化しました！（09:04待機画面へセット完了）");
+    }
 
       // DOM反映
       const titleEl = document.getElementById('dev-modal-title');
