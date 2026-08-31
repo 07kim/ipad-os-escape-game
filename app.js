@@ -400,10 +400,10 @@ function executeRemoteAdminCommand(cmd) {
       
       // 端末識別子とGAS設定以外を完全消去 ＆ 09:04静止待機に設定
       localStorage.clear();
-      localStorage.setItem('team_id', currentTeam);
+      localStorage.setItem('game_team_id', currentTeam);
       localStorage.setItem('game_loop', '1');
       localStorage.setItem('game_timer_running', 'false');
-      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
       localStorage.setItem('fake_clock_set_time', String(Date.now()));
       if (gasUrl) localStorage.setItem('gas_url', gasUrl);
 
@@ -412,6 +412,36 @@ function executeRemoteAdminCommand(cmd) {
         location.reload(true);
       }, 600);
       return;
+    }
+  }
+
+  // ⑨ 運営からの管理番号・チーム名変更の受信・即時反映
+  if (type === 'set_device_info' || p.action === 'set_device_info') {
+    const target = cmd.target || p.target;
+    const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
+    if (!target || target === currentDevId || target === 'ALL') {
+      if (p.newDeviceId) {
+        gameState.teamId = p.newDeviceId;
+        localStorage.setItem('game_team_id', p.newDeviceId);
+        const sbTeam = document.getElementById('sb-team-id');
+        if (sbTeam) sbTeam.innerText = p.newDeviceId;
+        const settApple = document.getElementById('settings-apple-id');
+        if (settApple) settApple.innerText = p.newDeviceId;
+        const settIcon = document.getElementById('settings-avatar-icon');
+        if (settIcon) settIcon.innerText = p.newDeviceId;
+      }
+      if (p.teamId) {
+        if (window.GAME_DATABASE && window.GAME_DATABASE.system) {
+          window.GAME_DATABASE.system.teamId = p.teamId;
+        }
+        localStorage.setItem('game_team_name', p.teamId);
+      }
+      if (p.studentName) {
+        gameState.manabaUser = p.studentName;
+        localStorage.setItem('manaba_user', p.studentName);
+      }
+      if (typeof updateAppUI === 'function') updateAppUI();
+      console.log(`📱 端末情報が運営により更新されました: 管理番号=${gameState.teamId}, チーム=${p.teamId || ''}`);
     }
   }
 
@@ -659,6 +689,151 @@ function startAutoSpreadsheetSync() {
   // 8秒おきに裏側で自動チェック・コマンド受信（超軽量数十バイト・リロード不要）
   setInterval(fetchLatestDataFromSpreadsheet, 8000);
 }
+
+// ==========================================================================
+// 😴 iPadスリープ防止 ＆ 画面暗転時バックグラウンド維持システム
+//   - 画面起動中: Screen Wake Lock API で自動スリープ（放置による暗転）を完全防止
+//   - 画面暗転時: AudioContext の無音ループでSafariのプロセス凍結を防ぎ、遠隔音再生を維持
+//   - 画面復帰時: 即時最新コマンドを取得し、暗転中に届いた処理を即座に実行
+// ==========================================================================
+let _noSleepAudioCtx = null;
+let _noSleepSourceNode = null;
+let _noSleepActive = false;
+let _screenWakeLock = null;
+
+// Screen Wake Lock リクエスト（対応環境）
+async function requestScreenWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      _screenWakeLock = await navigator.wakeLock.request('screen');
+      _screenWakeLock.addEventListener('release', () => {
+        console.log('[WakeLock] スリープロック解除');
+      });
+      console.log('[WakeLock] 画面スリープ防止ロック取得成功');
+    } catch(err) {
+      console.warn('[WakeLock] スリープロック取得失敗 (バッテリー節約等):', err);
+    }
+  }
+}
+
+function initNoSleepAudio() {
+  requestScreenWakeLock();
+
+  if (_noSleepAudioCtx) {
+    if (_noSleepAudioCtx.state === 'suspended') {
+      _noSleepAudioCtx.resume().catch(() => {});
+    }
+    return;
+  }
+  try {
+    _noSleepAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    _keepAudioContextAlive();
+    _noSleepActive = true;
+    console.log('[NoSleep] AudioContext 起動 - スリープ防止モード開始');
+  } catch(e) {
+    console.warn('[NoSleep] AudioContext 初期化失敗:', e);
+  }
+}
+
+function _keepAudioContextAlive() {
+  if (!_noSleepAudioCtx) return;
+  try {
+    // 1秒の無音バッファを作成してループ再生（CPU負荷ほぼゼロ・Safariのバックグラウンド停止を防止）
+    const bufferSize = _noSleepAudioCtx.sampleRate * 1;
+    const buffer = _noSleepAudioCtx.createBuffer(1, bufferSize, _noSleepAudioCtx.sampleRate);
+    const source = _noSleepAudioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(_noSleepAudioCtx.destination);
+    source.start(0);
+    _noSleepSourceNode = source;
+    _noSleepActive = true;
+  } catch(e) {
+    console.warn('[NoSleep] 無音ループ開始失敗:', e);
+  }
+}
+
+function stopNoSleepAudio() {
+  try {
+    if (_noSleepSourceNode) {
+      _noSleepSourceNode.stop();
+      _noSleepSourceNode.disconnect();
+      _noSleepSourceNode = null;
+    }
+    if (_noSleepAudioCtx) {
+      _noSleepAudioCtx.suspend();
+    }
+    if (_screenWakeLock) {
+      _screenWakeLock.release().catch(() => {});
+      _screenWakeLock = null;
+    }
+    _noSleepActive = false;
+    console.log('[NoSleep] スリープ防止 停止');
+  } catch(e) {}
+}
+
+// 画面の表示状態変化（スリープ暗転 ➔ 復帰）を監視
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // 画面復帰 ➔ WakeLock を再取得 ＆ AudioContext を resume
+    requestScreenWakeLock();
+    if (_noSleepAudioCtx && _noSleepAudioCtx.state === 'suspended') {
+      _noSleepAudioCtx.resume().then(() => {
+        console.log('[NoSleep] 画面復帰: AudioContext resume 成功');
+      }).catch(() => {});
+    }
+    // 画面復帰直後に最新コマンドを即時受信（管理画面からの音出しや変更を漏らさず適用）
+    if (typeof fetchLatestDataFromSpreadsheet === 'function') {
+      fetchLatestDataFromSpreadsheet();
+    }
+    // スリープ中に届いていたローカルコマンドを再処理
+    _processQueuedSleepCommands();
+  } else {
+    // 画面が暗くなった ➔ ステータスを記録
+    try {
+      localStorage.setItem('device_sleep_since', String(Date.now()));
+    } catch(e) {}
+    console.log('[NoSleep] 画面暗転検知 - バックグラウンド維持中');
+  }
+});
+
+// 画面フォーカス時にも同様に同期
+window.addEventListener('focus', () => {
+  requestScreenWakeLock();
+  if (typeof fetchLatestDataFromSpreadsheet === 'function') {
+    fetchLatestDataFromSpreadsheet();
+  }
+});
+
+// スリープ中にキューされたコマンドを処理（復帰時に呼ばれる）
+function _processQueuedSleepCommands() {
+  try {
+    const queued = localStorage.getItem('sleep_cmd_queue');
+    if (queued) {
+      const cmds = JSON.parse(queued);
+      if (Array.isArray(cmds)) {
+        cmds.forEach(cmd => {
+          if (cmd.sound && typeof playSystemSound === 'function') {
+            playSystemSound(cmd.sound);
+          }
+          if (cmd.alertMsg && typeof showSystemAlert === 'function') {
+            showSystemAlert(cmd.alertMsg);
+          }
+        });
+      }
+      localStorage.removeItem('sleep_cmd_queue');
+    }
+  } catch(e) {}
+}
+
+// ユーザー操作（タップ・クリック・キー入力）で自動的に起動
+function _onFirstUserInteraction() {
+  initNoSleepAudio();
+}
+['touchstart', 'touchend', 'click', 'keydown', 'mousedown'].forEach(evt => {
+  document.addEventListener(evt, _onFirstUserInteraction, { passive: true });
+});
+
 
 // --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---
 function applyOperationalRestrictions() {

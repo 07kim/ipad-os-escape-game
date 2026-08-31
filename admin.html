@@ -1816,18 +1816,23 @@
           <!-- 選択端末ヘッダー -->
           <div class="right-detail-header">
             <div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <h2 id="detail-dev-title" style="font-family:'Orbitron', monospace; font-size:18px; font-weight:900; color:#0f172a;">
-                  iPad-01
-                </h2>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <!-- 管理番号バッジ -->
+                <div style="display:flex; align-items:center; justify-content:center; width:46px; height:46px; background:linear-gradient(135deg,#0ea5e9,#0284c7); border-radius:12px; box-shadow:0 2px 8px rgba(2,132,199,0.3);">
+                  <span id="detail-dev-num-badge" style="font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:#fff; line-height:1;">01</span>
+                </div>
+                <div>
+                  <h2 id="detail-dev-title" style="font-size:17px; font-weight:800; color:#0f172a; margin:0 0 2px 0;">iPad-01</h2>
+                  <div id="detail-dev-team-label" style="font-size:13px; font-weight:700; color:#0369a1;">👥 チームA</div>
+                </div>
                 <span id="detail-dev-loop-tag" class="dev-item-loop-tag loop-1" style="font-size:11px; padding:3px 8px;">
                   1周目
                 </span>
                 <span id="detail-dev-status-tag" style="font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; padding:3px 8px; border-radius:4px;">
-                  🟢 稼働中 (3秒前)
+                  🟢 稼働中
                 </span>
               </div>
-              <div style="font-size:12px; color:#475569; margin-top:4px; display:flex; align-items:center; gap:8px;" id="detail-dev-user-sub-wrap">
+              <div style="font-size:11.5px; color:#64748b; margin-top:6px; display:flex; align-items:center; gap:8px;" id="detail-dev-user-sub-wrap">
                 <span id="detail-dev-user-sub">📱 管理番号: iPad-01 | 👥 チーム: チームA</span>
                 <button class="nav-btn" onclick="openEditDeviceNameModal()" style="padding:3px 8px; font-size:11px; font-weight:700; color:var(--primary); border:1px solid #cbd5e1; background:#f8fafc; border-radius:6px; cursor:pointer;" title="管理番号・チーム名を変更">
                   <i data-lucide="edit-3" style="width:11px; height:11px;"></i> 管理番号・チーム変更
@@ -3732,19 +3737,24 @@
         itemEl.className = `dynamic-device-item ${isSelected ? 'active-selected' : ''}`;
         itemEl.onclick = () => selectMonitoringDevice(d.id);
         const teamLabel = d.teamId || d.team || '未設定';
+        // 管理番号から数字部分だけ抽出（iPad-01 -> "01"、数字のみのIDはそのまま）
+        const numMatch = d.id.match(/(\d+)/);
+        const numOnly = numMatch ? String(parseInt(numMatch[1])).padStart(2, '0') : d.id;
         itemEl.innerHTML = `
           <div class="dev-item-header">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>
-              <span class="dev-item-id">${d.id}</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:center; justify-content:center; min-width:34px; height:34px; background:${teamLabel !== '未設定' ? 'linear-gradient(135deg,#0ea5e9,#0284c7)' : '#94a3b8'}; border-radius:9px; box-shadow:0 1px 4px rgba(0,0,0,0.18);">
+                <span style="font-family:'Orbitron',monospace; font-size:13px; font-weight:900; color:#fff;">${numOnly}</span>
+              </div>
+              <div style="min-width:0;">
+                <div style="font-size:12px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.id}</div>
+                <div style="font-size:11px; font-weight:700; color:${teamLabel !== '未設定' ? '#0369a1' : '#94a3b8'};">👥 ${teamLabel}</div>
+              </div>
             </div>
             <span class="dev-item-loop-tag ${loopClass}">${d.loop}周目</span>
           </div>
-          <div class="dev-item-body">
-            <span class="dev-item-user" style="color:${teamLabel !== '未設定' ? '#0369a1' : '#94a3b8'};">
-              👥 ${teamLabel}
-            </span>
-            <span class="dev-item-screen" title="${d.screen}">
+          <div class="dev-item-body" style="margin-top:4px;">
+            <span class="dev-item-screen" title="${d.screen}" style="font-size:11px;">
               ${d.screen}
             </span>
           </div>
@@ -3771,6 +3781,8 @@
       if (!device) return;
 
       const titleEl = document.getElementById('detail-dev-title');
+      const numBadgeEl = document.getElementById('detail-dev-num-badge');
+      const teamLabelEl = document.getElementById('detail-dev-team-label');
       const loopTagEl = document.getElementById('detail-dev-loop-tag');
       const statusTagEl = document.getElementById('detail-dev-status-tag');
       const userSubEl = document.getElementById('detail-dev-user-sub');
@@ -3778,7 +3790,13 @@
       const hintsEl = document.getElementById('detail-dev-hints');
       const rankEl = document.getElementById('detail-dev-rank');
 
+      const teamLabel = device.teamId || device.team || '未設定';
+      const numMatch = device.id.match(/(\d+)/);
+      const numOnly = numMatch ? String(parseInt(numMatch[1])).padStart(2, '0') : device.id;
+
       if (titleEl) titleEl.innerText = device.id;
+      if (numBadgeEl) numBadgeEl.innerText = numOnly;
+      if (teamLabelEl) teamLabelEl.innerHTML = `👥 ${teamLabel}`;
       if (loopTagEl) {
         loopTagEl.className = `dev-item-loop-tag loop-${device.loop}`;
         loopTagEl.innerText = `${device.loop}周目`;
@@ -3787,7 +3805,6 @@
         statusTagEl.innerText = `🟢 稼働中 (${device.lastSeen})`;
       }
       if (userSubEl) {
-        const teamLabel = device.teamId || device.team || '未設定';
         userSubEl.innerHTML = `📱 管理番号: <strong>${device.id}</strong> | 👥 チーム: <strong>${teamLabel}</strong>`;
       }
       if (screenEl) {
@@ -3992,7 +4009,14 @@
       // 2. 表示を即時更新
       const userSubEl = document.getElementById('detail-dev-user-sub');
       const titleEl = document.getElementById('detail-dev-title');
+      const numBadgeEl = document.getElementById('detail-dev-num-badge');
+      const teamLabelEl = document.getElementById('detail-dev-team-label');
+      const numMatch = newDeviceId.match(/(\d+)/);
+      const numOnly = numMatch ? String(parseInt(numMatch[1])).padStart(2, '0') : newDeviceId;
+
       if (titleEl) titleEl.innerText = newDeviceId;
+      if (numBadgeEl) numBadgeEl.innerText = numOnly;
+      if (teamLabelEl) teamLabelEl.innerHTML = `👥 ${newTeam || '未設定'}`;
       if (userSubEl) {
         userSubEl.innerHTML = `📱 管理番号: <strong>${newDeviceId}</strong> | 👥 チーム: <strong>${newTeam || '未設定'}</strong>`;
       }
