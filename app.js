@@ -6046,6 +6046,26 @@ window.addEventListener('storage', (e) => {
         }
       }
     } catch(err) {}
+  } else if (e.key === 'admin_device_info_trigger') {
+    try {
+      const info = JSON.parse(e.newValue);
+      const myTeam = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.teamId) || localStorage.getItem('game_team_id') || "チームA";
+      const myDeviceOwner = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.deviceOwner) || "";
+      if (info && (!info.target || info.target === myDeviceOwner || info.target === myTeam || info.target === 'all')) {
+        if (info.studentName) {
+          gameState.manabaUser = info.studentName;
+          localStorage.setItem('manaba_user', info.studentName);
+        }
+        if (info.teamId) {
+          gameState.teamId = info.teamId;
+          localStorage.setItem('game_team_id', info.teamId);
+          if (window.GAME_DATABASE && window.GAME_DATABASE.system) {
+            window.GAME_DATABASE.system.teamId = info.teamId;
+          }
+        }
+        if (typeof updateAppUI === 'function') updateAppUI();
+      }
+    } catch(err) {}
   } else if (e.key === 'game_db_cache_trigger') {
     loadGameDatabase();
     updateAppUI();

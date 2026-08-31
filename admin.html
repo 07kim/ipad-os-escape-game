@@ -112,6 +112,52 @@
       margin-bottom: 24px;
     }
 
+    /* 汎用管理パネル（音響・システム設定タブ等） */
+    .admin-panel {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 16px;
+    }
+
+    .admin-panel.danger-theme {
+      border: 1.5px solid #fecaca;
+      background: #fffdfd;
+    }
+
+    .admin-panel-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* 個別ヒント・指示送信フォーム */
+    .individual-send-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .individual-send-box input {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .individual-send-box .btn {
+      width: auto !important;
+      flex-shrink: 0;
+      white-space: nowrap;
+      padding: 9px 18px;
+    }
+
     .card-title {
       font-size: 16px;
       font-weight: 700;
@@ -1768,8 +1814,11 @@
                   🟢 稼働中 (3秒前)
                 </span>
               </div>
-              <div style="font-size:12px; color:#475569; margin-top:3px;" id="detail-dev-user-sub">
-                👤 ログイン名: 連城 観 (s23c1044kr)
+              <div style="font-size:12px; color:#475569; margin-top:4px; display:flex; align-items:center; gap:8px;" id="detail-dev-user-sub-wrap">
+                <span id="detail-dev-user-sub">👤 ログイン名: 連城 観 (s23c1044kr)</span>
+                <button class="nav-btn" onclick="openEditDeviceNameModal()" style="padding:3px 8px; font-size:11px; font-weight:700; color:var(--primary); border:1px solid #cbd5e1; background:#f8fafc; border-radius:6px; cursor:pointer;" title="参加者名・チーム名を変更">
+                  <i data-lucide="edit-3" style="width:11px; height:11px;"></i> 名前変更
+                </button>
               </div>
             </div>
 
@@ -1819,11 +1868,11 @@
               </button>
             </div>
 
-            <!-- 入力欄 ＆ 送信 -->
-            <div style="display:flex; gap:8px;">
+            <!-- 入力欄 ＆ 送信（幅潰れを修正） -->
+            <div class="individual-send-box">
               <input type="text" id="individual-alert-input" placeholder="例: 【ヒント】第11回講義資料に周波数の記載があります" 
-                     style="flex:1; padding:8px 12px; font-size:12.5px; border:1.5px solid var(--border-color); border-radius:8px;">
-              <button class="btn btn-primary" onclick="sendIndividualAlertFromPane()" style="padding:8px 16px; font-size:13px; font-weight:700; white-space:nowrap;">
+                     style="padding:9px 12px; font-size:12.5px; border:1.5px solid var(--border-color); border-radius:8px;">
+              <button class="btn btn-primary" onclick="sendIndividualAlertFromPane()">
                 <i data-lucide="send"></i> 個別送信
               </button>
             </div>
@@ -2096,128 +2145,136 @@
 
   <!-- ⚙️ タブ4: システム設定・転換 -->
   <div class="admin-tab-pane" id="pane-system">
-    <div style="padding: 20px;">
+    <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
 
       <!-- 2カラムレイアウト -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start;">
+      <div style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:20px; align-items:start;">
 
-        <!-- ─── 左カラム ─── -->
+        <!-- ─── 左カラム（接続・データ管理） ─── -->
         <div>
 
           <!-- ① GAS接続設定 -->
           <div class="admin-panel">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <i data-lucide="cloud" style="width:18px; height:18px; color:var(--primary);"></i>
-              <span style="font-size:14px; font-weight:800; color:#0f172a;">GAS クラウド接続設定</span>
+            <div class="admin-panel-title">
+              <i data-lucide="cloud" style="width:20px; height:20px; color:var(--primary);"></i>
+              <span>GAS クラウド連携・同期設定</span>
             </div>
 
             <!-- 接続ステータス表示 -->
-            <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:14px;">
-              <div id="admin-status-dot" style="width:10px; height:10px; border-radius:50%; background:#94a3b8; flex-shrink:0;"></div>
-              <div id="admin-status-text" style="font-size:12px; color:#64748b; font-weight:600;">⏳ 未確認</div>
-              <button class="nav-btn" onclick="testGasPing()" style="margin-left:auto; padding:4px 10px; font-size:11px; font-weight:700;">
-                <i data-lucide="wifi" style="width:12px; height:12px;"></i> 疎通テスト
+            <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:16px;">
+              <div id="admin-status-dot" style="width:12px; height:12px; border-radius:50%; background:#94a3b8; flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-size:11px; color:#94a3b8; font-weight:700;">現在のクラウド接続状態</div>
+                <div id="admin-status-text" style="font-size:13px; color:#334155; font-weight:700;">⏳ 未確認</div>
+              </div>
+              <button class="nav-btn" onclick="testGasPing()" style="padding:6px 14px; font-size:12px; font-weight:700; background:#fff; border:1px solid #cbd5e1;">
+                <i data-lucide="wifi" style="width:13px; height:13px;"></i> 疎通テスト
               </button>
             </div>
 
             <!-- GAS URL入力 -->
-            <div class="form-group" style="margin-bottom:10px;">
-              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">
-                <i data-lucide="link" style="width:12px; height:12px;"></i> GAS デプロイURL:
+            <div class="form-group" style="margin-bottom:12px;">
+              <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="link" style="width:13px; height:13px; color:var(--primary);"></i> Google Apps Script (GAS) デプロイURL:
               </label>
               <textarea id="admin-gas-url-input" rows="3"
                 placeholder="https://script.google.com/macros/s/..."
-                style="width:100%; padding:9px 10px; font-size:11.5px; font-family:monospace; border:1.5px solid var(--border-color); border-radius:8px; resize:vertical; box-sizing:border-box; color:#334155;">
+                style="width:100%; padding:10px 12px; font-size:12px; font-family:ui-monospace, monospace; border:1.5px solid var(--border-color); border-radius:8px; resize:vertical; box-sizing:border-box; color:#1e293b; background:#fcfdfe; line-height:1.5;">
               </textarea>
             </div>
-            <div style="display:flex; gap:8px;">
-              <button class="btn btn-primary" onclick="saveAdminGasUrl()" style="flex:1; padding:9px; font-size:12.5px; font-weight:800;">
-                <i data-lucide="save" style="width:13px; height:13px;"></i> 保存 & 疎通テスト
+
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary" onclick="saveAdminGasUrl()" style="flex:1; padding:10px; font-size:13px; font-weight:800;">
+                <i data-lucide="save" style="width:14px; height:14px;"></i> URLを保存して接続テスト
               </button>
-              <button class="nav-btn" onclick="document.getElementById('admin-gas-url-input').value=''; localStorage.removeItem('gas_url'); showToast('GAS URLをクリアしました', true);" style="padding:9px 12px; font-size:12px;" title="URLをクリア">
-                <i data-lucide="x" style="width:13px; height:13px;"></i>
+              <button class="nav-btn" onclick="document.getElementById('admin-gas-url-input').value=''; localStorage.removeItem('gas_url'); showToast('GAS URLをクリアしました', true);" style="padding:10px 14px; font-size:12px; color:#64748b;" title="URL入力をクリア">
+                <i data-lucide="trash" style="width:14px; height:14px;"></i> クリア
               </button>
             </div>
           </div>
 
           <!-- ② ローカルストレージ管理 -->
-          <div class="admin-panel" style="margin-top:16px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <i data-lucide="database" style="width:18px; height:18px; color:#8b5cf6;"></i>
-              <span style="font-size:14px; font-weight:800; color:#0f172a;">ローカルストレージ管理</span>
-              <span style="font-size:11px; color:#64748b; margin-left:4px;">管理PC側のキャッシュ</span>
+          <div class="admin-panel">
+            <div class="admin-panel-title">
+              <i data-lucide="database" style="width:20px; height:20px; color:#8b5cf6;"></i>
+              <span>ブラウザ内キャッシュ管理 (localStorage)</span>
             </div>
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.5;">
+              管理PCブラウザに保存されている主要な同期キーと状態一覧です。
+            </p>
 
             <!-- LS状態リスト -->
-            <div id="system-ls-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-height:180px; overflow-y:auto;">
-              <div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px 0;">
+            <div id="system-ls-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px; max-height:220px; overflow-y:auto; padding-right:4px;">
+              <div style="font-size:12px; color:#94a3b8; text-align:center; padding:16px 0;">
                 ⏳ 読み込み中...
               </div>
             </div>
 
             <!-- 操作ボタン -->
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="nav-btn" onclick="renderSystemLsState()" style="padding:6px 12px; font-size:11.5px; font-weight:700;">
-                <i data-lucide="refresh-cw" style="width:12px; height:12px;"></i> 更新
+              <button class="nav-btn" onclick="renderSystemLsState()" style="padding:7px 14px; font-size:12px; font-weight:700; background:#fff; border:1px solid #cbd5e1;">
+                <i data-lucide="refresh-cw" style="width:12px; height:12px;"></i> 状態を再読込
               </button>
-              <button class="nav-btn" onclick="clearAdminLsKey('admin_sound_trigger')" style="padding:6px 12px; font-size:11.5px; font-weight:700; color:#b45309;">
-                <i data-lucide="volume-x" style="width:12px; height:12px;"></i> 音響キャッシュ消去
+              <button class="nav-btn" onclick="clearAdminLsKey('admin_sound_trigger')" style="padding:7px 12px; font-size:11.5px; font-weight:700; color:#b45309; border:1px solid #fed7aa; background:#fffaf5;">
+                <i data-lucide="volume-x" style="width:12px; height:12px;"></i> 音響キー消去
               </button>
-              <button class="nav-btn" onclick="clearAdminLsKey('admin_alert_trigger')" style="padding:6px 12px; font-size:11.5px; font-weight:700; color:#b45309;">
-                <i data-lucide="bell-off" style="width:12px; height:12px;"></i> アラートキャッシュ消去
+              <button class="nav-btn" onclick="clearAdminLsKey('admin_alert_trigger')" style="padding:7px 12px; font-size:11.5px; font-weight:700; color:#b45309; border:1px solid #fed7aa; background:#fffaf5;">
+                <i data-lucide="bell-off" style="width:12px; height:12px;"></i> アラートキー消去
               </button>
             </div>
           </div>
 
         </div>
 
-        <!-- ─── 右カラム ─── -->
+        <!-- ─── 右カラム（公演転換・情報） ─── -->
         <div>
 
           <!-- ③ 公演転換セットアップ -->
-          <div class="admin-panel" style="border:1.5px solid #fecaca; background:#fffbfb;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <i data-lucide="refresh-ccw" style="width:18px; height:18px; color:#ef4444;"></i>
-              <span style="font-size:14px; font-weight:800; color:#b91c1c;">公演転換セットアップ</span>
+          <div class="admin-panel danger-theme">
+            <div class="admin-panel-title" style="color:#b91c1c;">
+              <i data-lucide="refresh-ccw" style="width:20px; height:20px; color:#ef4444;"></i>
+              <span>公演転換セットアップ（全端末初期化）</span>
             </div>
-            <p style="font-size:12px; color:#991b1b; margin-bottom:14px; line-height:1.6; padding:10px 12px; background:#fee2e2; border-radius:8px; border-left:3px solid #ef4444;">
-              ⚠️ 次公演の開始前 / 公演終了後に使用します。<br>
-              全端末のメモ・入力・周回・ログイン情報を完全消去し、<br>
-              09:04待機画面へリセットします。<strong>（2段階確認あり）</strong>
-            </p>
 
-            <!-- 手順ガイド -->
-            <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
-              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
-                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">1</span>
-                全iPadが待機状態であることを確認
+            <div style="padding:12px 14px; background:#fee2e2; border-radius:10px; border-left:4px solid #ef4444; margin-bottom:16px;">
+              <div style="font-size:12px; font-weight:800; color:#991b1b; margin-bottom:4px;">⚠️ 次公演開始前・終了後の初期化</div>
+              <div style="font-size:11.5px; color:#7f1d1d; line-height:1.5;">
+                全端末のメモ・入力・周回・ログイン状態を完全消去し、09:04待機画面へ一括リセットします。
               </div>
-              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
-                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">2</span>
-                下ボタンを押して2段階確認を完了する
+            </div>
+
+            <!-- 手順ステップ -->
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;">
+              <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
+                <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">1</span>
+                <span>全iPadがアクセス可能な待機状態であることを確認</span>
               </div>
-              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b;">
-                <span style="width:20px; height:20px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">3</span>
-                全端末の初期化完了を端末モニタリングで確認
+              <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
+                <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">2</span>
+                <span>下ボタンを押して<strong>2段階確認</strong>を完了する</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#475569; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fecaca;">
+                <span style="width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">3</span>
+                <span>「端末モニタリング」タブで全端末のリセットを確認</span>
               </div>
             </div>
 
             <button class="btn" onclick="executeGlobalMasterReset()"
-              style="width:100%; padding:13px 16px; font-size:13px; font-weight:800; background:#fef2f2; color:#b91c1c; border:2px solid #fecaca; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;"
-              onmouseover="this.style.background='#fee2e2'; this.style.borderColor='#f87171';"
-              onmouseout="this.style.background='#fef2f2'; this.style.borderColor='#fecaca';">
+              style="width:100%; padding:14px 16px; font-size:13.5px; font-weight:800; background:#fef2f2; color:#b91c1c; border:2px solid #f87171; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;"
+              onmouseover="this.style.background='#fee2e2'; this.style.borderColor='#ef4444';"
+              onmouseout="this.style.background='#fef2f2'; this.style.borderColor='#f87171';">
               <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
-              🚨 全iPad & データを一括完全初期化
+              🚨 全iPad ＆ データを一括完全初期化
             </button>
           </div>
 
           <!-- ④ システム情報 -->
-          <div class="admin-panel" style="margin-top:16px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <i data-lucide="info" style="width:18px; height:18px; color:#0ea5e9;"></i>
-              <span style="font-size:14px; font-weight:800; color:#0f172a;">システム情報</span>
+          <div class="admin-panel">
+            <div class="admin-panel-title">
+              <i data-lucide="info" style="width:20px; height:20px; color:#0ea5e9;"></i>
+              <span>システム稼働ステータス</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:8px;" id="system-info-panel">
+            <div style="display:flex; flex-direction:column; gap:6px;" id="system-info-panel">
               <!-- JSで動的生成 -->
             </div>
           </div>
@@ -2227,22 +2284,60 @@
       </div>
 
       <!-- ─── 下段全幅: GASエンドポイント一覧 ─── -->
-      <div class="admin-panel" style="margin-top:16px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-          <i data-lucide="terminal" style="width:18px; height:18px; color:#10b981;"></i>
-          <span style="font-size:14px; font-weight:800; color:#0f172a;">GAS エンドポイント一覧</span>
-          <span style="font-size:11px; color:#64748b; margin-left:4px;">各アクションのURLをコピーして直接テストできます</span>
-          <button class="nav-btn" onclick="renderGasEndpoints()" style="margin-left:auto; padding:4px 10px; font-size:11px;">
-            <i data-lucide="refresh-cw" style="width:11px; height:11px;"></i> 更新
+      <div class="admin-panel" style="margin-top:20px;">
+        <div class="admin-panel-title">
+          <i data-lucide="terminal" style="width:20px; height:20px; color:#10b981;"></i>
+          <span>GAS API エンドポイント一覧</span>
+          <span style="font-size:11px; color:#64748b; font-weight:400; margin-left:4px;">各アクションのURLをコピーまたは直接ブラウザで確認できます</span>
+          <button class="nav-btn" onclick="renderGasEndpoints()" style="margin-left:auto; padding:4px 12px; font-size:11.5px; background:#fff; border:1px solid #cbd5e1;">
+            <i data-lucide="refresh-cw" style="width:12px; height:12px;"></i> 更新
           </button>
         </div>
-        <div id="gas-endpoints-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:8px;">
-          <div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px; grid-column:1/-1;">
+        <div id="gas-endpoints-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:10px;">
+          <div style="font-size:12px; color:#94a3b8; text-align:center; padding:16px; grid-column:1/-1;">
             ⏳ GAS URLを設定すると、エンドポイント一覧が表示されます
           </div>
         </div>
       </div>
 
+    </div>
+  </div>
+
+
+  <!-- ✏️ 端末名・参加者名変更モーダル -->
+  <div id="admin-edit-name-modal" class="custom-modal-backdrop">
+    <div class="custom-modal-card" style="max-width: 440px;" onclick="event.stopPropagation()">
+      <div class="custom-modal-header">
+        <div class="custom-modal-icon-wrap type-info">
+          <i data-lucide="user-check" style="width:24px; height:24px; color:var(--primary);"></i>
+        </div>
+        <div>
+          <div class="custom-modal-title">端末・参加者名の変更</div>
+          <div class="custom-modal-subtitle" id="edit-modal-target-dev">iPad-01</div>
+        </div>
+      </div>
+      <div class="custom-modal-body" style="padding: 16px 20px;">
+        <div class="form-group">
+          <label>👤 ログイン参加者名:</label>
+          <input type="text" id="edit-input-user-name" placeholder="例: 連城 観">
+        </div>
+        <div class="form-group">
+          <label>🆔 学籍番号 / ユーザーID:</label>
+          <input type="text" id="edit-input-student-id" placeholder="例: s23c1044kr">
+        </div>
+        <div class="form-group">
+          <label>👥 所属チーム名:</label>
+          <input type="text" id="edit-input-team-name" placeholder="例: チームA">
+        </div>
+      </div>
+      <div class="custom-modal-actions">
+        <button class="modal-btn-cancel" onclick="closeEditDeviceNameModal()">
+          キャンセル
+        </button>
+        <button class="modal-btn-confirm type-info" onclick="saveDeviceNameChanges()">
+          <i data-lucide="check" style="width:14px; height:14px;"></i> 保存して端末へ反映
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3595,7 +3690,7 @@
         return;
       }
       if (!currentSelectedDeviceId) {
-        alert("端末が選択されていません。");
+        showToast("⚠️ 端末が選択されていません。", true);
         return;
       }
 
@@ -3612,6 +3707,98 @@
       }, `📨 【${currentSelectedDeviceId}】へ個別ヒント「${text}」を送信しました！`);
 
       if (input) input.value = "";
+    }
+
+    // ===== ✏️ 端末名・参加者名変更モーダル制御 =====
+    function openEditDeviceNameModal() {
+      const modal = document.getElementById('admin-edit-name-modal');
+      const targetLabel = document.getElementById('edit-modal-target-dev');
+      const nameInput = document.getElementById('edit-input-user-name');
+      const idInput = document.getElementById('edit-input-student-id');
+      const teamInput = document.getElementById('edit-input-team-name');
+
+      if (!modal) return;
+
+      const deviceId = currentSelectedDeviceId || 'iPad-01';
+      if (targetLabel) targetLabel.innerText = `対象端末: ${deviceId}`;
+
+      // 既存の情報を取得して入力欄に初期セット
+      const devData = (latestDevicesData || []).find(d => (d.id || d.teamId) === deviceId);
+      const currentManaba = devData ? (devData.manaba || devData.studentName || '') : '';
+      const currentTeam = devData ? (devData.teamId || devData.team || '') : '';
+
+      if (nameInput) nameInput.value = currentManaba;
+      if (idInput) idInput.value = devData?.studentId || '';
+      if (teamInput) teamInput.value = currentTeam || (window.GAME_DATABASE?.system?.teamId || '');
+
+      modal.classList.add('open');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeEditDeviceNameModal() {
+      const modal = document.getElementById('admin-edit-name-modal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function saveDeviceNameChanges() {
+      const deviceId = currentSelectedDeviceId || 'iPad-01';
+      const nameInput = document.getElementById('edit-input-user-name');
+      const idInput = document.getElementById('edit-input-student-id');
+      const teamInput = document.getElementById('edit-input-team-name');
+
+      const newName = nameInput ? nameInput.value.trim() : '';
+      const newId = idInput ? idInput.value.trim() : '';
+      const newTeam = teamInput ? teamInput.value.trim() : '';
+
+      if (!newName && !newTeam) {
+        showToast('⚠️ 変更する名前またはチーム名を入力してください', true);
+        return;
+      }
+
+      // 1. クラウド / iPad端末へ名前変更コマンドを送信
+      sendCloudAdminCommand({
+        id: "NAME_CHANGE_" + Date.now(),
+        type: "set_device_info",
+        name: `端末情報変更 (${deviceId})`,
+        params: {
+          target: deviceId,
+          studentName: newName,
+          studentId: newId,
+          teamId: newTeam,
+          timestamp: Date.now()
+        }
+      }, `✅ 【${deviceId}】の参加者名・チーム名を更新しました！`);
+
+      // ローカル同期トリガー発行（同一ブラウザ/タブ間即座反映）
+      try {
+        localStorage.setItem('admin_device_info_trigger', JSON.stringify({
+          target: deviceId,
+          studentName: newName,
+          studentId: newId,
+          teamId: newTeam,
+          timestamp: Date.now()
+        }));
+      } catch(e) {}
+
+      // 2. 表示を即時更新
+      const userSubEl = document.getElementById('detail-dev-user-sub');
+      if (userSubEl) {
+        userSubEl.innerHTML = `👤 ログイン名: <strong>${newName || '未設定'}</strong> ${newId ? `(${newId})` : ''} ${newTeam ? `[${newTeam}]` : ''}`;
+      }
+
+      // latestDevicesData の該当端末データも更新
+      if (Array.isArray(latestDevicesData)) {
+        const target = latestDevicesData.find(d => (d.id || d.teamId) === deviceId);
+        if (target) {
+          if (newName) target.manaba = newName;
+          if (newId) target.studentId = newId;
+          if (newTeam) target.teamId = newTeam;
+        }
+      }
+
+      closeEditDeviceNameModal();
+      showToast(`👤 【${deviceId}】の名前・チーム名を変更しました`);
+      renderDynamicMonitoringList();
     }
 
     // 🔄 選択端末の個別遠隔リロード（オリジナル確認モーダル付き）
