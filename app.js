@@ -244,6 +244,8 @@ function getResolvedGasUrl() {
   return "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec";
 }
 
+let isSpreadsheetSyncing = false;
+
 function fetchLatestDataFromSpreadsheet() {
   const gasUrl = getResolvedGasUrl();
   if (!gasUrl) {
@@ -253,8 +255,13 @@ function fetchLatestDataFromSpreadsheet() {
     return;
   }
 
+  // 多重通信を防止（前の通信が完了していない場合はスキップ）
+  if (isSpreadsheetSyncing) return;
+  isSpreadsheetSyncing = true;
+
   const startTime = Date.now();
-  const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
+  // 🚀 超軽量ステータス・最新コマンドのみを取得（数十バイトの極小通信）
+  const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
   
   fetch(url)
     .then(res => {
@@ -262,57 +269,26 @@ function fetchLatestDataFromSpreadsheet() {
       return res.json();
     })
     .then(json => {
+      isSpreadsheetSyncing = false;
       window.CLOUD_SYNC_STATUS.latencyMs = Date.now() - startTime;
       window.CLOUD_SYNC_STATUS.lastSyncTime = Date.now();
       window.CLOUD_SYNC_STATUS.connected = true;
       window.CLOUD_SYNC_STATUS.lastError = null;
       updateStaffSyncUI();
 
-      if (json && (json.success || json.data) && json.data) {
+      if (json && (json.success || json.data)) {
+        const cmd = json.latestCommand || (json.data && json.data.latestCommand);
         // 1. 運営コマンドの受信 ＆ リアルタイム実行
-        if (json.data.latestCommand) {
-          executeRemoteAdminCommand(json.data.latestCommand);
-        }
-
-        // 2. スプレッドシートデータ差分更新
-        const rawJsonStr = JSON.stringify(json.data);
-        if (rawJsonStr !== lastDataHash) {
-          lastDataHash = rawJsonStr;
-          console.log("🔄 スプレッドシートの変更を検知し、リアルタイム反映しました！", json.data);
-          
-          if (json.data.browser && json.data.browser.pagesContent) {
-            Object.assign(window.GAME_DATABASE.browser.pagesContent, json.data.browser.pagesContent);
-          }
-          if (json.data.browser && json.data.browser.news) {
-            window.GAME_DATABASE.browser.news = json.data.browser.news;
-          }
-          if (json.data.browser && json.data.browser.searchResults) {
-            window.GAME_DATABASE.browser.searchResults = json.data.browser.searchResults;
-          }
-          // linkApp & mailAppはdata.jsで一元管理するため、GASによる古いデータ上書きを防止
-          if (window.INITIAL_GAME_DATABASE) {
-            if (window.INITIAL_GAME_DATABASE.linkApp && (!window.GAME_DATABASE.linkApp || !window.GAME_DATABASE.linkApp.chats)) {
-              window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
-            }
-            if (window.INITIAL_GAME_DATABASE.mailApp) {
-              window.GAME_DATABASE.mailApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.mailApp));
-            }
-          }
-          if (json.data.lockNotifications) {
-            window.GAME_DATABASE.lockNotifications = json.data.lockNotifications;
-          }
-          if (json.data.system) {
-            Object.assign(window.GAME_DATABASE.system, json.data.system);
-          }
-
-          updateAppUI();
+        if (cmd) {
+          executeRemoteAdminCommand(cmd);
         }
       }
 
-      // 3. 自分の進捗ステータスをGASへ定期送信（ハートビート）
+      // 2. 自分の進捗ステータスをGASへ定期送信（ハートビート）
       sendDeviceStatusHeartbeat();
     })
     .catch(err => {
+      isSpreadsheetSyncing = false;
       window.CLOUD_SYNC_STATUS.connected = false;
       window.CLOUD_SYNC_STATUS.lastError = err.message || "ネットワーク通信エラー";
       console.warn("⚠️ クラウド同期エラー:", err);
@@ -680,8 +656,8 @@ function updateStaffSyncUI() {
 
 function startAutoSpreadsheetSync() {
   fetchLatestDataFromSpreadsheet();
-  // 6秒おきに裏側で自動チェック・コマンド受信（リロード不要）
-  setInterval(fetchLatestDataFromSpreadsheet, 6000);
+  // 8秒おきに裏側で自動チェック・コマンド受信（超軽量数十バイト・リロード不要）
+  setInterval(fetchLatestDataFromSpreadsheet, 8000);
 }
 
 // --- 操作制限 (デフォルト挙動の無効化・Pull-to-refresh完全防止) ---
