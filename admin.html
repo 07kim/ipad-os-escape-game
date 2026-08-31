@@ -1092,6 +1092,211 @@
       color: #64748b;
     }
 
+    /* 🔊 音響・演出タブ */
+    .audio-emergency-bar {
+      background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+      background-size: 200% 100%;
+      animation: emergencyPulse 2.5s ease infinite;
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(239,68,68,0.35);
+      border: 1.5px solid rgba(255,255,255,0.25);
+    }
+    @keyframes emergencyPulse {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .audio-emergency-bar .emergency-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+    .audio-emergency-bar .emergency-label svg {
+      animation: emergencyShake 0.8s ease-in-out infinite;
+    }
+    @keyframes emergencyShake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-12deg); }
+      40% { transform: rotate(12deg); }
+      60% { transform: rotate(-8deg); }
+      80% { transform: rotate(8deg); }
+    }
+    .btn-emergency-stop {
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.7);
+      color: #fff;
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+    .btn-emergency-stop:hover {
+      background: rgba(255,255,255,0.3);
+      border-color: #fff;
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+    .audio-section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #475569;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid var(--border-color);
+      margin-bottom: 14px;
+    }
+    .audio-se-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .audio-se-card {
+      background: #f8fafc;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .audio-se-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 16px rgba(99,102,241,0.12);
+      transform: translateY(-2px);
+    }
+    .audio-se-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 12px 0 0 12px;
+    }
+    .audio-se-card.type-info::before { background: #3b82f6; }
+    .audio-se-card.type-warning::before { background: #f59e0b; }
+    .audio-se-card.type-danger::before { background: #ef4444; }
+    .audio-se-card.type-success::before { background: #10b981; }
+    .audio-se-card.type-neutral::before { background: #94a3b8; }
+    .audio-se-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .audio-se-emoji {
+      font-size: 22px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .audio-se-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .audio-se-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .audio-se-desc {
+      font-size: 10.5px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .audio-se-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-se-preview {
+      flex: 1;
+      padding: 7px 10px;
+      background: #f1f5f9;
+      border: 1.5px solid var(--border-color);
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .btn-se-preview:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .btn-se-broadcast {
+      flex: 2;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      transition: all 0.18s ease;
+      color: #fff;
+    }
+    .btn-se-broadcast.type-info { background: #3b82f6; }
+    .btn-se-broadcast.type-info:hover { background: #2563eb; box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+    .btn-se-broadcast.type-warning { background: #f59e0b; color: #1c1917; }
+    .btn-se-broadcast.type-warning:hover { background: #d97706; box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+    .btn-se-broadcast.type-danger { background: #ef4444; }
+    .btn-se-broadcast.type-danger:hover { background: #dc2626; box-shadow: 0 4px 14px rgba(239,68,68,0.4); }
+    .btn-se-broadcast.type-success { background: #10b981; }
+    .btn-se-broadcast.type-success:hover { background: #059669; box-shadow: 0 4px 14px rgba(16,185,129,0.4); }
+    .btn-se-broadcast.type-neutral { background: #64748b; }
+    .btn-se-broadcast.type-neutral:hover { background: #475569; box-shadow: 0 4px 14px rgba(100,116,139,0.4); }
+    .audio-broadcast-feedback {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #15803d;
+      margin-top: 6px;
+      animation: slideInFade 0.3s ease;
+    }
+    .audio-broadcast-feedback.visible {
+      display: flex;
+    }
+    @keyframes slideInFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* 🛡️ オリジナル安全確認ポップアップモーダル */
     .custom-modal-backdrop {
       position: fixed;
@@ -1633,8 +1838,251 @@
     </div>
   </div> <!-- /#pane-monitor -->
 
-  <!-- 🔊 タブ3: 音響・演出 (項目4で実装) -->
-  <div class="admin-tab-pane" id="pane-audio"></div>
+
+  <!-- 🔊 タブ3: 音響・演出 -->
+  <div class="admin-tab-pane" id="pane-audio">
+    <div style="padding: 20px;">
+
+      <!-- 🚨 最上部 緊急全停止バー（常時表示） -->
+      <div class="audio-emergency-bar">
+        <div class="emergency-label">
+          <i data-lucide="volume-x" style="width:22px; height:22px;"></i>
+          🛑 全iPad SE 緊急停止バー
+          <span style="font-size:11px; font-weight:400; opacity:0.85;">現在配信中の音響をすべての端末で即時カット</span>
+        </div>
+        <button class="btn-emergency-stop" onclick="broadcastEmergencyMute()">
+          ⬛ ALL MUTE（緊急停止）
+        </button>
+      </div>
+
+      <!-- ─── ① 公演進行SEプリセット ─── -->
+      <div class="admin-panel">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
+          <i data-lucide="clapperboard" style="width:18px; height:18px; color:var(--primary);"></i>
+          <span style="font-size:14px; font-weight:800; color:#0f172a;">公演進行SEプリセット</span>
+          <span style="font-size:11px; color:#64748b; margin-left:4px;">各プリセットを全iPadへ一斉配信します</span>
+        </div>
+
+        <div class="audio-se-grid">
+
+          <!-- ゲームスタート -->
+          <div class="audio-se-card type-info">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🚀</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">ゲームスタート</div>
+                <div class="audio-se-desc">boot音 / 端末ロック解除演出</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('boot')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-info" onclick="adminBroadcastSound('boot', 'ゲームスタート音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 1→2周目 タイムループ発生 -->
+          <div class="audio-se-card type-warning">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🌀</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">タイムループ発生</div>
+                <div class="audio-se-desc">distortion音 / 1→2周目 歴史改変</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('distortion')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-warning" onclick="adminBroadcastSound('distortion', 'タイムループ発生音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 2→3周目 世界線崩壊 -->
+          <div class="audio-se-card type-danger">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">💥</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">世界線崩壊警報</div>
+                <div class="audio-se-desc">alarm音 / 2→3周目 U.Z.W.支配</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('alarm')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-danger" onclick="adminBroadcastSound('alarm', '世界線崩壊警報音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 脱出成功クリア -->
+          <div class="audio-se-card type-success">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🏅</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">脱出成功ファンファーレ</div>
+                <div class="audio-se-desc">fanfare音 / ゲームクリア演出</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('fanfare')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-success" onclick="adminBroadcastSound('fanfare', '脱出成功ファンファーレ')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- ゲームオーバー -->
+          <div class="audio-se-card type-danger">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">💀</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">タイムオーバー</div>
+                <div class="audio-se-desc">gameover音 / 時間切れ演出</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('gameover')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-danger" onclick="adminBroadcastSound('gameover', 'タイムオーバー音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 緊急不正アクセス警告 -->
+          <div class="audio-se-card type-danger">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🔴</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">不正アクセス緊急警報</div>
+                <div class="audio-se-desc">alarm連続 / クライマックス演出</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSoundRepeat('alarm', 3)" title="管理PCのみで試聴（3連）">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-danger" onclick="adminBroadcastSoundRepeat('alarm', 3, '不正アクセス緊急警報')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 残り10分アナウンス -->
+          <div class="audio-se-card type-warning">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">⏳</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">残り10分アナウンス</div>
+                <div class="audio-se-desc">alert音 / ラストスパート促進</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('alert')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-warning" onclick="adminBroadcastSound('alert', '残り10分アナウンス音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+          <!-- 通知（汎用） -->
+          <div class="audio-se-card type-neutral">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🔔</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">システム通知</div>
+                <div class="audio-se-desc">notif音 / 汎用お知らせ</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('notif')" title="管理PCのみで試聴">
+                <i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴
+              </button>
+              <button class="btn-se-broadcast type-neutral" onclick="adminBroadcastSound('notif', 'システム通知音')">
+                <i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 配信フィードバック -->
+        <div class="audio-broadcast-feedback" id="audio-feedback-bar">
+          <i data-lucide="check-circle-2" style="width:16px; height:16px;"></i>
+          <span id="audio-feedback-text"></span>
+        </div>
+      </div>
+
+      <!-- ─── ② UI効果音 SEカード ─── -->
+      <div class="admin-panel" style="margin-top:16px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
+          <i data-lucide="music" style="width:18px; height:18px; color:#8b5cf6;"></i>
+          <span style="font-size:14px; font-weight:800; color:#0f172a;">UI効果音（手元プレビュー / 配信）</span>
+          <span style="font-size:11px; color:#64748b; margin-left:4px;">管理PCの画面トップに常に表示されます。配信ボタンで全iPadに同期。</span>
+        </div>
+
+        <div class="audio-se-grid">
+
+          <div class="audio-se-card type-info">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">✅</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">成功・正解音</div>
+                <div class="audio-se-desc">success / 正解フィードバック</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('success')"><i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴</button>
+              <button class="btn-se-broadcast type-info" onclick="adminBroadcastSound('success', '成功・正解音')"><i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信</button>
+            </div>
+          </div>
+
+          <div class="audio-se-card type-danger">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">❌</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">エラー・不正解音</div>
+                <div class="audio-se-desc">error / 失敗フィードバック</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('error')"><i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴</button>
+              <button class="btn-se-broadcast type-danger" onclick="adminBroadcastSound('error', 'エラー・不正解音')"><i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信</button>
+            </div>
+          </div>
+
+          <div class="audio-se-card type-neutral">
+            <div class="audio-se-card-header">
+              <span class="audio-se-emoji">🖱️</span>
+              <div class="audio-se-info">
+                <div class="audio-se-name">タッチ効果音</div>
+                <div class="audio-se-desc">touch / UI操作確認音</div>
+              </div>
+            </div>
+            <div class="audio-se-actions">
+              <button class="btn-se-preview" onclick="adminPreviewSound('touch')"><i data-lucide="headphones" style="width:12px;height:12px;"></i> 試聴</button>
+              <button class="btn-se-broadcast type-neutral" onclick="adminBroadcastSound('touch', 'タッチ効果音')"><i data-lucide="radio" style="width:12px;height:12px;"></i> 全iPad配信</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ⚙️ タブ4: システム設定・転換 (項目5で実装) -->
   <div class="admin-tab-pane" id="pane-system"></div>
@@ -3347,12 +3795,242 @@
       }, 3500);
     }
 
+
     // 初期化実行
     window.addEventListener('DOMContentLoaded', () => {
       initAdminTimer();
       initFlowState();
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
+
+    // ===== 🔊 音響・演出タブ JS =====
+
+    // 管理PC内蔵 Web Audio Context（試聴用）
+    let adminAudioCtx = null;
+    function getAdminAudioCtx() {
+      if (!adminAudioCtx) {
+        try {
+          adminAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) { return null; }
+      }
+      if (adminAudioCtx.state === 'suspended') {
+        adminAudioCtx.resume().catch(() => {});
+      }
+      return adminAudioCtx;
+    }
+
+    // 管理PC手元試聴（全SEタイプ対応）
+    function adminPreviewSound(type) {
+      const ctx = getAdminAudioCtx();
+      if (!ctx) { showToast('⚠️ ブラウザの音声が許可されていません', true); return; }
+      const now = ctx.currentTime;
+
+      if (type === 'boot') {
+        // 起動チャイム：4音上昇
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now + i * 0.13);
+          const t0 = now + i * 0.13;
+          g.gain.setValueAtTime(0.01, t0);
+          g.gain.linearRampToValueAtTime(0.6, t0 + 0.012);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(t0); osc.stop(t0 + 0.35);
+        });
+
+      } else if (type === 'distortion') {
+        // 時間歪み：うねる不協和音
+        [220, 233, 349].forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, now);
+          osc.frequency.linearRampToValueAtTime(f * 0.6, now + 0.8);
+          g.gain.setValueAtTime(0.0, now);
+          g.gain.linearRampToValueAtTime(0.45, now + 0.05);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.9);
+        });
+
+      } else if (type === 'alarm') {
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.55);
+        g.gain.setValueAtTime(0.01, now);
+        g.gain.linearRampToValueAtTime(0.65, now + 0.008);
+        g.gain.setValueAtTime(0.5, now + 0.27);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.57);
+
+      } else if (type === 'fanfare') {
+        const notes = [
+          { f: 523.25, s: 0.00, d: 0.30, v: 0.65 },
+          { f: 659.25, s: 0.09, d: 0.30, v: 0.65 },
+          { f: 783.99, s: 0.18, d: 0.40, v: 0.75 },
+          { f: 1046.50, s: 0.28, d: 0.75, v: 0.85 }
+        ];
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.f, now + n.s);
+          const t0 = now + n.s;
+          g.gain.setValueAtTime(0.01, t0);
+          g.gain.linearRampToValueAtTime(n.v, t0 + 0.008);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.d);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(t0); osc.stop(t0 + n.d + 0.02);
+        });
+
+      } else if (type === 'gameover') {
+        // ゲームオーバー：下降する重い音
+        const notes = [
+          { f: 392.00, s: 0.00, d: 0.35, v: 0.7 },
+          { f: 311.13, s: 0.20, d: 0.35, v: 0.7 },
+          { f: 246.94, s: 0.40, d: 0.55, v: 0.8 }
+        ];
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(n.f, now + n.s);
+          const t0 = now + n.s;
+          g.gain.setValueAtTime(0.01, t0);
+          g.gain.linearRampToValueAtTime(n.v, t0 + 0.015);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.d);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(t0); osc.stop(t0 + n.d + 0.02);
+        });
+
+      } else if (type === 'alert') {
+        // アラート：2回のビープ
+        [0, 0.25].forEach(delay => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now + delay);
+          const t0 = now + delay;
+          g.gain.setValueAtTime(0.01, t0);
+          g.gain.linearRampToValueAtTime(0.55, t0 + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(t0); osc.stop(t0 + 0.2);
+        });
+
+      } else if (type === 'success' || type === 'notif') {
+        const notes = [
+          { f: 587.33, s: 0.00, d: 0.20, v: 0.70 },
+          { f: 880.00, s: 0.06, d: 0.40, v: 0.80 }
+        ];
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(n.f, now + n.s);
+          const t0 = now + n.s;
+          g.gain.setValueAtTime(0.01, t0);
+          g.gain.linearRampToValueAtTime(n.v, t0 + 0.006);
+          g.gain.setValueAtTime(n.v * 0.7, t0 + 0.04);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.d);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(t0); osc.stop(t0 + n.d + 0.02);
+        });
+
+      } else if (type === 'error') {
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(180, now);
+        g.gain.setValueAtTime(0.01, now);
+        g.gain.linearRampToValueAtTime(0.65, now + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.22);
+
+      } else if (type === 'touch') {
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.035);
+        g.gain.setValueAtTime(0.18, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.04);
+      }
+
+      showToast(`🎧 試聴: ${type} （管理PCのみ）`);
+    }
+
+    // 管理PC手元試聴（繰り返し）
+    function adminPreviewSoundRepeat(type, count) {
+      const ctx = getAdminAudioCtx();
+      if (!ctx) return;
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => adminPreviewSound(type), i * 700);
+      }
+    }
+
+    // 配信フィードバックバー表示
+    let audioFeedbackTimer = null;
+    function showAudioFeedback(text) {
+      const bar  = document.getElementById('audio-feedback-bar');
+      const textEl = document.getElementById('audio-feedback-text');
+      if (!bar || !textEl) return;
+      textEl.innerText = text;
+      bar.classList.add('visible');
+      if (audioFeedbackTimer) clearTimeout(audioFeedbackTimer);
+      audioFeedbackTimer = setTimeout(() => bar.classList.remove('visible'), 4000);
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // 全iPad SE配信（localStorage トリガー → app.js のstorage listenerが拾う）
+    function adminBroadcastSound(type, label) {
+      try {
+        localStorage.setItem('admin_sound_trigger', '');
+        setTimeout(() => localStorage.setItem('admin_sound_trigger', type), 20);
+      } catch(e) {}
+      showAudioFeedback(`✅ 「${label}」を全iPadへ配信しました (${new Date().toLocaleTimeString('ja-JP')})`);
+      showToast(`🔊 「${label}」を全iPad一斉配信しました！`);
+      // 管理PCでも確認試聴
+      adminPreviewSound(type);
+    }
+
+    // 繰り返しSE配信
+    function adminBroadcastSoundRepeat(type, count, label) {
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          try {
+            localStorage.setItem('admin_sound_trigger', '');
+            setTimeout(() => localStorage.setItem('admin_sound_trigger', type), 20);
+          } catch(e) {}
+        }, i * 700);
+      }
+      showAudioFeedback(`✅ 「${label}」×${count}連 を全iPadへ配信しました (${new Date().toLocaleTimeString('ja-JP')})`);
+      showToast(`🔊 「${label}」×${count}連 を全iPad一斉配信しました！`);
+      adminPreviewSoundRepeat(type, count);
+    }
+
+    // 🚨 緊急全iPad SE停止（mute 指示送信）
+    function broadcastEmergencyMute() {
+      try {
+        // ミュート指示を localStorage に書き込む（各iPadのstorage listenerがキャッチしてミュート処理）
+        localStorage.setItem('admin_sound_trigger', 'mute');
+        // 少し遅らせて再セット（一部iPadが拾えなかった場合の保険）
+        setTimeout(() => localStorage.setItem('admin_sound_trigger', 'mute'), 300);
+        setTimeout(() => localStorage.setItem('admin_sound_trigger', 'mute'), 700);
+      } catch(e) {}
+      showToast('🛑 全iPad SE 緊急停止指示を送信しました', true);
+      showAudioFeedback(`🛑 緊急全停止を配信しました (${new Date().toLocaleTimeString('ja-JP')})`);
+    }
+
   </script>
 </body>
 </html>

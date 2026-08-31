@@ -6013,7 +6013,24 @@ function logWriteToGAS(logType, message) {
 window.addEventListener('storage', (e) => {
   if (e.key === 'admin_sound_trigger') {
     const soundType = e.newValue;
-    if (soundType) playSystemSound(soundType);
+    if (!soundType) return;
+    if (soundType === 'mute') {
+      // 🚨 緊急全停止 - AudioContextを一時停止して全音を即時カット
+      try {
+        if (globalAudioCtx) {
+          globalAudioCtx.suspend().catch(() => {});
+          // 1秒後にresumeを復元（次の音が鳴るようにしておく）
+          setTimeout(() => {
+            if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+              globalAudioCtx.resume().catch(() => {});
+            }
+          }, 1000);
+        }
+      } catch(e) {}
+    } else {
+      playSystemSound(soundType);
+    }
+
   } else if (e.key === 'admin_alert_trigger') {
     const alertMsg = e.newValue;
     if (alertMsg) showSystemAlert(alertMsg);
