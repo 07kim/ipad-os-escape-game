@@ -420,162 +420,262 @@
       animation: highlightPulse 1.2s ease-out;
     }
 
-    /* ⏱️ ヘッダー組み込み型 コンパクトタイマー ＆ ステータスバー */
-    .admin-top-banner {
+    /* 🌟 上部タブナビゲーションスタイル */
+    .admin-main-tabs-bar {
       max-width: 1400px;
       margin: 0 auto 20px auto;
-      padding: 10px 18px;
-      background: #0f172a;
-      color: #ffffff;
-      border-radius: 14px;
-      border: 1px solid #334155;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
+      gap: 8px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0;
     }
-    .top-timer-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .timer-section-divider {
-      width: 1px;
-      height: 26px;
-      background: rgba(255, 255, 255, 0.15);
-      flex-shrink: 0;
-    }
-    .timer-badge-chip {
-      background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 8px;
-      padding: 5px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .timer-badge-chip.total-chip {
-      width: 140px;
-    }
-    .timer-badge-chip.loop-chip {
-      width: 136px;
-    }
-    .timer-chip-label {
-      font-size: 11px;
+
+    .admin-tab-nav-btn {
+      padding: 12px 24px;
+      font-size: 14px;
       font-weight: 700;
-      color: #94a3b8;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .timer-chip-digits {
-      font-family: 'Orbitron', 'SF Mono', Monaco, monospace;
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum";
-      display: inline-block;
-      width: 58px;
-      text-align: center;
-      letter-spacing: 1px;
-      flex-shrink: 0;
-    }
-    .timer-chip-digits.total {
-      font-size: 17px;
-      font-weight: 900;
-      color: #38bdf8;
-    }
-    .timer-chip-digits.loop {
-      font-size: 17px;
-      font-weight: 800;
-      color: #4ade80;
-    }
-    .top-laps-inline {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-shrink: 0;
-    }
-    .top-lap-pill {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      padding: 4px 6px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 106px;
-      flex-shrink: 0;
-      font-size: 11px;
-      transition: all 0.2s ease;
-    }
-    .top-lap-pill.active {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
-    }
-    .lap-name {
-      font-weight: 800;
-      color: #cbd5e1;
-      font-size: 10px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .lap-val {
-      font-family: 'Orbitron', monospace;
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum";
-      display: inline-block;
-      width: 44px;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: #ffffff;
-      flex-shrink: 0;
-    }
-    .lap-tag {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 1px 4px;
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.35);
-      color: #94a3b8;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .top-lap-pill.active .lap-tag {
-      background: #0284c7;
-      color: #ffffff;
-    }
-    .timer-ctrl-btn {
-      padding: 5px 12px;
-      font-size: 11px;
-      font-weight: 800;
-      border-radius: 7px;
+      color: #64748b;
+      background: transparent;
       border: none;
+      border-bottom: 3px solid transparent;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      transition: all 0.2s;
-      white-space: nowrap;
-      flex-shrink: 0;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border-radius: 8px 8px 0 0;
     }
-    .timer-ctrl-btn:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
+
+    .admin-tab-nav-btn:hover {
+      color: var(--primary);
+      background: #f1f5f9;
     }
-    .top-status-group {
+
+    .admin-tab-nav-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.03);
+    }
+
+    /* ⏱️ 優先度 ＆ ジャンプ率を意識した大型タイマーダッシュボード */
+    .admin-timer-hero-card {
+      max-width: 1400px;
+      margin: 0 auto 20px auto;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 16px;
+      padding: 18px 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timer-hero-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .timer-hero-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .timer-stat-cards-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 14px;
       flex-wrap: wrap;
+    }
+
+    /* ★★★ 最重要: 世界線時刻カード (24px) */
+    .hero-stat-card.world-time {
+      background: #ecfdf5;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 10px 18px;
+      min-width: 190px;
+    }
+    .hero-stat-label.world {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #047857;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .hero-stat-digit.world {
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 900;
+      color: #059669;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+    .hero-stat-sub.world {
+      font-size: 11px;
+      font-weight: 700;
+      color: #10b981;
+      margin-top: 2px;
+    }
+
+    /* ★★★ 最重要: トータル公演時間カード (22px) */
+    .hero-stat-card.total-time {
+      background: #f0f9ff;
+      border: 1.5px solid #bae6fd;
+      border-radius: 12px;
+      padding: 10px 18px;
+      min-width: 160px;
+    }
+    .hero-stat-label.total {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .hero-stat-digit.total {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 900;
+      color: #0284c7;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+    .hero-stat-sub.total {
+      font-size: 10px;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-top: 2px;
+    }
+
+    /* ★★☆ 重要: カレント周回時間カード (20px) */
+    .hero-stat-card.loop-time {
+      background: #f7fee7;
+      border: 1.5px solid #d9f99d;
+      border-radius: 12px;
+      padding: 10px 18px;
+      min-width: 160px;
+    }
+    .hero-stat-label.loop {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #4d7c0f;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .hero-stat-digit.loop {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 900;
+      color: #65a30d;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+    .hero-stat-sub.loop {
+      font-size: 10px;
+      font-weight: 700;
+      color: #84cc16;
+      margin-top: 2px;
+    }
+
+    /* ★☆☆ ラップ履歴チップ群 */
+    .hero-laps-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .hero-lap-chip {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-lap-chip.active {
+      background: #e0f2fe;
+      border-color: #38bdf8;
+    }
+    .hero-lap-chip .chip-name {
+      font-weight: 700;
+      color: #475569;
+    }
+    .hero-lap-chip .chip-val {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    /* 🎮 大型メイン操作ボタン (高さ48px) */
+    .hero-action-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-hero-master-start {
+      height: 48px;
+      padding: 0 24px;
+      font-size: 15px;
+      font-weight: 800;
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      transition: all 0.2s ease;
+    }
+    .btn-hero-master-start:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
+    }
+    .btn-hero-master-start.running {
+      background: #e11d48;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+    }
+    .btn-hero-reset {
+      height: 48px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-hero-reset:hover {
+      background: #e2e8f0;
+    }
+
+    /* タブペイン制御 */
+    .admin-tab-pane {
+      display: none;
+    }
+    .admin-tab-pane.active {
+      display: block;
     }
   </style>
 </head>
@@ -584,91 +684,110 @@
   <header>
     <div class="header-title-wrap">
       <h1>26__0094 ADMIN DASHBOARD</h1>
-      <span class="header-badge">リアルタイム進行統制</span>
+      <span class="header-badge">進行統制 ＆ リアルタイム監視</span>
     </div>
     <div class="header-links" style="display:flex; align-items:center; gap:8px;">
-      <button class="nav-btn" onclick="sendRemoteDeviceReload('ALL')" style="background:#0284c7; color:#ffffff; border:none; font-weight:700; padding:6px 12px; cursor:pointer;" title="全30台の画面・キャッシュを強制リフレッシュ">
-        <i data-lucide="refresh-cw"></i> 🔄 全30台一斉リロード
-      </button>
-      <button class="nav-btn" onclick="sendMasterDataResetAll()" style="background:#dc2626; color:#ffffff; border:none; font-weight:700; padding:6px 12px; cursor:pointer;" title="次の公演転換時用：全iPadのメモ・入力・ログイン・周回を完全初期化">
-        <i data-lucide="trash-2"></i> 🧹 公演終了後 一括完全初期化
-      </button>
       <a href="index.html" target="_blank" class="nav-btn"><i data-lucide="tablet"></i> iPad端末画面</a>
       <a href="editor.html" class="nav-btn"><i data-lucide="edit-3"></i> コンテンツGUIエディタ</a>
     </div>
   </header>
 
-  <!-- ⏱️ ＆ 📡 公演タイマー・クラウド連携 一体型コントロールバー -->
-  <div class="admin-top-banner">
-    <!-- 左側：タイマー（全体ステータス ＆ トータル ＆ 現在周回 ＆ 1~3周目ラップ ＆ 操作ボタン） -->
-    <div class="top-timer-group">
-      <!-- 🌟 0. 進行ステータスバッジ（スタート前・1周目・2周目・3周目） -->
-      <div class="timer-badge-chip" id="global-game-status-chip" style="min-width:130px; height:36px; padding:0 12px; border-radius:18px; border:1.5px solid rgba(148, 163, 184, 0.4); background:rgba(15,23,42,0.8); display:flex; align-items:center; justify-content:center;">
-        <span id="global-game-status-text" style="font-size:13px; font-weight:900; color:#94a3b8; letter-spacing:0.3px;">⏱️ スタート前（待機中）</span>
-      </div>
-
-      <div class="timer-section-divider"></div>
-
-      <!-- 1. トータル公演時間 -->
-      <div class="timer-badge-chip total-chip" title="公演開始からのトータル経過時間">
-        <span class="timer-chip-label"><i data-lucide="clock" style="width:12px; height:12px; color:#38bdf8;"></i> トータル</span>
-        <span class="timer-chip-digits total" id="timer-total-digits">00:00</span>
-      </div>
-
-      <!-- 2. カレント周回経過時間 -->
-      <div class="timer-badge-chip loop-chip" title="現在の周回に入ってからの経過時間">
-        <span class="timer-chip-label"><i data-lucide="repeat" style="width:12px; height:12px; color:#4ade80;"></i> <span id="timer-current-loop-name">1周目</span></span>
-        <span class="timer-chip-digits loop" id="timer-loop-digits">00:00</span>
-      </div>
-
-      <div class="timer-section-divider"></div>
-
-      <!-- 3. 各周回ラップタイム履歴 -->
-      <div class="top-laps-inline" title="周回ごとの所要時間実績">
-        <div class="top-lap-pill active" id="lap-card-1">
-          <span class="lap-name">1周目</span>
-          <span class="lap-val" id="lap-time-1">00:00</span>
-          <span class="lap-tag" id="lap-status-1">待機</span>
+  <!-- ⏱️ 優先度 ＆ ジャンプ率を意識した大型タイマーダッシュボード（最上部固定） -->
+  <div class="admin-timer-hero-card">
+    <!-- 上段：クラウドステータス ＆ 直近コマンド情報 -->
+    <div class="timer-hero-top-row">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div id="admin-cloud-indicator" style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; background:#f8fafc; padding:4px 12px; border-radius:20px; border:1px solid #cbd5e1;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
+          <span id="admin-status-text">クラウド確認中...</span>
         </div>
-        <div class="top-lap-pill" id="lap-card-2">
-          <span class="lap-name">2周目</span>
-          <span class="lap-val" id="lap-time-2">--:--</span>
-          <span class="lap-tag" id="lap-status-2">待機</span>
-        </div>
-        <div class="top-lap-pill" id="lap-card-3">
-          <span class="lap-name">3周目</span>
-          <span class="lap-val" id="lap-time-3">--:--</span>
-          <span class="lap-tag" id="lap-status-3">待機</span>
-        </div>
+        <span style="font-size:12px; color:#64748b;" id="admin-last-command-info">直近コマンド: なし</span>
       </div>
 
-      <div class="timer-section-divider"></div>
-
-      <!-- 4. タイマー操作ボタン -->
-      <div style="display:flex; gap:6px;">
-        <button id="btn-timer-toggle" class="timer-ctrl-btn" onclick="toggleAdminTimer()" style="background:#0284c7; color:#fff;">
-          <i data-lucide="play" id="icon-timer-toggle" style="width:13px; height:13px;"></i> <span id="text-timer-toggle">ゲームスタート</span>
-        </button>
-        <button class="timer-ctrl-btn" onclick="resetAdminTimer()" style="background:rgba(255,255,255,0.1); color:#cbd5e1;">
-          <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> リセット
-        </button>
+      <div style="font-size:12px; color:#64748b; font-weight:600;">
+        ※全30台のiPadは作中世界線時刻（26-09-04 09:04基準）と完全同期します
       </div>
     </div>
 
-    <!-- 右側：クラウド接続ステータス ＆ GAS URL -->
-    <div class="top-status-group">
-      <div id="admin-cloud-indicator" style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); padding:5px 10px; border-radius:20px; border:1px solid rgba(255,255,255,0.15);">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
-        <span id="admin-status-text">確認中...</span>
+    <!-- 中段：ジャンプ率重視の3重タイマーカード ＆ 操作ボタン -->
+    <div class="timer-hero-main-row">
+      <div class="timer-stat-cards-group">
+        <!-- 1. 🌍 世界線時刻（作中時間 09:04基準） -->
+        <div class="hero-stat-card world-time">
+          <div class="hero-stat-label world">
+            <i data-lucide="globe" style="width:13px; height:13px;"></i> 世界線時刻 (作中)
+          </div>
+          <div class="hero-stat-digit world" id="hero-world-time-digits">09:04:00</div>
+          <div class="hero-stat-sub world" id="hero-world-date-sub">26-09-04 (Fri)</div>
+        </div>
+
+        <!-- 2. ⏱️ トータル公演時間（現実累積時間） -->
+        <div class="hero-stat-card total-time">
+          <div class="hero-stat-label total">
+            <i data-lucide="clock" style="width:13px; height:13px;"></i> トータル公演時間
+          </div>
+          <div class="hero-stat-digit total" id="timer-total-digits">00:00</div>
+          <div class="hero-stat-sub total">TOTAL ELAPSED</div>
+        </div>
+
+        <!-- 3. 🔄 カレント周回時間 -->
+        <div class="hero-stat-card loop-time">
+          <div class="hero-stat-label loop">
+            <i data-lucide="repeat" style="width:13px; height:13px;"></i> <span id="timer-current-loop-name">1周目</span> 経過時間
+          </div>
+          <div class="hero-stat-digit loop" id="timer-loop-digits">00:00</div>
+          <div class="hero-stat-sub loop">CURRENT LOOP</div>
+        </div>
+
+        <!-- 4. 📊 各周回ラップタイム履歴 -->
+        <div class="hero-laps-group">
+          <div class="hero-lap-chip active" id="lap-card-1">
+            <span class="chip-name">1周目:</span>
+            <span class="chip-val" id="lap-time-1">00:00</span>
+          </div>
+          <div class="hero-lap-chip" id="lap-card-2">
+            <span class="chip-name">2周目:</span>
+            <span class="chip-val" id="lap-time-2">--:--</span>
+          </div>
+          <div class="hero-lap-chip" id="lap-card-3">
+            <span class="chip-name">3周目:</span>
+            <span class="chip-val" id="lap-time-3">--:--</span>
+          </div>
+        </div>
       </div>
-      <div style="font-size:11px; color:#94a3b8; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="admin-last-command-info">直近: なし</div>
-      <input type="text" id="admin-gas-url-input" placeholder="GAS Web API URL" style="width:150px; padding:4px 8px; font-size:11px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:#fff;">
-      <button class="nav-btn" onclick="saveAdminGasUrl()" style="padding:5px 9px; font-size:11px; font-weight:700; background:var(--primary); color:#fff; border:none;" title="URL保存"><i data-lucide="save" style="width:12px; height:12px;"></i></button>
-      <button class="nav-btn" onclick="testGasPing()" style="padding:5px 9px; font-size:11px; font-weight:700;" title="疎通テスト"><i data-lucide="radio" style="width:12px; height:12px;"></i></button>
+
+      <!-- 5. 🎮 大型メイン操作ボタン -->
+      <div class="hero-action-group">
+        <button id="btn-timer-toggle" class="btn-hero-master-start" onclick="toggleAdminTimer()">
+          <i data-lucide="play" id="icon-timer-toggle" style="width:18px; height:18px;"></i>
+          <span id="text-timer-toggle">ゲームスタート</span>
+        </button>
+        <button class="btn-hero-reset" onclick="resetAdminTimer()" title="タイマーをリセット">
+          <i data-lucide="rotate-ccw" style="width:15px; height:15px;"></i> リセット
+        </button>
+      </div>
     </div>
   </div>
 
-  <div class="container">
+  <!-- 🌟 上部4大タブナビゲーションバー -->
+  <div class="admin-main-tabs-bar">
+    <button class="admin-tab-nav-btn active" id="tab-btn-flow" onclick="switchAdminMainTab('flow')">
+      <i data-lucide="play-circle" style="width:16px; height:16px;"></i> ⏱️ 進行統制 (メイン)
+    </button>
+    <button class="admin-tab-nav-btn" id="tab-btn-monitor" onclick="switchAdminMainTab('monitor')">
+      <i data-lucide="activity" style="width:16px; height:16px;"></i> 📊 端末モニタリング
+    </button>
+    <button class="admin-tab-nav-btn" id="tab-btn-audio" onclick="switchAdminMainTab('audio')">
+      <i data-lucide="volume-2" style="width:16px; height:16px;"></i> 🔊 音響・演出
+    </button>
+    <button class="admin-tab-nav-btn" id="tab-btn-system" onclick="switchAdminMainTab('system')">
+      <i data-lucide="settings" style="width:16px; height:16px;"></i> ⚙️ システム設定・転換
+    </button>
+  </div>
+
+  <!-- 🎬 タブ1: ⏱️ 進行統制 (メイン) -->
+  <div class="admin-tab-pane active" id="pane-flow">
+    <div class="container">
     
     <!-- 左カラム：進行プリセット ＆ 音響トリガー -->
     <div>
@@ -772,7 +891,16 @@
         </button>
       </div>
     </div>
-  </div>
+  </div> <!-- /#pane-flow -->
+
+  <!-- 📊 タブ2: 端末モニタリング (項目3で実装) -->
+  <div class="admin-tab-pane" id="pane-monitor"></div>
+
+  <!-- 🔊 タブ3: 音響・演出 (項目4で実装) -->
+  <div class="admin-tab-pane" id="pane-audio"></div>
+
+  <!-- ⚙️ タブ4: システム設定・転換 (項目5で実装) -->
+  <div class="admin-tab-pane" id="pane-system"></div>
 
   <!-- 📱 端末詳細・進捗インサイトモーダル -->
   <div class="device-modal-overlay" id="device-modal-overlay" onclick="closeDeviceModal()">
@@ -1121,77 +1249,64 @@
       const totalDigitsEl = document.getElementById('timer-total-digits');
       const loopDigitsEl = document.getElementById('timer-loop-digits');
       const loopNameEl = document.getElementById('timer-current-loop-name');
+      const worldDigitsEl = document.getElementById('hero-world-time-digits');
 
       if (totalDigitsEl) totalDigitsEl.innerText = formatMs(totalMs);
       if (loopDigitsEl) loopDigitsEl.innerText = formatMs(loopMs);
       if (loopNameEl) loopNameEl.innerText = `${adminTimerState.currentLoop}周目`;
 
-      // 🌟 全体進行ステータスバッジの更新
-      const statusChip = document.getElementById('global-game-status-chip');
-      const statusText = document.getElementById('global-game-status-text');
-      if (statusText) {
+      // 🌍 世界線時刻（作中時間: 09:04:00 + カレント周回経過秒）の計算
+      if (worldDigitsEl) {
         if (!adminTimerState.isRunning && adminTimerState.totalElapsedBeforePause === 0 && (!adminTimerState.totalStartTime)) {
-          statusText.innerText = "⏱️ スタート前（待機中）";
-          statusText.style.color = "#94a3b8";
-          if (statusChip) statusChip.style.borderColor = "rgba(148, 163, 184, 0.4)";
-        } else if (!adminTimerState.isRunning) {
-          statusText.innerText = `⏸️ ${adminTimerState.currentLoop}周目（一時停止）`;
-          statusText.style.color = "#fbbf24";
-          if (statusChip) statusChip.style.borderColor = "rgba(251, 191, 36, 0.6)";
+          worldDigitsEl.innerText = "09:04:00";
         } else {
-          if (adminTimerState.currentLoop === 1) {
-            statusText.innerText = "🌀 1周目 進行中";
-            statusText.style.color = "#38bdf8";
-            if (statusChip) statusChip.style.borderColor = "rgba(56, 189, 248, 0.7)";
-          } else if (adminTimerState.currentLoop === 2) {
-            statusText.innerText = "🌀 2周目 進行中";
-            statusText.style.color = "#fb923c";
-            if (statusChip) statusChip.style.borderColor = "rgba(251, 146, 60, 0.7)";
-          } else if (adminTimerState.currentLoop === 3) {
-            statusText.innerText = "🔥 3周目（クライマックス）";
-            statusText.style.color = "#f87171";
-            if (statusChip) statusChip.style.borderColor = "rgba(248, 113, 113, 0.7)";
-          }
+          const baseSec = (9 * 3600) + (4 * 60); // 09:04:00 in seconds
+          const elapsedSec = Math.floor(loopMs / 1000);
+          const currentWorldSec = (baseSec + elapsedSec) % 86400;
+          const h = String(Math.floor(currentWorldSec / 3600)).padStart(2, '0');
+          const m = String(Math.floor((currentWorldSec % 3600) / 60)).padStart(2, '0');
+          const s = String(currentWorldSec % 60).padStart(2, '0');
+          worldDigitsEl.innerText = `${h}:${m}:${s}`;
         }
       }
 
       // ラップタイムカード更新
       for (let l = 1; l <= 3; l++) {
         const cardEl = document.getElementById(`lap-card-${l}`);
-        const statusEl = document.getElementById(`lap-status-${l}`);
         const timeEl = document.getElementById(`lap-time-${l}`);
 
         if (!cardEl) continue;
 
         if (l === adminTimerState.currentLoop) {
-          cardEl.className = 'top-lap-pill active';
-          if (statusEl) {
-            if (!adminTimerState.isRunning && adminTimerState.totalElapsedBeforePause === 0 && (!adminTimerState.totalStartTime)) {
-              statusEl.innerText = '待機';
-              statusEl.style.color = '#94a3b8';
-            } else {
-              statusEl.innerText = adminTimerState.isRunning ? '進行中 ⏱️' : '一時停止 ⏸️';
-              statusEl.style.color = '#38bdf8';
-            }
-          }
+          cardEl.className = 'hero-lap-chip active';
           if (timeEl) timeEl.innerText = formatMs(loopMs);
         } else if (l < adminTimerState.currentLoop) {
-          cardEl.className = 'top-lap-pill';
+          cardEl.className = 'hero-lap-chip';
           const dur = adminTimerState.loopLaps[l] ? adminTimerState.loopLaps[l].durationMs : 0;
-          if (statusEl) {
-            statusEl.innerText = '完了 ✅';
-            statusEl.style.color = '#4ade80';
-          }
-          if (timeEl) timeEl.innerText = formatMs(dur);
+          if (timeEl) timeEl.innerText = formatMs(dur) + ' ✓';
         } else {
-          cardEl.className = 'top-lap-pill';
-          if (statusEl) {
-            statusEl.innerText = '待機';
-            statusEl.style.color = '#94a3b8';
-          }
+          cardEl.className = 'hero-lap-chip';
           if (timeEl) timeEl.innerText = '--:--';
         }
       }
+    }
+
+    // 🌟 上部タブ切り替え関数
+    function switchAdminMainTab(tabKey) {
+      const tabIds = ['flow', 'monitor', 'audio', 'system'];
+      tabIds.forEach(key => {
+        const btn = document.getElementById(`tab-btn-${key}`);
+        const pane = document.getElementById(`pane-${key}`);
+        if (btn) {
+          if (key === tabKey) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+        if (pane) {
+          if (key === tabKey) pane.classList.add('active');
+          else pane.classList.remove('active');
+        }
+      });
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function formatMs(ms) {
