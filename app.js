@@ -4571,7 +4571,7 @@ function openManabaCourse(courseIdOrName) {
   gameState._currentCourseObj = course;
 
   // メニューバーの「📖 コースコンテンツ」ボタンにイベントバインド
-  const courseContentsBtn = document.querySelector('.course-menu-btn.active-green');
+  const courseContentsBtn = document.getElementById('cmenu-btn-page');
   if (courseContentsBtn) {
     courseContentsBtn.onclick = () => switchCourseSubTab('page');
   }

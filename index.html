@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.77.0">
+  <link rel="stylesheet" href="style.css?v=2.78.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -1526,7 +1526,7 @@
                 <div class="course-title-block">
                   <div class="course-code-str" id="manaba-course-code">24QM3011</div>
                   <h2 class="course-main-name">
-                    <a href="javascript:void(0);" id="manaba-course-title">応用量子力学</a>
+                    <a href="javascript:void(0);" id="manaba-course-title" onclick="backToCourseTop()">応用量子力学</a>
                   </h2>
                 </div>
               </div>
@@ -1541,21 +1541,18 @@
               </div>
             </div>
 
-            <!-- コース内メニューバー（立体ボタンの横並び） -->
+            <!-- コース内メニューバー（本家iPad完全一致：立体ボタンの横並び） -->
             <div class="official-course-menubar">
               <div class="course-menu-buttons-left">
-                <button class="course-menu-btn" id="cmenu-btn-top" onclick="switchCourseSubTab('top')">コースTOP</button>
                 <button class="course-menu-btn" id="cmenu-btn-query" onclick="switchCourseSubTab('query')">小テスト</button>
                 <button class="course-menu-btn" id="cmenu-btn-survey" onclick="switchCourseSubTab('survey')">アンケート</button>
-                <button class="course-menu-btn has-badge" id="cmenu-btn-report" onclick="switchCourseSubTab('report')">
-                  レポート <span class="menu-unread-badge">1</span>
-                </button>
+                <button class="course-menu-btn" id="cmenu-btn-report" onclick="switchCourseSubTab('report')">レポート</button>
                 <button class="course-menu-btn" id="cmenu-btn-project" onclick="switchCourseSubTab('project')">プロジェクト</button>
                 <button class="course-menu-btn" id="cmenu-btn-grade" onclick="switchCourseSubTab('grade')">成 績</button>
               </div>
               <div class="course-menu-buttons-right">
-                <button class="course-menu-btn icon-btn" id="cmenu-btn-bbs" onclick="switchCourseSubTab('bbs')">💬 掲示板</button>
-                <button class="course-menu-btn icon-btn active-green" id="cmenu-btn-page" onclick="switchCourseSubTab('page')">📖 コースコンテンツ</button>
+                <button class="course-menu-btn icon-btn" id="cmenu-btn-bbs" onclick="switchCourseSubTab('bbs')">💬 掲 示 板</button>
+                <button class="course-menu-btn icon-btn" id="cmenu-btn-page" onclick="switchCourseSubTab('page')">📖 コースコンテンツ</button>
               </div>
             </div>
 
@@ -2421,7 +2418,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.77.0"></script>
-  <script src="app.js?v=2.77.0"></script>
+  <script src="data.js?v=2.78.0"></script>
+  <script src="app.js?v=2.78.0"></script>
 </body>
 </html>
