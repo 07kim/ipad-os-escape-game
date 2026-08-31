@@ -6072,23 +6072,50 @@ body {
 }
 
 /* 5. コースメインコンテンツ */
+.manaba-smartphone-banner {
+  background: #9bc83b;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 0;
+  width: 100%;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
 .official-course-main-body {
   padding: 0 18px 14px 18px;
 }
 
-.course-top-layout-columns {
-  display: flex;
+.course-top-upper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.course-top-left-col {
-  flex: 1;
-  min-width: 0;
+.course-bottom-memo-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
-.course-top-right-col {
-  width: 250px;
-  flex-shrink: 0;
+.manaba-bottom-memo-btn {
+  background: #ffffff;
+  border: 1px solid #c8c8c8;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.manaba-bottom-memo-btn:hover {
+  background: #f9f9f9;
 }
 
 .course-info-row {

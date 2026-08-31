@@ -4507,31 +4507,29 @@ function openManabaCourse(courseIdOrName) {
           </tr>
         `;
       });
+      const newsFooterLink = document.getElementById('manaba-course-news-footer-link');
+      if (newsFooterLink) newsFooterLink.style.display = 'block';
     } else {
       // 空の通常授業：ニュースはありません。
       gameState._currentCourseNewsList = [];
       newsTable.innerHTML = `
         <tr>
-          <td colspan="2" style="padding:16px; color:#555; font-size:13px; border:none;">ニュースはありません。</td>
+          <td colspan="2" style="padding:16px 20px; color:#555; font-size:13px; border:none;">ニュースはありません。</td>
         </tr>
       `;
-    }
-  }
-
-  // スレッド（更新順）
-  const bbsBox = document.getElementById('manaba-course-bbs-box');
-  if (bbsBox) {
-    if (!isCustomCourse) {
-      bbsBox.innerHTML = `<div style="padding:16px; color:#555; font-size:13px;">スレッドはありません。</div>`;
+      const newsFooterLink = document.getElementById('manaba-course-news-footer-link');
+      if (newsFooterLink) newsFooterLink.style.display = 'none';
     }
   }
 
   // コンテンツカード（更新順）生成
   const cardGrid = document.getElementById('manaba-materials-card-grid');
+  const contentsFooterLink = document.getElementById('manaba-course-contents-footer-link');
   if (cardGrid) {
     cardGrid.innerHTML = "";
     
     if (isCustomCourse) {
+      if (contentsFooterLink) contentsFooterLink.style.display = 'flex';
       // 1. 授業動画カード
       cardGrid.innerHTML += `
         <div class="content-card-item" onclick="showIpadModal('講義アーカイブ動画', '【第11回 講義アーカイブ】\n映像データは現在ストリーミングサーバーから同期中です。\n\n▶ 内容: 高周波共鳴回路と量子変調の実験実演\n▶ 講師: 神崎 恭介 教授\n▶ 収録時間: 45分\n\n（※講義資料PDFおよびメモをご確認ください）')">
@@ -4563,6 +4561,7 @@ function openManabaCourse(courseIdOrName) {
       `;
     } else {
       // 空の通常授業：コンテンツはありません。（添付画像完全準拠）
+      if (contentsFooterLink) contentsFooterLink.style.display = 'none';
       cardGrid.innerHTML = `
         <div style="padding:16px 20px; color:#555; font-size:13px; width:100%;">コンテンツはありません。</div>
       `;

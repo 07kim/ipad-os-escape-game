@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.73.0">
+  <link rel="stylesheet" href="style.css?v=2.74.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -1186,6 +1186,9 @@
         <!-- manaba ログイン後マイページ (千葉工大 公式完全一致) -->
         <div class="manaba-portal-official" id="manaba-portal-view" style="display:none;">
           
+          <!-- 0. iPad特有: スマートフォン用画面を表示バナー -->
+          <div class="manaba-smartphone-banner">スマートフォン用画面を表示</div>
+
           <!-- 1. 最上部ヘッダー -->
           <div class="official-portal-header">
             <div class="portal-header-top">
@@ -1590,72 +1593,76 @@
               <a href="javascript:void(0);" class="sublink-item" onclick="openManabaSubmissions()">📄 提出記録</a>
             </div>
 
-            <!-- コースメインコンテンツ（2カラム構成：左72% / 右28%） -->
+            <!-- コースメインコンテンツ（公式iPad完全準拠：上段2分割 [左: コースニュース / 右: スレッド] ＋ 下段全幅 [コンテンツ]） -->
             <div class="official-course-main-body" id="course-top-main-columns">
-              <div class="course-top-layout-columns">
+              
+              <!-- 上段: 左右2分割グリッド -->
+              <div class="course-top-upper-grid">
                 
-                <!-- [左カラム 72%] コースニュース & コンテンツ（更新順） -->
-                <div class="course-top-left-col">
-                  
-                  <!-- 1. コースニュース ブロック -->
-                  <div class="course-card-box">
-                    <div class="course-card-box-header">
-                      <div class="card-header-title">
-                        <span class="header-icon-dots">∴</span>
-                        <h3>コースニュース</h3>
-                      </div>
-                    </div>
-                    <div class="course-card-box-body">
-                      <table class="course-news-official-table" id="manaba-course-news-table">
-                        <!-- JSで動的生成 -->
-                      </table>
-                      <div class="card-box-footer-link">
-                        <a href="javascript:void(0);">➔ コースニュース一覧</a>
-                      </div>
+                <!-- [上段左] コースニュース ブロック -->
+                <div class="course-card-box">
+                  <div class="course-card-box-header">
+                    <div class="card-header-title">
+                      <span class="header-icon-dots">∴</span>
+                      <h3>コースニュース</h3>
                     </div>
                   </div>
-
-                  <!-- 2. コンテンツ（更新順） ブロック -->
-                  <div class="course-card-box" style="margin-top:14px;">
-                    <div class="course-card-box-header flex-between">
-                      <div class="card-header-title">
-                        <span class="header-icon-book">📖</span>
-                        <h3>コースコンテンツ（全13回 講義資料）</h3>
-                      </div>
-                      <a href="javascript:void(0);" onclick="openManabaCoursePageView(0)" class="view-all-materials-link">➔ 全資料を開く</a>
-                    </div>
-                    <div class="course-card-box-body">
-                      <div class="course-contents-card-grid" id="manaba-materials-card-grid">
-                        <!-- JSで動的生成（授業資料カードをタップでPDFプレビュー！） -->
-                      </div>
-                      <div class="card-box-footer-link">
-                        <a href="javascript:void(0);" onclick="openManabaCoursePageView(0)">➔ コンテンツ一覧（目次ビュー）</a>
-                      </div>
+                  <div class="course-card-box-body">
+                    <table class="course-news-official-table" id="manaba-course-news-table">
+                      <!-- JSで動的生成 -->
+                    </table>
+                    <div class="card-box-footer-link" id="manaba-course-news-footer-link">
+                      <a href="javascript:void(0);">❯ コースニュース一覧</a>
                     </div>
                   </div>
+                </div>
 
-                  <!-- 3. スレッド（更新順） ブロック -->
-                  <div class="course-card-box" style="margin-top:14px;">
-                    <div class="course-card-box-header flex-between">
-                      <div class="card-header-title">
-                        <span class="header-icon-chat">💬</span>
-                        <h3>スレッド（ディスカッション）</h3>
-                      </div>
-                      <button class="btn-create-thread" onclick="showPushNotification('掲示板', '学生による新規スレッド作成は現在制限されています。', 'lock')">スレッド作成</button>
+                <!-- [上段右] スレッド（更新順） ブロック -->
+                <div class="course-card-box">
+                  <div class="course-card-box-header flex-between">
+                    <div class="card-header-title">
+                      <span class="header-icon-chat">💬</span>
+                      <h3>スレッド（更新順）</h3>
                     </div>
-                    <div class="course-card-box-body">
-                      <div class="thread-empty-state">
-                        現在ディスカッション中のスレッドはありません。
-                      </div>
-                      <div class="card-box-footer-link">
-                        <a href="javascript:void(0);">➔ スレッド一覧</a>
-                      </div>
+                    <button class="btn-create-thread" onclick="showPushNotification('掲示板', '学生による新規スレッド作成は現在制限されています。', 'lock')">スレッド作成</button>
+                  </div>
+                  <div class="course-card-box-body">
+                    <div class="thread-empty-state" style="padding:16px 20px; color:#555; font-size:13px;">
+                      スレッドはありません。
+                    </div>
+                    <div class="card-box-footer-link" style="display:flex; justify-content:flex-end;">
+                      <a href="javascript:void(0);">❯ スレッド一覧</a>
                     </div>
                   </div>
-
                 </div>
 
               </div>
+
+              <!-- 下段: 全幅 コンテンツ（更新順） ブロック -->
+              <div class="course-card-box" style="margin-top:14px;">
+                <div class="course-card-box-header">
+                  <div class="card-header-title">
+                    <span class="header-icon-book">📖</span>
+                    <h3>コンテンツ（更新順）</h3>
+                  </div>
+                </div>
+                <div class="course-card-box-body">
+                  <div class="course-contents-card-grid" id="manaba-materials-card-grid">
+                    <!-- JSで動的生成（授業資料・動画カードまたは「コンテンツはありません。」） -->
+                  </div>
+                  <div class="card-box-footer-link" id="manaba-course-contents-footer-link" style="display:flex; justify-content:flex-end;">
+                    <a href="javascript:void(0);" onclick="openManabaCoursePageView(0)">❯ コンテンツ一覧</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右下メモボタン（公式iPad完全一致） -->
+              <div class="course-bottom-memo-btn-row">
+                <button class="manaba-bottom-memo-btn" onclick="showPushNotification('メモ', 'メモ機能を開きます', 'edit')">
+                  <span>📝 メモ</span>
+                </button>
+              </div>
+
             </div>
 
             <!-- 📰 コースニュース詳細本文画面（千葉工大 公式完全再現） -->
@@ -2415,7 +2422,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.73.0"></script>
-  <script src="app.js?v=2.73.0"></script>
+  <script src="data.js?v=2.74.0"></script>
+  <script src="app.js?v=2.74.0"></script>
 </body>
 </html>
