@@ -1092,6 +1092,136 @@
       color: #64748b;
     }
 
+    /* 🛡️ オリジナル安全確認ポップアップモーダル */
+    .custom-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .custom-modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .custom-modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border: 1.5px solid var(--border-color);
+      overflow: hidden;
+      transform: scale(0.95) translateY(10px);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .custom-modal-backdrop.open .custom-modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .custom-modal-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .custom-modal-icon-wrap {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .custom-modal-icon-wrap.type-info { background: #e0f2fe; color: #0284c7; }
+    .custom-modal-icon-wrap.type-warning { background: #fef3c7; color: #d97706; }
+    .custom-modal-icon-wrap.type-danger { background: #fee2e2; color: #dc2626; }
+
+    .custom-modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+    .custom-modal-subtitle {
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+    .custom-modal-body {
+      padding: 18px 20px;
+    }
+
+    .custom-modal-message-box {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .custom-modal-actions {
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-btn-cancel {
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .modal-btn-cancel:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .modal-btn-confirm {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .modal-btn-confirm.type-info { background: #0284c7; }
+    .modal-btn-confirm.type-info:hover { background: #0369a1; }
+    .modal-btn-confirm.type-warning { background: #d97706; }
+    .modal-btn-confirm.type-warning:hover { background: #b45309; }
+    .modal-btn-confirm.type-danger { background: #dc2626; }
+    .modal-btn-confirm.type-danger:hover { background: #b91c1c; }
+
     /* タブペイン制御 */
     .admin-tab-pane {
       display: none;
@@ -1509,6 +1639,34 @@
   <!-- ⚙️ タブ4: システム設定・転換 (項目5で実装) -->
   <div class="admin-tab-pane" id="pane-system"></div>
 
+  <!-- 🛡️ オリジナル安全確認ポップアップモーダル（ブラウザ標準confirmの完全置換） -->
+  <div id="admin-confirm-modal" class="custom-modal-backdrop">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div class="custom-modal-header">
+        <div class="custom-modal-icon-wrap type-info" id="custom-modal-icon-wrap">
+          <i data-lucide="help-circle" id="custom-modal-icon" style="width:24px; height:24px;"></i>
+        </div>
+        <div>
+          <div class="custom-modal-title" id="custom-modal-title">確認</div>
+          <div class="custom-modal-subtitle" id="custom-modal-subtitle">操作を実行しますか？</div>
+        </div>
+      </div>
+      <div class="custom-modal-body">
+        <div class="custom-modal-message-box" id="custom-modal-message">
+          処理を続行します。よろしいですか？
+        </div>
+      </div>
+      <div class="custom-modal-actions">
+        <button class="modal-btn-cancel" id="custom-modal-btn-cancel" onclick="closeAdminCustomModal(false)">
+          キャンセル
+        </button>
+        <button class="modal-btn-confirm type-info" id="custom-modal-btn-confirm" onclick="closeAdminCustomModal(true)">
+          実行する
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 📱 端末詳細・進捗インサイトモーダル -->
   <div class="device-modal-overlay" id="device-modal-overlay" onclick="closeDeviceModal()">
     <div class="device-modal-card" onclick="event.stopPropagation()">
@@ -1576,6 +1734,58 @@
     let latestDevicesData = [];
     let monitorFilter = 'all';
 
+    // ===== 🛡️ オリジナル安全確認ポップアップモーダル（Promise非同期制御） =====
+    let customModalResolve = null;
+
+    function showCustomConfirm({ title = "確認", subtitle = "操作を実行しますか？", message = "", confirmText = "実行する", cancelText = "キャンセル", type = "info", icon = "help-circle" }) {
+      return new Promise((resolve) => {
+        customModalResolve = resolve;
+
+        const modal = document.getElementById('admin-confirm-modal');
+        const titleEl = document.getElementById('custom-modal-title');
+        const subEl = document.getElementById('custom-modal-subtitle');
+        const msgEl = document.getElementById('custom-modal-message');
+        const iconWrapEl = document.getElementById('custom-modal-icon-wrap');
+        const iconEl = document.getElementById('custom-modal-icon');
+        const btnCancel = document.getElementById('custom-modal-btn-cancel');
+        const btnConfirm = document.getElementById('custom-modal-btn-confirm');
+
+        if (!modal) {
+          // 万一モーダルDOMがない場合のフォールバック
+          resolve(window.confirm(`${title}\n\n${message}`));
+          return;
+        }
+
+        if (titleEl) titleEl.innerText = title;
+        if (subEl) subEl.innerText = subtitle;
+        if (msgEl) msgEl.innerText = message;
+        if (btnCancel) btnCancel.innerText = cancelText;
+        if (btnConfirm) {
+          btnConfirm.innerText = confirmText;
+          btnConfirm.className = `modal-btn-confirm type-${type}`;
+        }
+        if (iconWrapEl) {
+          iconWrapEl.className = `custom-modal-icon-wrap type-${type}`;
+        }
+        if (iconEl) {
+          iconEl.setAttribute('data-lucide', icon);
+        }
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        modal.classList.add('open');
+      });
+    }
+
+    function closeAdminCustomModal(result) {
+      const modal = document.getElementById('admin-confirm-modal');
+      if (modal) modal.classList.remove('open');
+      if (customModalResolve) {
+        customModalResolve(result);
+        customModalResolve = null;
+      }
+    }
+
     // ===== ⏱️ 公演タイムライン ＆ 周回タイマー管理 =====
     let adminTimerState = {
       isRunning: false,
@@ -1619,13 +1829,21 @@
       } catch(e) {}
     }
 
-    function toggleAdminTimer() {
+    async function toggleAdminTimer() {
       if (adminTimerState.isRunning) {
         pauseAdminTimer();
       } else {
         // もしまだ一度も開始していない（待機中またはステップ1）場合
         if (!adminTimerState.totalStartTime && adminTimerState.totalElapsedBeforePause === 0) {
-          const ok = confirm("🚀【公演ゲームスタート】\n全iPad端末を一括初期化してロック解除し、タイマーを 00:00 からリセット開始（1周目スタート）しますか？");
+          const ok = await showCustomConfirm({
+            title: "🚀 公演ゲームスタート",
+            subtitle: "全iPad端末の初期化・計時スタート",
+            message: "全iPad端末を一括初期化してロック解除し、タイマーを 00:00 からリセット開始（1周目スタート）します。\n\n全端末が作中世界線時刻（09:04:00）に同期して動き出します。よろしいですか？",
+            confirmText: "🚀 ゲームスタート",
+            cancelText: "キャンセル",
+            type: "info",
+            icon: "play-circle"
+          });
           if (!ok) return;
           
           // 🔄 タイマーリセット ＆ 1周目初期化 ＆ 進行ステップ02へ移行
@@ -1997,42 +2215,75 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    // ▶ NEXTボタンクリック：次のシーンへ安全に進行（ポップアップ確認付き）
-    function advanceToNextScene() {
+    // ▶ NEXTボタンクリック：次のシーンへ安全に進行（オリジナル確認モーダル付き）
+    async function advanceToNextScene() {
       if (currentFlowStep >= 5) return;
       const nextStep = currentFlowStep + 1;
       const config = FLOW_STEP_CONFIG[nextStep];
       if (!config) return;
 
-      let msg = `🚀【シーン進行確認】\n全稼働iPadを次のシーン「0${nextStep}. ${config.name}」へ進行しますか？`;
+      let title = "🚀 シーン進行確認";
+      let subtitle = `次のステップへ全iPadを一斉移行します`;
+      let msg = `全稼働iPadを次のシーン「0${nextStep}. ${config.name}」へ進行します。\n\n【内容】${config.desc}\n\nよろしいですか？`;
+      let btnText = "▶ シーン進行する";
+      let type = "info";
+      let icon = "fast-forward";
+
       if (nextStep === 5) {
-        msg = `🏁【ゲーム終了確認】\nタイマーを停止し、全iPadを「05. ゲーム終了（ログ集計・アンケート画面）」へ移行しますか？`;
+        title = "🏁 ゲーム終了確認";
+        subtitle = "タイマー停止 ＆ ログ集計・アンケート画面移行";
+        msg = "タイマー計測を停止し、全iPadを「05. ゲーム終了（ログ集計・アンケート画面）」へ移行します。\n\n公演を終了してよろしいですか？";
+        btnText = "🏁 ゲーム終了・集計";
+        type = "danger";
+        icon = "flag";
       } else if (nextStep === 3 || nextStep === 4) {
-        msg = `🌀【タイムループ突入確認】\n全iPadを「0${nextStep}. ${config.name}」へ移行しますか？\n（作中時刻が09:04に巻き戻り、新周回のコンテンツが解禁されます）`;
+        title = "🌀 タイムループ突入確認";
+        subtitle = `${config.loop}周目突入・作中時刻09:04巻き戻し`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※作中世界線時刻が【09:04:00】に巻き戻り、前周回のラップタイムが確定し、新周回コンテンツが全端末で解禁されます。\n\n進行してよろしいですか？`;
+        btnText = `🌀 ${config.loop}周目へ突入`;
+        type = "warning";
+        icon = "repeat";
       }
 
-      const ok = confirm(msg);
+      const ok = await showCustomConfirm({
+        title: title,
+        subtitle: subtitle,
+        message: msg,
+        confirmText: btnText,
+        cancelText: "キャンセル",
+        type: type,
+        icon: icon
+      });
       if (!ok) return;
 
       executeFlowStep(nextStep);
     }
 
-    // ◀ ロールバックボタンクリック：1つ前のシーンへ戻す（ポップアップ確認付き）
-    function rollbackToPreviousScene() {
+    // ◀ ロールバックボタンクリック：1つ前のシーンへ戻す（オリジナル確認モーダル付き）
+    async function rollbackToPreviousScene() {
       if (currentFlowStep <= 1) {
         showToast("⚠️ 既に最初のシーン（01. 待機中）です");
         return;
       }
       const prevStep = currentFlowStep - 1;
       const config = FLOW_STEP_CONFIG[prevStep];
-      const ok = confirm(`◀【シーン巻き戻し確認】\n全iPadを1つ前のシーン「0${prevStep}. ${config?.name}」の状態へ戻しますか？\n（周回やタイマーも安全に巻き戻されます）`);
+
+      const ok = await showCustomConfirm({
+        title: "◀ シーン巻き戻し確認（ロールバック）",
+        subtitle: "1つ前のシーン状態へ全iPadを安全に戻します",
+        message: `全iPadを1つ前のシーン「0${prevStep}. ${config?.name}」の状態へ戻します。\n\n※周回番号やタイマーの計測状態もそのシーン時点のものに安全に同期されます。巻き戻してよろしいですか？`,
+        confirmText: "◀ 1つ前のシーンへ戻す",
+        cancelText: "キャンセル",
+        type: "warning",
+        icon: "rotate-ccw"
+      });
       if (!ok) return;
 
       executeFlowStep(prevStep);
     }
 
-    // ステップカードクリック時のハンドラ（過去・未来のクリックもポップアップで安全確認）
-    function handleStepCardClick(stepNum) {
+    // ステップカードクリック時のハンドラ（過去・未来のクリックもオリジナルモーダルで安全確認）
+    async function handleStepCardClick(stepNum) {
       if (stepNum === currentFlowStep) {
         showToast(`ℹ️ 現在「0${stepNum}. ${FLOW_STEP_CONFIG[stepNum]?.name}」が進行中です`);
         return;
@@ -2043,7 +2294,15 @@
 
       // 1. 過去のステップ（ロールバック）を押した場合
       if (stepNum < currentFlowStep) {
-        const ok = confirm(`◀【シーン巻き戻し確認】\n過去のシーン「0${stepNum}. ${config.name}」へ全iPadを安全に戻しますか？\n（周回やタイマーもそのシーンの状態に再設定されます）`);
+        const ok = await showCustomConfirm({
+          title: "◀ シーン巻き戻し確認",
+          subtitle: `過去のシーン「0${stepNum}. ${config.name}」へ戻します`,
+          message: `全iPadを過去のシーン「0${stepNum}. ${config.name}」の状態へ戻します。\n\n※周回やタイマーもそのシーンの状態に再設定されます。よろしいですか？`,
+          confirmText: `◀ 0${stepNum}へ巻き戻す`,
+          cancelText: "キャンセル",
+          type: "warning",
+          icon: "rotate-ccw"
+        });
         if (!ok) return;
         executeFlowStep(stepNum);
         return;
@@ -2062,7 +2321,15 @@
       }
 
       // 4. 手動アンロック時でジャンプする場合
-      const ok = confirm(`⚠️【任意シーン選択確認】\n「0${stepNum}. ${config.name}」へ直接ジャンプしますか？`);
+      const ok = await showCustomConfirm({
+        title: "⚠️ 任意シーンへのジャンプ確認",
+        subtitle: `「0${stepNum}. ${config.name}」へ直接切り替えます`,
+        message: `全iPadを直接「0${stepNum}. ${config.name}」へ切り替えます。\n\nシーンの順送りをスキップして実行します。よろしいですか？`,
+        confirmText: `⚡ 0${stepNum}へジャンプ`,
+        cancelText: "キャンセル",
+        type: "warning",
+        icon: "alert-triangle"
+      });
       if (!ok) return;
       executeFlowStep(stepNum);
     }
@@ -2732,10 +2999,18 @@
       if (input) input.value = "";
     }
 
-    // 🔄 選択端末の個別遠隔リロード
-    function sendRemoteDeviceReload(deviceId) {
+    // 🔄 選択端末の個別遠隔リロード（オリジナル確認モーダル付き）
+    async function sendRemoteDeviceReload(deviceId) {
       if (!deviceId) return;
-      const ok = confirm(`🔄【遠隔リロード確認】\n「${deviceId}」の画面を強制リロードしますか？\n（入力データは保持されます）`);
+      const ok = await showCustomConfirm({
+        title: `🔄 個別遠隔リロード確認`,
+        subtitle: `${deviceId} の画面を強制再読み込みします`,
+        message: `端末「${deviceId}」のブラウザ画面を強制リロードします。\n\n※通信のスタックや描画不具合を解消します（入力データは保持されます）。実行してよろしいですか？`,
+        confirmText: "🔄 遠隔リロード実行",
+        cancelText: "キャンセル",
+        type: "warning",
+        icon: "refresh-cw"
+      });
       if (!ok) return;
 
       sendCloudAdminCommand({
@@ -2749,12 +3024,30 @@
       }, `🔄 【${deviceId}】へ遠隔リロード指示を送信しました！`);
     }
 
-    // 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログ消去）
-    function executeGlobalMasterReset() {
-      const ok1 = confirm("🚨【本番前・後 一括初期化の確認 (1/2)】\n全iPad端末のメモ・入力・進行状況・ログイン情報を完全消去し、1周目・09:04待機画面へ初期化しますか？");
+    // 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログ消去 / 2段階オリジナルモーダルガード）
+    async function executeGlobalMasterReset() {
+      // 1段階目
+      const ok1 = await showCustomConfirm({
+        title: "🚨 全iPad一括完全初期化 (1/2)",
+        subtitle: "公演前・公演後の全端末リセット",
+        message: "全iPad端末のメモ・入力・進行状況・ログイン情報を完全消去し、1周目・09:04待機画面へ初期化します。\n\n次の公演へ向けたセットアップを実行しますか？",
+        confirmText: "次へ進む（確認へ）",
+        cancelText: "キャンセル",
+        type: "danger",
+        icon: "trash-2"
+      });
       if (!ok1) return;
 
-      const ok2 = confirm("⚠️【最終確認 (2/2)】\nこの操作は取り消せません。本当に全iPadを一斉クリアしますか？");
+      // 2段階目（最終確認）
+      const ok2 = await showCustomConfirm({
+        title: "⚠️ 最終確認：本当に全データを消去しますか？ (2/2)",
+        subtitle: "この操作は取り消せません",
+        message: "【警告】全30台のiPadのローカルストレージおよびクラウド上の全ログがクリアされます。\n\n本当に全iPadを一斉完全初期化しますか？",
+        confirmText: "🧹 全データを消去して初期化",
+        cancelText: "中止する",
+        type: "danger",
+        icon: "alert-triangle"
+      });
       if (!ok2) return;
 
       // 1. タイマー初期化
@@ -2774,8 +3067,7 @@
       showToast("🧹 全iPad ＆ クラウドデータを一括完全初期化しました！（09:04待機画面へセット完了）");
     }
 
-      // DOM反映
-      const titleEl = document.getElementById('dev-modal-title');
+    function openDeviceDetailModal(deviceId) {
       const loopBadge = document.getElementById('dev-modal-loop-badge');
       const manabaEl = document.getElementById('dev-modal-manaba');
       const hintsEl = document.getElementById('dev-modal-hints');
