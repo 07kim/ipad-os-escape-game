@@ -4043,20 +4043,34 @@ function autofillManabaLogin(id, pass, name) {
 }
 
 function handleManabaLogin() {
-  const id = document.getElementById('manaba-id-input').value.trim();
-  const pass = document.getElementById('manaba-pass-input').value.trim();
-  const user = window.GAME_DATABASE.manaba.users[id];
+  const inputId = (document.getElementById('manaba-id-input').value || '').trim();
+  const inputPass = (document.getElementById('manaba-pass-input').value || '').trim();
+  const allUsers = (window.GAME_DATABASE && window.GAME_DATABASE.manaba && window.GAME_DATABASE.manaba.users) || {};
 
-  if (user && user.pass === pass) {
-    gameState.manabaUser = id;
+  // 大文字・小文字を区別せずにユーザーとパスワードを照合
+  let matchedUser = null;
+  let matchedUserId = null;
+
+  for (const [uid, udata] of Object.entries(allUsers)) {
+    if (uid.toLowerCase() === inputId.toLowerCase()) {
+      if (udata.pass && udata.pass.toLowerCase() === inputPass.toLowerCase()) {
+        matchedUser = udata;
+        matchedUserId = uid;
+        break;
+      }
+    }
+  }
+
+  if (matchedUser) {
+    gameState.manabaUser = matchedUserId;
     saveStateToStorage();
     playSystemSound("success");
     initManabaApp();
-    logWriteToGAS("MANABA_LOGIN_SUCCESS", `manabaログイン成功: ${user.name} (${id})`);
+    logWriteToGAS("MANABA_LOGIN_SUCCESS", `manabaログイン成功: ${matchedUser.name} (${matchedUserId})`);
   } else {
     playSystemSound("error");
     showIpadModal("認証エラー", "ユーザーIDまたはパスワードが正しくありません。\n学生証裏面の初期パスワード、またはPC設定を確認してください。");
-    logWriteToGAS("MANABA_LOGIN_FAILED", `ログイン失敗試行: ${id}`);
+    logWriteToGAS("MANABA_LOGIN_FAILED", `ログイン失敗試行: ${inputId}`);
   }
 }
 
