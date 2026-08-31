@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.76.0">
+  <link rel="stylesheet" href="style.css?v=2.77.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -1931,11 +1931,6 @@
               </div>
             </div>
 
-            <!-- 右下のメモアイコン -->
-            <div class="course-bottom-memo-btn-row">
-              <button class="btn-course-memo">📝 メモ</button>
-            </div>
-
           </div>
 
           <!-- PDF / 講義資料ビューアー -->
@@ -1949,13 +1944,21 @@
             </div>
           </div>
 
-          <!-- 5. 公式フッター -->
+          <!-- 5. 公式フッター（本家iPad完全一致） -->
           <div class="portal-official-footer">
-            <div class="portal-footer-links">
-              <a href="#" class="footer-link">マニュアル</a>
-              <a href="#" class="footer-link">パーソナルデータとライセンス</a>
+            <div class="portal-footer-left">
+              <div class="footer-ver-line">manaba 2.979</div>
+              <div class="footer-copy-line">Copyright © Asahi Net, Inc. All Rights Reserved.</div>
             </div>
-            <div class="portal-footer-ver">manaba 2.979</div>
+            <div class="portal-footer-center">
+              <a href="javascript:void(0);" class="footer-link-item">📥 マニュアル</a>
+              <a href="javascript:void(0);" class="footer-link-item">👤 パーソナルデータとライセンス</a>
+            </div>
+            <div class="portal-footer-right">
+              <span class="powered-text">Powered by</span>
+              <span class="powered-brand">manaba</span>
+              <div class="powered-leaf-icon">🍃</div>
+            </div>
           </div>
 
         </div>
@@ -2418,7 +2421,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.76.0"></script>
-  <script src="app.js?v=2.76.0"></script>
+  <script src="data.js?v=2.77.0"></script>
+  <script src="app.js?v=2.77.0"></script>
 </body>
 </html>
