@@ -2258,7 +2258,7 @@
                 <div style="font-size:11px; color:#94a3b8; font-weight:700;">現在のクラウド接続状態</div>
                 <div id="admin-status-text" style="font-size:13px; color:#334155; font-weight:700;">⏳ 未確認</div>
               </div>
-              <button class="nav-btn" onclick="testGasPing()" style="padding:6px 14px; font-size:12px; font-weight:700; background:#fff; border:1px solid #cbd5e1;">
+              <button class="nav-btn" onclick="testGasPing(true)" style="padding:6px 14px; font-size:12px; font-weight:700; background:#fff; border:1px solid #cbd5e1;">
                 <i data-lucide="wifi" style="width:13px; height:13px;"></i> 疎通テスト
               </button>
             </div>
@@ -3531,14 +3531,17 @@
     }
 
     // --- 疎通診断 (ハイブリッド互換: ping または get_data で判定) ---
-    function testGasPing() {
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+    function testGasPing(isManual = false) {
+      const gasUrl = (localStorage.getItem('gas_url') || '').trim()
+        || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
+        || 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
       const indDot = document.getElementById('admin-status-dot');
       const indText = document.getElementById('admin-status-text');
 
       if (!gasUrl) {
         if (indDot) indDot.style.background = "#ef4444";
         if (indText) indText.innerText = "🔴 GAS URL未設定";
+        if (isManual) showToast("⚠️ GAS URLが未設定です", true);
         return;
       }
 
@@ -3546,8 +3549,7 @@
       if (indText) indText.innerText = "🟡 通信テスト中...";
 
       const start = Date.now();
-      // まずは軽量な get_data (全バージョン共通) で疎通確認
-      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=ping` : `${gasUrl}?action=ping`;
 
       fetch(url)
         .then(res => {
@@ -3556,10 +3558,10 @@
         })
         .then(json => {
           const lat = Date.now() - start;
-          if (json && (json.success || json.data)) {
+          if (json && (json.success || json.data || json.message === "pong")) {
             if (indDot) indDot.style.background = "#22c55e";
             if (indText) indText.innerHTML = `<span style="color:#166534;">🟢 クラウド連携中 (応答: ${lat}ms)</span>`;
-            showToast(`疎通確認成功！ 応答時間: ${lat}ms 🟢`);
+            if (isManual) showToast(`疎通確認成功！ 応答時間: ${lat}ms 🟢`);
           } else {
             throw new Error(json.error || "無効なレスポンス");
           }
@@ -3567,7 +3569,7 @@
         .catch(err => {
           if (indDot) indDot.style.background = "#ef4444";
           if (indText) indText.innerHTML = `<span style="color:#991b1b;">🔴 通信エラー (${err.message || "接続失敗"})</span>`;
-          showToast("⚠️ 通信エラーが発生しました。GASデプロイ設定をご確認ください。");
+          if (isManual) showToast("⚠️ 通信エラーが発生しました。GASデプロイ設定をご確認ください。");
         });
     }
 
@@ -3578,54 +3580,10 @@
         window.GAME_DATABASE.system.gasUrl = url;
       }
       showToast("GAS URLを保存しました");
-      testGasPing();
+      testGasPing(true);
       refreshMonitoringDashboard();
     }
 
-    // --- 公演前 一括マスターデータリセット ---
-    function executeGlobalMasterReset() {
-      if (!confirm("⚠️ 【確認】全30台のiPadを一斉に初期状態（1周目・ロック画面）へ戻し、スプレッドシートのログを完全クリアしますか？\n\n※この操作は取り消せません。公演開始前の実行を推奨します。")) {
-        return;
-      }
-
-      sendCloudAdminCommand({
-        id: "RESET_" + Date.now(),
-        type: "master_reset",
-        name: "公演前マスターリセット",
-        params: {
-          loop: 1,
-          resetActors: true,
-          timestamp: Date.now()
-        }
-      }, "🚨 全30台 ＆ 演者ツールの一括マスターリセットを実行しました！");
-
-      // 演者ツール用リセットフラグをLocalStorageに記録
-      localStorage.setItem('admin_reset_trigger_time', Date.now());
-      localStorage.setItem('game_loop', '1');
-
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
-      if (gasUrl) {
-        // GAS側シートも全初期化 ＆ 演者トリガークリア
-        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
-        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_actor_triggers` : `${gasUrl}?action=reset_actor_triggers`).catch(() => {});
-      }
-
-      // 演者ツールへも周回リセットシグナルを送信
-      if (typeof BroadcastChannel !== 'undefined') {
-        try {
-          const bc = new BroadcastChannel('escape_game_channel');
-          bc.postMessage({ type: 'master_reset', payload: { loop: 1, resetActors: true } });
-          bc.postMessage({ type: 'reset_actor_triggers', payload: { loop: 1 } });
-        } catch(e) {}
-      }
-
-      // ローカルモニタリングデータも初期化
-      latestDevicesData = [];
-      renderMonitoringCards();
-
-      // ⏱️ 公演タイマーも初期化
-      resetAdminTimer();
-    }
     // ===== 📊 端末モニタリング（動的アクセス一覧・ソート・2ペイン詳細） =====
     let monitorSortKey = 'id'; // 'id' | 'score' | 'time'
     let monitorSortOrder = 'desc'; // 'desc' | 'asc'
