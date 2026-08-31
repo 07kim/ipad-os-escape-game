@@ -2322,7 +2322,7 @@
   </div>
 
 
-  <!-- ✏️ 管理番号 ＆ チーム名変更モーダル -->
+  <!-- ✏️ 管理番号 ＆ 代名詞変更モーダル -->
   <div id="admin-edit-name-modal" class="custom-modal-backdrop">
     <div class="custom-modal-card" style="max-width: 480px;" onclick="event.stopPropagation()">
       <div class="custom-modal-header">
@@ -2330,18 +2330,18 @@
           <i data-lucide="tablet" style="width:24px; height:24px; color:var(--primary);"></i>
         </div>
         <div>
-          <div class="custom-modal-title">管理番号 ＆ チーム名の変更</div>
+          <div class="custom-modal-title">管理番号 ＆ 代名詞の変更</div>
           <div class="custom-modal-subtitle" id="edit-modal-target-dev">対象端末: iPad-01</div>
         </div>
       </div>
       <div class="custom-modal-body" style="padding: 16px 20px;">
         
-        <!-- ① 管理番号（端末ID）設定 -->
+        <!-- ① 管理番号（1〜30）設定 -->
         <div class="form-group" style="margin-bottom:12px;">
           <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; display:block;">
-            📱 管理番号 (端末ID):
+            📱 管理番号 (1〜30):
           </label>
-          <input type="text" id="edit-input-device-id" placeholder="例: iPad-01" style="font-weight:800; font-family:monospace; font-size:14px; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; width:100%; box-sizing:border-box;">
+          <input type="text" id="edit-input-device-id" placeholder="例: iPad-01" style="font-weight:800; font-family:'Orbitron', monospace; font-size:15px; padding:8px 12px; border:2px solid #0284c7; border-radius:8px; width:100%; box-sizing:border-box; background:#f0f9ff; color:#0369a1;">
         </div>
 
         <!-- 空き番号案内バナー -->
@@ -2355,32 +2355,22 @@
           </div>
         </div>
 
-        <!-- クイック番号選択グリッド (iPad-01〜iPad-30) -->
+        <!-- クイック番号選択グリッド (1〜30) -->
         <div style="margin-bottom:16px;">
           <label style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px; display:block;">
-            クイック番号選択 (iPad 01〜30):
+            クイック番号選択 (1〜30):
           </label>
           <div id="edit-ipad-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:140px; overflow-y:auto; padding-right:2px;">
             <!-- JSで自動生成（使用中はグレー・空きは選択可能） -->
           </div>
         </div>
 
-        <!-- ② チーム名設定 -->
+        <!-- ② 代名詞（チーム名・プレイヤー名など）設定 -->
         <div class="form-group" style="margin-bottom:12px;">
           <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; display:block;">
-            👥 所属チーム名:
+            🏷️ 代名詞 (チーム名・プレイヤー名など):
           </label>
-          <input type="text" id="edit-input-team-name" placeholder="例: チームA, 1班" style="font-weight:700; font-size:13px; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; width:100%; box-sizing:border-box; margin-bottom:6px;">
-          
-          <!-- チーム名クイック候補ボタン -->
-          <div style="display:flex; gap:4px; flex-wrap:wrap;">
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームA')" style="padding:3px 8px; font-size:11px;">チームA</button>
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームB')" style="padding:3px 8px; font-size:11px;">チームB</button>
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームC')" style="padding:3px 8px; font-size:11px;">チームC</button>
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームD')" style="padding:3px 8px; font-size:11px;">チームD</button>
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームE')" style="padding:3px 8px; font-size:11px;">チームE</button>
-            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームF')" style="padding:3px 8px; font-size:11px;">チームF</button>
-          </div>
+          <input type="text" id="edit-input-team-name" placeholder="例: チームA、連城 観、1班 など" style="font-weight:700; font-size:13px; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; width:100%; box-sizing:border-box;">
         </div>
 
       </div>

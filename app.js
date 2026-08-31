@@ -1752,34 +1752,28 @@ function showStaffModal() {
   if (!modal) return;
   modal.style.display = 'flex';
   
-  // 1. 端末ID
+  // 1. 管理番号 (1〜30)
   const inputEl = document.getElementById('staff-team-id');
-  if (inputEl) inputEl.value = gameState.teamId || 'iPad-01';
+  const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
+  if (inputEl) inputEl.value = currentDevId;
 
-  // 2. ログインユーザー名
+  // 2. 管理番号の代名詞（チーム名・プレイヤー名など）
   const userEl = document.getElementById('staff-user-name');
-  if (userEl) userEl.value = gameState.manabaUser || '連城 観';
+  const currentAlias = localStorage.getItem('game_team_name') || (window.GAME_DATABASE?.system?.teamId) || gameState.manabaUser || 'チームA';
+  if (userEl) userEl.value = currentAlias;
 
-  // 3. GAS URL
-  const gasEl = document.getElementById('staff-gas-url-input');
-  if (gasEl) gasEl.value = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || '';
-
-  tempStaffLoop = parseInt(gameState.loop || 1, 10);
-  updateStaffLoopButtons();
-  testStaffGasPing();
-
-  // iPad 01〜30 のボタングリッドを生成
+  // 1〜30 のボタングリッドを生成
   const grid = document.getElementById('staff-ipad-grid');
   if (grid) {
     grid.innerHTML = "";
     for (let i = 1; i <= 30; i++) {
       const padNum = String(i).padStart(2, '0');
       const padName = `iPad-${padNum}`;
-      const isSelected = (gameState.teamId === padName);
+      const isSelected = (currentDevId === padName || currentDevId === String(i) || currentDevId === padNum);
       grid.innerHTML += `
         <button type="button" class="btn-subtle staff-ipad-btn ${isSelected ? 'selected' : ''}" 
                 onclick="selectStaffIpad('${padName}')"
-                style="padding:6px 2px; font-size:11px; font-weight:700; ${isSelected ? 'background:var(--system-blue); color:#fff;' : ''}">
+                style="padding:8px 2px; font-size:12px; font-weight:800; border-radius:6px; ${isSelected ? 'background:#0284c7; color:#fff;' : 'background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd;'}">
           ${padNum}
         </button>
       `;
@@ -1791,86 +1785,17 @@ function selectStaffIpad(name) {
   const inputEl = document.getElementById('staff-team-id');
   if (inputEl) inputEl.value = name;
   document.querySelectorAll('.staff-ipad-btn').forEach(b => {
-    if (b.innerText.trim() === name.replace('iPad-', '')) {
-      b.style.background = 'var(--system-blue)';
+    const num = name.replace('iPad-', '');
+    if (b.innerText.trim() === num) {
+      b.style.background = '#0284c7';
       b.style.color = '#fff';
+      b.style.border = 'none';
     } else {
-      b.style.background = '';
-      b.style.color = '';
+      b.style.background = '#f0f9ff';
+      b.style.color = '#0369a1';
+      b.style.border = '1px solid #bae6fd';
     }
   });
-}
-
-function selectStaffCharacter(name) {
-  const userEl = document.getElementById('staff-user-name');
-  if (userEl) {
-    userEl.value = name;
-    userEl.focus();
-  }
-}
-
-function setStaffLoop(loopNum) {
-  tempStaffLoop = loopNum;
-  updateStaffLoopButtons();
-}
-
-function updateStaffLoopButtons() {
-  [1, 2, 3].forEach(l => {
-    const btn = document.getElementById(`staff-loop-btn-${l}`);
-    if (btn) {
-      if (tempStaffLoop === l) {
-        btn.style.background = 'var(--system-blue)';
-        btn.style.color = '#fff';
-        btn.style.fontWeight = '700';
-      } else {
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.fontWeight = 'normal';
-      }
-    }
-  });
-}
-
-function forceStaffScreenLock(isLock) {
-  const lockEl = document.getElementById('lock-screen');
-  if (lockEl) {
-    if (isLock) {
-      lockEl.classList.remove('hidden');
-      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
-      localStorage.setItem('fake_clock_set_time', String(Date.now()));
-      if (typeof updateAppUI === 'function') updateAppUI();
-      showIpadModal("🔒 待機ロック", "端末を09:04固定の待機ロック状態に移行しました。");
-    } else {
-      lockEl.classList.add('hidden');
-      showIpadModal("🔓 ロック解除", "ロック画面を強制解除し、ホーム画面を展開しました。");
-    }
-  }
-}
-
-function testStaffGasPing() {
-  const statusText = document.getElementById('staff-sync-status-text');
-  const gasUrl = (document.getElementById('staff-gas-url-input')?.value || localStorage.getItem('gas_url') || (window.GAME_DATABASE?.system?.gasUrl) || '').trim();
-
-  if (!statusText) return;
-
-  if (!gasUrl) {
-    statusText.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span> <span style="color:#ef4444;">GAS URL未設定</span>`;
-    return;
-  }
-
-  statusText.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; display:inline-block;"></span> <span>通信テスト中...</span>`;
-
-  const pingUrl = gasUrl.includes('?') ? `${gasUrl}&action=ping` : `${gasUrl}?action=ping`;
-  const t0 = performance.now();
-  fetch(pingUrl)
-    .then(r => r.json())
-    .then(data => {
-      const ms = Math.round(performance.now() - t0);
-      statusText.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span> <span style="color:#15803d;">🟢 クラウド接続正常 (${ms}ms)</span>`;
-    })
-    .catch(() => {
-      statusText.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span> <span style="color:#ef4444;">🔴 通信失敗 (URLを確認)</span>`;
-    });
 }
 
 function closeStaffModal() {
@@ -1881,43 +1806,37 @@ function closeStaffModal() {
 function saveStaffConfig() {
   const inputEl = document.getElementById('staff-team-id');
   const userEl = document.getElementById('staff-user-name');
-  const gasEl = document.getElementById('staff-gas-url-input');
 
-  const newTeamId = inputEl ? inputEl.value.trim() : 'iPad-01';
-  const newUserName = userEl ? userEl.value.trim() : '連城 観';
-  const newGasUrl = gasEl ? gasEl.value.trim() : '';
+  const newDevId = inputEl ? inputEl.value.trim() : 'iPad-01';
+  const newAlias = userEl ? userEl.value.trim() : 'チームA';
 
-  if (newTeamId) {
-    gameState.teamId = newTeamId;
-    localStorage.setItem('game_team_id', newTeamId);
+  if (newDevId) {
+    gameState.teamId = newDevId;
+    localStorage.setItem('game_team_id', newDevId);
+    localStorage.setItem('team_id', newDevId);
+
+    const sbTeam = document.getElementById('sb-team-id');
+    if (sbTeam) sbTeam.innerText = newDevId;
+    const settApple = document.getElementById('settings-apple-id');
+    if (settApple) settApple.innerText = newDevId;
+    const settIcon = document.getElementById('settings-avatar-icon');
+    if (settIcon) settIcon.innerText = newDevId;
   }
-  if (newUserName) {
-    gameState.manabaUser = newUserName;
-    localStorage.setItem('manaba_user', newUserName);
-  }
-  if (newGasUrl) {
-    localStorage.setItem('gas_url', newGasUrl);
+
+  if (newAlias) {
+    localStorage.setItem('game_team_name', newAlias);
+    localStorage.setItem('manaba_user', newAlias);
+    gameState.manabaUser = newAlias;
     if (window.GAME_DATABASE && window.GAME_DATABASE.system) {
-      window.GAME_DATABASE.system.gasUrl = newGasUrl;
+      window.GAME_DATABASE.system.teamId = newAlias;
     }
   }
 
-  gameState.loop = tempStaffLoop;
-  localStorage.setItem('game_loop', String(tempStaffLoop));
-  saveStateToStorage();
-  
-  const sbTeam = document.getElementById('sb-team-id');
-  if (sbTeam) sbTeam.innerText = newTeamId;
-  const settApple = document.getElementById('settings-apple-id');
-  if (settApple) settApple.innerText = newTeamId;
-  const settIcon = document.getElementById('settings-avatar-icon');
-  if (settIcon) settIcon.innerText = newTeamId;
+  if (typeof updateAppUI === 'function') updateAppUI();
+  if (typeof sendDeviceStatusHeartbeat === 'function') sendDeviceStatusHeartbeat();
 
-  logWriteToGAS("STAFF_CONFIG_SAVED", `端末名: ${newTeamId}, ユーザー: ${newUserName}, 周回: ${tempStaffLoop} に設定保存されました。`);
-  
   closeStaffModal();
-  updateAppUI();
-  showIpadModal("✅ 設定保存完了", `端末: ${newTeamId}\n参加者名: ${newUserName}\n周回: ${tempStaffLoop}周目\n設定を適用しました。`);
+  showIpadModal("✅ 設定完了", `管理番号: ${newDevId}\n代名詞: ${newAlias}\nとして保存しました。`);
 }
 
 function performMasterReset() {
