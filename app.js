@@ -169,7 +169,7 @@ window.addEventListener('DOMContentLoaded', () => {
             triggerLoopTransition(payload.loop);
           } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
             console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
-            performMasterReset();
+            executeInstantMasterReset();
           }
         };
         console.log('✅ BroadcastChannelリスナーを起動しました (escape_game_channel)');
@@ -489,25 +489,9 @@ function executeRemoteAdminCommand(cmd) {
   // ⑧ 公演終了後の一斉データ完全消去＆初期化（マスターリセット）
   if (type === 'master_reset' || p.action === 'master_reset' || cmd.action === 'master_reset') {
     const target = cmd.target || p.target || 'ALL';
-    const myTeam = gameState.teamId || 'iPad-01';
+    const myTeam = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
     if (target === 'ALL' || target === myTeam) {
-      console.log("🚨 運営より公演終了後一斉初期化を受信しました。全データを完全初期化します。");
-      const currentTeam = myTeam;
-      const gasUrl = localStorage.getItem('gas_url');
-      
-      // 端末識別子とGAS設定以外を完全消去 ＆ 09:04静止待機に設定
-      localStorage.clear();
-      localStorage.setItem('game_team_id', currentTeam);
-      localStorage.setItem('game_loop', '1');
-      localStorage.setItem('game_timer_running', 'false');
-      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
-      localStorage.setItem('fake_clock_set_time', String(Date.now()));
-      if (gasUrl) localStorage.setItem('gas_url', gasUrl);
-
-      playSystemSound("fanfare");
-      setTimeout(() => {
-        location.reload(true);
-      }, 600);
+      executeInstantMasterReset();
       return;
     }
   }
@@ -2058,6 +2042,28 @@ function openPairingStaffModal() {
 }
 
 
+// 🚨 全iPad ＆ データを一括完全初期化（メタアプリ・管理番号・名前・進行等すべてリセット）
+function executeInstantMasterReset() {
+  console.log("🚨 全iPad ＆ データを一括完全初期化を実行します。");
+  const gasUrl = localStorage.getItem('gas_url');
+  
+  // LocalStorageを完全クリア（メタアプリ、メモ帳、手書き、管理番号、名前、ログイン、進行状況、登録フラグ等すべて消去）
+  localStorage.clear();
+  
+  // 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:04待機, 登録: 未設定, 通信設定維持）
+  localStorage.setItem('game_loop', '1');
+  localStorage.setItem('game_timer_running', 'false');
+  localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+  localStorage.setItem('fake_clock_set_time', String(Date.now()));
+  localStorage.setItem('device_registered', '0');
+  if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+
+  try { playSystemSound("fanfare"); } catch(e) {}
+  setTimeout(() => {
+    location.reload(true);
+  }, 400);
+}
+
 function performMasterReset() {
   // ブラウザ標準confirmを排除し、安全な2段階リセットフロー
   const modal = document.createElement('div');
@@ -2071,7 +2077,7 @@ function performMasterReset() {
       </div>
       <h3 style="margin:0 0 8px 0; font-size:16px; font-weight:800; color:#b91c1c;">⚠️ 端末データ完全初期化</h3>
       <p style="font-size:12.5px; color:#475569; margin:0 0 18px 0; line-height:1.6;">
-        このiPad内のメモ・手書き・入力履歴・進行状況をすべて消去し、1周目の初期状態（ロック画面）に戻します。<br><br>
+        このiPad内のメタアプリ、メモ・手書き・入力履歴・管理番号・名前・進行状況をすべて消去し、1周目の初期状態（待機画面）に戻します。<br><br>
         <strong>本当に実行しますか？</strong>
       </p>
       <div style="display:flex; gap:10px;">
@@ -2088,26 +2094,16 @@ function performMasterReset() {
   };
 
   document.getElementById('staff-reset-exec-btn').onclick = () => {
-    const currentTeam = gameState.teamId || 'iPad-01';
-    const gasUrl = localStorage.getItem('gas_url');
-    localStorage.clear();
-    localStorage.setItem('game_team_id', currentTeam);
-    localStorage.setItem('game_loop', '1');
-    localStorage.setItem('game_timer_running', 'false');
-    localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
-    localStorage.setItem('fake_clock_set_time', String(Date.now()));
-    if (gasUrl) localStorage.setItem('gas_url', gasUrl);
-    
     modal.innerHTML = `
       <div class="modal-content" style="max-width:320px; text-align:center; padding:24px 20px;">
         <div style="font-size:32px; margin-bottom:10px;">🔄</div>
-        <h4 style="margin:0 0 6px 0;">初期化中...</h4>
-        <p style="font-size:12px; color:#64748b; margin:0;">画面を再読み込みしています</p>
+        <h4 style="margin:0 0 6px 0;">完全初期化中...</h4>
+        <p style="font-size:12px; color:#64748b; margin:0;">全データをクリアし再読み込みしています</p>
       </div>
     `;
     setTimeout(() => {
-      location.reload();
-    }, 500);
+      executeInstantMasterReset();
+    }, 200);
   };
 }
 
