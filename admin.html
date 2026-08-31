@@ -1743,6 +1743,24 @@
           </button>
         </div>
 
+        <!-- 🔌 iPad接続リセットカード（接続登録を解除して待機画面に戻す） -->
+        <div class="card" style="margin-top:14px; border:1.5px solid #c7d2fe; background:#f8f8ff;">
+          <div class="card-title" style="color:#4338ca;">
+            <i data-lucide="plug" style="color:#6366f1;"></i> iPad接続リセット
+          </div>
+          <p style="font-size:12px; color:#4338ca; margin-bottom:14px; line-height:1.6;">
+            iPadの「接続登録」を解除します。<br>
+            リセット後、iPadはページを開いても<strong>「接続待機中」</strong>になります。<br>
+            再びスタッフが「スタッフ接続設定」から番号・代名詞を設定するまで使用できません。<br>
+            <span style="color:#991b1b;">※ゲームデータは消去しません（マスターリセットとは別機能）</span>
+          </p>
+          <button class="btn" onclick="executeDeviceConnectionReset('ALL')" style="width:100%; padding:12px 16px; font-size:13px; font-weight:800; background:#eef2ff; color:#4338ca; border:2px solid #c7d2fe; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;" onmouseover="this.style.background='#e0e7ff'; this.style.borderColor='#a5b4fc';" onmouseout="this.style.background='#eef2ff'; this.style.borderColor='#c7d2fe';" title="全iPadの接続登録を解除して待機画面へ戻す">
+            <i data-lucide="plug" style="width:16px; height:16px;"></i>
+            🔌 全iPad接続をリセット（接続待機画面へ）
+          </button>
+        </div>
+
+
       </div>
     </div>
   </div> <!-- /#pane-flow -->
@@ -4110,7 +4128,55 @@
       showToast("🧹 全iPad ＆ クラウドデータを一括完全初期化しました！（09:04待機画面へセット完了）");
     }
 
+    // 🔌 iPad接続リセット（接続登録解除 → 再接続が必要になる）
+    async function executeDeviceConnectionReset(targetId) {
+      const isAll = !targetId || targetId === 'ALL';
+      const label = isAll ? '全iPad' : `【${targetId}】`;
+
+      const ok = await showCustomConfirm({
+        title: `🔌 ${label} 接続リセット`,
+        subtitle: "接続登録を解除します",
+        message: `${label}の接続を解除します。\n\nリセット後、そのiPadはページを開いても「接続待機中」の画面になります。\nスタッフが再度「スタッフ接続設定」から登録するまで使用できません。\n\n本当に実行しますか？`,
+        confirmText: "🔌 接続をリセットする",
+        cancelText: "キャンセル",
+        type: "danger",
+        icon: "plug"
+      });
+      if (!ok) return;
+
+      const gasUrl = document.getElementById('gas-url-input')?.value?.trim() || localStorage.getItem('admin_gas_url') || '';
+      if (!gasUrl) {
+        showToast("⚠️ GAS URLが設定されていません。", "error");
+        return;
+      }
+
+      const target = isAll ? 'ALL' : targetId;
+      const url = gasUrl.includes('?')
+        ? `${gasUrl}&action=device_reset&target=${encodeURIComponent(target)}&_t=${Date.now()}`
+        : `${gasUrl}?action=device_reset&target=${encodeURIComponent(target)}&_t=${Date.now()}`;
+
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.success) {
+          showToast(`🔌 ${label}の接続をリセットしました。次回接続時にスタッフの設定が必要になります。`);
+          // ローカルのモニタリングリストも更新
+          if (isAll) {
+            latestDevicesData = [];
+          } else {
+            latestDevicesData = (latestDevicesData || []).filter(d => (d.id || d.teamId) !== targetId);
+          }
+          renderDynamicMonitoringList();
+        } else {
+          showToast(`⚠️ リセット失敗: ${json.error || '不明なエラー'}`, "error");
+        }
+      } catch (err) {
+        showToast(`⚠️ 通信エラー: ${err.message}`, "error");
+      }
+    }
+
     function openDeviceDetailModal(deviceId) {
+
       const loopBadge = document.getElementById('dev-modal-loop-badge');
       const manabaEl = document.getElementById('dev-modal-manaba');
       const hintsEl = document.getElementById('dev-modal-hints');

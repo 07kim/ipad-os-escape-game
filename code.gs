@@ -117,7 +117,27 @@ function doGet(e) {
       return renderJson({ success: true, message: "ログを記録しました" });
     }
 
+    // 10. iPad接続リセット（接続登録解除 & スプレッドシート行削除）
+    if (action === "device_reset") {
+      var target = e.parameter.target || "ALL";
+      // スプレッドシートから対象行を削除
+      if (target === "ALL") {
+        resetAllMonitoringData(ss);
+      } else {
+        removeDeviceRow(ss, target);
+      }
+      // iPad側へ device_reset コマンドを配信
+      var resetCmd = recordAdminCommand(ss, {
+        type: "device_reset",
+        name: "iPad接続リセット (対象: " + target + ")",
+        target: target,
+        params: { action: "device_reset", target: target, timestamp: Date.now() }
+      });
+      return renderJson({ success: true, message: "接続リセットを実行しました (対象: " + target + ")", commandId: resetCmd.id });
+    }
+
     return renderJson({ success: false, error: "Unknown GET action: " + action });
+
   } catch (err) {
     return renderJson({ success: false, error: err.toString() });
   }
@@ -428,10 +448,27 @@ function resetAllMonitoringData(ss) {
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
 
-  for (var i = 2; i <= lastRow; i++) {
-    sheet.getRange(i, 3, 1, 6).setValues([[1, 0, "未ログイン", "100%", "待機中", ""]]);
+  // 接続リセット: ヘッダー行以外を全削除（再接続まで表示しない）
+  sheet.deleteRows(2, lastRow - 1);
+}
+
+// 7b. 特定端末の行を削除（個別リセット用）
+function removeDeviceRow(ss, teamId) {
+  var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
+  if (!sheet) return;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+
+  var teamIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  // 下から削除することで行ずれを防ぐ
+  for (var i = teamIds.length - 1; i >= 0; i--) {
+    if (String(teamIds[i][0]).trim() === String(teamId).trim()) {
+      sheet.deleteRow(i + 2);
+    }
   }
 }
+
 
 // 8. プレイログを書き込み（直近200件で自動ローテーション・肥大化完全防止）
 function writeLog(ss, teamId, loopNum, logType, message) {

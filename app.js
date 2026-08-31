@@ -123,6 +123,14 @@ function loadGameDatabase() {
 // --- 起動処理 ---
 window.addEventListener('DOMContentLoaded', () => {
   try {
+    // 🔒 接続登録チェック（未登録ならゲームを止めて接続待機画面を表示）
+    if (localStorage.getItem('device_registered') !== '1') {
+      const pairingEl = document.getElementById('device-pairing-screen');
+      if (pairingEl) pairingEl.style.display = 'flex';
+      console.log('⏳ device_registered が未設定のため接続待機画面を表示します。');
+      return; // ゲーム起動処理をここで停止
+    }
+
     // キャッシュDBの読み込み
     loadGameDatabase();
 
@@ -415,7 +423,22 @@ function executeRemoteAdminCommand(cmd) {
     }
   }
 
-  // ⑨ 運営からの管理番号・チーム名変更の受信・即時反映
+  // ⑨ iPad接続リセット（接続登録を解除して接続待機画面に戻す）
+  if (type === 'device_reset' || p.action === 'device_reset' || cmd.action === 'device_reset') {
+    const target = cmd.target || p.target || 'ALL';
+    const myTeam = gameState.teamId || localStorage.getItem('game_team_id') || '';
+    if (target === 'ALL' || target === myTeam) {
+      console.log('🔌 運営より接続リセットを受信しました。登録情報を消去して待機画面へ移行します。');
+      const gasUrl = localStorage.getItem('gas_url');
+      localStorage.clear();
+      if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+      // 待機画面へ（リロード）
+      setTimeout(() => { location.reload(true); }, 300);
+      return;
+    }
+  }
+
+  // ⑩ 運営からの管理番号・チーム名変更の受信・即時反映
   if (type === 'set_device_info' || p.action === 'set_device_info') {
     const target = cmd.target || p.target;
     const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
@@ -1810,6 +1833,11 @@ function saveStaffConfig() {
   const newDevId = inputEl ? inputEl.value.trim() : 'iPad-01';
   const newAlias = userEl ? userEl.value.trim() : 'チームA';
 
+  if (!newDevId) {
+    alert('管理番号を入力してください。');
+    return;
+  }
+
   if (newDevId) {
     gameState.teamId = newDevId;
     localStorage.setItem('game_team_id', newDevId);
@@ -1832,12 +1860,47 @@ function saveStaffConfig() {
     }
   }
 
+  // ✅ 接続登録フラグを保存（これがないと次回起動時に待機画面になる）
+  localStorage.setItem('device_registered', '1');
+
+  // 🔓 接続待機画面が表示されていれば非表示にする
+  const pairingEl = document.getElementById('device-pairing-screen');
+  if (pairingEl && pairingEl.style.display !== 'none') {
+    pairingEl.style.display = 'none';
+    // 待機画面から接続した場合は、ゲームをフル起動する（ページリロードで確実に初期化）
+    console.log('🟢 接続登録完了。ゲームを起動するためにリロードします。');
+    setTimeout(() => { location.reload(); }, 400);
+    return;
+  }
+
   if (typeof updateAppUI === 'function') updateAppUI();
   if (typeof sendDeviceStatusHeartbeat === 'function') sendDeviceStatusHeartbeat();
 
   closeStaffModal();
-  showIpadModal("✅ 設定完了", `管理番号: ${newDevId}\n代名詞: ${newAlias}\nとして保存しました。`);
+  showIpadModal("✅ 接続・設定完了", `管理番号: ${newDevId}\n代名詞: ${newAlias}\nとして登録しました。`);
 }
+
+// 🔒 接続待機画面の「スタッフ接続設定を開く」ボタンから呼ばれる関数
+function openPairingStaffModal() {
+  // 通常のスタッフモーダルを開く（接続待機画面は裏に残したまま）
+  const modal = document.getElementById('staff-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  // 入力欄を初期化
+  const inputEl = document.getElementById('staff-team-id');
+  if (inputEl) inputEl.value = '';
+  const userEl = document.getElementById('staff-user-name');
+  if (userEl) userEl.value = '';
+
+  // 保存ボタンのラベルを「接続する」に変更
+  const saveBtn = modal.querySelector('button[onclick="saveStaffConfig()"]');
+  if (saveBtn) saveBtn.textContent = '🔗 接続する';
+
+  // 番号グリッドを生成
+  if (typeof showStaffModal === 'function') showStaffModal();
+}
+
 
 function performMasterReset() {
   // ブラウザ標準confirmを排除し、安全な2段階リセットフロー
