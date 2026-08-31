@@ -1828,9 +1828,9 @@
                 </span>
               </div>
               <div style="font-size:12px; color:#475569; margin-top:4px; display:flex; align-items:center; gap:8px;" id="detail-dev-user-sub-wrap">
-                <span id="detail-dev-user-sub">👤 ログイン名: 連城 観 (s23c1044kr)</span>
-                <button class="nav-btn" onclick="openEditDeviceNameModal()" style="padding:3px 8px; font-size:11px; font-weight:700; color:var(--primary); border:1px solid #cbd5e1; background:#f8fafc; border-radius:6px; cursor:pointer;" title="参加者名・チーム名を変更">
-                  <i data-lucide="edit-3" style="width:11px; height:11px;"></i> 名前変更
+                <span id="detail-dev-user-sub">📱 管理番号: iPad-01 | 👥 チーム: チームA</span>
+                <button class="nav-btn" onclick="openEditDeviceNameModal()" style="padding:3px 8px; font-size:11px; font-weight:700; color:var(--primary); border:1px solid #cbd5e1; background:#f8fafc; border-radius:6px; cursor:pointer;" title="管理番号・チーム名を変更">
+                  <i data-lucide="edit-3" style="width:11px; height:11px;"></i> 管理番号・チーム変更
                 </button>
               </div>
             </div>
@@ -2317,31 +2317,67 @@
   </div>
 
 
-  <!-- ✏️ 端末名・参加者名変更モーダル -->
+  <!-- ✏️ 管理番号 ＆ チーム名変更モーダル -->
   <div id="admin-edit-name-modal" class="custom-modal-backdrop">
-    <div class="custom-modal-card" style="max-width: 440px;" onclick="event.stopPropagation()">
+    <div class="custom-modal-card" style="max-width: 480px;" onclick="event.stopPropagation()">
       <div class="custom-modal-header">
         <div class="custom-modal-icon-wrap type-info">
-          <i data-lucide="user-check" style="width:24px; height:24px; color:var(--primary);"></i>
+          <i data-lucide="tablet" style="width:24px; height:24px; color:var(--primary);"></i>
         </div>
         <div>
-          <div class="custom-modal-title">端末・参加者名の変更</div>
-          <div class="custom-modal-subtitle" id="edit-modal-target-dev">iPad-01</div>
+          <div class="custom-modal-title">管理番号 ＆ チーム名の変更</div>
+          <div class="custom-modal-subtitle" id="edit-modal-target-dev">対象端末: iPad-01</div>
         </div>
       </div>
       <div class="custom-modal-body" style="padding: 16px 20px;">
-        <div class="form-group">
-          <label>👤 ログイン参加者名:</label>
-          <input type="text" id="edit-input-user-name" placeholder="例: 連城 観">
+        
+        <!-- ① 管理番号（端末ID）設定 -->
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; display:block;">
+            📱 管理番号 (端末ID):
+          </label>
+          <input type="text" id="edit-input-device-id" placeholder="例: iPad-01" style="font-weight:800; font-family:monospace; font-size:14px; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; width:100%; box-sizing:border-box;">
         </div>
-        <div class="form-group">
-          <label>🆔 学籍番号 / ユーザーID:</label>
-          <input type="text" id="edit-input-student-id" placeholder="例: s23c1044kr">
+
+        <!-- 空き番号案内バナー -->
+        <div id="edit-available-slots-box" style="margin-bottom:12px; padding:8px 12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
+          <div style="font-size:11px; font-weight:700; color:#166534; display:flex; align-items:center; gap:5px; margin-bottom:4px;">
+            <i data-lucide="check-circle-2" style="width:13px; height:13px;"></i>
+            <span>💡 割当可能な空き番号（未接続/未設定）:</span>
+          </div>
+          <div id="edit-available-slots-list" style="font-size:11.5px; font-family:monospace; font-weight:700; color:#15803d; line-height:1.4;">
+            iPad-02, iPad-03, iPad-04, iPad-05...
+          </div>
         </div>
-        <div class="form-group">
-          <label>👥 所属チーム名:</label>
-          <input type="text" id="edit-input-team-name" placeholder="例: チームA">
+
+        <!-- クイック番号選択グリッド (iPad-01〜iPad-30) -->
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px; display:block;">
+            クイック番号選択 (iPad 01〜30):
+          </label>
+          <div id="edit-ipad-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:140px; overflow-y:auto; padding-right:2px;">
+            <!-- JSで自動生成（使用中はグレー・空きは選択可能） -->
+          </div>
         </div>
+
+        <!-- ② チーム名設定 -->
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; display:block;">
+            👥 所属チーム名:
+          </label>
+          <input type="text" id="edit-input-team-name" placeholder="例: チームA, 1班" style="font-weight:700; font-size:13px; padding:8px 12px; border:1.5px solid var(--border-color); border-radius:8px; width:100%; box-sizing:border-box; margin-bottom:6px;">
+          
+          <!-- チーム名クイック候補ボタン -->
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームA')" style="padding:3px 8px; font-size:11px;">チームA</button>
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームB')" style="padding:3px 8px; font-size:11px;">チームB</button>
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームC')" style="padding:3px 8px; font-size:11px;">チームC</button>
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームD')" style="padding:3px 8px; font-size:11px;">チームD</button>
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームE')" style="padding:3px 8px; font-size:11px;">チームE</button>
+            <button type="button" class="nav-btn" onclick="selectQuickTeamName('チームF')" style="padding:3px 8px; font-size:11px;">チームF</button>
+          </div>
+        </div>
+
       </div>
       <div class="custom-modal-actions">
         <button class="modal-btn-cancel" onclick="closeEditDeviceNameModal()">
@@ -3595,6 +3631,8 @@
           loop: parseInt(d.loop, 10) || 1,
           hints: parseInt(d.hintsCount || d.hints, 10) || 0,
           manaba: d.manaba || "未ログイン",
+          teamId: d.teamId || d.team || "",
+          team: d.teamId || d.team || "",
           screen: d.screen || d.currentScreen || "ホーム画面",
           lastSeen: d.lastSeen || "3秒前",
           score: parseInt(d.score, 10) || (parseInt(d.loop, 10) || 1) * 1000 + (parseInt(d.hints, 10) || 0) * 100,
@@ -3607,14 +3645,15 @@
       if (Object.keys(devicesMap).length === 0) {
         for (let i = 1; i <= 6; i++) {
           const padId = `iPad-${String(i).padStart(2, '0')}`;
-          const users = ["連城 観 (s23c1044kr)", "月島 拓真 (s23c1088tm)", "風早 律 (s23c1012hr)", "未ログイン", "鳴海 悠 (s23c1099ny)", "白石 紬 (s23c1055st)"];
           const screens = ["🏫 manaba (講義資料PDF)", "💬 LINK チャット", "🌐 検索ブラウザ", "🔒 ロック画面", "✉️ メーラー (受信トレイ)", "📷 写真メモ"];
           devicesMap[padId] = {
             id: padId,
             name: padId,
             loop: (i <= 2) ? 2 : 1,
             hints: (i === 1) ? 4 : (i === 2 ? 3 : 1),
-            manaba: users[i - 1] || "未ログイン",
+            manaba: "",
+            teamId: ['チームA', 'チームB', 'チームC', 'チームA', 'チームB', '未設定'][i - 1],
+            team: ['チームA', 'チームB', 'チームC', 'チームA', 'チームB', '未設定'][i - 1],
             screen: screens[i - 1] || "ホーム画面",
             lastSeen: `${i * 3}秒前`,
             score: (i <= 2 ? 2000 : 1000) + (i * 120),
@@ -3631,7 +3670,7 @@
       const loop1Count = devices.filter(d => d.loop === 1).length;
       const loop2Count = devices.filter(d => d.loop === 2).length;
       const loop3Count = devices.filter(d => d.loop === 3).length;
-      const loginCount = devices.filter(d => d.manaba && !d.manaba.includes("未ログイン") && d.manaba !== "-").length;
+      const teamSetCount = devices.filter(d => d.teamId && d.teamId !== '未設定').length;
 
       const sumActiveEl = document.getElementById('summary-active-count');
       const sumL1El = document.getElementById('summary-loop1-count');
@@ -3643,7 +3682,7 @@
       if (sumL1El) sumL1El.innerText = `1周目: ${loop1Count}台`;
       if (sumL2El) sumL2El.innerText = `2周目: ${loop2Count}台`;
       if (sumL3El) sumL3El.innerText = `3周目: ${loop3Count}台`;
-      if (sumLoginEl) sumLoginEl.innerText = `👤 ログイン済: ${loginCount}台`;
+      if (sumLoginEl) sumLoginEl.innerText = `👥 チーム設定済: ${teamSetCount}台`;
 
       // 2. 絞り込み ＆ 複合検索
       let filtered = devices.filter(d => {
@@ -3692,6 +3731,7 @@
         const itemEl = document.createElement('div');
         itemEl.className = `dynamic-device-item ${isSelected ? 'active-selected' : ''}`;
         itemEl.onclick = () => selectMonitoringDevice(d.id);
+        const teamLabel = d.teamId || d.team || '未設定';
         itemEl.innerHTML = `
           <div class="dev-item-header">
             <div style="display:flex; align-items:center; gap:6px;">
@@ -3701,8 +3741,8 @@
             <span class="dev-item-loop-tag ${loopClass}">${d.loop}周目</span>
           </div>
           <div class="dev-item-body">
-            <span class="dev-item-user" style="color:${isLogged ? '#047857' : '#94a3b8'};">
-              ${isLogged ? '👤' : '🔒'} ${d.manaba}
+            <span class="dev-item-user" style="color:${teamLabel !== '未設定' ? '#0369a1' : '#94a3b8'};">
+              👥 ${teamLabel}
             </span>
             <span class="dev-item-screen" title="${d.screen}">
               ${d.screen}
@@ -3747,7 +3787,8 @@
         statusTagEl.innerText = `🟢 稼働中 (${device.lastSeen})`;
       }
       if (userSubEl) {
-        userSubEl.innerHTML = `👤 ログイン名: <strong>${device.manaba}</strong>`;
+        const teamLabel = device.teamId || device.team || '未設定';
+        userSubEl.innerHTML = `📱 管理番号: <strong>${device.id}</strong> | 👥 チーム: <strong>${teamLabel}</strong>`;
       }
       if (screenEl) {
         screenEl.innerText = device.screen || "ホーム画面";
@@ -3798,12 +3839,89 @@
       if (input) input.value = "";
     }
 
-    // ===== ✏️ 端末名・参加者名変更モーダル制御 =====
+    // ===== ✏️ 管理番号 ＆ チーム名変更モーダル制御 =====
+    function selectQuickTeamName(teamName) {
+      const input = document.getElementById('edit-input-team-name');
+      if (input) {
+        input.value = teamName;
+        input.focus();
+      }
+    }
+
+    function selectModalIpadSlot(padName) {
+      const input = document.getElementById('edit-input-device-id');
+      if (input) {
+        input.value = padName;
+      }
+      renderEditModalIpadGrid(padName);
+    }
+
+    function renderEditModalIpadGrid(selectedPadId) {
+      const grid = document.getElementById('edit-ipad-grid');
+      const slotsListEl = document.getElementById('edit-available-slots-list');
+      if (!grid) return;
+
+      // 現在接続中/登録中のデバイスID一覧を取得
+      const usedIds = new Set((latestDevicesData || []).map(d => (d.id || d.name || '').trim()).filter(Boolean));
+      
+      const availableSlots = [];
+      grid.innerHTML = "";
+
+      for (let i = 1; i <= 30; i++) {
+        const padNum = String(i).padStart(2, '0');
+        const padId = `iPad-${padNum}`;
+        const isCurrentSelected = (padId === selectedPadId);
+        const isUsed = usedIds.has(padId) && !isCurrentSelected;
+
+        if (!isUsed) {
+          availableSlots.push(padId);
+        }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-subtle';
+        btn.style.padding = '6px 2px';
+        btn.style.fontSize = '11px';
+        btn.style.fontWeight = '700';
+        btn.style.borderRadius = '6px';
+        btn.style.cursor = 'pointer';
+
+        if (isCurrentSelected) {
+          btn.style.background = 'var(--primary)';
+          btn.style.color = '#fff';
+          btn.innerText = `★${padNum}`;
+          btn.title = `現在選択中: ${padId}`;
+        } else if (isUsed) {
+          btn.style.background = '#f1f5f9';
+          btn.style.color = '#94a3b8';
+          btn.style.border = '1px dashed #cbd5e1';
+          btn.innerText = `${padNum}🔒`;
+          btn.title = `使用中: ${padId}（別端末で使用中）`;
+        } else {
+          btn.style.background = '#ecfdf5';
+          btn.style.color = '#059669';
+          btn.style.border = '1px solid #a7f3d0';
+          btn.innerText = `${padNum}`;
+          btn.title = `空き番号: ${padId}（割当可能）`;
+        }
+
+        btn.onclick = () => selectModalIpadSlot(padId);
+        grid.appendChild(btn);
+      }
+
+      if (slotsListEl) {
+        if (availableSlots.length > 0) {
+          slotsListEl.innerHTML = availableSlots.slice(0, 12).join(', ') + (availableSlots.length > 12 ? ` 他 ${availableSlots.length - 12}台` : '');
+        } else {
+          slotsListEl.innerHTML = `<span style="color:#ef4444;">※iPad-01〜30はすべて使用中です</span>`;
+        }
+      }
+    }
+
     function openEditDeviceNameModal() {
       const modal = document.getElementById('admin-edit-name-modal');
       const targetLabel = document.getElementById('edit-modal-target-dev');
-      const nameInput = document.getElementById('edit-input-user-name');
-      const idInput = document.getElementById('edit-input-student-id');
+      const devIdInput = document.getElementById('edit-input-device-id');
       const teamInput = document.getElementById('edit-input-team-name');
 
       if (!modal) return;
@@ -3813,12 +3931,18 @@
 
       // 既存の情報を取得して入力欄に初期セット
       const devData = (latestDevicesData || []).find(d => (d.id || d.teamId) === deviceId);
-      const currentManaba = devData ? (devData.manaba || devData.studentName || '') : '';
       const currentTeam = devData ? (devData.teamId || devData.team || '') : '';
 
-      if (nameInput) nameInput.value = currentManaba;
-      if (idInput) idInput.value = devData?.studentId || '';
-      if (teamInput) teamInput.value = currentTeam || (window.GAME_DATABASE?.system?.teamId || '');
+      if (devIdInput) devIdInput.value = deviceId;
+      if (teamInput) teamInput.value = currentTeam || (window.GAME_DATABASE?.system?.teamId || 'チームA');
+
+      renderEditModalIpadGrid(deviceId);
+
+      if (devIdInput) {
+        devIdInput.oninput = () => {
+          renderEditModalIpadGrid(devIdInput.value.trim());
+        };
+      }
 
       modal.classList.add('open');
       if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3830,40 +3954,36 @@
     }
 
     function saveDeviceNameChanges() {
-      const deviceId = currentSelectedDeviceId || 'iPad-01';
-      const nameInput = document.getElementById('edit-input-user-name');
-      const idInput = document.getElementById('edit-input-student-id');
+      const oldDeviceId = currentSelectedDeviceId || 'iPad-01';
+      const devIdInput = document.getElementById('edit-input-device-id');
       const teamInput = document.getElementById('edit-input-team-name');
 
-      const newName = nameInput ? nameInput.value.trim() : '';
-      const newId = idInput ? idInput.value.trim() : '';
+      const newDeviceId = devIdInput ? devIdInput.value.trim() : oldDeviceId;
       const newTeam = teamInput ? teamInput.value.trim() : '';
 
-      if (!newName && !newTeam) {
-        showToast('⚠️ 変更する名前またはチーム名を入力してください', true);
+      if (!newDeviceId && !newTeam) {
+        showToast('⚠️ 管理番号またはチーム名を入力してください', true);
         return;
       }
 
-      // 1. クラウド / iPad端末へ名前変更コマンドを送信
+      // 1. クラウド / iPad端末へ管理番号・チーム名変更コマンドを送信
       sendCloudAdminCommand({
         id: "NAME_CHANGE_" + Date.now(),
         type: "set_device_info",
-        name: `端末情報変更 (${deviceId})`,
+        name: `管理番号・チーム変更 (${oldDeviceId} ➔ ${newDeviceId})`,
         params: {
-          target: deviceId,
-          studentName: newName,
-          studentId: newId,
+          target: oldDeviceId,
+          newDeviceId: newDeviceId,
           teamId: newTeam,
           timestamp: Date.now()
         }
-      }, `✅ 【${deviceId}】の参加者名・チーム名を更新しました！`);
+      }, `✅ 【${oldDeviceId}】の管理番号を「${newDeviceId}」、チーム名を「${newTeam}」に更新しました！`);
 
       // ローカル同期トリガー発行（同一ブラウザ/タブ間即座反映）
       try {
         localStorage.setItem('admin_device_info_trigger', JSON.stringify({
-          target: deviceId,
-          studentName: newName,
-          studentId: newId,
+          target: oldDeviceId,
+          newDeviceId: newDeviceId,
           teamId: newTeam,
           timestamp: Date.now()
         }));
@@ -3871,22 +3991,25 @@
 
       // 2. 表示を即時更新
       const userSubEl = document.getElementById('detail-dev-user-sub');
+      const titleEl = document.getElementById('detail-dev-title');
+      if (titleEl) titleEl.innerText = newDeviceId;
       if (userSubEl) {
-        userSubEl.innerHTML = `👤 ログイン名: <strong>${newName || '未設定'}</strong> ${newId ? `(${newId})` : ''} ${newTeam ? `[${newTeam}]` : ''}`;
+        userSubEl.innerHTML = `📱 管理番号: <strong>${newDeviceId}</strong> | 👥 チーム: <strong>${newTeam || '未設定'}</strong>`;
       }
 
       // latestDevicesData の該当端末データも更新
       if (Array.isArray(latestDevicesData)) {
-        const target = latestDevicesData.find(d => (d.id || d.teamId) === deviceId);
+        const target = latestDevicesData.find(d => (d.id || d.teamId) === oldDeviceId);
         if (target) {
-          if (newName) target.manaba = newName;
-          if (newId) target.studentId = newId;
+          target.id = newDeviceId;
+          target.name = newDeviceId;
           if (newTeam) target.teamId = newTeam;
         }
       }
 
+      currentSelectedDeviceId = newDeviceId;
       closeEditDeviceNameModal();
-      showToast(`👤 【${deviceId}】の名前・チーム名を変更しました`);
+      showToast(`📱 管理番号: ${newDeviceId} / チーム: ${newTeam} に変更しました`);
       renderDynamicMonitoringList();
     }
 
