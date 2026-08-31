@@ -356,57 +356,101 @@ function executeRemoteAdminCommand(cmd) {
   // ③ シーン進行統制コマンド（8ステップ）のハンドリング
   if (type === 'scene_flow_step' || p.step !== undefined) {
     const stepNum = parseInt(p.step || 1, 10);
-    const loopOverlay = document.getElementById('loop-end-overlay');
-    const loopTag = document.getElementById('loop-end-tag');
-    const stepLoop = parseInt(p.loop || gameState.loop || 1, 10);
+    const blackoutEl = document.getElementById('complete-blackout-overlay');
 
-    console.log(`🎬 進行ステップ 0${stepNum} を受信しました (周回: ${stepLoop})`);
+    console.log(`🎬 進行ステップ 0${stepNum} を受信しました`);
 
-    // 奇数ステップ（3, 5, 7）: 各周回の終了（一時待機・時間停止・操作ロック画面表示）
-    if (stepNum === 3 || stepNum === 5 || stepNum === 7) {
+    // ステップ1: オープニング待機 (1周目・09:04固定・タイマー停止)
+    if (stepNum === 1) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      triggerLoopTransition(1, null, false, true);
+      return;
+    }
+
+    // ステップ2: 1周目スタート (1周目・09:04から時間進行開始)
+    if (stepNum === 2) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      const startMs = p.startTime || p.timestamp || Date.now();
+      triggerLoopTransition(1, startMs, true, false);
+      hideLockScreen();
+      return;
+    }
+
+    // ステップ3: 1周目終了（即座に2周目へ切替・内容は2周目・09:04固定・タイマー停止・操作自由）
+    if (stepNum === 3) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      playSystemSound("distortion");
+      triggerLoopTransition(2, null, false, false);
+      hideLockScreen();
+      return;
+    }
+
+    // ステップ4: 2周目スタート (2周目・09:04から時間進行開始)
+    if (stepNum === 4) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      const startMs = p.startTime || p.timestamp || Date.now();
+      gameState.loop = 2;
+      gameState.timerRunning = true;
+      gameState.clockSetTime = startMs;
+      gameState.clockStartISO = '2026-09-04T09:04:00';
+      localStorage.setItem('game_loop', '2');
+      localStorage.setItem('game_timer_running', 'true');
+      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+      localStorage.setItem('fake_clock_set_time', String(startMs));
+      hideLockScreen();
+      return;
+    }
+
+    // ステップ5: 2周目終了（即座に3周目へ切替・内容は3周目・09:04固定・タイマー停止・操作自由）
+    if (stepNum === 5) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      playSystemSound("alarm");
+      triggerLoopTransition(3, null, false, false);
+      hideLockScreen();
+      return;
+    }
+
+    // ステップ6: 3周目スタート (3周目・09:04から時間進行開始)
+    if (stepNum === 6) {
+      if (blackoutEl) blackoutEl.style.display = 'none';
+      const startMs = p.startTime || p.timestamp || Date.now();
+      gameState.loop = 3;
+      gameState.timerRunning = true;
+      gameState.clockSetTime = startMs;
+      gameState.clockStartISO = '2026-09-04T09:04:00';
+      localStorage.setItem('game_loop', '3');
+      localStorage.setItem('game_timer_running', 'true');
+      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+      localStorage.setItem('fake_clock_set_time', String(startMs));
+      hideLockScreen();
+      return;
+    }
+
+    // ステップ7: 3周目終了（完全ブラックアウト・全画面漆黒・操作不能）
+    if (stepNum === 7) {
       gameState.timerRunning = false;
       localStorage.setItem('game_timer_running', 'false');
-      playSystemSound("beep");
-
-      if (loopOverlay) {
-        if (loopTag) loopTag.innerText = `${stepLoop}周目 調査終了`;
-        loopOverlay.style.display = 'flex';
-      }
+      if (blackoutEl) blackoutEl.style.display = 'block';
+      closeAllWindowsSilent();
       return;
     }
 
-    // 偶数ステップ（2, 4, 6）: 各周回のスタート（ロック解除・周回開始・09:04巻き戻し）
-    if (stepNum === 2 || stepNum === 4 || stepNum === 6) {
-      if (loopOverlay) loopOverlay.style.display = 'none';
-      const loopStartTime = p.startTime || p.timestamp || Date.now();
-      triggerLoopTransition(stepLoop, loopStartTime, true);
-      return;
-    }
-
-    // ステップ1: オープニング待機
-    if (stepNum === 1) {
-      if (loopOverlay) loopOverlay.style.display = 'none';
-      showLockScreen();
-      return;
-    }
-
-    // ステップ8: ゲーム全体の終了
+    // ステップ8: 公演終了（ログ集計・アンケート等）
     if (stepNum === 8) {
-      if (loopOverlay) loopOverlay.style.display = 'none';
       gameState.timerRunning = false;
       localStorage.setItem('game_timer_running', 'false');
       return;
     }
   }
 
-  // ④ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04巻き戻しを完全徹底）
+  // ④ 周回強制移行（ホーム初期化 ＆ 09:04巻き戻し）
   if (isLoopChange) {
-    const loopOverlay = document.getElementById('loop-end-overlay');
-    if (loopOverlay) loopOverlay.style.display = 'none';
+    const blackoutEl = document.getElementById('complete-blackout-overlay');
+    if (blackoutEl) blackoutEl.style.display = 'none';
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
       const loopStartTime = p.startTime || p.timestamp || Date.now();
-      triggerLoopTransition(nextLoop, loopStartTime, true);
+      triggerLoopTransition(nextLoop, loopStartTime, true, false);
     }
   } else if (p.forceLock === true || p.lock === true) {
     // ⑤ 明示的なロック画面強制指示
@@ -1277,8 +1321,8 @@ function resetAllAppsForNewLoop() {
   gameState.activeApp = null;
 }
 
-// --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ ロック画面 ＆ 09:04静止待機を完全徹底） ---
-function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true) {
+// --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ 09:04静止待機を完全徹底） ---
+function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true, showLock = false) {
   const targetLoop = parseInt(nextLoop || 1, 10);
   if (isNaN(targetLoop)) return;
 
@@ -1315,8 +1359,12 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   const lockDate = document.getElementById('lock-date');
   if (lockDate) lockDate.innerText = "9月4日";
 
-  // 6. 前面にロック画面を全画面表示
-  showLockScreen();
+  // 6. ロック画面の制御
+  if (showLock) {
+    showLockScreen();
+  } else {
+    hideLockScreen();
+  }
 
   // 7. 演者ツール（actor.html）へ周回移行を即時通知
   if (typeof BroadcastChannel !== 'undefined') {
@@ -1329,7 +1377,7 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   // 8. コンテンツUI更新（ニュース・マスタデータの周回別表示切り替え）
   updateAppUI();
 
-  logWriteToGAS("LOOP_TRANSITION", `端末が強制的に周回 ${targetLoop} へ移行しました（ホーム初期化・ロック画面・09:04巻き戻し）。`);
+  logWriteToGAS("LOOP_TRANSITION", `端末が周回 ${targetLoop} へ移行しました（全データ切替・09:04巻き戻し・タイマー:${startTimer ? '稼働' : '停止'}）。`);
 }
 
 // --- アプリUIの周回ごとの更新 ---

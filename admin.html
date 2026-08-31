@@ -1612,13 +1612,13 @@
               </div>
             </div>
 
-            <!-- 03. 1周目終了 -->
+            <!-- 03. 1周目終了（2周目へ切替） -->
             <div class="flow-step-card next" id="flow-card-3" onclick="handleStepCardClick(3)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">03</div>
                 <div class="flow-step-title-block">
-                  <h3>1周目終了（一時ロック）</h3>
-                  <div class="flow-step-desc">1周目調査終了・画面を一時ロックし待機</div>
+                  <h3>1周目終了（2周目切替・09:04静止）</h3>
+                  <div class="flow-step-desc">2周目内容へ切替・09:04固定・操作自由</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-3" style="background:#84cc16; color:#fff;">
@@ -1631,8 +1631,8 @@
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">04</div>
                 <div class="flow-step-title-block">
-                  <h3>2周目スタート（タイムループ）</h3>
-                  <div class="flow-step-desc">09:04へ巻き戻し・ロック解除・2周目解禁</div>
+                  <h3>2周目スタート（タイマー始動）</h3>
+                  <div class="flow-step-desc">09:04から計時開始・2周目タイマー始動</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-4" style="background:#f1f5f9; color:#94a3b8;">
@@ -1640,13 +1640,13 @@
               </div>
             </div>
 
-            <!-- 05. 2周目終了 -->
+            <!-- 05. 2周目終了（3周目へ切替） -->
             <div class="flow-step-card locked" id="flow-card-5" onclick="handleStepCardClick(5)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">05</div>
                 <div class="flow-step-title-block">
-                  <h3>2周目終了（一時ロック）</h3>
-                  <div class="flow-step-desc">2周目調査終了・画面を一時ロックし待機</div>
+                  <h3>2周目終了（3周目切替・09:04静止）</h3>
+                  <div class="flow-step-desc">3周目内容へ切替・09:04固定・操作自由</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-5" style="background:#f1f5f9; color:#94a3b8;">
@@ -1659,8 +1659,8 @@
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">06</div>
                 <div class="flow-step-title-block">
-                  <h3>3周目スタート（最終決戦）</h3>
-                  <div class="flow-step-desc">09:04へ巻き戻し・ロック解除・3周目解禁</div>
+                  <h3>3周目スタート（タイマー始動）</h3>
+                  <div class="flow-step-desc">09:04から計時開始・3周目タイマー始動</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-6" style="background:#f1f5f9; color:#94a3b8;">
@@ -1668,13 +1668,13 @@
               </div>
             </div>
 
-            <!-- 07. 3周目終了 -->
+            <!-- 07. 3周目終了（完全暗転） -->
             <div class="flow-step-card locked" id="flow-card-7" onclick="handleStepCardClick(7)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">07</div>
                 <div class="flow-step-title-block">
-                  <h3>3周目終了（一時ロック）</h3>
-                  <div class="flow-step-desc">3周目調査終了・画面を一時ロックし待機</div>
+                  <h3>3周目終了（完全暗転・操作不能）</h3>
+                  <div class="flow-step-desc">画面完全ブラックアウト・全機能停止</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-7" style="background:#f1f5f9; color:#94a3b8;">
@@ -2968,14 +2968,14 @@
     let manualSceneUnlock = false;
 
     const FLOW_STEP_CONFIG = {
-      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態", isEnd: false },
-      2: { name: "1周目スタート（ゲーム開始）", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁", isEnd: false },
-      3: { name: "1周目終了（一時ロック）", loop: 1, desc: "1周目調査終了・画面を一時ロックし待機", isEnd: true },
-      4: { name: "2周目スタート（タイムループ）", loop: 2, desc: "09:04へ巻き戻し・ロック解除・2周目解禁", isEnd: false },
-      5: { name: "2周目終了（一時ロック）", loop: 2, desc: "2周目調査終了・画面を一時ロックし待機", isEnd: true },
-      6: { name: "3周目スタート（最終決戦）", loop: 3, desc: "09:04へ巻き戻し・ロック解除・3周目解禁", isEnd: false },
-      7: { name: "3周目終了（一時ロック）", loop: 3, desc: "3周目調査終了・画面を一時ロックし待機", isEnd: true },
-      8: { name: "ゲーム終了（ログ集計 ＆ アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定", isEnd: true }
+      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態", actionType: "wait" },
+      2: { name: "1周目スタート（ゲーム開始）", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁", actionType: "start" },
+      3: { name: "1周目終了（2周目切替・09:04静止）", loop: 2, desc: "2周目内容へ切替・09:04固定・操作自由", actionType: "loop_switch" },
+      4: { name: "2周目スタート（タイマー始動）", loop: 2, desc: "09:04から計時開始・2周目タイマー始動", actionType: "start" },
+      5: { name: "2周目終了（3周目切替・09:04静止）", loop: 3, desc: "3周目内容へ切替・09:04固定・操作自由", actionType: "loop_switch" },
+      6: { name: "3周目スタート（タイマー始動）", loop: 3, desc: "09:04から計時開始・3周目タイマー始動", actionType: "start" },
+      7: { name: "3周目終了（完全暗転・操作不能）", loop: 3, desc: "画面完全ブラックアウト・全機能停止", actionType: "blackout" },
+      8: { name: "ゲーム終了（ログ集計 ＆ アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定", actionType: "game_end" }
     };
 
     function initFlowState() {
@@ -3062,26 +3062,33 @@
       let icon = "fast-forward";
 
       if (nextStep === 8) {
-        title = "🏁 ゲーム終了確認";
+        title = "🏁 公演終了確認";
         subtitle = "タイマー停止 ＆ ログ集計・アンケート画面移行";
         msg = "タイマー計測を停止し、全iPadを「08. ゲーム終了（ログ集計・アンケート画面）」へ移行します。\n\n公演を終了してよろしいですか？";
         btnText = "🏁 ゲーム終了・集計";
         type = "danger";
         icon = "flag";
-      } else if (config.isEnd) {
-        title = `🛑 ${config.loop}周目 終了（一時待機）確認`;
-        subtitle = `タイマーを一時停止し、全iPadを一時ロックします`;
-        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※iPad画面に【調査終了・タイムアップ】オーバーレイが表示され、操作が一時ロックされます。\n\n進行してよろしいですか？`;
-        btnText = `🛑 ${config.loop}周目を終了・ロック`;
-        type = "warning";
-        icon = "pause-circle";
-      } else if (nextStep === 4 || nextStep === 6) {
-        title = `🌀 ${config.loop}周目 突入確認`;
-        subtitle = `${config.loop}周目スタート・作中時刻09:04巻き戻し`;
-        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※作中世界線時刻が【09:04:00】に巻き戻り、前周回のラップタイムが確定し、新周回コンテンツが全端末で解禁されます。\n\n進行してよろしいですか？`;
-        btnText = `🌀 ${config.loop}周目へ突入`;
+      } else if (nextStep === 7) {
+        title = "⬛ 3周目終了（完全暗転）確認";
+        subtitle = "全iPadの画面を完全消灯（ブラックアウト）し操作不能にします";
+        msg = "タイマー計測を停止し、全iPadの画面全体を真っ黒（完全消灯）にして操作不能にします。\n\n進行してよろしいですか？";
+        btnText = "⬛ 画面を完全暗転させる";
+        type = "danger";
+        icon = "power";
+      } else if (nextStep === 3 || nextStep === 5) {
+        title = `🌀 【${config.loop}周目】へタイムループ切替確認`;
+        subtitle = `iPad全データを${config.loop}周目へ即時切替（09:04静止・操作自由）`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※前周回のタイマー計測を確定・停止し、全端末のコンテンツが即座に【${config.loop}周目】のものに切り替わります（操作自由）。時刻は09:04で静止します。\n\n進行してよろしいですか？`;
+        btnText = `🌀 ${config.loop}周目へ切替`;
         type = "warning";
         icon = "repeat";
+      } else if (nextStep === 2 || nextStep === 4 || nextStep === 6) {
+        title = `⏱️ 【${config.loop}周目】タイマー始動確認`;
+        subtitle = `09:04から作中時計が動き出します`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※タイマー計測が始動し、作中世界線時刻（09:04:00）から時間が進み始めます。\n\nスタートしてよろしいですか？`;
+        btnText = `⏱️ ${config.loop}周目スタート`;
+        type = "info";
+        icon = "play";
       }
 
       const ok = await showCustomConfirm({
@@ -3188,31 +3195,63 @@
       const config = FLOW_STEP_CONFIG[stepNum];
       if (!config) return;
 
-      // 周回切替とタイマー連動 (8ステップ)
+      const now = Date.now();
+
+      // 周回切替とタイマー連動 (8ステップ新仕様)
       if (stepNum === 1) {
         // 01. 待機
         resetAdminTimerSilent();
         triggerInitialMasterResetForShow();
       } else if (stepNum === 2) {
-        // 02. 1周目開始
+        // 02. 1周目開始（タイマースタート）
         if (!adminTimerState.isRunning) startAdminTimer();
         onAdminLoopChanged(1);
       } else if (stepNum === 3) {
-        // 03. 1周目終了（一時停止・ロック）
+        // 03. 1周目終了（2周目切替・09:04静止・タイマー一時停止）
         pauseAdminTimer();
+        // 2周目へ事前切替（タイマーは動かさずデータだけ2周目・09:04巻き戻し）
+        adminTimerState.currentLoop = 2;
+        adminTimerState.loopElapsedBeforePause = 0;
+        adminTimerState.loopStartTime = null;
+        if (adminTimerState.loopLaps[2]) adminTimerState.loopLaps[2].status = 'active';
+        renderTimerUI();
+        saveAdminTimerState();
+        localStorage.setItem('game_loop', '2');
+        localStorage.setItem('fake_clock_set_time', String(now));
+        localStorage.setItem('game_timer_running', 'false');
       } else if (stepNum === 4) {
-        // 04. 2周目突入・開始
+        // 04. 2周目スタート（タイマー始動）
         if (!adminTimerState.isRunning) startAdminTimer();
-        onAdminLoopChanged(2);
+        adminTimerState.currentLoop = 2;
+        adminTimerState.loopStartTime = now;
+        renderTimerUI();
+        saveAdminTimerState();
+        localStorage.setItem('fake_clock_set_time', String(now));
+        localStorage.setItem('game_timer_running', 'true');
       } else if (stepNum === 5) {
-        // 05. 2周目終了（一時停止・ロック）
+        // 05. 2周目終了（3周目切替・09:04静止・タイマー一時停止）
         pauseAdminTimer();
+        // 3周目へ事前切替
+        adminTimerState.currentLoop = 3;
+        adminTimerState.loopElapsedBeforePause = 0;
+        adminTimerState.loopStartTime = null;
+        if (adminTimerState.loopLaps[3]) adminTimerState.loopLaps[3].status = 'active';
+        renderTimerUI();
+        saveAdminTimerState();
+        localStorage.setItem('game_loop', '3');
+        localStorage.setItem('fake_clock_set_time', String(now));
+        localStorage.setItem('game_timer_running', 'false');
       } else if (stepNum === 6) {
-        // 06. 3周目突入・開始
+        // 06. 3周目スタート（タイマー始動）
         if (!adminTimerState.isRunning) startAdminTimer();
-        onAdminLoopChanged(3);
+        adminTimerState.currentLoop = 3;
+        adminTimerState.loopStartTime = now;
+        renderTimerUI();
+        saveAdminTimerState();
+        localStorage.setItem('fake_clock_set_time', String(now));
+        localStorage.setItem('game_timer_running', 'true');
       } else if (stepNum === 7) {
-        // 07. 3周目終了（一時停止・ロック）
+        // 07. 3周目終了（完全暗転・タイマー停止）
         pauseAdminTimer();
       } else if (stepNum === 8) {
         // 08. ゲーム終了
@@ -3227,8 +3266,9 @@
         params: {
           step: stepNum,
           loop: config.loop,
-          action: config.isEnd ? "loop_end" : "loop_start",
-          timestamp: Date.now()
+          actionType: config.actionType,
+          startTime: now,
+          timestamp: now
         }
       }, `🎬 【0${stepNum}. ${config.name}】を全稼働iPadへ配信・同期しました！`);
     }
