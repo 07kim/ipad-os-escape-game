@@ -50,7 +50,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 // --- グローバルステート管理 ---
 let gameState = {
   loop: 1,
-  teamId: "チームA",
+  teamId: "",
   clockStartISO: "2126-09-04T09:04:00",
   clockSetTime: Date.now(), // 設定されたタイミングの現実タイムスタンプ
   timerRunning: false, // スタートするまでは時が進まない（09:04で静止待機）
@@ -726,7 +726,8 @@ function sendDeviceStatusHeartbeat() {
   if (!gasUrl) return;
 
   const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
-  const myTeamName = localStorage.getItem('game_team_name') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.teamId) || 'チームA';
+  // ⚠️ GAME_DATABASE のデフォルト値（チームA等）は使わない。未設定のまま送信する
+  const myTeamName = localStorage.getItem('game_team_name') || '';
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
   const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
@@ -742,7 +743,8 @@ function sendDeviceStatusHeartbeat() {
   // 2. 同一端末テスト用 LocalStorage 更新
   localStorage.setItem('team_id', myDeviceId);
   localStorage.setItem('game_team_id', myDeviceId);
-  localStorage.setItem('game_team_name', myTeamName);
+  // ⚠️ チーム名はスタッフが設定した値がある場合のみ上書き保存（デフォルト値で上書きしない）
+  if (myTeamName) localStorage.setItem('game_team_name', myTeamName);
   localStorage.setItem('game_loop', String(myLoop));
   localStorage.setItem('game_unlocked_hints', JSON.stringify(gameState.unlockedHints || []));
   localStorage.setItem('game_manaba_user', gameState.manabaLoggedInUser || "");
@@ -1040,7 +1042,7 @@ function applyOperationalRestrictions() {
 // --- 状態の読み込みと保存 ---
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
-  gameState.teamId = localStorage.getItem('team_id') || 'チームA';
+  gameState.teamId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || 'iPad-01';
   gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2026-09-04T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
   gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
@@ -1945,7 +1947,7 @@ function saveStaffConfig() {
   const userEl = document.getElementById('staff-user-name');
 
   const newDevId = inputEl ? inputEl.value.trim() : 'iPad-01';
-  const newAlias = userEl ? userEl.value.trim() : 'チームA';
+  const newAlias = userEl ? userEl.value.trim() : '';
 
   if (!newDevId) {
     alert('管理番号を入力してください。');
