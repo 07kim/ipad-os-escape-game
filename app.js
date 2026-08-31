@@ -1873,14 +1873,16 @@ function showStaffModal() {
   if (!modal) return;
   modal.style.display = 'flex';
   
-  // 1. 管理番号 (1〜30)
+  // 1. 管理番号 (1〜30 選択式)
   const inputEl = document.getElementById('staff-team-id');
+  const badgeEl = document.getElementById('staff-selected-id-badge');
   const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
   if (inputEl) inputEl.value = currentDevId;
+  if (badgeEl) badgeEl.innerText = currentDevId;
 
-  // 2. 管理番号の代名詞（チーム名・プレイヤー名など）
+  // 2. 代名詞（チーム名・プレイヤー名など）
   const userEl = document.getElementById('staff-user-name');
-  const currentAlias = localStorage.getItem('game_team_name') || (window.GAME_DATABASE?.system?.teamId) || gameState.manabaUser || 'チームA';
+  const currentAlias = localStorage.getItem('game_team_name') || (window.GAME_DATABASE?.system?.teamId) || gameState.manabaUser || currentDevId;
   if (userEl) userEl.value = currentAlias;
 
   // 1〜30 のボタングリッドを生成
@@ -1904,7 +1906,20 @@ function showStaffModal() {
 
 function selectStaffIpad(name) {
   const inputEl = document.getElementById('staff-team-id');
+  const badgeEl = document.getElementById('staff-selected-id-badge');
+  const userEl = document.getElementById('staff-user-name');
+
   if (inputEl) inputEl.value = name;
+  if (badgeEl) badgeEl.innerText = name;
+
+  // 代名詞入力欄が空、または「iPad-XX」というデフォルト名のままなら、新しい番号のデフォルト名に自動更新
+  if (userEl) {
+    const val = userEl.value.trim();
+    if (!val || val.startsWith('iPad-') || val.match(/^iPad/i)) {
+      userEl.value = name;
+    }
+  }
+
   document.querySelectorAll('.staff-ipad-btn').forEach(b => {
     const num = name.replace('iPad-', '');
     if (b.innerText.trim() === num) {

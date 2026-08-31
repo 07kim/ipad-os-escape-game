@@ -2300,25 +2300,34 @@
             <button type="button" class="btn-subtle" onclick="closeStaffModal()" style="padding:5px 10px; font-size:12px; border-radius:6px;">✕ 閉じる</button>
           </div>
           
-          <!-- ① 管理番号 (1〜30) -->
-          <div class="form-group" style="margin-bottom:14px;">
+          <!-- ① 代名詞・端末名（自由入力欄・筆頭） -->
+          <div class="form-group" style="margin-bottom:16px;">
             <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:5px; display:block;">
-              📱 管理番号 (1〜30):
+              🏷️ 代名詞・端末名 (自由に書き換え可能):
             </label>
-            <input type="text" id="staff-team-id" placeholder="iPad-01" style="font-weight:800; font-family:'Orbitron', monospace; text-align:center; font-size:16px; padding:9px 12px; border:2px solid #0284c7; border-radius:10px; width:100%; box-sizing:border-box; background:#f0f9ff; color:#0369a1; margin-bottom:8px;">
-            
-            <div style="font-size:11px; color:#64748b; margin-bottom:4px; font-weight:700;">クイック番号選択 (1〜30):</div>
-            <div class="staff-team-grid" id="staff-ipad-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:120px; overflow-y:auto; padding-right:2px;">
-              <!-- JSで 01 〜 30 ボタンを自動描画 -->
+            <input type="text" id="staff-user-name" placeholder="例: チームA、連城 観、1班 など" style="font-weight:700; font-size:14px; padding:9px 12px; border:1.5px solid #0284c7; border-radius:10px; width:100%; box-sizing:border-box; background:#f0f9ff; color:#0369a1;">
+            <div style="font-size:11px; color:#64748b; margin-top:4px; font-weight:600; line-height:1.4;">
+              💡 下の番号を選ぶと初期名（iPad-01等）が入りますが、自由にチーム名や個人名に上書きできます
             </div>
           </div>
 
-          <!-- ② 管理番号の代名詞（チーム名・プレイヤー名など） -->
+          <!-- ② 管理番号 (1〜30 選択式) -->
           <div class="form-group" style="margin-bottom:18px;">
-            <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:5px; display:block;">
-              🏷️ 代名詞 (チーム名・プレイヤー名など):
-            </label>
-            <input type="text" id="staff-user-name" placeholder="例: チームA、連城 観、1班 など" style="font-weight:700; font-size:14px; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:10px; width:100%; box-sizing:border-box;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; margin:0;">
+                📱 管理番号 (1〜30 選択式):
+              </label>
+              <div style="display:flex; align-items:center; gap:5px;">
+                <span style="font-size:11px; color:#64748b; font-weight:700;">選択中:</span>
+                <span id="staff-selected-id-badge" style="font-family:'Orbitron', monospace; font-size:12px; font-weight:900; background:#0284c7; color:#fff; padding:2px 8px; border-radius:6px;">iPad-01</span>
+              </div>
+            </div>
+            <!-- 選択値を保持する隠しフィールド -->
+            <input type="hidden" id="staff-team-id" value="iPad-01">
+            
+            <div class="staff-team-grid" id="staff-ipad-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:125px; overflow-y:auto; padding-right:2px; padding-top:2px;">
+              <!-- JSで 01 〜 30 ボタンを自動描画 -->
+            </div>
           </div>
 
           <!-- アクション操作群（保存・リロード・リセット） -->
