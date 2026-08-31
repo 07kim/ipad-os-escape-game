@@ -3780,23 +3780,39 @@
 
       // 1. 最新データからデバイスを展開（GAS・ローカル双方のフィールド名を完全吸収）
       latestDevicesData.forEach(d => {
-        // 管理番号（端末ID: 例 iPad-30）の判定
-        let devId = d.id || d.teamId || d.name || 'iPad-01';
-        // チーム名（例: チームA）の判定
-        let teamName = d.teamName || d.team || (d.id && d.teamId && d.teamId !== d.id ? d.teamId : '') || '';
+        // フィールド候補の取得
+        const rawId = (d.id || '').trim();
+        const rawTeamId = (d.teamId || '').trim();
+        const rawName = (d.name || '').trim();
+        const rawTeamName = (d.teamName || d.team || '').trim();
 
-        // 登録状態の判定（明示的なregisteredフラグ、またはチーム名が未設定でないこと）
-        const isReg = (d.registered === true || d.registered === 1 || (teamName && teamName !== '未設定' && !teamName.includes('未設定')));
+        let devId = '';
+        let teamName = '';
 
-        // チーム名が空の場合、devIdがiPad-xxなら未設定、それ以外ならチーム名とする
-        if (!teamName) {
-          if (devId.startsWith('iPad-') || devId.match(/^\d+$/)) {
-            teamName = '未設定';
-          } else {
-            teamName = devId;
-            devId = d.name || d.id || 'iPad-01';
-          }
+        // ① 管理番号（iPad-XX 形式、または数字）を特定
+        if (rawId.startsWith('iPad-') || rawId.match(/^\d+$/)) {
+          devId = rawId;
+        } else if (rawTeamId.startsWith('iPad-') || rawTeamId.match(/^\d+$/)) {
+          devId = rawTeamId;
+        } else if (rawName.startsWith('iPad-') || rawName.match(/^\d+$/)) {
+          devId = rawName;
+        } else {
+          devId = 'iPad-01';
         }
+
+        // ② 代名詞・チーム名を特定（管理番号と一致しない文字列を採用）
+        if (rawTeamName && rawTeamName !== devId) {
+          teamName = rawTeamName;
+        } else if (rawTeamId && rawTeamId !== devId && !rawTeamId.startsWith('iPad-')) {
+          teamName = rawTeamId;
+        } else if (rawId && rawId !== devId && !rawId.startsWith('iPad-')) {
+          teamName = rawId;
+        } else {
+          teamName = '未設定';
+        }
+
+        // 登録状態の判定
+        const isReg = (d.registered === true || d.registered === 1 || (teamName && teamName !== '未設定' && !teamName.includes('未設定')));
 
         devicesMap[devId] = {
           id: devId,
@@ -4180,17 +4196,30 @@
       sendCloudAdminCommand({
         id: "NAME_CHANGE_" + Date.now(),
         type: "set_device_info",
-        name: `管理番号・チーム変更 (${oldDeviceId} ➔ ${newDeviceId})`,
+        name: `管理番号・チーム変更 (${oldDeviceId} ➔ ${newDeviceId} / ${newTeam})`,
         params: {
           target: oldDeviceId,
           newDeviceId: newDeviceId,
           teamId: newTeam,
           timestamp: Date.now()
         }
-      }, `✅ 【${oldDeviceId}】の管理番号を「${newDeviceId}」、チーム名を「${newTeam}」に更新しました！`);
+      }, `✅ 【${newDeviceId}】の代名詞（チーム名）を「${newTeam || '未設定'}」に更新しました！`);
 
-      // ローカル同期トリガー発行（同一ブラウザ/タブ間即座反映）
+      // 2. GASスプレッドシートへ直接ステータス更新を送信（即時クラウド同期）
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (gasUrl) {
+        const updateUrl = gasUrl.includes('?') 
+          ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&registered=${newTeam ? 1 : 0}&_t=${Date.now()}`
+          : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&registered=${newTeam ? 1 : 0}&_t=${Date.now()}`;
+        fetch(updateUrl).catch(() => {});
+      }
+
+      // 3. 同一ブラウザ/タブ用 LocalStorage の即時書き込み
       try {
+        localStorage.setItem('game_team_id', newDeviceId);
+        localStorage.setItem('team_id', newDeviceId);
+        localStorage.setItem('game_team_name', newTeam);
+        localStorage.setItem('device_registered', newTeam ? '1' : '0');
         localStorage.setItem('admin_device_info_trigger', JSON.stringify({
           target: oldDeviceId,
           newDeviceId: newDeviceId,
@@ -4199,34 +4228,37 @@
         }));
       } catch(e) {}
 
-      // 2. 表示を即時更新
-      const userSubEl = document.getElementById('detail-dev-user-sub');
-      const titleEl = document.getElementById('detail-dev-title');
-      const numBadgeEl = document.getElementById('detail-dev-num-badge');
-      const teamLabelEl = document.getElementById('detail-dev-team-label');
-      const numMatch = newDeviceId.match(/(\d+)/);
-      const numOnly = numMatch ? String(parseInt(numMatch[1])).padStart(2, '0') : newDeviceId;
-
-      if (titleEl) titleEl.innerText = newDeviceId;
-      if (numBadgeEl) numBadgeEl.innerText = numOnly;
-      if (teamLabelEl) teamLabelEl.innerHTML = `👥 ${newTeam || '未設定'}`;
-      if (userSubEl) {
-        userSubEl.innerHTML = `📱 管理番号: <strong>${newDeviceId}</strong> | 👥 チーム: <strong>${newTeam || '未設定'}</strong>`;
-      }
-
-      // latestDevicesData の該当端末データも更新
+      // 4. latestDevicesData の該当端末データを確実に更新または追加
       if (Array.isArray(latestDevicesData)) {
-        const target = latestDevicesData.find(d => (d.id || d.teamId) === oldDeviceId);
+        let target = latestDevicesData.find(d => (d.id === oldDeviceId || d.teamId === oldDeviceId || d.name === oldDeviceId || d.id === newDeviceId));
         if (target) {
           target.id = newDeviceId;
           target.name = newDeviceId;
-          if (newTeam) target.teamId = newTeam;
+          target.teamId = newTeam;
+          target.teamName = newTeam;
+          target.team = newTeam;
+          target.registered = !!newTeam;
+        } else {
+          latestDevicesData.push({
+            id: newDeviceId,
+            name: newDeviceId,
+            teamId: newTeam,
+            teamName: newTeam,
+            team: newTeam,
+            registered: !!newTeam,
+            loop: 1,
+            hints: 0,
+            screen: 'ホーム画面',
+            lastSeen: 'たった今',
+            lastSeenMs: Date.now(),
+            isActive: true
+          });
         }
       }
 
       currentSelectedDeviceId = newDeviceId;
       closeEditDeviceNameModal();
-      showToast(`📱 管理番号: ${newDeviceId} / チーム: ${newTeam} に変更しました`);
+      showToast(`📱 管理番号: ${newDeviceId} / 代名詞: ${newTeam || '未設定'} を保存しました`);
       renderDynamicMonitoringList();
     }
 

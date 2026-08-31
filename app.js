@@ -535,10 +535,15 @@ function executeRemoteAdminCommand(cmd) {
   if (type === 'set_device_info' || p.action === 'set_device_info') {
     const target = cmd.target || p.target;
     const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
-    if (!target || target === currentDevId || target === 'ALL') {
+    const currentTeamName = localStorage.getItem('game_team_name') || '';
+
+    // ターゲットが自身のデバイスID、以前のチーム名、ALL、または空の場合に確実に反映
+    const isTargetMe = (!target || target === 'ALL' || target === currentDevId || target === currentTeamName || target === 'チームA');
+    if (isTargetMe) {
       if (p.newDeviceId) {
         gameState.teamId = p.newDeviceId;
         localStorage.setItem('game_team_id', p.newDeviceId);
+        localStorage.setItem('team_id', p.newDeviceId);
         const sbTeam = document.getElementById('sb-team-id');
         if (sbTeam) sbTeam.innerText = p.newDeviceId;
         const settApple = document.getElementById('settings-apple-id');
@@ -546,17 +551,20 @@ function executeRemoteAdminCommand(cmd) {
         const settIcon = document.getElementById('settings-avatar-icon');
         if (settIcon) settIcon.innerText = p.newDeviceId;
       }
-      if (p.teamId) {
+      if (p.teamId !== undefined) {
         if (window.GAME_DATABASE && window.GAME_DATABASE.system) {
           window.GAME_DATABASE.system.teamId = p.teamId;
         }
         localStorage.setItem('game_team_name', p.teamId);
+        localStorage.setItem('device_registered', p.teamId ? '1' : '0');
       }
       if (p.studentName) {
         gameState.manabaUser = p.studentName;
         localStorage.setItem('manaba_user', p.studentName);
       }
       if (typeof updateAppUI === 'function') updateAppUI();
+      // 直ちに最新ステータスをGASへ返信
+      sendDeviceStatusHeartbeat();
       console.log(`📱 端末情報が運営により更新されました: 管理番号=${gameState.teamId}, チーム=${p.teamId || ''}`);
     }
   }
@@ -1042,7 +1050,20 @@ function applyOperationalRestrictions() {
 // --- 状態の読み込みと保存 ---
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
-  gameState.teamId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || 'iPad-01';
+  
+  // 管理番号（iPad-XX）の復元とクレンジング
+  let rawDevId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || 'iPad-01';
+  if (!rawDevId.startsWith('iPad-') && !rawDevId.match(/^\d+$/)) {
+    // もし過去の残骸で「チームA」等の文字が入っていたら代名詞に移動して管理番号はiPad-01にする
+    if (!localStorage.getItem('game_team_name') && rawDevId !== 'チームA') {
+      localStorage.setItem('game_team_name', rawDevId);
+    }
+    rawDevId = 'iPad-01';
+    localStorage.setItem('game_team_id', 'iPad-01');
+    localStorage.setItem('team_id', 'iPad-01');
+  }
+  gameState.teamId = rawDevId;
+
   gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2026-09-04T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
   gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
