@@ -3627,20 +3627,35 @@
       // アクセス実績のあるデバイスマップを構築（未接続の空枠30個は作らない流動的仕様）
       const devicesMap = {};
 
-      // 1. 最新データからデバイスを展開
+      // 1. 最新データからデバイスを展開（GAS・ローカル双方のフィールド名を完全吸収）
       latestDevicesData.forEach(d => {
-        const id = d.id || d.name || 'Unknown';
-        devicesMap[id] = {
-          id: id,
-          name: d.name || id,
+        // 管理番号（端末ID: 例 iPad-30）の判定
+        let devId = d.id || d.teamId || d.name || 'iPad-01';
+        // チーム名（例: チームA）の判定
+        let teamName = d.teamName || d.team || (d.id && d.teamId && d.teamId !== d.id ? d.teamId : '') || '';
+
+        // チーム名が空の場合、devIdがiPad-xxなら未設定、それ以外ならチーム名とする
+        if (!teamName) {
+          if (devId.startsWith('iPad-') || devId.match(/^\d+$/)) {
+            teamName = '未設定';
+          } else {
+            teamName = devId;
+            devId = d.name || d.id || 'iPad-01';
+          }
+        }
+
+        devicesMap[devId] = {
+          id: devId,
+          name: devId,
+          teamId: teamName,
+          team: teamName,
+          teamName: teamName,
           loop: parseInt(d.loop, 10) || 1,
           hints: parseInt(d.hintsCount || d.hints, 10) || 0,
-          manaba: d.manaba || "未ログイン",
-          teamId: d.teamId || d.team || "",
-          team: d.teamId || d.team || "",
+          manaba: d.manaba || d.manabaUser || "未ログイン",
           screen: d.screen || d.currentScreen || "ホーム画面",
           lastSeen: d.lastSeen || "3秒前",
-          score: parseInt(d.score, 10) || (parseInt(d.loop, 10) || 1) * 1000 + (parseInt(d.hints, 10) || 0) * 100,
+          score: parseInt(d.score, 10) || (parseInt(d.loop, 10) || 1) * 1000 + (parseInt(d.hintsCount || d.hints, 10) || 0) * 100,
           lastSeenMs: d.lastSeenMs || Date.now(),
           isActive: true
         };
@@ -3878,8 +3893,8 @@
       const slotsListEl = document.getElementById('edit-available-slots-list');
       if (!grid) return;
 
-      // 現在接続中/登録中のデバイスID一覧を取得
-      const usedIds = new Set((latestDevicesData || []).map(d => (d.id || d.name || '').trim()).filter(Boolean));
+      // 現在接続中/登録中のデバイスID一覧を取得（teamId / id の両方をサポート）
+      const usedIds = new Set((latestDevicesData || []).map(d => (d.id || d.teamId || d.name || '').trim()).filter(Boolean));
       
       const availableSlots = [];
       grid.innerHTML = "";
@@ -3948,7 +3963,7 @@
 
       // 既存の情報を取得して入力欄に初期セット
       const devData = (latestDevicesData || []).find(d => (d.id || d.teamId) === deviceId);
-      const currentTeam = devData ? (devData.teamId || devData.team || '') : '';
+      const currentTeam = devData ? (devData.teamName || devData.team || (devData.id && devData.teamId !== devData.id ? devData.teamId : '')) : '';
 
       if (devIdInput) devIdInput.value = deviceId;
       if (teamInput) teamInput.value = currentTeam || (window.GAME_DATABASE?.system?.teamId || 'チームA');

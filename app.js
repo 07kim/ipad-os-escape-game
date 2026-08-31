@@ -609,20 +609,23 @@ function sendDeviceStatusHeartbeat() {
   const gasUrl = getResolvedGasUrl();
   if (!gasUrl) return;
 
-  const myTeam = gameState.teamId || 'iPad-01';
+  const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
+  const myTeamName = localStorage.getItem('game_team_name') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.teamId) || 'チームA';
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
   const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
 
   // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
   const getUrl = gasUrl.includes('?') 
-    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myTeam)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`
-    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myTeam)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`;
+    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`
+    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`;
 
   fetch(getUrl).catch(() => {});
 
   // 2. 同一端末テスト用 LocalStorage 更新
-  localStorage.setItem('team_id', myTeam);
+  localStorage.setItem('team_id', myDeviceId);
+  localStorage.setItem('game_team_id', myDeviceId);
+  localStorage.setItem('game_team_name', myTeamName);
   localStorage.setItem('game_loop', String(myLoop));
   localStorage.setItem('game_unlocked_hints', JSON.stringify(gameState.unlockedHints || []));
   localStorage.setItem('game_manaba_user', gameState.manabaLoggedInUser || "");

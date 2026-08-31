@@ -51,8 +51,10 @@ function doGet(e) {
       var hintsCount = Number(p.hints || 0);
       var manaba = p.manaba ? decodeURIComponent(p.manaba) : "未ログイン";
       var loopNum = Number(p.loop || 1);
+      var teamName = p.teamName ? decodeURIComponent(p.teamName) : "";
       
       updateTeamStatus(ss, p.teamId, loopNum, {
+        teamName: teamName,
         hintsCount: hintsCount,
         manabaUser: manaba
       });
@@ -356,33 +358,49 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   if (!sheet) return;
 
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return;
-
-  var teamIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   var targetRow = -1;
 
-  for (var i = 0; i < teamIds.length; i++) {
-    if (teamIds[i][0] === teamId) {
-      targetRow = i + 2;
-      break;
+  if (lastRow > 1) {
+    var teamIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < teamIds.length; i++) {
+      if (teamIds[i][0] === teamId) {
+        targetRow = i + 2;
+        break;
+      }
     }
   }
-
-  if (targetRow === -1) return;
 
   var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
   var hintsCount = (statusData && statusData.hintsCount !== undefined) ? statusData.hintsCount : 0;
   var manaba = (statusData && statusData.manabaUser) ? statusData.manabaUser : "未ログイン";
   var battery = (statusData && statusData.battery) ? statusData.battery : "100%";
+  var teamName = (statusData && statusData.teamName) ? statusData.teamName : "";
 
-  sheet.getRange(targetRow, 3, 1, 6).setValues([[
-    Number(loopNum || 1),
-    hintsCount,
-    manaba,
-    battery,
-    "接続中",
-    nowStr
-  ]]);
+  if (targetRow === -1) {
+    // 該当行がない場合は新規追加
+    sheet.appendRow([
+      teamId,
+      teamName || "未設定",
+      Number(loopNum || 1),
+      hintsCount,
+      manaba,
+      battery,
+      "接続中",
+      nowStr
+    ]);
+  } else {
+    if (teamName) {
+      sheet.getRange(targetRow, 2).setValue(teamName);
+    }
+    sheet.getRange(targetRow, 3, 1, 6).setValues([[
+      Number(loopNum || 1),
+      hintsCount,
+      manaba,
+      battery,
+      "接続中",
+      nowStr
+    ]]);
+  }
 }
 
 // 7. モニタリングデータの初期化（マスターリセット用）
