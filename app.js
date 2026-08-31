@@ -123,13 +123,14 @@ function loadGameDatabase() {
 // --- 起動処理 ---
 window.addEventListener('DOMContentLoaded', () => {
   try {
-    // 🔒 接続登録チェック（未登録ならゲームを止めて接続待機画面を表示）
-    if (localStorage.getItem('device_registered') !== '1') {
-      const pairingEl = document.getElementById('device-pairing-screen');
-      if (pairingEl) pairingEl.style.display = 'flex';
-      console.log('⏳ device_registered が未設定のため接続待機画面を表示します。');
-      return; // ゲーム起動処理をここで停止
+    // 🔒 接続登録（命名）チェック（未命名ならバッジを表示し、フラグをセット。ただしゲームは起動する）
+    const isRegistered = localStorage.getItem('device_registered') === '1';
+    window._deviceRegistered = isRegistered;
+    const unregBadge = document.getElementById('unregistered-badge');
+    if (unregBadge) {
+      unregBadge.style.display = isRegistered ? 'none' : 'inline-block';
     }
+    console.log('📱 端末登録状況 (device_registered):', isRegistered ? '設定済み' : '未設定');
 
     // キャッシュDBの読み込み
     loadGameDatabase();
@@ -352,15 +353,63 @@ function executeRemoteAdminCommand(cmd) {
     playSystemSound(soundName);
   }
 
-  // ③ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04巻き戻しを完全徹底）
+  // ③ シーン進行統制コマンド（8ステップ）のハンドリング
+  if (type === 'scene_flow_step' || p.step !== undefined) {
+    const stepNum = parseInt(p.step || 1, 10);
+    const loopOverlay = document.getElementById('loop-end-overlay');
+    const loopTag = document.getElementById('loop-end-tag');
+    const stepLoop = parseInt(p.loop || gameState.loop || 1, 10);
+
+    console.log(`🎬 進行ステップ 0${stepNum} を受信しました (周回: ${stepLoop})`);
+
+    // 奇数ステップ（3, 5, 7）: 各周回の終了（一時待機・時間停止・操作ロック画面表示）
+    if (stepNum === 3 || stepNum === 5 || stepNum === 7) {
+      gameState.timerRunning = false;
+      localStorage.setItem('game_timer_running', 'false');
+      playSystemSound("beep");
+
+      if (loopOverlay) {
+        if (loopTag) loopTag.innerText = `${stepLoop}周目 調査終了`;
+        loopOverlay.style.display = 'flex';
+      }
+      return;
+    }
+
+    // 偶数ステップ（2, 4, 6）: 各周回のスタート（ロック解除・周回開始・09:04巻き戻し）
+    if (stepNum === 2 || stepNum === 4 || stepNum === 6) {
+      if (loopOverlay) loopOverlay.style.display = 'none';
+      const loopStartTime = p.startTime || p.timestamp || Date.now();
+      triggerLoopTransition(stepLoop, loopStartTime, true);
+      return;
+    }
+
+    // ステップ1: オープニング待機
+    if (stepNum === 1) {
+      if (loopOverlay) loopOverlay.style.display = 'none';
+      showLockScreen();
+      return;
+    }
+
+    // ステップ8: ゲーム全体の終了
+    if (stepNum === 8) {
+      if (loopOverlay) loopOverlay.style.display = 'none';
+      gameState.timerRunning = false;
+      localStorage.setItem('game_timer_running', 'false');
+      return;
+    }
+  }
+
+  // ④ 周回強制移行（ホーム初期化 ＆ ロック画面 ＆ 09:04巻き戻しを完全徹底）
   if (isLoopChange) {
+    const loopOverlay = document.getElementById('loop-end-overlay');
+    if (loopOverlay) loopOverlay.style.display = 'none';
     const nextLoop = parseInt(p.loop, 10);
     if (!isNaN(nextLoop)) {
       const loopStartTime = p.startTime || p.timestamp || Date.now();
       triggerLoopTransition(nextLoop, loopStartTime, true);
     }
   } else if (p.forceLock === true || p.lock === true) {
-    // ④ 明示的なロック画面強制指示
+    // ⑤ 明示的なロック画面強制指示
     showLockScreen();
   }
 
@@ -637,11 +686,12 @@ function sendDeviceStatusHeartbeat() {
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
   const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
+  const isRegistered = localStorage.getItem('device_registered') === '1';
 
   // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
   const getUrl = gasUrl.includes('?') 
-    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`
-    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&_t=${Date.now()}`;
+    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`
+    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`;
 
   fetch(getUrl).catch(() => {});
 

@@ -1582,7 +1582,7 @@
             ステップに沿って進行をワンクリックで配信します。全稼働iPadへ即座に周回切替やコンテンツ解放が同期されます。
           </p>
 
-          <!-- 全5ステップカード一覧 -->
+          <!-- 全8ステップカード一覧 -->
           <div class="flow-steps-container">
             <!-- 01. 待機 -->
             <div class="flow-step-card done" id="flow-card-1" onclick="handleStepCardClick(1)">
@@ -1612,13 +1612,13 @@
               </div>
             </div>
 
-            <!-- 03. 2周目突入 -->
+            <!-- 03. 1周目終了 -->
             <div class="flow-step-card next" id="flow-card-3" onclick="handleStepCardClick(3)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">03</div>
                 <div class="flow-step-title-block">
-                  <h3>2周目突入（タイムループ）</h3>
-                  <div class="flow-step-desc">09:04へ巻き戻し・1周目ラップ確定・2周目解禁</div>
+                  <h3>1周目終了（一時ロック）</h3>
+                  <div class="flow-step-desc">1周目調査終了・画面を一時ロックし待機</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-3" style="background:#84cc16; color:#fff;">
@@ -1626,13 +1626,13 @@
               </div>
             </div>
 
-            <!-- 04. 3周目突入 -->
+            <!-- 04. 2周目開始 -->
             <div class="flow-step-card locked" id="flow-card-4" onclick="handleStepCardClick(4)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">04</div>
                 <div class="flow-step-title-block">
-                  <h3>3周目突入（最終決戦フェーズ）</h3>
-                  <div class="flow-step-desc">09:04へ巻き戻し・2周目ラップ確定・3周目解禁</div>
+                  <h3>2周目スタート（タイムループ）</h3>
+                  <div class="flow-step-desc">09:04へ巻き戻し・ロック解除・2周目解禁</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-4" style="background:#f1f5f9; color:#94a3b8;">
@@ -1640,16 +1640,58 @@
               </div>
             </div>
 
-            <!-- 05. ゲーム終了 -->
+            <!-- 05. 2周目終了 -->
             <div class="flow-step-card locked" id="flow-card-5" onclick="handleStepCardClick(5)">
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">05</div>
+                <div class="flow-step-title-block">
+                  <h3>2周目終了（一時ロック）</h3>
+                  <div class="flow-step-desc">2周目調査終了・画面を一時ロックし待機</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-5" style="background:#f1f5f9; color:#94a3b8;">
+                🔒 未到達
+              </div>
+            </div>
+
+            <!-- 06. 3周目開始 -->
+            <div class="flow-step-card locked" id="flow-card-6" onclick="handleStepCardClick(6)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">06</div>
+                <div class="flow-step-title-block">
+                  <h3>3周目スタート（最終決戦）</h3>
+                  <div class="flow-step-desc">09:04へ巻き戻し・ロック解除・3周目解禁</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-6" style="background:#f1f5f9; color:#94a3b8;">
+                🔒 未到達
+              </div>
+            </div>
+
+            <!-- 07. 3周目終了 -->
+            <div class="flow-step-card locked" id="flow-card-7" onclick="handleStepCardClick(7)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">07</div>
+                <div class="flow-step-title-block">
+                  <h3>3周目終了（一時ロック）</h3>
+                  <div class="flow-step-desc">3周目調査終了・画面を一時ロックし待機</div>
+                </div>
+              </div>
+              <div class="flow-step-status-tag" id="flow-tag-7" style="background:#f1f5f9; color:#94a3b8;">
+                🔒 未到達
+              </div>
+            </div>
+
+            <!-- 08. ゲーム終了 -->
+            <div class="flow-step-card locked" id="flow-card-8" onclick="handleStepCardClick(8)">
+              <div class="flow-step-left">
+                <div class="flow-step-num-badge">08</div>
                 <div class="flow-step-title-block">
                   <h3>ゲーム終了（ログ集計 ＆ アンケート）</h3>
                   <div class="flow-step-desc">タイマー停止・アンケート表示・ログ確定</div>
                 </div>
               </div>
-              <div class="flow-step-status-tag" id="flow-tag-5" style="background:#f1f5f9; color:#94a3b8;">
+              <div class="flow-step-status-tag" id="flow-tag-8" style="background:#f1f5f9; color:#94a3b8;">
                 🔒 未到達
               </div>
             </div>
@@ -1658,7 +1700,7 @@
           <!-- NEXT大型進行ボタン -->
           <button class="flow-next-hero-btn" id="btn-flow-next-hero" onclick="advanceToNextScene()">
             <i data-lucide="fast-forward" style="width:20px; height:20px;"></i>
-            <span id="text-flow-next-hero">▶ 次のシーンへ進行 (03. 2周目突入)</span>
+            <span id="text-flow-next-hero">▶ 次のシーンへ進行 (03. 1周目終了)</span>
           </button>
 
           <!-- サブ操作：ロールバック ＆ 手動アンロック -->
@@ -1796,6 +1838,18 @@
         
         <!-- 左ペイン：ソート・絞り込み・検索 ＆ 動的縦スクロール一覧 -->
         <div class="monitor-left-card">
+          <!-- 🏷️ 命名設定状況タブ（設定済み / 未設定） -->
+          <div style="display:flex; gap:6px; margin-bottom:10px; border-bottom:1px solid var(--border-color, #e2e8f0); padding-bottom:8px;">
+            <button class="nav-btn active" id="tab-monitor-registered" onclick="setMonitorRegisteredTab('registered')" style="flex:1; padding:7px 10px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; border-radius:8px;">
+              <span>🏷️ 設定済み端末</span>
+              <span id="badge-count-registered" style="background:#0284c7; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px;">0</span>
+            </button>
+            <button class="nav-btn" id="tab-monitor-unregistered" onclick="setMonitorRegisteredTab('unregistered')" style="flex:1; padding:7px 10px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; border-radius:8px;">
+              <span>⚠️ 未設定端末</span>
+              <span id="badge-count-unregistered" style="background:#ef4444; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px;">0</span>
+            </button>
+          </div>
+
           <!-- ソート項目 ＆ 昇順/降順トグル -->
           <div class="monitor-sort-controls">
             <div class="sort-btn-group">
@@ -2909,16 +2963,19 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    // ===== 🎬 進行統制（5ステップ進行・ロールバック・定型文）ロジック =====
+    // ===== 🎬 進行統制（8ステップ独立進行・ロールバック・定型文）ロジック =====
     let currentFlowStep = 1;
     let manualSceneUnlock = false;
 
     const FLOW_STEP_CONFIG = {
-      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態" },
-      2: { name: "1周目スタート", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁" },
-      3: { name: "2周目突入（タイムループ）", loop: 2, desc: "09:04へ巻き戻し・1周目ラップ確定・2周目解禁" },
-      4: { name: "3周目突入（最終決戦）", loop: 3, desc: "09:04へ巻き戻し・2周目ラップ確定・3周目解禁" },
-      5: { name: "ゲーム終了（集計・アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定" }
+      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態", isEnd: false },
+      2: { name: "1周目スタート（ゲーム開始）", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁", isEnd: false },
+      3: { name: "1周目終了（一時ロック）", loop: 1, desc: "1周目調査終了・画面を一時ロックし待機", isEnd: true },
+      4: { name: "2周目スタート（タイムループ）", loop: 2, desc: "09:04へ巻き戻し・ロック解除・2周目解禁", isEnd: false },
+      5: { name: "2周目終了（一時ロック）", loop: 2, desc: "2周目調査終了・画面を一時ロックし待機", isEnd: true },
+      6: { name: "3周目スタート（最終決戦）", loop: 3, desc: "09:04へ巻き戻し・ロック解除・3周目解禁", isEnd: false },
+      7: { name: "3周目終了（一時ロック）", loop: 3, desc: "3周目調査終了・画面を一時ロックし待機", isEnd: true },
+      8: { name: "ゲーム終了（ログ集計 ＆ アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定", isEnd: true }
     };
 
     function initFlowState() {
@@ -2930,8 +2987,8 @@
     }
 
     function updateFlowStepsUI() {
-      // 1. 各ステップカードのUI状態更新
-      for (let s = 1; s <= 5; s++) {
+      // 1. 各ステップカードのUI状態更新 (1〜8)
+      for (let s = 1; s <= 8; s++) {
         const cardEl = document.getElementById(`flow-card-${s}`);
         const tagEl = document.getElementById(`flow-tag-${s}`);
         if (!cardEl || !tagEl) continue;
@@ -2971,7 +3028,7 @@
       const nextBtnText = document.getElementById('text-flow-next-hero');
       const nextBtn = document.getElementById('btn-flow-next-hero');
       if (nextBtn && nextBtnText) {
-        if (currentFlowStep >= 5) {
+        if (currentFlowStep >= 8) {
           nextBtnText.innerText = "🏁 全シーン進行完了（公演終了）";
           nextBtn.style.background = "#64748b";
           nextBtn.disabled = true;
@@ -2992,7 +3049,7 @@
 
     // ▶ NEXTボタンクリック：次のシーンへ安全に進行（オリジナル確認モーダル付き）
     async function advanceToNextScene() {
-      if (currentFlowStep >= 5) return;
+      if (currentFlowStep >= 8) return;
       const nextStep = currentFlowStep + 1;
       const config = FLOW_STEP_CONFIG[nextStep];
       if (!config) return;
@@ -3004,16 +3061,23 @@
       let type = "info";
       let icon = "fast-forward";
 
-      if (nextStep === 5) {
+      if (nextStep === 8) {
         title = "🏁 ゲーム終了確認";
         subtitle = "タイマー停止 ＆ ログ集計・アンケート画面移行";
-        msg = "タイマー計測を停止し、全iPadを「05. ゲーム終了（ログ集計・アンケート画面）」へ移行します。\n\n公演を終了してよろしいですか？";
+        msg = "タイマー計測を停止し、全iPadを「08. ゲーム終了（ログ集計・アンケート画面）」へ移行します。\n\n公演を終了してよろしいですか？";
         btnText = "🏁 ゲーム終了・集計";
         type = "danger";
         icon = "flag";
-      } else if (nextStep === 3 || nextStep === 4) {
-        title = "🌀 タイムループ突入確認";
-        subtitle = `${config.loop}周目突入・作中時刻09:04巻き戻し`;
+      } else if (config.isEnd) {
+        title = `🛑 ${config.loop}周目 終了（一時待機）確認`;
+        subtitle = `タイマーを一時停止し、全iPadを一時ロックします`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※iPad画面に【調査終了・タイムアップ】オーバーレイが表示され、操作が一時ロックされます。\n\n進行してよろしいですか？`;
+        btnText = `🛑 ${config.loop}周目を終了・ロック`;
+        type = "warning";
+        icon = "pause-circle";
+      } else if (nextStep === 4 || nextStep === 6) {
+        title = `🌀 ${config.loop}周目 突入確認`;
+        subtitle = `${config.loop}周目スタート・作中時刻09:04巻き戻し`;
         msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※作中世界線時刻が【09:04:00】に巻き戻り、前周回のラップタイムが確定し、新周回コンテンツが全端末で解禁されます。\n\n進行してよろしいですか？`;
         btnText = `🌀 ${config.loop}周目へ突入`;
         type = "warning";
@@ -3124,7 +3188,7 @@
       const config = FLOW_STEP_CONFIG[stepNum];
       if (!config) return;
 
-      // 周回切替とタイマー連動
+      // 周回切替とタイマー連動 (8ステップ)
       if (stepNum === 1) {
         // 01. 待機
         resetAdminTimerSilent();
@@ -3134,13 +3198,24 @@
         if (!adminTimerState.isRunning) startAdminTimer();
         onAdminLoopChanged(1);
       } else if (stepNum === 3) {
-        // 03. 2周目突入
-        onAdminLoopChanged(2);
+        // 03. 1周目終了（一時停止・ロック）
+        pauseAdminTimer();
       } else if (stepNum === 4) {
-        // 04. 3周目突入
-        onAdminLoopChanged(3);
+        // 04. 2周目突入・開始
+        if (!adminTimerState.isRunning) startAdminTimer();
+        onAdminLoopChanged(2);
       } else if (stepNum === 5) {
-        // 05. ゲーム終了
+        // 05. 2周目終了（一時停止・ロック）
+        pauseAdminTimer();
+      } else if (stepNum === 6) {
+        // 06. 3周目突入・開始
+        if (!adminTimerState.isRunning) startAdminTimer();
+        onAdminLoopChanged(3);
+      } else if (stepNum === 7) {
+        // 07. 3周目終了（一時停止・ロック）
+        pauseAdminTimer();
+      } else if (stepNum === 8) {
+        // 08. ゲーム終了
         pauseAdminTimer();
       }
 
@@ -3152,10 +3227,12 @@
         params: {
           step: stepNum,
           loop: config.loop,
+          action: config.isEnd ? "loop_end" : "loop_start",
           timestamp: Date.now()
         }
       }, `🎬 【0${stepNum}. ${config.name}】を全稼働iPadへ配信・同期しました！`);
     }
+
 
     // 💡 定型文クイック入力
     function setQuickAlertText(text) {
@@ -3625,6 +3702,25 @@
       } catch(e) {}
     }
 
+    // 🏷️ 命名設定状況タブの選択状態（'registered' または 'unregistered'）
+    let activeMonitorRegisteredTab = 'registered';
+
+    function setMonitorRegisteredTab(tabKey) {
+      activeMonitorRegisteredTab = tabKey;
+      const tabReg = document.getElementById('tab-monitor-registered');
+      const tabUnreg = document.getElementById('tab-monitor-unregistered');
+      if (tabReg && tabUnreg) {
+        if (tabKey === 'registered') {
+          tabReg.classList.add('active');
+          tabUnreg.classList.remove('active');
+        } else {
+          tabReg.classList.remove('active');
+          tabUnreg.classList.add('active');
+        }
+      }
+      renderDynamicMonitoringList();
+    }
+
     // 🌟 動的アクセス一覧の描画（アクセス中の端末のみを生成・流動的管理）
     function renderDynamicMonitoringList() {
       const container = document.getElementById('dynamic-devices-container');
@@ -3642,6 +3738,9 @@
         // チーム名（例: チームA）の判定
         let teamName = d.teamName || d.team || (d.id && d.teamId && d.teamId !== d.id ? d.teamId : '') || '';
 
+        // 登録状態の判定（明示的なregisteredフラグ、またはチーム名が未設定でないこと）
+        const isReg = (d.registered === true || d.registered === 1 || (teamName && teamName !== '未設定' && !teamName.includes('未設定')));
+
         // チーム名が空の場合、devIdがiPad-xxなら未設定、それ以外ならチーム名とする
         if (!teamName) {
           if (devId.startsWith('iPad-') || devId.match(/^\d+$/)) {
@@ -3658,6 +3757,7 @@
           teamId: teamName,
           team: teamName,
           teamName: teamName,
+          registered: isReg,
           loop: parseInt(d.loop, 10) || 1,
           hints: parseInt(d.hintsCount || d.hints, 10) || 0,
           manaba: d.manaba || d.manabaUser || "未ログイン",
@@ -3674,14 +3774,16 @@
         for (let i = 1; i <= 6; i++) {
           const padId = `iPad-${String(i).padStart(2, '0')}`;
           const screens = ["🏫 manaba (講義資料PDF)", "💬 LINK チャット", "🌐 検索ブラウザ", "🔒 ロック画面", "✉️ メーラー (受信トレイ)", "📷 写真メモ"];
+          const isMockReg = (i <= 4); // 1〜4台目を設定済みモックとする
           devicesMap[padId] = {
             id: padId,
             name: padId,
             loop: (i <= 2) ? 2 : 1,
             hints: (i === 1) ? 4 : (i === 2 ? 3 : 1),
             manaba: "",
-            teamId: ['チームA', 'チームB', 'チームC', 'チームA', 'チームB', '未設定'][i - 1],
-            team: ['チームA', 'チームB', 'チームC', 'チームA', 'チームB', '未設定'][i - 1],
+            teamId: isMockReg ? ['チームA', 'チームB', 'チームC', 'チームD'][i - 1] : '未設定',
+            team: isMockReg ? ['チームA', 'チームB', 'チームC', 'チームD'][i - 1] : '未設定',
+            registered: isMockReg,
             screen: screens[i - 1] || "ホーム画面",
             lastSeen: `${i * 3}秒前`,
             score: (i <= 2 ? 2000 : 1000) + (i * 120),
@@ -3693,12 +3795,13 @@
 
       let devices = Object.values(devicesMap);
 
-      // 1. サマリーバーの集計・更新
+      // 1. サマリーバー ＆ サブタブバッジの集計・更新
       const totalCount = devices.length;
       const loop1Count = devices.filter(d => d.loop === 1).length;
       const loop2Count = devices.filter(d => d.loop === 2).length;
       const loop3Count = devices.filter(d => d.loop === 3).length;
-      const teamSetCount = devices.filter(d => d.teamId && d.teamId !== '未設定').length;
+      const regCount = devices.filter(d => d.registered).length;
+      const unregCount = devices.filter(d => !d.registered).length;
 
       const sumActiveEl = document.getElementById('summary-active-count');
       const sumL1El = document.getElementById('summary-loop1-count');
@@ -3706,15 +3809,27 @@
       const sumL3El = document.getElementById('summary-loop3-count');
       const sumLoginEl = document.getElementById('summary-login-count');
 
+      const badgeRegEl = document.getElementById('badge-count-registered');
+      const badgeUnregEl = document.getElementById('badge-count-unregistered');
+      if (badgeRegEl) badgeRegEl.innerText = String(regCount);
+      if (badgeUnregEl) badgeUnregEl.innerText = String(unregCount);
+
       if (sumActiveEl) sumActiveEl.innerHTML = `<i data-lucide="tablet" style="width:14px; height:14px;"></i> 現在アクセス中: ${totalCount}台`;
       if (sumL1El) sumL1El.innerText = `1周目: ${loop1Count}台`;
       if (sumL2El) sumL2El.innerText = `2周目: ${loop2Count}台`;
       if (sumL3El) sumL3El.innerText = `3周目: ${loop3Count}台`;
-      if (sumLoginEl) sumLoginEl.innerText = `👥 チーム設定済: ${teamSetCount}台`;
+      if (sumLoginEl) sumLoginEl.innerText = `🏷️ 設定済: ${regCount}台`;
 
-      // 2. 絞り込み ＆ 複合検索
+      // 2. 設定状況タブ ＆ 周回絞り込み ＆ 検索による多層フィルタリング
       let filtered = devices.filter(d => {
+        // 設定状況タブによる絞り込み
+        if (activeMonitorRegisteredTab === 'registered' && !d.registered) return false;
+        if (activeMonitorRegisteredTab === 'unregistered' && d.registered) return false;
+
+        // 周回による絞り込み
         if (monitorFilter !== 'all' && String(d.loop) !== String(monitorFilter)) return false;
+
+        // キーワード検索
         if (searchKeyword) {
           const matchId = d.id.toLowerCase().includes(searchKeyword);
           const matchName = d.name.toLowerCase().includes(searchKeyword);

@@ -52,11 +52,13 @@ function doGet(e) {
       var manaba = p.manaba ? decodeURIComponent(p.manaba) : "未ログイン";
       var loopNum = Number(p.loop || 1);
       var teamName = p.teamName ? decodeURIComponent(p.teamName) : "";
+      var registeredVal = p.registered !== undefined ? Number(p.registered) : 0;
       
       updateTeamStatus(ss, p.teamId, loopNum, {
         teamName: teamName,
         hintsCount: hintsCount,
-        manabaUser: manaba
+        manabaUser: manaba,
+        registered: registeredVal
       });
 
       return renderJson({ success: true, message: "ステータスを更新しました (GET)" });
@@ -166,7 +168,11 @@ function doPost(e) {
     }
 
     if (action === "update_status") {
-      updateTeamStatus(ss, postData.teamId, postData.loopNum, postData.statusData);
+      var statusData = postData.statusData || {};
+      if (statusData.registered === undefined) {
+        statusData.registered = 0;
+      }
+      updateTeamStatus(ss, postData.teamId, postData.loopNum, statusData);
       return renderJson({ success: true, message: "進捗ステータスを更新しました。" });
     }
 
@@ -212,16 +218,16 @@ function cleanAndSetupOptimizedDatabase() {
   // 3. 最新の4大シートのみをピカピカに作成
   // ① 📊 30台進行状況モニタリング
   var sMon = ss.insertSheet("10_30台進行状況モニタリング");
-  sMon.appendRow(["端末ID (TeamID)", "チーム名", "現在周回 (Loop)", "ヒント解放数", "manabaログイン状況", "バッテリー残量", "通信状態", "最終通信日時"]);
-  sMon.getRange(1, 1, 1, 8).setBackground("#0284c7").setFontColor("#ffffff").setFontWeight("bold");
+  sMon.appendRow(["端末ID (TeamID)", "チーム名", "現在周回 (Loop)", "ヒント解放数", "manabaログイン状況", "バッテリー残量", "通信状態", "最終通信日時", "設定状況"]);
+  sMon.getRange(1, 1, 1, 9).setBackground("#0284c7").setFontColor("#ffffff").setFontWeight("bold");
 
   for (var t = 1; t <= 30; t++) {
     var teamId = "iPad-" + (t < 10 ? "0" + t : t);
     var teamName = "チーム " + String.fromCharCode(64 + t);
-    sMon.appendRow([teamId, teamName, 1, 0, "未ログイン", "100%", "待機中", ""]);
+    sMon.appendRow([teamId, teamName, 1, 0, "未ログイン", "100%", "待機中", "", "未設定"]);
   }
   sMon.setFrozenRows(1);
-  sMon.autoResizeColumns(1, 8);
+  sMon.autoResizeColumns(1, 9);
 
   // ② 🎮 運営コマンドキュー
   var sCmd = ss.insertSheet("98_運営コマンドキュー");
@@ -352,7 +358,7 @@ function readAllDevicesStatus(ss) {
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return [];
 
-  var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
   var result = [];
 
   // 24時間以内に接続実績がある端末のみを返す（スプレッドシートのダミー行・古い行を除外）
@@ -373,6 +379,8 @@ function readAllDevicesStatus(ss) {
     if (isNaN(lastSeenDate.getTime())) continue; // 日時として解釈できない行はスキップ
     if (lastSeenDate < cutoff) continue; // 24時間以上前の端末はスキップ
 
+    var registeredVal = data[i][8] === "設定済み";
+
     result.push({
       teamId: teamId,
       teamName: data[i][1],
@@ -381,7 +389,8 @@ function readAllDevicesStatus(ss) {
       manabaUser: data[i][4],
       battery: data[i][5],
       status: data[i][6],
-      lastSeen: data[i][7]
+      lastSeen: data[i][7],
+      registered: registeredVal
     });
   }
 
@@ -412,6 +421,8 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   var manaba = (statusData && statusData.manabaUser) ? statusData.manabaUser : "未ログイン";
   var battery = (statusData && statusData.battery) ? statusData.battery : "100%";
   var teamName = (statusData && statusData.teamName) ? statusData.teamName : "";
+  
+  var registeredStr = (statusData && (statusData.registered === 1 || statusData.registered === true)) ? "設定済み" : "未設定";
 
   if (targetRow === -1) {
     // 該当行がない場合は新規追加
@@ -423,19 +434,21 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
       manaba,
       battery,
       "接続中",
-      nowStr
+      nowStr,
+      registeredStr
     ]);
   } else {
     if (teamName) {
       sheet.getRange(targetRow, 2).setValue(teamName);
     }
-    sheet.getRange(targetRow, 3, 1, 6).setValues([[
+    sheet.getRange(targetRow, 3, 1, 7).setValues([[
       Number(loopNum || 1),
       hintsCount,
       manaba,
       battery,
       "接続中",
-      nowStr
+      nowStr,
+      registeredStr
     ]]);
   }
 }
