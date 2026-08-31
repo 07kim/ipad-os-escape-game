@@ -4461,8 +4461,9 @@ function openManabaCourse(courseIdOrName) {
   if (teacherEl) teacherEl.innerText = course.teacher;
   if (termEl) termEl.innerText = course.term || "2026 前期 月曜 2限";
 
-  // 講義が独自資料を持つか（応用量子力学、21世紀会計史、UIUX等）
-  const isCustomCourse = (course.id === 'c_quantum' || course.id === 'c_accounting' || course.id === 'c_uiux' || (course.materials && course.materials.length > 2));
+  // 講義が独自資料を持つか（陣内樹の応用量子力学、21世紀会計史など。Lの授業はすべて完全空データ）
+  const isLUser = (gameState.manabaUser === 's23c1044kr' || gameState.manabaUser === 'U24c3040' || gameState.manabaUser === '2024B0159');
+  const isCustomCourse = !isLUser && (course.id === 'c_quantum' || course.id === 'c_accounting' || (course.materials && course.materials.length > 2));
   gameState._isCurrentCourseExpired = !isCustomCourse;
 
   // コースニュース テーブル生成
