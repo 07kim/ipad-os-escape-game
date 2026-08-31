@@ -458,113 +458,133 @@
       box-shadow: 0 -2px 6px rgba(0,0,0,0.03);
     }
 
-    /* ⏱️ 最上部一体型スマート・コンパクトタイマーバー */
+    /* ⏱️ 最上部一体型タイマーバー（高ジャンプ率・視認性重視） */
     .admin-compact-header-bar {
       max-width: 1400px;
-      margin: 0 auto 16px auto;
+      margin: 0 auto 18px auto;
       background: #ffffff;
       border: 1.5px solid var(--border-color);
-      border-radius: 12px;
-      padding: 8px 16px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      border-radius: 14px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
     }
 
     .compact-timer-left {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 14px;
+      flex: 1;
     }
 
     .compact-cloud-pill {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
       background: #f8fafc;
       padding: 4px 10px;
       border-radius: 20px;
       border: 1px solid var(--border-color);
       color: #334155;
+      white-space: nowrap;
     }
 
-    .compact-stat-chip {
+    /* 各タイマーボックス（ジャンプ率重視の縦2段配置） */
+    .timer-stat-box {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1.5px solid transparent;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 12px;
-      border-radius: 8px;
-      border: 1px solid transparent;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 140px;
     }
 
-    .compact-stat-chip.world {
+    .timer-stat-box.world {
       background: #ecfdf5;
       border-color: #a7f3d0;
+      min-width: 175px;
     }
-    .compact-stat-chip.total {
+    .timer-stat-box.total {
       background: #f0f9ff;
       border-color: #bae6fd;
+      min-width: 145px;
     }
-    .compact-stat-chip.loop {
+    .timer-stat-box.loop {
       background: #f7fee7;
       border-color: #d9f99d;
+      min-width: 145px;
     }
 
-    .compact-stat-label {
+    .timer-stat-label {
       font-size: 11px;
       font-weight: 800;
-      color: #64748b;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
     }
-    .compact-stat-chip.world .compact-stat-label { color: #047857; }
-    .compact-stat-chip.total .compact-stat-label { color: #0369a1; }
-    .compact-stat-chip.loop .compact-stat-label { color: #4d7c0f; }
+    .timer-stat-box.world .timer-stat-label { color: #047857; }
+    .timer-stat-box.total .timer-stat-label { color: #0369a1; }
+    .timer-stat-box.loop .timer-stat-label { color: #4d7c0f; }
 
-    .compact-stat-val {
+    .timer-stat-val {
       font-family: 'Orbitron', monospace;
       font-weight: 900;
-      letter-spacing: 0.5px;
-      line-height: 1;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      white-space: nowrap;
     }
-    .compact-stat-val.world {
-      font-size: 20px;
+    .timer-stat-val.world {
+      font-size: 24px;
       color: #059669;
     }
-    .compact-stat-val.total {
-      font-size: 18px;
+    .timer-stat-val.total {
+      font-size: 22px;
       color: #0284c7;
     }
-    .compact-stat-val.loop {
-      font-size: 18px;
+    .timer-stat-val.loop {
+      font-size: 20px;
       color: #65a30d;
     }
 
-    .compact-stat-sub {
+    .timer-stat-sub {
       font-size: 10px;
       font-weight: 700;
-      color: #10b981;
-      padding-left: 2px;
+      margin-top: 1px;
+      white-space: nowrap;
     }
+    .timer-stat-box.world .timer-stat-sub { color: #10b981; }
+    .timer-stat-box.total .timer-stat-sub { color: #38bdf8; }
+    .timer-stat-box.loop .timer-stat-sub { color: #84cc16; }
 
-    .compact-laps-group {
+    /* ラップ履歴縦カラム */
+    .timer-laps-column {
       display: flex;
-      gap: 6px;
-      align-items: center;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .compact-lap-pill {
       background: #f8fafc;
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 3px 8px;
       font-size: 11px;
       font-weight: 700;
       color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 90px;
+      white-space: nowrap;
     }
     .compact-lap-pill.active {
       background: #e0f2fe;
@@ -574,19 +594,20 @@
     .compact-lap-pill b {
       font-family: 'Orbitron', monospace;
       font-weight: 800;
-      margin-left: 2px;
     }
 
     .compact-header-right {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-end;
       gap: 8px;
+      flex-shrink: 0;
     }
 
     .compact-btn-start {
-      height: 38px;
-      padding: 0 16px;
-      font-size: 13px;
+      height: 42px;
+      padding: 0 18px;
+      font-size: 14px;
       font-weight: 800;
       background: #0284c7;
       color: #ffffff;
@@ -596,8 +617,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
     .compact-btn-start:hover {
       background: #0369a1;
@@ -605,7 +627,7 @@
     }
     .compact-btn-start.running {
       background: #e11d48;
-      box-shadow: 0 2px 6px rgba(225, 29, 72, 0.2);
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
     }
     /* 🎬 進行統制パネル用スタイル */
     .flow-steps-container {
@@ -797,53 +819,57 @@
 </head>
 <body>
 
-  <!-- ⏱️ 最上部一体型スマート・コンパクトタイマーバー -->
+  <!-- ⏱️ 最上部一体型タイマーバー（高ジャンプ率・視認性重視） -->
   <div class="admin-compact-header-bar">
-    <!-- 左側：クラウド状態 ＆ 世界線時刻（作中） ＆ トータル時間 ＆ 周回時間 ＆ ラップ -->
+    <!-- 左側：世界線時刻（作中） ＆ トータル時間 ＆ 周回時間 ＆ ラップ -->
     <div class="compact-timer-left">
+      <!-- 1. 🌍 世界線時刻（作中時間 09:04基準） -->
+      <div class="timer-stat-box world" title="iPad内の全アプリが同期する作中世界線時刻（26-09-04 09:04基準）">
+        <div class="timer-stat-label"><i data-lucide="globe" style="width:12px; height:12px;"></i> 世界線時刻 (作中)</div>
+        <div class="timer-stat-val world" id="hero-world-time-digits">09:04:00</div>
+        <div class="timer-stat-sub world" id="hero-world-date-sub">26-09-04 (Fri)</div>
+      </div>
+
+      <!-- 2. ⏱️ トータル公演時間 -->
+      <div class="timer-stat-box total" title="公演全体の累積経過時間">
+        <div class="timer-stat-label"><i data-lucide="clock" style="width:12px; height:12px;"></i> トータル公演時間</div>
+        <div class="timer-stat-val total" id="timer-total-digits">00:00</div>
+        <div class="timer-stat-sub total">TOTAL ELAPSED</div>
+      </div>
+
+      <!-- 3. 🔄 カレント周回時間 -->
+      <div class="timer-stat-box loop" title="現在の周回の経過時間">
+        <div class="timer-stat-label"><i data-lucide="repeat" style="width:12px; height:12px;"></i> <span id="timer-current-loop-name">1周目</span> 経過</div>
+        <div class="timer-stat-val loop" id="timer-loop-digits">00:00</div>
+        <div class="timer-stat-sub loop">CURRENT LOOP</div>
+      </div>
+
+      <!-- 4. 📊 各周回ラップ履歴 -->
+      <div class="timer-laps-column" title="周回ごとの所要時間実績">
+        <div class="compact-lap-pill active" id="lap-card-1"><span>1周目</span><b id="lap-time-1">00:00</b></div>
+        <div class="compact-lap-pill" id="lap-card-2"><span>2周目</span><b id="lap-time-2">--:--</b></div>
+        <div class="compact-lap-pill" id="lap-card-3"><span>3周目</span><b id="lap-time-3">--:--</b></div>
+      </div>
+    </div>
+
+    <!-- 右側：操作ボタン ＆ クラウド状態 -->
+    <div class="compact-header-right">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button id="btn-timer-toggle" class="compact-btn-start" onclick="toggleAdminTimer()">
+          <i data-lucide="play" id="icon-timer-toggle" style="width:16px; height:16px;"></i>
+          <span id="text-timer-toggle">ゲームスタート</span>
+        </button>
+        <button class="nav-btn" onclick="resetAdminTimer()" title="タイマーをリセット" style="padding:8px 12px; font-size:12px; font-weight:700;">
+          <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> リセット
+        </button>
+        <a href="index.html" target="_blank" class="nav-btn" style="padding:8px 12px; font-size:12px; font-weight:700;"><i data-lucide="tablet" style="width:14px; height:14px;"></i> iPad</a>
+        <a href="editor.html" class="nav-btn" style="padding:8px 12px; font-size:12px; font-weight:700;"><i data-lucide="edit-3" style="width:14px; height:14px;"></i> エディタ</a>
+      </div>
+
       <div id="admin-cloud-indicator" class="compact-cloud-pill">
         <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;" id="admin-status-dot"></span>
         <span id="admin-status-text">クラウド連携中</span>
       </div>
-
-      <!-- 1. 🌍 世界線時刻（作中時間 09:04基準） -->
-      <div class="compact-stat-chip world" title="iPad内の全アプリが同期する作中世界線時刻（26-09-04 09:04基準）">
-        <span class="compact-stat-label"><i data-lucide="globe" style="width:12px; height:12px;"></i> 世界線時刻</span>
-        <span class="compact-stat-val world" id="hero-world-time-digits">09:04:00</span>
-        <span class="compact-stat-sub">26-09-04</span>
-      </div>
-
-      <!-- 2. ⏱️ トータル公演時間 -->
-      <div class="compact-stat-chip total" title="公演全体の累積経過時間">
-        <span class="compact-stat-label"><i data-lucide="clock" style="width:12px; height:12px;"></i> トータル</span>
-        <span class="compact-stat-val total" id="timer-total-digits">00:00</span>
-      </div>
-
-      <!-- 3. 🔄 カレント周回時間 -->
-      <div class="compact-stat-chip loop" title="現在の周回の経過時間">
-        <span class="compact-stat-label"><i data-lucide="repeat" style="width:12px; height:12px;"></i> <span id="timer-current-loop-name">1周目</span></span>
-        <span class="compact-stat-val loop" id="timer-loop-digits">00:00</span>
-      </div>
-
-      <!-- 4. 📊 各周回ラップ履歴 -->
-      <div class="compact-laps-group" title="周回ごとの所要時間実績">
-        <span class="compact-lap-pill active" id="lap-card-1">1周: <b id="lap-time-1">00:00</b></span>
-        <span class="compact-lap-pill" id="lap-card-2">2周: <b id="lap-time-2">--:--</b></span>
-        <span class="compact-lap-pill" id="lap-card-3">3周: <b id="lap-time-3">--:--</b></span>
-      </div>
-    </div>
-
-    <!-- 右側：タイマー操作 ＆ 外部リンク -->
-    <div class="compact-header-right">
-      <button id="btn-timer-toggle" class="compact-btn-start" onclick="toggleAdminTimer()">
-        <i data-lucide="play" id="icon-timer-toggle" style="width:15px; height:15px;"></i>
-        <span id="text-timer-toggle">ゲームスタート</span>
-      </button>
-      <button class="nav-btn" onclick="resetAdminTimer()" title="タイマーをリセット" style="padding:7px 10px; font-size:12px;">
-        <i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> リセット
-      </button>
-      <a href="index.html" target="_blank" class="nav-btn" style="padding:7px 10px; font-size:12px;"><i data-lucide="tablet" style="width:13px; height:13px;"></i> iPad</a>
-      <a href="editor.html" class="nav-btn" style="padding:7px 10px; font-size:12px;"><i data-lucide="edit-3" style="width:13px; height:13px;"></i> エディタ</a>
     </div>
   </div>
 
@@ -1526,39 +1552,73 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    // ▶ NEXTボタンクリック：次のシーンへ安全に進行
+    // ▶ NEXTボタンクリック：次のシーンへ安全に進行（ポップアップ確認付き）
     function advanceToNextScene() {
       if (currentFlowStep >= 5) return;
       const nextStep = currentFlowStep + 1;
+      const config = FLOW_STEP_CONFIG[nextStep];
+      if (!config) return;
 
+      let msg = `🚀【シーン進行確認】\n全稼働iPadを次のシーン「0${nextStep}. ${config.name}」へ進行しますか？`;
       if (nextStep === 5) {
-        const ok = confirm("🏁【ゲーム終了確認】\nタイマーを停止し、全iPadをゲーム終了（ログ集計・アンケート画面）へ移行しますか？");
-        if (!ok) return;
+        msg = `🏁【ゲーム終了確認】\nタイマーを停止し、全iPadを「05. ゲーム終了（ログ集計・アンケート画面）」へ移行しますか？`;
+      } else if (nextStep === 3 || nextStep === 4) {
+        msg = `🌀【タイムループ突入確認】\n全iPadを「0${nextStep}. ${config.name}」へ移行しますか？\n（作中時刻が09:04に巻き戻り、新周回のコンテンツが解禁されます）`;
       }
+
+      const ok = confirm(msg);
+      if (!ok) return;
 
       executeFlowStep(nextStep);
     }
 
-    // ◀ ロールバックボタンクリック：1つ前のシーンへ戻す
+    // ◀ ロールバックボタンクリック：1つ前のシーンへ戻す（ポップアップ確認付き）
     function rollbackToPreviousScene() {
       if (currentFlowStep <= 1) {
         showToast("⚠️ 既に最初のシーン（01. 待機中）です");
         return;
       }
       const prevStep = currentFlowStep - 1;
-      const ok = confirm(`◀【シーン巻き戻し確認】\n全iPadを「0${prevStep}. ${FLOW_STEP_CONFIG[prevStep]?.name}」の状態へ戻しますか？`);
+      const config = FLOW_STEP_CONFIG[prevStep];
+      const ok = confirm(`◀【シーン巻き戻し確認】\n全iPadを1つ前のシーン「0${prevStep}. ${config?.name}」の状態へ戻しますか？\n（周回やタイマーも安全に巻き戻されます）`);
       if (!ok) return;
 
       executeFlowStep(prevStep);
     }
 
-    // ステップカードクリック時のハンドラ
+    // ステップカードクリック時のハンドラ（過去・未来のクリックもポップアップで安全確認）
     function handleStepCardClick(stepNum) {
-      if (!manualSceneUnlock && stepNum !== currentFlowStep + 1 && stepNum !== currentFlowStep) {
+      if (stepNum === currentFlowStep) {
+        showToast(`ℹ️ 現在「0${stepNum}. ${FLOW_STEP_CONFIG[stepNum]?.name}」が進行中です`);
+        return;
+      }
+
+      const config = FLOW_STEP_CONFIG[stepNum];
+      if (!config) return;
+
+      // 1. 過去のステップ（ロールバック）を押した場合
+      if (stepNum < currentFlowStep) {
+        const ok = confirm(`◀【シーン巻き戻し確認】\n過去のシーン「0${stepNum}. ${config.name}」へ全iPadを安全に戻しますか？\n（周回やタイマーもそのシーンの状態に再設定されます）`);
+        if (!ok) return;
+        executeFlowStep(stepNum);
+        return;
+      }
+
+      // 2. 次のステップ（NEXT）を押した場合
+      if (stepNum === currentFlowStep + 1) {
+        advanceToNextScene();
+        return;
+      }
+
+      // 3. 2つ以上先のステップ（ロック時）を押した場合
+      if (!manualSceneUnlock) {
         showToast("🔒 ロックされています。「▶ 次のシーンへ進行」を押すか、「任意シーン直接選択」をONにしてください");
         return;
       }
-      if (stepNum === currentFlowStep) return;
+
+      // 4. 手動アンロック時でジャンプする場合
+      const ok = confirm(`⚠️【任意シーン選択確認】\n「0${stepNum}. ${config.name}」へ直接ジャンプしますか？`);
+      if (!ok) return;
       executeFlowStep(stepNum);
     }
 
