@@ -1617,13 +1617,7 @@
             </label>
           </div>
 
-          <!-- 🚨 公演前・公演後 一括完全リセット（全iPad初期化＆ログクリア） -->
-          <div style="margin-top:12px; padding-top:12px; border-top:1px dashed #fecaca; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:11px; color:#991b1b; font-weight:600;">※次公演セットアップ用：全iPadのメモ・入力・周回を完全消去</span>
-            <button class="nav-btn" onclick="executeGlobalMasterReset()" style="padding:6px 12px; font-size:11.5px; font-weight:700; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; cursor:pointer;" title="全iPadのメモ・入力・周回を完全初期化">
-              <i data-lucide="trash-2" style="width:13px; height:13px;"></i> 🚨 全iPad ＆ データを一括完全初期化
-            </button>
-          </div>
+
         </div>
       </div>
 
@@ -1677,8 +1671,24 @@
             </button>
           </div>
         </div>
-      </div>
 
+        <!-- 🚨 公演転換・全iPad一括初期化カード -->
+        <div class="card" style="margin-top:14px; border:1.5px solid #fecaca; background:#fffbfb;">
+          <div class="card-title" style="color:#b91c1c;">
+            <i data-lucide="refresh-ccw" style="color:#ef4444;"></i> 公演転換・全iPad一括初期化
+          </div>
+          <p style="font-size:12px; color:#991b1b; margin-bottom:14px; line-height:1.6;">
+            次公演の開始前 / 公演終了後に使用します。<br>
+            全端末のメモ・入力・周回・ログイン情報を完全消去し、<br>
+            09:04待機画面へリセットします。<strong>（2段階確認あり）</strong>
+          </p>
+          <button class="btn" onclick="executeGlobalMasterReset()" style="width:100%; padding:12px 16px; font-size:13px; font-weight:800; background:#fef2f2; color:#b91c1c; border:2px solid #fecaca; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;" onmouseover="this.style.background='#fee2e2'; this.style.borderColor='#f87171';" onmouseout="this.style.background='#fef2f2'; this.style.borderColor='#fecaca';" title="全iPadのメモ・入力・周回を完全初期化">
+            <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
+            🚨 全iPad ＆ データを一括完全初期化
+          </button>
+        </div>
+
+      </div>
     </div>
   </div> <!-- /#pane-flow -->
 
