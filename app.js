@@ -2007,21 +2007,30 @@ function saveStaffConfig() {
   // ✅ 接続登録フラグを保存（これがないと次回起動時に待機画面になる）
   localStorage.setItem('device_registered', '1');
 
-  // 🔓 接続待機画面が表示されていれば非表示にする
-  const pairingEl = document.getElementById('device-pairing-screen');
-  if (pairingEl && pairingEl.style.display !== 'none') {
-    pairingEl.style.display = 'none';
-    // 待機画面から接続した場合は、ゲームをフル起動する（ページリロードで確実に初期化）
-    console.log('🟢 接続登録完了。ゲームを起動するためにリロードします。');
-    setTimeout(() => { location.reload(); }, 400);
-    return;
+  // 🚀 GASスプレッドシートへ即座に「設定済み」＆代名詞・番号を送信（確実上書き）
+  const gasUrl = getResolvedGasUrl();
+  if (gasUrl) {
+    const updateUrl = gasUrl.includes('?') 
+      ? `${gasUrl}&action=update_device_name&oldTeamId=${encodeURIComponent(newDevId)}&newTeamId=${encodeURIComponent(newDevId)}&teamName=${encodeURIComponent(newAlias)}&registered=1&_t=${Date.now()}`
+      : `${gasUrl}?action=update_device_name&oldTeamId=${encodeURIComponent(newDevId)}&newTeamId=${encodeURIComponent(newDevId)}&teamName=${encodeURIComponent(newAlias)}&registered=1&_t=${Date.now()}`;
+    fetch(updateUrl).catch(() => {});
   }
 
   if (typeof updateAppUI === 'function') updateAppUI();
   if (typeof sendDeviceStatusHeartbeat === 'function') sendDeviceStatusHeartbeat();
 
+  // 🔓 接続待機画面が表示されていれば非表示にする
+  const pairingEl = document.getElementById('device-pairing-screen');
+  if (pairingEl && pairingEl.style.display !== 'none') {
+    pairingEl.style.display = 'none';
+    // 待機画面から接続した場合は、ゲームをフル起動する（通信完了を待ってページリロード）
+    console.log('🟢 接続登録完了。ゲームを起動するためにリロードします。');
+    setTimeout(() => { location.reload(); }, 500);
+    return;
+  }
+
   closeStaffModal();
-  showIpadModal("✅ 接続・設定完了", `管理番号: ${newDevId}\n代名詞: ${newAlias}\nとして登録しました。`);
+  showIpadModal("✅ 接続・設定完了", `管理番号: ${newDevId}\n代名詞: ${newAlias || '（未設定）'}\nとして登録しました。`);
 }
 
 // 🔒 接続待機画面の「スタッフ接続設定を開く」ボタンから呼ばれる関数
