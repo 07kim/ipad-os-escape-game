@@ -158,6 +158,15 @@
       padding: 9px 18px;
     }
 
+    /* ボタン回転アニメーション */
+    .rotating-spinner {
+      animation: spin-anim 0.8s linear infinite;
+    }
+    @keyframes spin-anim {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
     .card-title {
       font-size: 16px;
       font-weight: 700;
@@ -1753,9 +1762,13 @@
           <span class="summary-stat-badge loop3" id="summary-loop3-count">3周目: 0台</span>
           <span class="summary-stat-badge login" id="summary-login-count">👤 ログイン済: 0台</span>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <button class="nav-btn" onclick="refreshMonitoringDashboard()" style="padding:6px 12px; font-size:11.5px; font-weight:700;">
-            <i data-lucide="refresh-cw" style="width:13px; height:13px;"></i> 最新状況を更新
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="forceRefreshAllDevicesWithFeedback()" style="width:auto; padding:7px 14px; font-size:12px; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(2,132,199,0.25);" title="GASクラウドから全端末の最新接続状況・ステータスを即時取得">
+            <i data-lucide="refresh-cw" id="btn-icon-all-sync" style="width:14px; height:14px;"></i>
+            <span>🔄 全端末ステータス一斉取得</span>
+          </button>
+          <button class="nav-btn" onclick="broadcastAllDeviceReload()" style="padding:7px 12px; font-size:11.5px; font-weight:700; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca;" title="すべての稼働中iPadを一斉に遠隔リロード">
+            <i data-lucide="rotate-cw" style="width:13px; height:13px;"></i> 📡 全端末一括リロード
           </button>
         </div>
       </div>
@@ -3485,6 +3498,82 @@
         .catch(() => {
           renderDynamicMonitoringList();
         });
+    }
+
+    // 🔄 全端末ステータス一斉取得（フィードバック・アニメーション付き）
+    function forceRefreshAllDevicesWithFeedback() {
+      const iconEl = document.getElementById('btn-icon-all-sync');
+      if (iconEl) iconEl.classList.add('rotating-spinner');
+
+      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      if (!gasUrl) {
+        renderDynamicMonitoringList();
+        if (iconEl) iconEl.classList.remove('rotating-spinner');
+        showToast("ℹ️ ローカル端末一覧を更新しました（GAS URL未設定）");
+        return;
+      }
+
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          let count = 0;
+          if (json && json.success && json.devices) {
+            latestDevicesData = json.devices;
+            count = json.devices.length;
+          }
+          renderDynamicMonitoringList();
+          showToast(`✅ 全端末の最新状況を取得しました (接続: ${count}台 / ${new Date().toLocaleTimeString('ja-JP')})`);
+        })
+        .catch(() => {
+          fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.data && d.data.devicesStatus) {
+                latestDevicesData = d.data.devicesStatus;
+                showToast(`✅ 全端末の最新状況を取得しました (接続: ${latestDevicesData.length}台)`);
+              } else {
+                showToast(`⚠️ 端末データの取得を完了しました（応答なし）`, true);
+              }
+            })
+            .catch(() => {
+              showToast("⚠️ クラウド通信に失敗しました。ローカルデータを表示中", true);
+            })
+            .finally(() => renderDynamicMonitoringList());
+        })
+        .finally(() => {
+          if (iconEl) {
+            setTimeout(() => iconEl.classList.remove('rotating-spinner'), 600);
+          }
+        });
+    }
+
+    // 📡 全iPad一斉遠隔リロード
+    async function broadcastAllDeviceReload() {
+      const ok = await showCustomConfirm({
+        title: "📡 全iPad一括遠隔リロード確認",
+        subtitle: "すべての稼働中iPadの画面を強制再読み込みします",
+        message: "全端末に対して画面リロード（F5更新）シグナルを配信します。\n\n※進行データやログイン状態は保持されます。全員の画面を最新状態に揃えたい場合に実行してください。",
+        confirmText: "📡 全端末を一括リロード",
+        cancelText: "キャンセル",
+        type: "warning",
+        icon: "rotate-cw"
+      });
+      if (!ok) return;
+
+      sendCloudAdminCommand({
+        id: "RELOAD_ALL_" + Date.now(),
+        type: "reload",
+        name: "全iPad一括遠隔リロード",
+        params: {
+          target: "all",
+          timestamp: Date.now()
+        }
+      }, "📡 全iPadへ画面一括リロード指示を配信しました！");
+
+      try {
+        localStorage.setItem('admin_reload_trigger', String(Date.now()));
+      } catch(e) {}
     }
 
     // 🌟 動的アクセス一覧の描画（アクセス中の端末のみを生成・流動的管理）
