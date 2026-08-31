@@ -3449,6 +3449,44 @@ function submitInAppForm() {
   const selectedTasks = [];
   document.querySelectorAll('.inapp-task-chk:checked').forEach(c => selectedTasks.push(c.value));
 
+  // 🕒 タイムスタンプ生成（09:04基準の現在世界線時刻）
+  const fakeHHMM = getFormattedFakeTime();
+  const timeStampStr = `2026/09/04 ${fakeHHMM}:00`;
+  const shortTimeStr = `2026/09/04 ${fakeHHMM}`;
+  const userEmail = "s25b1150er@chibatech.ac.jp"; // 矢田逞（ログイン中ユーザー）
+
+  // ① フォーム編集画面の回答データ（GFORM_RESPONSES_DATA）へリアルタイム追加
+  const newRespObj = {
+    id: GFORM_RESPONSES_DATA.length + 1,
+    name: name || "無記名",
+    email: userEmail,
+    opinion: opinion || "（意見なし）",
+    tasks: selectedTasks.length > 0 ? selectedTasks : ["特になし"],
+    timestamp: shortTimeStr
+  };
+  GFORM_RESPONSES_DATA.push(newRespObj);
+
+  // ② 偽Googleスプレッドシート（Form_Responses / フォームの回答 1）へリアルタイムで1行追加
+  const newRowData = [
+    timeStampStr,
+    userEmail,
+    name || "無記名",
+    opinion || "（意見なし）",
+    selectedTasks.length > 0 ? selectedTasks.join(', ') : "特になし"
+  ];
+
+  if (window.GAME_DATABASE && window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.spreadsheet) {
+    const sRows = window.GAME_DATABASE.hacking.spreadsheet.rows;
+    if (sRows) {
+      if (sRows["Form_Responses"]) sRows["Form_Responses"].push(newRowData);
+      if (sRows["フォームの回答 1"]) sRows["フォームの回答 1"].push(newRowData);
+    }
+  }
+
+  // 回答数バッジの更新
+  const respBadge = document.getElementById('editor-resp-count-badge');
+  if (respBadge) respBadge.innerText = `${GFORM_RESPONSES_DATA.length} 件`;
+
   // 送信完了画面に切り替え（Google Forms公式仕様）
   const bodyEl = document.getElementById('link-inapp-form-body');
   if (bodyEl) {
@@ -3557,7 +3595,7 @@ function switchEditorTab(tabId) {
 }
 
 // 🟣 Googleフォーム回答サブタブ（要約 / 質問 / 個別）のデータとコントローラ
-const GFORM_RESPONSES_DATA = [
+let GFORM_RESPONSES_DATA = [
   {
     id: 1,
     name: "外園胡春",
@@ -3632,7 +3670,7 @@ function nextGFormQuestion() {
   }
 }
 
-// 設問別回答カード表示（画像1, 2, 3準拠）
+// 設問別回答カード表示（全回答データを動的描画）
 function renderGFormQuestionView() {
   const qDef = GFORM_QUESTIONS_DEF[gformCurrentQuestionIndex];
   const container = document.getElementById('gform-question-content');
@@ -3641,41 +3679,31 @@ function renderGFormQuestionView() {
   let html = '';
 
   if (gformCurrentQuestionIndex === 0) {
-    // 設問1: 氏名 (七瀬、外園、比嘉)
-    const names = ["七瀬いろは", "外園胡春", "比嘉俊希"];
-    names.forEach(name => {
+    // 設問1: 氏名
+    GFORM_RESPONSES_DATA.forEach(resp => {
       html += `
         <div class="response-detail-card" style="padding:16px 20px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #dadce0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-          <div style="font-size:15px; color:#202124; margin-bottom:8px; font-weight:500;">${name}</div>
+          <div style="font-size:15px; color:#202124; margin-bottom:8px; font-weight:500;">${resp.name || "無記名"}</div>
           <div style="font-size:12px; color:#1a73e8; font-weight:500;">1 件の回答</div>
         </div>
       `;
     });
   } else if (gformCurrentQuestionIndex === 1) {
-    // 設問2: 意見 (比嘉、七瀬、外園)
-    const opinions = [
-      GFORM_RESPONSES_DATA[1].opinion,
-      GFORM_RESPONSES_DATA[2].opinion,
-      GFORM_RESPONSES_DATA[0].opinion
-    ];
-    opinions.forEach(op => {
+    // 設問2: 意見
+    GFORM_RESPONSES_DATA.forEach(resp => {
       html += `
         <div class="response-detail-card" style="padding:16px 20px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #dadce0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-          <div style="font-size:14px; color:#202124; line-height:1.65; margin-bottom:10px;">${op}</div>
+          <div style="font-size:14px; color:#202124; line-height:1.65; margin-bottom:10px;">${resp.opinion || "（意見なし）"}</div>
           <div style="font-size:12px; color:#1a73e8; font-weight:500;">1 件の回答</div>
         </div>
       `;
     });
   } else if (gformCurrentQuestionIndex === 2) {
-    // 設問3: お手伝い (比嘉3種、外園2種、七瀬1種)
+    // 設問3: お手伝い
     const allOptions = ["資料の分別作業", "指定場所までの運搬", "デジタル化(スキャン等)の作業", "特になし"];
-    const taskCombinations = [
-      GFORM_RESPONSES_DATA[1].tasks, // 比嘉
-      GFORM_RESPONSES_DATA[0].tasks, // 外園
-      GFORM_RESPONSES_DATA[2].tasks  // 七瀬
-    ];
 
-    taskCombinations.forEach(selected => {
+    GFORM_RESPONSES_DATA.forEach(resp => {
+      const selected = resp.tasks || [];
       let chkHtml = allOptions.map(opt => {
         const isChecked = selected.includes(opt);
         return `
@@ -3789,10 +3817,10 @@ function openGSpreadsheet(e) {
   const modal = document.getElementById('hacking-modal');
   if (modal) modal.scrollTop = 0;
 
-  // 常に最新マスタのForm_Responsesデータを優先して反映
-  if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.hacking && window.INITIAL_GAME_DATABASE.hacking.spreadsheet) {
-    if (!window.GAME_DATABASE.hacking) window.GAME_DATABASE.hacking = {};
-    window.GAME_DATABASE.hacking.spreadsheet = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.hacking.spreadsheet));
+  if (!window.GAME_DATABASE.hacking || !window.GAME_DATABASE.hacking.spreadsheet) {
+    if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.hacking) {
+      window.GAME_DATABASE.hacking = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.hacking));
+    }
   }
 
   document.getElementById('gform-view').style.display = 'none';
