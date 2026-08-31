@@ -7,7 +7,7 @@ window.GAME_DATABASE = {
   // --- システム基本設定 ---
   system: {
     gasUrl: "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec",
-    teamId: "チームA",
+    teamId: "",
     deviceOwner: "連城 観 のiPad (L)",
     features: {
       enableBubbleWrap: true, // 🔘 無限プチプチアプリのON/OFF（falseで非表示）

@@ -538,7 +538,7 @@ function executeRemoteAdminCommand(cmd) {
     const currentTeamName = localStorage.getItem('game_team_name') || '';
 
     // ターゲットが自身のデバイスID、以前のチーム名、ALL、または空の場合に確実に反映
-    const isTargetMe = (!target || target === 'ALL' || target === currentDevId || target === currentTeamName || target === 'チームA');
+    const isTargetMe = (!target || target === 'ALL' || target === currentDevId || (currentTeamName && target === currentTeamName));
     if (isTargetMe) {
       if (p.newDeviceId) {
         gameState.teamId = p.newDeviceId;
@@ -1051,10 +1051,17 @@ function applyOperationalRestrictions() {
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
   
+  // 過去の残骸で「チームA」が入っている場合は完全に削除・空文字化
+  if (localStorage.getItem('game_team_name') === 'チームA') {
+    localStorage.removeItem('game_team_name');
+  }
+  if (localStorage.getItem('manaba_user') === 'チームA') {
+    localStorage.removeItem('manaba_user');
+  }
+
   // 管理番号（iPad-XX）の復元とクレンジング
   let rawDevId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || 'iPad-01';
   if (!rawDevId.startsWith('iPad-') && !rawDevId.match(/^\d+$/)) {
-    // もし過去の残骸で「チームA」等の文字が入っていたら代名詞に移動して管理番号はiPad-01にする
     if (!localStorage.getItem('game_team_name') && rawDevId !== 'チームA') {
       localStorage.setItem('game_team_name', rawDevId);
     }

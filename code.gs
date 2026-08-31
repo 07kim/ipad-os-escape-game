@@ -223,8 +223,7 @@ function cleanAndSetupOptimizedDatabase() {
 
   for (var t = 1; t <= 30; t++) {
     var teamId = "iPad-" + (t < 10 ? "0" + t : t);
-    var teamName = "チーム " + String.fromCharCode(64 + t);
-    sMon.appendRow([teamId, teamName, 1, 0, "未ログイン", "100%", "待機中", "", "未設定"]);
+    sMon.appendRow([teamId, "", 1, 0, "未ログイン", "100%", "待機中", "", "未設定"]);
   }
   sMon.setFrozenRows(1);
   sMon.autoResizeColumns(1, 9);
