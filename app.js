@@ -4732,6 +4732,139 @@ function switchCourseSubTab(tabKey) {
   logWriteToGAS("MANABA_SUBTAB_OPEN", `コースメニュータブ切り替え: ${currentTab.title}`);
 }
 
+// 🎓 教科名に合わせて適切な目次（全13回）を動的に自動生成するヘルパー関数
+function generateManabaCourseThemes(courseName) {
+  const name = courseName || "";
+
+  // 1. 機械学習 / 知能システム / データ
+  if (name.includes("機械学習") || name.includes("知能システム") || name.includes("データ解析") || name.includes("AI") || name.includes("人工知能")) {
+    return [
+      "1  ガイダンス",
+      "2  データサイエンスと機械学習",
+      "3  正規分布・平均・分散",
+      "4. 最小二乗法と回帰分析",
+      "5. 分類アルゴリズムの基礎（勾配ベクトルとヘッセ行列）",
+      "6. 分類アルゴリズムの基礎（ヘッセ行列と正定値）",
+      "7. リフレクション",
+      "8. 最尤推定法",
+      "9. パーセプトロン",
+      "10. ロジスティック回帰と漸化式",
+      "11. 教師なし学習（K平均法）",
+      "12. ベイズ推定",
+      "13. 期末試験"
+    ];
+  }
+
+  // 2. メディア / デザイン / チャレンジ / 表現
+  if (name.includes("メディア") || name.includes("デザイン") || name.includes("チャレンジ") || name.includes("表現")) {
+    return [
+      "1 ガイダンス",
+      "2 メディア表現の基礎",
+      "3 インタフェース設計",
+      "4 映像・グラフィック基礎",
+      "5 インタラクティブシステム",
+      "6 プロトタイピング演習",
+      "7 中間発表と講評",
+      "8 デジタルコンテンツ制作",
+      "9 ユーザー体験の検証",
+      "10 チーム制作ワークショップ",
+      "11 最終作品ブラッシュアップ",
+      "12 成果物講評準備",
+      "13 成果発表会"
+    ];
+  }
+
+  // 3. 英語 / 語学
+  if (name.includes("英語") || name.includes("English") || name.includes("アカデミック")) {
+    return [
+      "Lesson 1 Course Guidance",
+      "Lesson 2 Reading Academic Texts",
+      "Lesson 3 Technical Vocabulary",
+      "Lesson 4 Structure of Research Papers",
+      "Lesson 5 Presentation Skills 1",
+      "Lesson 6 Group Discussions",
+      "Lesson 7 Mid-term Review",
+      "Lesson 8 Listening Comprehension",
+      "Lesson 9 Logical Arguments & Critical Thinking",
+      "Lesson 10 Abstract Writing",
+      "Lesson 11 Peer Review Workshop",
+      "Lesson 12 Final Presentation",
+      "Lesson 13 Course Wrap-up & Evaluation"
+    ];
+  }
+
+  // 4. 暗号 / ネットワーク / セキュリティ / 情報工学
+  if (name.includes("暗号") || name.includes("ネットワーク") || name.includes("セキュリティ") || name.includes("ガバナンス") || name.includes("分散")) {
+    return [
+      "第1回 暗号プロトコル概要と情報セキュリティ",
+      "第2回 共通鍵暗号方式の原理",
+      "第3回 公開鍵暗号系とRSA",
+      "第4回 ハッシュ関数とメッセージ認証符号",
+      "第5回 ディジタル署名と公開鍵基盤(PKI)",
+      "第6回 ゼロ知識証明入門",
+      "第7回 中間演習と解説",
+      "第8回 認証プロトコルと鍵共有",
+      "第9回 ブロックチェーンと分散合意",
+      "第10回 耐量子暗号と最新動向",
+      "第11回 プロトコル実装演習",
+      "第12回 事例研究と脅威分析",
+      "第13回 まとめと総括"
+    ];
+  }
+
+  // 5. 数学 / 物理 / 基礎科学
+  if (name.includes("数学") || name.includes("物理") || name.includes("力学") || name.includes("解析")) {
+    return [
+      "第1回 シラバス説明と基礎復習",
+      "第2回 行列と線形写像の幾何的意味",
+      "第3回 固有値問題と対角化",
+      "第4回 多変数関数の微分と極値問題",
+      "第5回 重積分と座標変換",
+      "第6回 ベクトル場の発散と回転",
+      "第7回 中間演習",
+      "第8回 複素関数とコーシーの積分定理",
+      "第9回 フーリエ級数展開の基礎",
+      "第10回 フーリエ変換とその応用",
+      "第11回 ラプラス変換と過渡現象",
+      "第12回 総合演習",
+      "第13回 期末総括"
+    ];
+  }
+
+  // 6. PBL / キャリア / 経済 / イノベーション
+  if (name.includes("PBL") || name.includes("キャリア") || name.includes("経済") || name.includes("イノベーション") || name.includes("消費者")) {
+    return [
+      "第1回 オリエンテーション",
+      "第2回 課題設定とリサーチ手法",
+      "第3回 ケーススタディ分析",
+      "第4回 アイデア創出ワークショップ",
+      "第5回 ビジネスモデル検討",
+      "第6回 中間プレゼンテーション",
+      "第7回 フィードバックと改善",
+      "第8回 プロジェクト実行計画",
+      "第9回 チーム活動中間報告",
+      "第10回 成果物作成演習",
+      "第11回 最終プレゼン準備",
+      "第12回 最終成果発表会",
+      "第13回 全体リフレクション"
+    ];
+  }
+
+  // 7. 回数だけの先生（第1回, 第2回... 添付画像準拠）
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  if (hash % 3 === 0) {
+    return Array.from({ length: 13 }, (_, i) => `第${i + 1}回`);
+  } else if (hash % 3 === 1) {
+    return Array.from({ length: 13 }, (_, i) => `第${i + 1}回 講義資料`);
+  } else {
+    return [
+      "1  ガイダンス",
+      ...Array.from({ length: 11 }, (_, i) => `${i + 2}  第${i + 2}回 講義`),
+      "13 期末試験"
+    ];
+  }
+}
+
 function openManabaCoursePageView(pageIdx) {
   const course = gameState._currentCourseObj || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {};
   const isCustomCourse = (course.id === 'c_quantum' || course.id === 'c_accounting' || course.id === 'c_uiux' || (course.materials && course.materials.length > 2));
@@ -4755,26 +4888,12 @@ function openManabaCoursePageView(pageIdx) {
       }))
     ];
   } else {
-    // 🌟 空の通常授業：全13回の「公開期間終了」ページ（画像5準拠）
-    const defaultThemes = [
-      "1  ガイダンス",
-      "2  データサイエンスと機械学習",
-      "3  正規分布・平均・分散",
-      "4. 最小二乗法と回帰分析",
-      "5. 分類アルゴリズムの基礎（勾配ベクトルとヘッセ行列）",
-      "6. 分類アルゴリズムの基礎（ヘッセ行列と正定値）",
-      "7. リフレクション",
-      "8. 最尤推定法",
-      "9. パーセプトロン",
-      "10. ロジスティック回帰と漸化式",
-      "11. 教師なし学習（K平均法）",
-      "12. ベイズ推定",
-      "13. 期末試験"
-    ];
-    coursePages = defaultThemes.map((title, idx) => ({
+    // 🌟 空の通常授業：教科名に合わせたリアルな全13回「公開期間終了」ページ
+    const dynamicThemes = generateManabaCourseThemes(course.name);
+    coursePages = dynamicThemes.map((title, idx) => ({
       title: title,
       type: "expired",
-      date: "2026-04-11 22:17",
+      date: `2026-04-${String(10 + (idx % 4) * 5).padStart(2, '0')} 22:17`,
       time: "2026-08-01 00:00:00",
       ver: "1.5版"
     }));
