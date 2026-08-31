@@ -2729,7 +2729,7 @@
       localStorage.setItem('admin_reset_trigger_time', Date.now());
       localStorage.setItem('game_loop', '1');
 
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       if (gasUrl) {
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_actor_triggers` : `${gasUrl}?action=reset_actor_triggers`).catch(() => {});
@@ -2879,7 +2879,7 @@
       }
 
       // ☁️ GASクラウド側にも周回変更を即座に送信
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       if (gasUrl) {
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=update_loop&loop=${targetLoop}` : `${gasUrl}?action=update_loop&loop=${targetLoop}`).catch(() => {});
       }
@@ -3329,19 +3329,27 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    // 🌐 GASデプロイURLを一元取得（LocalStorage優先、無効時はdata.jsの最新URLに自動フォールバック）
+    function getAdminGasUrl() {
+      const defaultUrl = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
+        || "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec";
+      const saved = (localStorage.getItem('gas_url') || '').trim();
+      if (saved && saved.startsWith('https://script.google.com/')) {
+        return saved;
+      }
+      return defaultUrl;
+    }
+
     function initAdminDashboard() {
       try { renderPresetButtons(); } catch(e) { console.error("renderPresetButtons error:", e); }
       try { initAdminTimer(); } catch(e) { console.error("initAdminTimer error:", e); }
       try {
-        const defaultGasUrl = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || "https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec";
-        const savedGasUrl = localStorage.getItem('gas_url') || defaultGasUrl;
-        if (!localStorage.getItem('gas_url') && defaultGasUrl) {
-          localStorage.setItem('gas_url', defaultGasUrl);
-        }
+        const gasUrl = getAdminGasUrl();
+        localStorage.setItem('gas_url', gasUrl);
         const urlInput = document.getElementById('admin-gas-url-input');
-        if (urlInput) urlInput.value = savedGasUrl;
+        if (urlInput) urlInput.value = gasUrl;
       } catch(e) {}
-      try { testGasPing(); } catch(e) {}
+      try { testGasPing(false); } catch(e) {}
       try { renderMonitoringCards(); } catch(e) {}
       try { refreshMonitoringDashboard(); } catch(e) {}
       if (typeof lucide !== 'undefined') {
@@ -3471,7 +3479,7 @@
 
     // --- クラウド経由でのコマンド送信コア関数 ---
     function sendCloudAdminCommand(commandObj, successMsg) {
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       const cmdPayload = Object.assign({ timestamp: Date.now(), target: "ALL" }, commandObj);
 
       // 同一端末テスト用LocalStorage & 周回同期
@@ -3532,9 +3540,7 @@
 
     // --- 疎通診断 (ハイブリッド互換: ping または get_data で判定) ---
     function testGasPing(isManual = false) {
-      const gasUrl = (localStorage.getItem('gas_url') || '').trim()
-        || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
-        || 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
+      const gasUrl = getAdminGasUrl();
       const indDot = document.getElementById('admin-status-dot');
       const indText = document.getElementById('admin-status-text');
 
@@ -3569,7 +3575,7 @@
         .catch(err => {
           if (indDot) indDot.style.background = "#ef4444";
           if (indText) indText.innerHTML = `<span style="color:#991b1b;">🔴 通信エラー (${err.message || "接続失敗"})</span>`;
-          if (isManual) showToast("⚠️ 通信エラーが発生しました。GASデプロイ設定をご確認ください。");
+          if (isManual) showToast(`⚠️ 通信エラー (${err.message || "接続失敗"})。GASデプロイ設定をご確認ください。`);
         });
     }
 
@@ -3619,7 +3625,7 @@
     }
 
     function refreshMonitoringDashboard() {
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       if (!gasUrl) {
         renderDynamicMonitoringList();
         return;
@@ -3652,7 +3658,7 @@
       const iconEl = document.getElementById('btn-icon-all-sync');
       if (iconEl) iconEl.classList.add('rotating-spinner');
 
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       if (!gasUrl) {
         renderDynamicMonitoringList();
         if (iconEl) iconEl.classList.remove('rotating-spinner');
@@ -4190,7 +4196,7 @@
       }, `✅ 【${newDeviceId}】の代名詞（チーム名）を「${newTeam || '未設定'}」に更新しました！`);
 
       // 2. GASスプレッドシートへ直接ステータス更新を送信（即時クラウド同期 & B列上書き）
-      const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+      const gasUrl = getAdminGasUrl();
       if (gasUrl) {
         const updateUrl = gasUrl.includes('?') 
           ? `${gasUrl}&action=update_device_name&oldTeamId=${encodeURIComponent(oldDeviceId)}&newTeamId=${encodeURIComponent(newDeviceId)}&teamName=${encodeURIComponent(newTeam)}&_t=${Date.now()}`
@@ -4330,9 +4336,7 @@
       });
       if (!ok) return;
 
-      const gasUrl = (localStorage.getItem('gas_url') || '').trim()
-        || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
-        || 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
+      const gasUrl = getAdminGasUrl();
       if (!gasUrl) {
         showToast("⚠️ GAS URLが設定されていません。", "error");
         return;
@@ -4957,7 +4961,7 @@
       const container = document.getElementById('gas-endpoints-list');
       if (!container) return;
 
-      const base = (localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl) || '').trim();
+      const base = getAdminGasUrl();
       if (!base) {
         container.innerHTML = '<div style="font-size:11.5px; color:#94a3b8; text-align:center; padding:12px; grid-column:1/-1;">⏳ GAS URLを設定すると、エンドポイント一覧が表示されます</div>';
         return;
