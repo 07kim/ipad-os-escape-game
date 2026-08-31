@@ -3815,8 +3815,9 @@
           teamName = '未設定';
         }
 
-        // 登録状態の判定
-        const isReg = (d.registered === true || d.registered === 1 || (teamName && teamName !== '未設定' && !teamName.includes('未設定')));
+        // 登録状態の判定（GASから"設定済み"文字列が返る場合も含め正確に判定）
+        const isReg = (d.registered === true || d.registered === 1 || d.registered === "設定済み" || d.registered === "1"
+          || (teamName && teamName !== '未設定' && !teamName.includes('未設定')));
 
         devicesMap[devId] = {
           id: devId,

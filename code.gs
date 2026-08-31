@@ -69,8 +69,9 @@ function doGet(e) {
       var oldDevId = e.parameter.oldTeamId || e.parameter.teamId || "iPad-01";
       var newDevId = e.parameter.newTeamId || e.parameter.teamId || oldDevId;
       var newTeamName = e.parameter.teamName !== undefined ? decodeURIComponent(e.parameter.teamName) : "";
+      var isRegistered = (e.parameter.registered === "1" || e.parameter.registered === 1);
       
-      updateDeviceNameDirect(ss, oldDevId, newDevId, newTeamName);
+      updateDeviceNameDirect(ss, oldDevId, newDevId, newTeamName, isRegistered);
       return renderJson({ success: true, message: "B列のチーム名・管理番号を上書きしました！" });
     }
 
@@ -464,7 +465,8 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
 }
 
 // 6b. 管理番号・代名詞（チーム名）の直接ピンポイント上書き更新
-function updateDeviceNameDirect(ss, oldTeamId, newTeamId, newTeamName) {
+// registered: true の場合はI列（設定状況）を「設定済み」に強制設定
+function updateDeviceNameDirect(ss, oldTeamId, newTeamId, newTeamName, registered) {
   var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
   if (!sheet) return;
 
@@ -483,10 +485,11 @@ function updateDeviceNameDirect(ss, oldTeamId, newTeamId, newTeamName) {
   }
 
   var nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
-  var registeredStr = (newTeamName && newTeamName !== "未設定") ? "設定済み" : "未設定";
+  // registered=true なら無条件で「設定済み」。そうでない場合はチーム名が入っていれば「設定済み」
+  var registeredStr = (registered === true || registered === 1) ? "設定済み" : ((newTeamName && newTeamName !== "未設定") ? "設定済み" : "未設定");
 
   if (targetRow !== -1) {
-    // A列（端末ID）とB列（チーム名・代名詞）を直接上書き！
+    // A列（端末ID）とB列（チーム名・代名詞）、H列（最終通信）、I列（設定状況）を直接上書き！
     sheet.getRange(targetRow, 1).setValue(newTeamId);
     sheet.getRange(targetRow, 2).setValue(newTeamName);
     sheet.getRange(targetRow, 8).setValue(nowStr);

@@ -1050,7 +1050,14 @@ function applyOperationalRestrictions() {
 // --- 状態の読み込みと保存 ---
 function loadStateFromStorage() {
   gameState.loop = parseInt(localStorage.getItem('game_loop') || '1');
-  
+
+  // 🌐 GAS URLが未設定なら data.js のデフォルトURLを自動セット（iPad起動時の通信エラーを防止）
+  if (!localStorage.getItem('gas_url')) {
+    const defaultUrl = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
+      || 'https://script.google.com/macros/s/AKfycbwKAWMjn0ywOYor7_EQ63HDyoxw_Ag5gH81Efs45ttVKa3vdi6HyOveZrBADpkycIpaYw/exec';
+    if (defaultUrl) localStorage.setItem('gas_url', defaultUrl);
+  }
+
   // 過去の残骸で「チームA」が入っている場合は完全に削除・空文字化
   if (localStorage.getItem('game_team_name') === 'チームA') {
     localStorage.removeItem('game_team_name');
