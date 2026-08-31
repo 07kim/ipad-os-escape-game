@@ -4407,38 +4407,28 @@ function openManabaCourse(courseIdOrName) {
       course = {
         id: userMatch.id || `c_${Date.now()}`,
         name: userMatch.name,
-        teacher: userMatch.teacher || "佐藤 健一",
-        term: userMatch.term || "26 前期",
-        room: userMatch.room || "津田沼校舎1号館",
-        code: "24" + Math.floor(100000 + Math.random() * 900000),
-        news: [
-          { date: "26-08-20", title: `【受講者連絡】${userMatch.name} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
-          { date: "26-08-05", title: `${userMatch.name}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
-        ],
-        materials: [
-          { id: 1, title: `第1回: ${userMatch.name} ガイダンス`, file: `${userMatch.name}_01.pdf`, content: `【${userMatch.name} 第1回講義資料】\n\nシラバス説明と評価基準について。` }
-        ]
+        teacher: userMatch.teacher || "",
+        term: userMatch.term || "",
+        room: userMatch.room || "",
+        code: userMatch.code || "23238648",
+        news: [],
+        materials: []
       };
     }
   }
 
-  // 4. まだ見つからない場合（時間割の科目名から動的生成）
+  // 4. まだ見つからない場合（時間割の科目名から生成）
   if (!course) {
-    const fallbackName = courseIdOrName || "応用量子力学";
+    const fallbackName = courseIdOrName || "講義";
     course = {
       id: `c_${Date.now()}`,
       name: fallbackName,
-      teacher: "佐藤 健一",
-      term: "2026 前期",
-      room: "津田沼校舎1号館",
-      code: "24" + Math.floor(100000 + Math.random() * 900000),
-      news: [
-        { date: "2026-08-20", title: `【受講者連絡】${fallbackName} 第13回 講義資料と小テストについて`, content: `第13回の講義資料を公開しました。次週までに小テストを提出してください。` },
-        { date: "2026-08-05", title: `${fallbackName}｜期末試験座席案内`, content: `期末試験の座席配置を公開しました。学生証を持参の上、指定の座席に着席してください。` }
-      ],
-      materials: [
-        { id: 1, title: `第1回: ${fallbackName} ガイダンス`, file: `${fallbackName}_01.pdf`, content: `【${fallbackName} 第1回講義資料】\n\nシラバス説明と評価基準について。` }
-      ]
+      teacher: "",
+      term: "",
+      room: "",
+      code: "23238648",
+      news: [],
+      materials: []
     };
   }
 
@@ -4557,19 +4547,9 @@ function openManabaCourse(courseIdOrName) {
         </div>
       `;
     } else {
-      // 空の通常授業：授業コンテンツカード
-      cardGrid.innerHTML += `
-        <div class="content-card-item" onclick="openManabaCoursePageView(0)" style="cursor:pointer;">
-          <div class="content-card-icon">
-            <div class="card-icon-line"></div>
-            <div class="card-icon-line"></div>
-            <div class="card-icon-line"></div>
-          </div>
-          <div class="content-card-info">
-            <span class="content-card-title" style="color:#0272c1; text-decoration:underline;">授業コンテンツ</span>
-            <span class="content-card-date">2026-07-05 22:48</span>
-          </div>
-        </div>
+      // 空の通常授業：コンテンツはありません。（添付画像完全準拠）
+      cardGrid.innerHTML = `
+        <div style="padding:16px 20px; color:#555; font-size:13px; width:100%;">コンテンツはありません。</div>
       `;
     }
   }
@@ -4579,7 +4559,7 @@ function openManabaCourse(courseIdOrName) {
   // メニューバーの「📖 コースコンテンツ」ボタンにイベントバインド
   const courseContentsBtn = document.querySelector('.course-menu-btn.active-green');
   if (courseContentsBtn) {
-    courseContentsBtn.onclick = () => openManabaCoursePageView(0);
+    courseContentsBtn.onclick = () => switchCourseSubTab('page');
   }
 
   // コーストップ表示状態を初期化
@@ -4621,6 +4601,24 @@ function switchCourseSubTab(tabKey) {
   }
 
   if (tabKey === 'page') {
+    if (gameState._isCurrentCourseExpired) {
+      // 空の通常授業：コンテンツはありません。（画像3枚目スタイル）
+      if (mainCols) mainCols.style.display = 'none';
+      if (noticeBox) noticeBox.style.display = 'none';
+      if (sublinksRow) sublinksRow.style.display = 'none';
+      if (subtabView) subtabView.style.display = 'block';
+      if (titleTextEl) titleTextEl.innerText = "コンテンツ";
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <div class="description vspacing" style="margin-top: 15px;">
+            <p class="first small" style="background:#fff; border:1px solid #d4d4d4; padding:16px 20px; border-radius:4px; color:#444; font-size:13.5px; line-height:1.6;">
+              このコースにはコンテンツはありません。
+            </p>
+          </div>
+        `;
+      }
+      return;
+    }
     if (mainCols) mainCols.style.display = 'none';
     if (noticeBox) noticeBox.style.display = 'none';
     if (sublinksRow) sublinksRow.style.display = 'none';
