@@ -333,11 +333,25 @@ function fetchLatestDataFromSpreadsheet() {
         }
 
         // 🌀 現在の周回情報（globalLoop）を取得し、アクセス時・リロード時にその周回へ自動同期
-        const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || json.loop || (json.data && json.data.loop), 10);
+        // ⚠️ プレイ中にアプリが勝手に閉じるのを防止するため：
+        //   1. 初回起動時（またはリフレッシュ時）に1回だけ同期を実行
+        //   2. 既にアプリを開いている場合は強制終了（closeAllWindowsSilent）を回避し、静かに周回データを更新
+        const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || (json.loop !== undefined ? json.loop : 0), 10);
         if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
-          if (gameState.loop !== serverLoop) {
-            console.log(`🌀 サーバーの全体周回（${serverLoop}周目）を検出。現在の端末周回（${gameState.loop}周目）から自動同期します。`);
-            triggerLoopTransition(serverLoop);
+          const currentLoop = parseInt(gameState.loop || 1, 10);
+          if (!window._hasInitialLoopSynced) {
+            window._hasInitialLoopSynced = true;
+            if (currentLoop !== serverLoop) {
+              console.log(`🌀 [初回アクセス同期] サーバーの全体周回（${serverLoop}周目）を検出。現在の端末周回（${currentLoop}周目）から自動同期します。`);
+              if (!gameState.activeApp) {
+                triggerLoopTransition(serverLoop);
+              } else {
+                gameState.loop = serverLoop;
+                saveStateToStorage();
+                localStorage.setItem('game_loop', String(serverLoop));
+                updateAppUI();
+              }
+            }
           }
         }
 
