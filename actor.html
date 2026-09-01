@@ -615,7 +615,7 @@
       <div class="actor-avatar g">G</div>
       <div class="actor-card-info">
         <div class="actor-name">外園 胡春（G）</div>
-        <div class="actor-sub">2周目：森野捜索 ＆ タイムワープ報告（計2回・順序ロック付）</div>
+        <div class="actor-sub">1〜3周目：森野捜索 / 1・2周目：タイムワープ報告（順序ロック付）</div>
       </div>
       <i data-lucide="chevron-right" style="color:var(--text-muted);"></i>
     </div>
@@ -682,18 +682,18 @@
         triggers: [
           {
             id: "g_search_morino",
-            stageTitle: "2周目：タイミング①",
+            stageTitle: "1〜3周目共通（各周回1回）",
             btnLabel: "【送信①】森野の捜索連絡",
             text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。",
-            allowedLoops: [2]
+            allowedLoops: [1, 2, 3]
           },
           {
             id: "g_timewarp_alert",
-            stageTitle: "2周目：タイミング②",
+            stageTitle: "1・2周目：タイミング②",
             btnLabel: "【送信②】タイムワープ報告",
             text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
             dependsOn: "g_search_morino", // ①を送信するまでロック
-            allowedLoops: [2]
+            allowedLoops: [1, 2]
           }
         ]
       },
