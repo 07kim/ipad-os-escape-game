@@ -543,6 +543,26 @@ body {
   border-radius: 14px;
 }
 
+/* リフレッシュ (再読み込み) ドックアイコン */
+.refresh-dock-icon {
+  background: #ffffff;
+}
+.refresh-dock-icon i,
+.refresh-dock-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #0284c7;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.refresh-dock-icon:hover i,
+.refresh-dock-icon:hover svg {
+  transform: rotate(180deg);
+}
+.refresh-dock-icon:active i,
+.refresh-dock-icon:active svg {
+  transform: rotate(360deg);
+}
+
 .dock-badge {
   position: absolute;
   top: -4px;

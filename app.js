@@ -6143,6 +6143,68 @@ function reloadIpadPage() {
   }, 100);
 }
 
+// 🔄 下部ドックから呼び出される軽量リフレッシュ（状態を保存してメモリ解放・再読み込み）
+function refreshApp() {
+  try { playSystemSound("beep"); } catch(e) {}
+
+  // 1. アイコンのアニメーション回転
+  const btn = document.getElementById('dock-refresh-btn');
+  if (btn) {
+    const icon = btn.querySelector('i') || btn.querySelector('svg');
+    if (icon) {
+      icon.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      icon.style.transform = 'rotate(360deg)';
+    }
+  }
+
+  // 2. 直前のゲーム状態・メモ・周回等を確実にローカル保存（データ損失を完全防止）
+  try {
+    if (typeof saveStateToStorage === 'function') {
+      saveStateToStorage();
+    }
+  } catch(e) {
+    console.warn("State save before refresh failed:", e);
+  }
+
+  // 3. 「再読み込み中」の洗練された軽量フィードバックトーストを表示
+  const toast = document.createElement('div');
+  toast.id = 'refresh-loading-toast';
+  toast.style.position = 'fixed';
+  toast.style.bottom = '105px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%) translateY(16px)';
+  toast.style.background = 'rgba(15, 23, 42, 0.88)';
+  toast.style.backdropFilter = 'blur(12px)';
+  toast.style.webkitBackdropFilter = 'blur(12px)';
+  toast.style.color = '#ffffff';
+  toast.style.padding = '10px 20px';
+  toast.style.borderRadius = '24px';
+  toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
+  toast.style.display = 'flex';
+  toast.style.alignItems = 'center';
+  toast.style.gap = '10px';
+  toast.style.fontSize = '13px';
+  toast.style.fontWeight = '600';
+  toast.style.zIndex = '999999';
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)';
+  toast.innerHTML = `
+    <div style="width: 15px; height: 15px; border: 2px solid #38bdf8; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+    <span>システムを再読み込み中...</span>
+  `;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  // 4. アニメーション完了後にページ再読み込みを実行
+  setTimeout(() => {
+    location.reload();
+  }, 350);
+}
+
 // ==========================================================================
 // ⑧ 設定アプリ
 // ==========================================================================
