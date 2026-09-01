@@ -2785,12 +2785,40 @@
 
     let adminTimerInterval = null;
 
+    // 🛡️ タイマー状態のサニタイズ（Unixタイムスタンプ混入やNaNなどの異常値を自動修復）
+    function sanitizeAdminTimerState() {
+      const MAX_VALID_ELAPSED = 86400000; // 24時間
+      let dirty = false;
+      if (typeof adminTimerState.totalElapsedBeforePause !== 'number' || isNaN(adminTimerState.totalElapsedBeforePause) || adminTimerState.totalElapsedBeforePause > MAX_VALID_ELAPSED || adminTimerState.totalElapsedBeforePause < 0) {
+        console.warn("⚠️ 異常なtotalElapsedBeforePauseを検知しリセットしました:", adminTimerState.totalElapsedBeforePause);
+        adminTimerState.totalElapsedBeforePause = 0;
+        dirty = true;
+      }
+      if (typeof adminTimerState.loopElapsedBeforePause !== 'number' || isNaN(adminTimerState.loopElapsedBeforePause) || adminTimerState.loopElapsedBeforePause > MAX_VALID_ELAPSED || adminTimerState.loopElapsedBeforePause < 0) {
+        console.warn("⚠️ 異常なloopElapsedBeforePauseを検知しリセットしました:", adminTimerState.loopElapsedBeforePause);
+        adminTimerState.loopElapsedBeforePause = 0;
+        dirty = true;
+      }
+      if (adminTimerState.loopLaps) {
+        for (let l = 1; l <= 3; l++) {
+          if (adminTimerState.loopLaps[l] && (typeof adminTimerState.loopLaps[l].durationMs !== 'number' || isNaN(adminTimerState.loopLaps[l].durationMs) || adminTimerState.loopLaps[l].durationMs > MAX_VALID_ELAPSED || adminTimerState.loopLaps[l].durationMs < 0)) {
+            adminTimerState.loopLaps[l].durationMs = 0;
+            dirty = true;
+          }
+        }
+      }
+      if (dirty) {
+        saveAdminTimerState();
+      }
+    }
+
     function initAdminTimer() {
       try {
         const saved = localStorage.getItem('admin_timeline_timer');
         if (saved) {
           const parsed = JSON.parse(saved);
           Object.assign(adminTimerState, parsed);
+          sanitizeAdminTimerState();
           if (adminTimerState.isRunning && adminTimerState.totalStartTime) {
             startTimerInterval();
             updateTimerButtonsUI(true);
@@ -2798,9 +2826,11 @@
             renderTimerUI();
           }
         } else {
+          sanitizeAdminTimerState();
           renderTimerUI();
         }
       } catch(e) {
+        sanitizeAdminTimerState();
         renderTimerUI();
       }
     }
@@ -2925,11 +2955,17 @@
       if (!adminTimerState.isRunning) return;
       const now = Date.now();
       
-      adminTimerState.totalElapsedBeforePause += (now - adminTimerState.totalStartTime);
-      adminTimerState.loopElapsedBeforePause += (now - adminTimerState.loopStartTime);
+      if (adminTimerState.totalStartTime && adminTimerState.totalStartTime > 0) {
+        adminTimerState.totalElapsedBeforePause += Math.max(0, now - adminTimerState.totalStartTime);
+      }
+      if (adminTimerState.loopStartTime && adminTimerState.loopStartTime > 0) {
+        adminTimerState.loopElapsedBeforePause += Math.max(0, now - adminTimerState.loopStartTime);
+      }
       adminTimerState.isRunning = false;
       adminTimerState.totalStartTime = null;
       adminTimerState.loopStartTime = null;
+
+      sanitizeAdminTimerState();
 
       if (adminTimerInterval) clearInterval(adminTimerInterval);
       updateTimerButtonsUI(false);
@@ -2996,9 +3032,9 @@
       const now = Date.now();
 
       // 前の周回の確定所要時間を記録
-      let prevDuration = adminTimerState.loopElapsedBeforePause;
-      if (adminTimerState.isRunning && adminTimerState.loopStartTime) {
-        prevDuration += (now - adminTimerState.loopStartTime);
+      let prevDuration = adminTimerState.loopElapsedBeforePause || 0;
+      if (adminTimerState.isRunning && adminTimerState.loopStartTime && adminTimerState.loopStartTime > 0) {
+        prevDuration += Math.max(0, now - adminTimerState.loopStartTime);
       }
       if (adminTimerState.loopLaps[prevLoop]) {
         adminTimerState.loopLaps[prevLoop].durationMs = prevDuration;
@@ -3053,19 +3089,20 @@
     }
 
     function renderTimerUI() {
+      sanitizeAdminTimerState();
       const now = Date.now();
       const currentL = adminTimerState.currentLoop || 1;
       
       // 1. トータル時間計算
-      let totalMs = adminTimerState.totalElapsedBeforePause;
-      if (adminTimerState.isRunning && adminTimerState.totalStartTime) {
-        totalMs += (now - adminTimerState.totalStartTime);
+      let totalMs = adminTimerState.totalElapsedBeforePause || 0;
+      if (adminTimerState.isRunning && adminTimerState.totalStartTime && adminTimerState.totalStartTime > 0) {
+        totalMs += Math.max(0, now - adminTimerState.totalStartTime);
       }
 
       // 2. 現在の周回時間計算
-      let loopMs = adminTimerState.loopElapsedBeforePause;
-      if (adminTimerState.isRunning && adminTimerState.loopStartTime) {
-        loopMs += (now - adminTimerState.loopStartTime);
+      let loopMs = adminTimerState.loopElapsedBeforePause || 0;
+      if (adminTimerState.isRunning && adminTimerState.loopStartTime && adminTimerState.loopStartTime > 0) {
+        loopMs += Math.max(0, now - adminTimerState.loopStartTime);
       }
 
       // 👑 3. 大型カレント周回ヒーローボックスの更新
@@ -3447,6 +3484,7 @@
         if (!adminTimerState.isRunning) startAdminTimer();
         adminTimerState.currentLoop = 2;
         adminTimerState.loopStartTime = now;
+        adminTimerState.loopElapsedBeforePause = 0;
         renderTimerUI();
         saveAdminTimerState();
         localStorage.setItem('fake_clock_set_time', String(now));
@@ -3469,6 +3507,7 @@
         if (!adminTimerState.isRunning) startAdminTimer();
         adminTimerState.currentLoop = 3;
         adminTimerState.loopStartTime = now;
+        adminTimerState.loopElapsedBeforePause = 0;
         renderTimerUI();
         saveAdminTimerState();
         localStorage.setItem('fake_clock_set_time', String(now));
@@ -3872,11 +3911,15 @@
               const isTimerRunning = (currentFlowStep === 2 || currentFlowStep === 4 || currentFlowStep === 6);
               if (!isTimerRunning && adminTimerState.isRunning) {
                 pauseAdminTimer();
-              } else if (isTimerRunning && !adminTimerState.isRunning && json.startTime) {
-                adminTimerState.startTime = Number(json.startTime);
+              } else if (isTimerRunning && !adminTimerState.isRunning) {
+                const sTime = json.startTime ? Number(json.startTime) : Date.now();
                 adminTimerState.isRunning = true;
-                if (!adminTimerInterval) adminTimerInterval = setInterval(updateAdminTimerTick, 500);
+                adminTimerState.totalStartTime = sTime;
+                adminTimerState.loopStartTime = sTime;
+                startTimerInterval();
+                updateTimerButtonsUI(true);
                 renderTimerUI();
+                saveAdminTimerState();
               }
             }
             if (json.devices) {
