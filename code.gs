@@ -511,15 +511,35 @@ function updateDeviceNameDirect(ss, oldTeamId, newTeamId, newTeamName, registere
 }
 
 // 7. モニタリングデータの初期化（マスターリセット用）
+// 行削除ではなく、全端末の進行データを「1周目・未設定」状態へ一括リセットする
 function resetAllMonitoringData(ss) {
   var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
   if (!sheet) return;
 
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return;
+  if (lastRow <= 1) return; // ヘッダーのみなら何もしない
 
-  // 接続リセット: ヘッダー行以外を全削除（再接続まで表示しない）
-  sheet.deleteRows(2, lastRow - 1);
+  var numRows = lastRow - 1;
+
+  // C列（現在周回）= 1, D列（ヒント解放数）= 0, E列（manabaログイン状況）= "未ログイン",
+  // G列（通信状態）= "待機中", H列（最終通信日時）= "", I列（設定状況）= "未設定"
+  // B列（チーム名・代名詞）= "" (名前も完全消去)
+  var resetValues = [];
+  var teamIds = sheet.getRange(2, 1, numRows, 1).getValues();
+  for (var i = 0; i < numRows; i++) {
+    resetValues.push([
+      teamIds[i][0], // A列: 端末ID は保持（iPad-01〜iPad-30 のリストを維持）
+      "",            // B列: チーム名・代名詞 → 完全消去
+      1,             // C列: 現在周回 → 1周目へリセット
+      0,             // D列: ヒント解放数 → 0
+      "未ログイン",   // E列: manabaログイン状況 → 未ログイン
+      "100%",        // F列: バッテリー残量 → 100%（デフォルト）
+      "待機中",      // G列: 通信状態 → 待機中
+      "",            // H列: 最終通信日時 → クリア
+      "未設定"       // I列: 設定状況 → 未設定
+    ]);
+  }
+  sheet.getRange(2, 1, numRows, 9).setValues(resetValues);
 }
 
 // 7b. 特定端末の行を削除（個別リセット用）

@@ -123,6 +123,27 @@ function loadGameDatabase() {
 // --- 起動処理 ---
 window.addEventListener('DOMContentLoaded', () => {
   try {
+    // 🔄 URLパラメータ ?reset=1 / ?clear=1 による完全初期化クリーン起動
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('reset') === '1' || urlParams.get('clear') === '1') {
+      console.log("🔄 URLパラメータによる完全初期化クリーン起動を実行します。");
+      const gasUrl = localStorage.getItem('gas_url');
+      localStorage.clear();
+      try { sessionStorage.clear(); } catch(e) {}
+      if (window.INITIAL_GAME_DATABASE) {
+        try { window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE)); } catch(e) {}
+      }
+      localStorage.setItem('game_loop', '1');
+      localStorage.setItem('game_timer_running', 'false');
+      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+      localStorage.setItem('fake_clock_set_time', String(Date.now()));
+      localStorage.setItem('device_registered', '0');
+      if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+      // パラメータを除いたクリーンURLへリダイレクト
+      location.replace(location.pathname + '?reset_done=1');
+      return;
+    }
+
     // 🔒 接続登録（命名）チェック
     const isRegistered = localStorage.getItem('device_registered') === '1';
     window._deviceRegistered = isRegistered;
@@ -892,6 +913,11 @@ document.addEventListener('visibilitychange', () => {
         console.log('[NoSleep] 画面復帰: AudioContext resume 成功');
       }).catch(() => {});
     }
+
+    // 🚨 スリープ中に master_reset が届いていた場合は即時完全初期化（漏れ防止）
+    // GAS から最新コマンドを取得し、master_reset なら即リセット
+    _checkAndExecutePendingMasterReset();
+
     // 画面復帰直後に最新コマンドを即時受信（管理画面からの音出しや変更を漏らさず適用）
     if (typeof fetchLatestDataFromSpreadsheet === 'function') {
       fetchLatestDataFromSpreadsheet();
@@ -934,6 +960,33 @@ function _processQueuedSleepCommands() {
       localStorage.removeItem('sleep_cmd_queue');
     }
   } catch(e) {}
+}
+
+// 🚨 スリープ・バックグラウンド中に届いた master_reset を復帰時に確認して即時実行
+function _checkAndExecutePendingMasterReset() {
+  const gasUrl = localStorage.getItem('gas_url');
+  if (!gasUrl) return;
+
+  // GAS からスリープ中に届いた最新コマンドを確認（タイムアウト3秒・軽量接続）
+  const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
+  fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined })
+    .then(res => res.json())
+    .then(json => {
+      if (!json || (!json.success && !json.data)) return;
+      const cmd = json.latestCommand || (json.data && json.data.latestCommand);
+      if (!cmd || !cmd.type) return;
+      // master_reset コマンドが存在し、かつまだ実行していない場合のみ即時実行
+      const cmdType = cmd.type || (cmd.params && cmd.params.action);
+      if (cmdType === 'master_reset' && cmd.id !== lastExecutedCommandId) {
+        const target = (cmd.params && cmd.params.target) || cmd.target || 'ALL';
+        const myTeam = gameState.teamId || localStorage.getItem('game_team_id') || '';
+        if (target === 'ALL' || target === myTeam) {
+          console.log('🚨 復帰時チェック: スリープ中に届いた master_reset を検知しました。即時完全初期化します。');
+          executeInstantMasterReset();
+        }
+      }
+    })
+    .catch(() => {}); // ネットワークエラーは無視
 }
 
 // ユーザー操作（タップ・クリック・キー入力）で自動的に起動
@@ -2046,11 +2099,49 @@ function openPairingStaffModal() {
 function executeInstantMasterReset() {
   console.log("🚨 全iPad ＆ データを一括完全初期化を実行します。");
   const gasUrl = localStorage.getItem('gas_url');
-  
-  // LocalStorageを完全クリア（メタアプリ、メモ帳、手書き、管理番号、名前、ログイン、進行状況、登録フラグ等すべて消去）
+
+  // ① LocalStorage を完全クリア（3周目進行・メタアプリ・メモ帳・手書き・管理番号・名前・ログイン・証拠リスト等すべて消去）
   localStorage.clear();
-  
-  // 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:04待機, 登録: 未設定, 通信設定維持）
+
+  // ② SessionStorage もクリア（セッション内のキャッシュ残留を防止）
+  try { sessionStorage.clear(); } catch(e) {}
+
+  // ③ window.GAME_DATABASE をマスタから完全復元（チャット履歴・状態変化を一切残さない）
+  if (window.INITIAL_GAME_DATABASE) {
+    try {
+      window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE));
+    } catch(e) {}
+  }
+
+  // ④ gameState を初期値へ完全リセット（3周目・メタアプリ・メモ帳・証拠・友達等すべて）
+  gameState.loop = 1;
+  gameState.teamId = "";
+  gameState.clockStartISO = "2126-09-04T09:04:00";
+  gameState.clockSetTime = Date.now();
+  gameState.timerRunning = false;
+  gameState.unlockedHints = [];
+  gameState.collectedEvidence = [];
+  gameState.manabaUser = null;
+  gameState.manabaLoggedInUser = null;
+  gameState.addedFriends = ["committee_group"];
+  gameState.activeApp = null;
+  gameState.activeMetaTab = "observation";
+  gameState.activeManabaTab = "mypage";
+  gameState.currentBrowserPage = "home";
+  gameState.browserHistory = [];
+  gameState.browserSearchQuery = "";
+  gameState.activeChatContact = null;
+  gameState.phoneInput = "";
+  gameState.alertDismissed = true;
+  gameState.memoTabs = [{ title: "メモ 1", text: "", drawData: null }];
+  gameState.activeMemoTabIndex = 0;
+  gameState.memoMode = "text";
+  gameState.dynamicLockNotifications = [];
+
+  // ⑤ メタアプリのモジュールレベル変数もリセット
+  try { metaObservationCurrentFolder = 'root'; } catch(e) {}
+
+  // ⑥ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:04待機, 登録: 未設定, 通信設定維持）
   localStorage.setItem('game_loop', '1');
   localStorage.setItem('game_timer_running', 'false');
   localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
@@ -2058,9 +2149,13 @@ function executeInstantMasterReset() {
   localStorage.setItem('device_registered', '0');
   if (gasUrl) localStorage.setItem('gas_url', gasUrl);
 
+  // ⑦ 実行済みコマンドIDキャッシュをクリア（次回の master_reset を重複スキップしないように）
+  lastExecutedCommandId = null;
+
   try { playSystemSound("fanfare"); } catch(e) {}
   setTimeout(() => {
-    location.reload(true);
+    // ?reset_done=1 を付けてリロードすることで、再起動後に同コマンドが二重実行されないようにする
+    location.href = location.pathname + '?reset_done=1';
   }, 400);
 }
 
