@@ -37,8 +37,11 @@ function doGet(e) {
 
     // 2. 【超軽量・最速】30台の進行ステータス ＆ 最新運営コマンドを取得（iPad & GM画面用）
     if (action === "get_status" || action === "get_data") {
+      var currentLoop = getGlobalLoop(ss);
       return renderJson({
         success: true,
+        globalLoop: currentLoop,                 // ⭐ 現在の全体周回（1, 2, 3）
+        loop: currentLoop,                       // 互換用
         devices: readAllDevicesStatus(ss),
         latestCommand: getLatestAdminCommand(ss),
         resetPending: getResetPendingFlag(ss),   // ⭐ リセット待機フラグ
@@ -79,6 +82,14 @@ function doGet(e) {
     // 4. GM運営コマンドの送信 (GET)
     if (action === "send_command" && e.parameter.cmd) {
       var cmdObj = JSON.parse(decodeURIComponent(e.parameter.cmd));
+      if (cmdObj) {
+        if (cmdObj.type === "loop_change" || (cmdObj.params && cmdObj.params.loop)) {
+          var targetL = Number(cmdObj.loop || (cmdObj.params && cmdObj.params.loop));
+          if (!isNaN(targetL)) setGlobalLoop(ss, targetL);
+        } else if (cmdObj.type === "master_reset") {
+          setGlobalLoop(ss, 1);
+        }
+      }
       var res = recordAdminCommand(ss, cmdObj);
       return renderJson({ success: true, message: "コマンドを送信・記録しました！", commandId: res.id });
     }
@@ -107,12 +118,13 @@ function doGet(e) {
     if (action === "update_loop" && e.parameter.loop) {
       var newLoop = Number(e.parameter.loop);
       setResetPendingFlag(ss, false); // ゲーム再開 = リセット完了とみなしてフラグ解除
+      setGlobalLoop(ss, newLoop);     // ⭐ 現在の全体周回を「システム設定」に永続保存
       var loopCmd = recordAdminCommand(ss, {
         type: "loop_change",
         name: "周回変更 (Loop " + newLoop + ")",
         params: { loop: newLoop, timestamp: Date.now() }
       });
-      return renderJson({ success: true, message: "周回変更コマンドを発行しました！", loop: newLoop, commandId: loopCmd.id });
+      return renderJson({ success: true, message: "周回変更コマンドを発行しました！", loop: newLoop, globalLoop: newLoop, commandId: loopCmd.id });
     }
 
     // 7b. reset_pending フラグを手動解除（管理画面から呼べる緊急解除用）
@@ -125,6 +137,7 @@ function doGet(e) {
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
       setResetPendingFlag(ss, true);  // ⭐ リセット待機フラグを立てる（スリープ中の端末も次回起動時に必ずリセット）
+      setGlobalLoop(ss, 1);           // ⭐ 全体周回を1周目に初期化
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット（1周目初期化）",
@@ -189,7 +202,16 @@ function doPost(e) {
     }
 
     if (action === "send_admin_command") {
-      var res = recordAdminCommand(ss, postData.command);
+      var cmd = postData.command;
+      if (cmd) {
+        if (cmd.type === "loop_change" || (cmd.params && cmd.params.loop)) {
+          var tLoop = Number(cmd.loop || (cmd.params && cmd.params.loop));
+          if (!isNaN(tLoop)) setGlobalLoop(ss, tLoop);
+        } else if (cmd.type === "master_reset") {
+          setGlobalLoop(ss, 1);
+        }
+      }
+      var res = recordAdminCommand(ss, cmd);
       return renderJson({ success: true, message: "運営コマンドを全iPadへ配信しました！", commandId: res.id });
     }
 
@@ -204,6 +226,8 @@ function doPost(e) {
 
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
+      setResetPendingFlag(ss, true);
+      setGlobalLoop(ss, 1);
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット",
@@ -647,4 +671,73 @@ function setResetPendingFlag(ss, value) {
   }
   // キーがなければ新規追加
   sheet.appendRow([RESET_FLAG_KEY, value ? "true" : "false"]);
+}
+
+// ================================================================
+// 🌀 全体周回（グローバル周回: 1, 2, 3）管理
+// iPadアクセス時・リロード時に現在の全体周回に即座に同期されるための永続化
+// ================================================================
+
+var GLOBAL_LOOP_KEY = "global_loop";
+
+/**
+ * 現在の全体周回（グローバル周回: 1, 2, 3）を取得
+ * @return {number} 1, 2, または 3
+ */
+function getGlobalLoop(ss) {
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (sheet) {
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 1) {
+      var data = sheet.getRange(1, 1, lastRow, 2).getValues();
+      for (var i = 0; i < data.length; i++) {
+        if (String(data[i][0]).trim() === GLOBAL_LOOP_KEY) {
+          var val = parseInt(data[i][1], 10);
+          if (!isNaN(val) && val >= 1 && val <= 3) return val;
+        }
+      }
+    }
+  }
+
+  // フォールバック: 30台進行状況モニタリングから最新端末の周回を拾う
+  try {
+    var monSheet = ss.getSheetByName("10_30台進行状況モニタリング");
+    if (monSheet && monSheet.getLastRow() > 1) {
+      var loopData = monSheet.getRange(2, 3, monSheet.getLastRow() - 1, 1).getValues();
+      var maxL = 1;
+      for (var j = 0; j < loopData.length; j++) {
+        var num = parseInt(loopData[j][0], 10);
+        if (!isNaN(num) && num > maxL && num <= 3) maxL = num;
+      }
+      if (maxL > 1) return maxL;
+    }
+  } catch(e) {}
+
+  return 1; // デフォルト1周目
+}
+
+/**
+ * 現在の全体周回（グローバル周回）を設定・保存
+ * @param {number} loopNum 1, 2, 3
+ */
+function setGlobalLoop(ss, loopNum) {
+  var val = parseInt(loopNum || 1, 10);
+  if (isNaN(val) || val < 1 || val > 3) val = 1;
+
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(RESET_FLAG_SHEET);
+    sheet.getRange(1, 1).setValue(GLOBAL_LOOP_KEY);
+    sheet.getRange(1, 2).setValue(String(val));
+    return;
+  }
+  var lastRow = sheet.getLastRow();
+  var data = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 2).getValues() : [];
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === GLOBAL_LOOP_KEY) {
+      sheet.getRange(i + 1, 2).setValue(String(val));
+      return;
+    }
+  }
+  sheet.appendRow([GLOBAL_LOOP_KEY, String(val)]);
 }

@@ -944,10 +944,15 @@
 
             // 2. システム設定 ＆ 稼働中iPad端末（30台）の進行状況からの周回検出
             if (!detectedLoop) {
-              if (d.system && d.system.loop) {
+              if (d.globalLoop) {
+                detectedLoop = d.globalLoop;
+              } else if (d.system && d.system.loop) {
                 detectedLoop = d.system.loop;
               } else if (d.loop) {
                 detectedLoop = d.loop;
+              } else if (d.devices && Array.isArray(d.devices) && d.devices.length > 0) {
+                const loops = d.devices.map(dev => parseInt(dev.loop || dev.loopNum || 1, 10)).filter(num => !isNaN(num) && num >= 1);
+                if (loops.length > 0) detectedLoop = Math.max(...loops);
               } else if (d.devicesStatus && Array.isArray(d.devicesStatus) && d.devicesStatus.length > 0) {
                 // 稼働中のiPad端末の最新周回を拾う
                 const loops = d.devicesStatus.map(dev => parseInt(dev.loop || dev.loopNum || 1, 10)).filter(num => !isNaN(num) && num >= 1);

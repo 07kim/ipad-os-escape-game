@@ -3635,8 +3635,14 @@
       fetch(url)
         .then(res => res.json())
         .then(json => {
-          if (json && json.success && json.devices) {
-            latestDevicesData = json.devices;
+          if (json && json.success) {
+            if (json.globalLoop && json.globalLoop !== adminTimerState.currentLoop) {
+              adminTimerState.currentLoop = Number(json.globalLoop);
+              renderTimerUI();
+            }
+            if (json.devices) {
+              latestDevicesData = json.devices;
+            }
           } else {
             fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
               .then(r => r.json())

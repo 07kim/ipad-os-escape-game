@@ -332,6 +332,15 @@ function fetchLatestDataFromSpreadsheet() {
           localStorage.removeItem('reset_pending_done');
         }
 
+        // 🌀 現在の周回情報（globalLoop）を取得し、アクセス時・リロード時にその周回へ自動同期
+        const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || json.loop || (json.data && json.data.loop), 10);
+        if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
+          if (gameState.loop !== serverLoop) {
+            console.log(`🌀 サーバーの全体周回（${serverLoop}周目）を検出。現在の端末周回（${gameState.loop}周目）から自動同期します。`);
+            triggerLoopTransition(serverLoop);
+          }
+        }
+
         const cmd = json.latestCommand || (json.data && json.data.latestCommand);
         // 1. 運営コマンドの受信 ＆ リアルタイム実行
         if (cmd) {
@@ -873,6 +882,8 @@ function updateStaffSyncUI() {
 
 function startAutoSpreadsheetSync() {
   fetchLatestDataFromSpreadsheet();
+  // 起動直後（1.5秒後）にも再同期をかけてアクセス時の即時周回一致を確実化
+  setTimeout(fetchLatestDataFromSpreadsheet, 1500);
   // 8秒おきに裏側で自動チェック・コマンド受信（超軽量数十バイト・リロード不要）
   setInterval(fetchLatestDataFromSpreadsheet, 8000);
 }
