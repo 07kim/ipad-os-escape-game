@@ -37,12 +37,15 @@ function doGet(e) {
 
     // 2. 【超軽量・最速】30台の進行ステータス ＆ 最新運営コマンドを取得（iPad & GM画面用）
     if (action === "get_status" || action === "get_data") {
+      var currentGlobalLoop = getGlobalLoop(ss);
       var flowState = getSceneFlowState(ss);
+      var effectiveLoop = (currentGlobalLoop >= 1 && currentGlobalLoop <= 3) ? currentGlobalLoop : flowState.loop;
+
       return renderJson({
         success: true,
         flowStep: flowState.step,                // ⭐ 現在のシーンステップ（1〜8）
-        globalLoop: flowState.loop,              // ⭐ 現在の全体周回（1, 2, 3）
-        loop: flowState.loop,                    // 互換用
+        globalLoop: effectiveLoop,               // ⭐ 現在の全体周回（1, 2, 3）
+        loop: effectiveLoop,                     // 互換用
         timerRunning: flowState.timerRunning,    // ⭐ タイマーが進行中か（false=09:04静止待機）
         startTime: flowState.startTime,          // ⭐ 計時開始ミリ秒タイムスタンプ
         blackout: flowState.blackout,            // ⭐ 完全暗転（ステップ7）
@@ -885,6 +888,14 @@ function getSceneFlowState(ss) {
   var explicitGlobalLoop = getGlobalLoop(ss);
   if (explicitGlobalLoop >= 1 && explicitGlobalLoop <= 3) {
     state.loop = explicitGlobalLoop;
+    // 周回とステップ番号が矛盾している場合は、その周回に適合したステップへ自動補正
+    if (state.loop === 1 && state.step > 2) {
+      state.step = 2;
+    } else if (state.loop === 2 && (state.step < 3 || state.step > 4)) {
+      state.step = 4;
+    } else if (state.loop === 3 && state.step < 5) {
+      state.step = 6;
+    }
   }
 
   return state;

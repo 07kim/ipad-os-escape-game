@@ -338,15 +338,32 @@ function fetchLatestDataFromSpreadsheet() {
         const serverTimerRunning = (json.timerRunning === true || json.timerRunning === "true");
         const serverStartTime = parseInt(json.startTime || (json.data && json.data.startTime) || 0, 10) || null;
 
-        // 1. 周回の更新チェック（管理画面で変更された周回を最優先で即時同期）
+        // 1. 周回の更新チェック（管理画面で変更された周回を最優先で即時同期 ＆ 初回アクセス時も確実にコンテンツ描画）
         if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
           const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10);
-          if (currentLoop !== serverLoop) {
-            console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${serverLoop}周目`);
+          const isFirstSync = !window._hasInitialContentSynced;
+          if (currentLoop !== serverLoop || isFirstSync) {
+            console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${serverLoop}周目 (初回アクセス:${isFirstSync})`);
+            window._hasInitialContentSynced = true;
             gameState.loop = serverLoop;
             localStorage.setItem('game_loop', String(serverLoop));
             saveStateToStorage();
+
+            // 観測フォルダ・メール・LINK・ニュース・通知など全アプリをその周の内容に完全更新
+            metaObservationCurrentFolder = 'root';
             updateAppUI();
+
+            // 現在開いているアプリがある場合は、その画面も該当周回データで即座に再描画
+            if (gameState.activeApp === 'meta-app') {
+              renderMetaObservation('root');
+              renderMetaEvidence();
+            } else if (gameState.activeApp === 'mail-app') {
+              renderMailList();
+            } else if (gameState.activeApp === 'browser-app') {
+              renderBrowserNews();
+            } else if (gameState.activeApp === 'link-app') {
+              renderLinkChatList();
+            }
           }
         }
 
