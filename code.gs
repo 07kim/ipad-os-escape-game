@@ -41,6 +41,7 @@ function doGet(e) {
         success: true,
         devices: readAllDevicesStatus(ss),
         latestCommand: getLatestAdminCommand(ss),
+        resetPending: getResetPendingFlag(ss),   // ⭐ リセット待機フラグ
         timestamp: Date.now()
       });
     }
@@ -105,6 +106,7 @@ function doGet(e) {
     // 7. 周回一括更新 (GET)
     if (action === "update_loop" && e.parameter.loop) {
       var newLoop = Number(e.parameter.loop);
+      setResetPendingFlag(ss, false); // ゲーム再開 = リセット完了とみなしてフラグ解除
       var loopCmd = recordAdminCommand(ss, {
         type: "loop_change",
         name: "周回変更 (Loop " + newLoop + ")",
@@ -113,21 +115,34 @@ function doGet(e) {
       return renderJson({ success: true, message: "周回変更コマンドを発行しました！", loop: newLoop, commandId: loopCmd.id });
     }
 
+    // 7b. reset_pending フラグを手動解除（管理画面から呼べる緊急解除用）
+    if (action === "clear_reset_flag") {
+      setResetPendingFlag(ss, false);
+      return renderJson({ success: true, message: "リセット待機フラグを解除しました" });
+    }
+
     // 8. マスターリセット（全iPad・モニタリング初期化）
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
+      setResetPendingFlag(ss, true);  // ⭐ リセット待機フラグを立てる（スリープ中の端末も次回起動時に必ずリセット）
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット（1周目初期化）",
         params: { loop: 1, resetActors: true, timestamp: Date.now() }
       });
-      return renderJson({ success: true, message: "全30台のマスターリセットを実行しました！", commandId: resetCmd.id });
+      return renderJson({ success: true, message: "全３０台のマスターリセットを実行しました！", commandId: resetCmd.id });
     }
 
     // 9. プレイログ書き込み (GET)
     if (action === "write_log") {
       writeLog(ss, e.parameter.teamId || "iPad-01", Number(e.parameter.loop || 1), e.parameter.type || "INFO", decodeURIComponent(e.parameter.message || ""));
       return renderJson({ success: true, message: "ログを記録しました" });
+    }
+
+    // 9b. iPadリセット完了通知 — reset_pending フラグを解除
+    if (action === "reset_complete") {
+      setResetPendingFlag(ss, false);
+      return renderJson({ success: true, message: "リセット完了を受信しました" });
     }
 
     // 10. iPad接続リセット（接続登録解除 & スプレッドシート行削除）
@@ -581,4 +596,55 @@ function writeLog(ss, teamId, loopNum, logType, message) {
   if (curRows > maxRows + 10) {
     sheet.deleteRows(2, curRows - maxRows);
   }
+}
+
+// ================================================================
+// 🔴 リセット待機フラグ管理（スリープ中にリセットした端末への底流し機構）
+// コマンドは30秒で失効するが、このフラグはリセット完了まで永続する
+// ================================================================
+
+var RESET_FLAG_SHEET = "システム設定";
+var RESET_FLAG_KEY   = "reset_pending";
+
+/**
+ * reset_pending フラグを読み取る
+ * @return {boolean} true = 全端末にリセット待機中
+ */
+function getResetPendingFlag(ss) {
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (!sheet) return false;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 1) return false;
+  var data = sheet.getRange(1, 1, lastRow, 2).getValues();
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === RESET_FLAG_KEY) {
+      return String(data[i][1]).trim() === "true";
+    }
+  }
+  return false;
+}
+
+/**
+ * reset_pending フラグを設定 / 解除
+ * @param {boolean} value true=リセット待機中 / false=完了
+ */
+function setResetPendingFlag(ss, value) {
+  // 「システム設定」シートがなければ自動作成
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(RESET_FLAG_SHEET);
+    sheet.getRange(1, 1).setValue(RESET_FLAG_KEY);
+    sheet.getRange(1, 2).setValue(value ? "true" : "false");
+    return;
+  }
+  var lastRow = sheet.getLastRow();
+  var data = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 2).getValues() : [];
+  for (var i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === RESET_FLAG_KEY) {
+      sheet.getRange(i + 1, 2).setValue(value ? "true" : "false");
+      return;
+    }
+  }
+  // キーがなければ新規追加
+  sheet.appendRow([RESET_FLAG_KEY, value ? "true" : "false"]);
 }

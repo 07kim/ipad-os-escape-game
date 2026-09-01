@@ -313,6 +313,25 @@ function fetchLatestDataFromSpreadsheet() {
       updateStaffSyncUI();
 
       if (json && (json.success || json.data)) {
+        // 🔴 リセット待機フラグのチェック（スリープ中にリセットを受け取れなかった端末を救済）
+        // GASに reset_pending=true が立っていれば、コマンドの有効期限に関係なく即座にリセット
+        if (json.resetPending === true) {
+          // 「自分はこのリセットを既に処理した」かどうかをLocalStorageで確認
+          const alreadyReset = localStorage.getItem('reset_pending_done') === 'true';
+          if (!alreadyReset) {
+            console.warn('🔴 GASのreset_pendingフラグを検出。即座にリセットを実行します。');
+            // ローカルに「処理済み」を記録（リロード後の再実行を防ぐ）
+            // ※ executeInstantMasterReset() で localStorage.clear() されるため、
+            //   リセット後はフラグが消え、再度 reset_pending=true なら再実行される（正しい動作）
+            localStorage.setItem('reset_pending_done', 'true');
+            setTimeout(() => { executeInstantMasterReset(); }, 300);
+            return;
+          }
+        } else {
+          // GASのフラグが解除されたら、自分の「処理済み」フラグもクリア
+          localStorage.removeItem('reset_pending_done');
+        }
+
         const cmd = json.latestCommand || (json.data && json.data.latestCommand);
         // 1. 運営コマンドの受信 ＆ リアルタイム実行
         if (cmd) {
