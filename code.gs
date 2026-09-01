@@ -407,21 +407,21 @@ function readAllDevicesStatus(ss) {
   return result;
 }
 
-// 6. チームの進捗状況を更新（メモリバッファ付き高速更新）
+// 6. チームの進捗状況を更新（重複行自動マージ付き高速更新）
 function updateTeamStatus(ss, teamId, loopNum, statusData) {
-  if (!teamId) return;
+  if (!teamId || String(teamId).trim() === '') return; // 空のteamIdは無視
+  var normalizedId = String(teamId).trim();
   var sheet = ss.getSheetByName("10_30台進行状況モニタリング");
   if (!sheet) return;
 
   var lastRow = sheet.getLastRow();
-  var targetRow = -1;
+  var matchedRows = []; // 同一IDの行をすべて収集
 
   if (lastRow > 1) {
     var teamIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < teamIds.length; i++) {
-      if (teamIds[i][0] === teamId) {
-        targetRow = i + 2;
-        break;
+      if (String(teamIds[i][0]).trim() === normalizedId) {
+        matchedRows.push(i + 2); // 1-indexed 行番号
       }
     }
   }
@@ -431,13 +431,12 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
   var manaba = (statusData && statusData.manabaUser) ? statusData.manabaUser : "未ログイン";
   var battery = (statusData && statusData.battery) ? statusData.battery : "100%";
   var teamName = (statusData && statusData.teamName !== undefined) ? statusData.teamName : "";
-  
   var registeredStr = (statusData && (statusData.registered === 1 || statusData.registered === true || (teamName && teamName !== "未設定"))) ? "設定済み" : "未設定";
 
-  if (targetRow === -1) {
-    // 該当行がない場合は新規追加
+  if (matchedRows.length === 0) {
+    // 該当行なし → 新規追加
     sheet.appendRow([
-      teamId,
+      normalizedId,
       teamName || "",
       Number(loopNum || 1),
       hintsCount,
@@ -448,7 +447,8 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
       registeredStr
     ]);
   } else {
-    // B列（チーム名）を常に確実に上書き（チームAなどの古い値を上書き）
+    // 最初の行を更新
+    var targetRow = matchedRows[0];
     if (statusData && statusData.teamName !== undefined) {
       sheet.getRange(targetRow, 2).setValue(teamName);
     }
@@ -461,6 +461,13 @@ function updateTeamStatus(ss, teamId, loopNum, statusData) {
       nowStr,
       registeredStr
     ]]);
+
+    // 🔀 重複行（2行目以降）を下から削除してマージ
+    if (matchedRows.length > 1) {
+      for (var j = matchedRows.length - 1; j >= 1; j--) {
+        sheet.deleteRow(matchedRows[j]);
+      }
+    }
   }
 }
 

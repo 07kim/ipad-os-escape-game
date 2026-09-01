@@ -138,10 +138,20 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
       localStorage.setItem('fake_clock_set_time', String(Date.now()));
       localStorage.setItem('device_registered', '0');
+      localStorage.setItem('team_id', '');
+      localStorage.setItem('game_team_id', '');
       if (gasUrl) localStorage.setItem('gas_url', gasUrl);
       // パラメータを除いたクリーンURLへリダイレクト
       location.replace(location.pathname + '?reset_done=1');
       return;
+    }
+
+    // ✅ ?reset_done=1 でのリロード: パラメータを除去してクリーンURLで確定 + 接続待機画面へ
+    if (urlParams.get('reset_done') === '1') {
+      console.log("✅ マスターリセット完了。接続待機画面で起動します。");
+      // last_exec_cmd_id は維持（GASの同一コマンドを再実行しない）
+      // クリーンURLへ置き換え（ブラウザ履歴汚染防止）
+      history.replaceState(null, '', location.pathname);
     }
 
     // 🔒 接続登録（命名）チェック
@@ -734,18 +744,24 @@ function sendDeviceStatusHeartbeat() {
   const gasUrl = getResolvedGasUrl();
   if (!gasUrl) return;
 
-  const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
+  // ⚠️ 未登録（device_registered !== '1'）の場合はハートビートを送信しない
+  // リセット直後のiPadが空のIDや 'iPad-01' でモニタリングシートに行を生成するのを防止
+  const isRegistered = localStorage.getItem('device_registered') === '1';
+  if (!isRegistered) return;
+
+  const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || '';
+  if (!myDeviceId) return; // 管理番号が空の場合も送信しない
+
   // ⚠️ GAME_DATABASE のデフォルト値（チームA等）は使わない。未設定のまま送信する
   const myTeamName = localStorage.getItem('game_team_name') || '';
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
   const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
-  const isRegistered = localStorage.getItem('device_registered') === '1';
 
   // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
   const getUrl = gasUrl.includes('?') 
-    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`
-    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`;
+    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`
+    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`;
 
   fetch(getUrl).catch(() => {});
 
@@ -1100,14 +1116,24 @@ function loadStateFromStorage() {
   }
 
   // 管理番号（iPad-XX）の復元とクレンジング
-  let rawDevId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || 'iPad-01';
-  if (!rawDevId.startsWith('iPad-') && !rawDevId.match(/^\d+$/)) {
-    if (!localStorage.getItem('game_team_name') && rawDevId !== 'チームA') {
-      localStorage.setItem('game_team_name', rawDevId);
+  // ⚠️ 未登録状態（device_registered !== '1' かつ team_id が空）ではデフォルト補完しない
+  const isRegisteredForId = localStorage.getItem('device_registered') === '1';
+  const storedTeamId = localStorage.getItem('team_id') || localStorage.getItem('game_team_id') || '';
+  let rawDevId;
+
+  if (!storedTeamId && !isRegisteredForId) {
+    // リセット直後 or 未登録: 空のまま維持（'iPad-01' 自動補完しない）
+    rawDevId = '';
+  } else {
+    rawDevId = storedTeamId || 'iPad-01';
+    if (rawDevId && !rawDevId.startsWith('iPad-') && !rawDevId.match(/^\d+$/)) {
+      if (!localStorage.getItem('game_team_name') && rawDevId !== 'チームA') {
+        localStorage.setItem('game_team_name', rawDevId);
+      }
+      rawDevId = 'iPad-01';
+      localStorage.setItem('game_team_id', 'iPad-01');
+      localStorage.setItem('team_id', 'iPad-01');
     }
-    rawDevId = 'iPad-01';
-    localStorage.setItem('game_team_id', 'iPad-01');
-    localStorage.setItem('team_id', 'iPad-01');
   }
   gameState.teamId = rawDevId;
 
@@ -2147,16 +2173,25 @@ function executeInstantMasterReset() {
   localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
   localStorage.setItem('fake_clock_set_time', String(Date.now()));
   localStorage.setItem('device_registered', '0');
+  // ⚠️ team_id・game_team_id を明示的に空文字にセット（loadStateFromStorage の 'iPad-01' 自動補完を防ぐ）
+  localStorage.setItem('team_id', '');
+  localStorage.setItem('game_team_id', '');
   if (gasUrl) localStorage.setItem('gas_url', gasUrl);
 
-  // ⑦ 実行済みコマンドIDキャッシュをクリア（次回の master_reset を重複スキップしないように）
-  lastExecutedCommandId = null;
+  // ⑦ 実行済みコマンドIDを「リセット済み」として書き戻す
+  // → localStorage.clear() でIDが消えているため、再起動後に同じ master_reset が再実行されるのを防ぐ
+  const savedCmdId = lastExecutedCommandId;
+  if (savedCmdId) {
+    localStorage.setItem('last_exec_cmd_id', savedCmdId);
+  }
+  lastExecutedCommandId = savedCmdId;
 
   try { playSystemSound("fanfare"); } catch(e) {}
+
+  // ⑧ リロード（PWA/Service Worker 環境でも確実に発火するよう location.replace を使用）
   setTimeout(() => {
-    // ?reset_done=1 を付けてリロードすることで、再起動後に同コマンドが二重実行されないようにする
-    location.href = location.pathname + '?reset_done=1';
-  }, 400);
+    location.replace(location.pathname + '?reset_done=1');
+  }, 500);
 }
 
 function performMasterReset() {
