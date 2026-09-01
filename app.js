@@ -702,11 +702,27 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   } catch(e) {}
 
   // 2. LINKアプリが開いている場合は即座に画面へ描画 ＆ スクロール
-  if (gameState.activeApp === 'link') {
-    openLinkChat('committee_group');
-    const msgContainer = document.getElementById('link-messages-container');
-    if (msgContainer) {
-      msgContainer.scrollTop = msgContainer.scrollHeight;
+  const isLinkOpen = (
+    gameState.activeApp === 'link-app' ||
+    gameState.activeApp === 'link' ||
+    (document.getElementById('app-link-app') && document.getElementById('app-link-app').classList.contains('active'))
+  );
+
+  if (isLinkOpen) {
+    // 左側トーク一覧（プレビューテキスト・時間・バッジ）を即座に更新
+    renderLinkChatList();
+
+    // 現在開いている部屋が全体連絡（または初期状態）ならチャット画面を再描画
+    const currentRoom = gameState.activeChatContact || 'committee_group';
+    if (currentRoom === targetRoom) {
+      openLinkChat(targetRoom, true);
+      const msgContainer = document.getElementById('link-messages-container');
+      if (msgContainer) {
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+        setTimeout(() => {
+          msgContainer.scrollTo({ top: msgContainer.scrollHeight, behavior: 'smooth' });
+        }, 60);
+      }
     }
   }
 
@@ -719,10 +735,15 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     }
 
     playSystemSound("notif");
-    showPushNotification("LINK", senderInfo.name, text, "message-circle", () => {
-      openApp('link-app');
-      openLinkChat('committee_group');
-    });
+
+    // 全体連絡画面を開いていない場合のみプッシュ通知を表示（開いている時は邪魔にならないよう音と画面更新のみ）
+    const isViewingRoom = (isLinkOpen && (gameState.activeChatContact === targetRoom || !gameState.activeChatContact));
+    if (!isViewingRoom) {
+      showPushNotification("LINK", senderInfo.name, text, "message-circle", () => {
+        openApp('link-app');
+        openLinkChat('committee_group', true);
+      });
+    }
 
     // 📱 ロック画面の通知センターにもリアルタイムに追加
     if (!gameState.dynamicLockNotifications) gameState.dynamicLockNotifications = [];
@@ -1412,8 +1433,13 @@ function resetLinkAppForLoop() {
   renderLinkChatList();
 
   // もしLINKアプリが開いていたら、現在アクティブなトークルーム（または全体連絡）を再描画
-  if (gameState.activeApp === 'link') {
-    const activeContactId = gameState.activeContactId || 'committee_group';
+  const isLinkOpen = (
+    gameState.activeApp === 'link-app' ||
+    gameState.activeApp === 'link' ||
+    (document.getElementById('app-link-app') && document.getElementById('app-link-app').classList.contains('active'))
+  );
+  if (isLinkOpen) {
+    const activeContactId = gameState.activeChatContact || gameState.activeContactId || 'committee_group';
     openLinkChat(activeContactId);
   }
 }
@@ -3691,9 +3717,12 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
 
     const displayTime = formatChatTime(msg.time);
 
+    const isNewMsg = (msg._addedAt && (Date.now() - msg._addedAt < 15000)) || msg.isNew;
+    const animClass = isNewMsg ? ' new-incoming-anim' : '';
+
     if (isMe) {
       messageArea.innerHTML += `
-        <div class="chat-message-row outgoing">
+        <div class="chat-message-row outgoing${animClass}">
           <div class="chat-message-content">
             <div class="chat-bubble-wrapper">
               <div class="chat-meta-info">
@@ -3720,7 +3749,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
       `;
     } else {
       messageArea.innerHTML += `
-        <div class="chat-message-row incoming">
+        <div class="chat-message-row incoming${animClass}">
           <div class="chat-sender-avatar ${meta.avatarClass}">${meta.avatar}</div>
           <div class="chat-message-content">
             <div class="chat-sender-name">${meta.name}</div>
@@ -3758,6 +3787,11 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
   // 📜 ユーザーが上を読んでいる最中ならスクロール位置を維持、部屋変更時または一番下にいる時は下へスクロール
   if (isRoomChanged || forceScrollToBottom || isNearBottom) {
     messageArea.scrollTop = messageArea.scrollHeight;
+    if (forceScrollToBottom) {
+      setTimeout(() => {
+        messageArea.scrollTo({ top: messageArea.scrollHeight, behavior: 'smooth' });
+      }, 50);
+    }
   } else {
     messageArea.scrollTop = prevScrollTop;
   }
