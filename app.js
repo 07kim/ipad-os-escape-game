@@ -194,10 +194,13 @@ window.addEventListener('DOMContentLoaded', () => {
             executeRemoteAdminCommand(payload);
           } else if (type === 'loop_change' && payload && payload.loop) {
             console.log('🌀 BroadcastChannel経由で周回変更を受信:', payload.loop);
-            triggerLoopTransition(payload.loop);
+            triggerLoopTransition(payload.loop, payload.startTime, false, true);
+          } else if (type === 'scene_flow_step' && payload && payload.step) {
+            console.log('🎬 BroadcastChannel経由でシーン進行を受信:', payload);
+            applyFlowStepState(payload.step, payload.startTime, false, payload.loop);
           } else if (type === 'preset' && payload && payload.loop) {
             console.log('🎬 BroadcastChannel経由でプリセットを受信:', payload.loop);
-            triggerLoopTransition(payload.loop);
+            triggerLoopTransition(payload.loop, null, false, true);
           } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
             console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
             executeInstantMasterReset();
@@ -1537,11 +1540,11 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 2) {
     // 02. 1周目スタート (1周目・09:04から計時開始・ロック解除)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 1;
+    gameState.loop = loopToSet;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', '1');
+    localStorage.setItem('game_loop', String(loopToSet));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
@@ -1567,9 +1570,11 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 4) {
     // 04. 2周目スタート (2周目・09:04から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = loopToSet;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = startMs;
+    localStorage.setItem('game_loop', String(loopToSet));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
@@ -1578,9 +1583,11 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 5) {
     // 05. 2周目終了 (3周目切替・09:04静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = loopToSet;
     gameState.timerRunning = false;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = now;
+    localStorage.setItem('game_loop', String(loopToSet));
     localStorage.setItem('game_timer_running', 'false');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(now));
@@ -1595,9 +1602,11 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 6) {
     // 06. 3周目スタート (3周目・09:04から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = loopToSet;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = startMs;
+    localStorage.setItem('game_loop', String(loopToSet));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));

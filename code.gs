@@ -175,6 +175,25 @@ function doGet(e) {
       });
     }
 
+    // 7d. 👑 管理画面（Master）からの周回・タイマー・ステップ強制同期 (GET)
+    if (action === "sync_admin") {
+      if (e.parameter.loop) {
+        var aLoop = Number(e.parameter.loop);
+        if (!isNaN(aLoop) && aLoop >= 1 && aLoop <= 3) {
+          setGlobalLoop(ss, aLoop);
+        }
+      }
+      if (e.parameter.step) {
+        var aStep = Number(e.parameter.step);
+        var aLoopNum = e.parameter.loop ? Number(e.parameter.loop) : getGlobalLoop(ss);
+        var aTimerRun = (e.parameter.timerRunning === "true" || e.parameter.timerRunning === true);
+        var aStartT = e.parameter.startTime ? Number(e.parameter.startTime) : null;
+        setSceneFlowState(ss, aStep, aLoopNum, aTimerRun, aStartT, e.parameter.blackout === "true");
+      }
+      var syncedLoop = getGlobalLoop(ss);
+      return renderJson({ success: true, message: "管理画面の最新周回と同期しました！", globalLoop: syncedLoop });
+    }
+
     // 8. マスターリセット（全iPad・モニタリング初期化）
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
@@ -748,20 +767,6 @@ function getGlobalLoop(ss) {
       }
     }
   }
-
-  // フォールバック: 30台進行状況モニタリングから最新端末の周回を拾う
-  try {
-    var monSheet = ss.getSheetByName("10_30台進行状況モニタリング");
-    if (monSheet && monSheet.getLastRow() > 1) {
-      var loopData = monSheet.getRange(2, 3, monSheet.getLastRow() - 1, 1).getValues();
-      var maxL = 1;
-      for (var j = 0; j < loopData.length; j++) {
-        var num = parseInt(loopData[j][0], 10);
-        if (!isNaN(num) && num > maxL && num <= 3) maxL = num;
-      }
-      if (maxL > 1) return maxL;
-    }
-  } catch(e) {}
 
   return 1; // デフォルト1周目
 }

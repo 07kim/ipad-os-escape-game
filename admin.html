@@ -2878,10 +2878,14 @@
         } catch(e) {}
       }
 
-      // ☁️ GASクラウド側にも周回変更を即座に送信
+      // ☁️ GASクラウド側にも周回変更を即座に送信（管理画面の周回を絶対化）
       const gasUrl = getAdminGasUrl();
       if (gasUrl) {
+        const mappedStep = (targetLoop === 1) ? 2 : (targetLoop === 2) ? 4 : 6;
+        currentFlowStep = mappedStep;
+        updateFlowStepsUI();
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=update_loop&loop=${targetLoop}` : `${gasUrl}?action=update_loop&loop=${targetLoop}`).catch(() => {});
+        fetch(`${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=sync_admin&loop=${targetLoop}&step=${mappedStep}&timerRunning=true&startTime=${now}`).catch(() => {});
       }
 
       showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（全iPadが09:04へ巻き戻り）`);
@@ -3300,6 +3304,7 @@
           ? `${gasUrl}&action=update_flow_step&step=${stepNum}&loop=${config.loop}&timerRunning=${isTimerRunning}&startTime=${now}&blackout=${isBlackout}&_t=${Date.now()}`
           : `${gasUrl}?action=update_flow_step&step=${stepNum}&loop=${config.loop}&timerRunning=${isTimerRunning}&startTime=${now}&blackout=${isBlackout}&_t=${Date.now()}`;
         fetch(flowUpdateUrl).catch(() => {});
+        fetch(`${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=sync_admin&loop=${config.loop}&step=${stepNum}&timerRunning=${isTimerRunning}&startTime=${now}&blackout=${isBlackout}`).catch(() => {});
       }
     }
 
@@ -3647,9 +3652,17 @@
         .then(res => res.json())
         .then(json => {
           if (json && json.success) {
-            if (json.globalLoop && json.globalLoop !== adminTimerState.currentLoop) {
+            // 👑 管理画面が絶対！初回のみサーバーを取り込み、以降は管理画面の周回を絶対としてサーバーへ上書き伝搬
+            if (!window._hasAdminInitialLoopSynced && json.globalLoop) {
+              window._hasAdminInitialLoopSynced = true;
               adminTimerState.currentLoop = Number(json.globalLoop);
               renderTimerUI();
+            } else if (adminTimerState.currentLoop && json.globalLoop !== adminTimerState.currentLoop) {
+              console.log(`👑 管理画面の周回(${adminTimerState.currentLoop}周目)をサーバー(${json.globalLoop}周目)へ強制同期します`);
+              const gasUrl = getAdminGasUrl();
+              if (gasUrl) {
+                fetch(`${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=sync_admin&loop=${adminTimerState.currentLoop}&step=${currentFlowStep}&timerRunning=${adminTimerState.isRunning}&startTime=${adminTimerState.startTime || ''}`).catch(() => {});
+              }
             }
             if (json.flowStep && json.flowStep !== currentFlowStep) {
               currentFlowStep = Number(json.flowStep);
