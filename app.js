@@ -332,17 +332,28 @@ function fetchLatestDataFromSpreadsheet() {
           localStorage.removeItem('reset_pending_done');
         }
 
-        // 🌀 現在の周回情報（globalLoop）を取得し、アクセス時・リロード時にその周回へ自動同期
-        // ⚠️ プレイ中にアプリが勝手に閉じるのを防止するため：
-        //   1. 初回起動時（またはリフレッシュ時）に1回だけ同期を実行
-        //   2. 既にアプリを開いている場合は強制終了（closeAllWindowsSilent）を回避し、静かに周回データを更新
+        // 🎬 シーン進行統制（8ステップ）＆ タイマー状態の完全同期
+        // スプレッドシートから現在のステップ（flowStep: 1〜8）、周回、タイマー稼働状態、開始時刻を取得
+        const serverStep = parseInt(json.flowStep || (json.data && json.data.flowStep) || 0, 10);
         const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || (json.loop !== undefined ? json.loop : 0), 10);
-        if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
+        const serverTimerRunning = (json.timerRunning === true || json.timerRunning === "true");
+        const serverStartTime = parseInt(json.startTime || (json.data && json.data.startTime) || 0, 10) || null;
+
+        if (serverStep >= 1 && serverStep <= 8) {
+          const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
+          if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep) {
+            const isFirst = !window._hasInitialFlowSynced;
+            window._hasInitialFlowSynced = true;
+            localStorage.setItem('current_flow_step', String(serverStep));
+            console.log(`🎬 サーバーのシーン進行状態（ステップ0${serverStep} / 周回${serverLoop} / タイマー:${serverTimerRunning}）を適用します (初回:${isFirst})`);
+            applyFlowStepState(serverStep, serverStartTime, isFirst);
+          }
+        } else if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
+          // フォールバック: 周回のみ返ってきた場合
           const currentLoop = parseInt(gameState.loop || 1, 10);
           if (!window._hasInitialLoopSynced) {
             window._hasInitialLoopSynced = true;
             if (currentLoop !== serverLoop) {
-              console.log(`🌀 [初回アクセス同期] サーバーの全体周回（${serverLoop}周目）を検出。現在の端末周回（${currentLoop}周目）から自動同期します。`);
               if (!gameState.activeApp) {
                 triggerLoopTransition(serverLoop);
               } else {
@@ -425,91 +436,10 @@ function executeRemoteAdminCommand(cmd) {
   // ③ シーン進行統制コマンド（8ステップ）のハンドリング
   if (type === 'scene_flow_step' || p.step !== undefined) {
     const stepNum = parseInt(p.step || 1, 10);
-    const blackoutEl = document.getElementById('complete-blackout-overlay');
-
-    console.log(`🎬 進行ステップ 0${stepNum} を受信しました`);
-
-    // ステップ1: オープニング待機 (1周目・09:04固定・タイマー停止)
-    if (stepNum === 1) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      triggerLoopTransition(1, null, false, true);
-      return;
-    }
-
-    // ステップ2: 1周目スタート (1周目・09:04から時間進行開始)
-    if (stepNum === 2) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      const startMs = p.startTime || p.timestamp || Date.now();
-      triggerLoopTransition(1, startMs, true, false);
-      hideLockScreen();
-      return;
-    }
-
-    // ステップ3: 1周目終了（即座に2周目へ切替・内容は2周目・09:04固定・タイマー停止・操作自由）
-    if (stepNum === 3) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      playSystemSound("distortion");
-      triggerLoopTransition(2, null, false, false);
-      hideLockScreen();
-      return;
-    }
-
-    // ステップ4: 2周目スタート (2周目・09:04から時間進行開始)
-    if (stepNum === 4) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      const startMs = p.startTime || p.timestamp || Date.now();
-      gameState.loop = 2;
-      gameState.timerRunning = true;
-      gameState.clockSetTime = startMs;
-      gameState.clockStartISO = '2026-09-04T09:04:00';
-      localStorage.setItem('game_loop', '2');
-      localStorage.setItem('game_timer_running', 'true');
-      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
-      localStorage.setItem('fake_clock_set_time', String(startMs));
-      hideLockScreen();
-      return;
-    }
-
-    // ステップ5: 2周目終了（即座に3周目へ切替・内容は3周目・09:04固定・タイマー停止・操作自由）
-    if (stepNum === 5) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      playSystemSound("alarm");
-      triggerLoopTransition(3, null, false, false);
-      hideLockScreen();
-      return;
-    }
-
-    // ステップ6: 3周目スタート (3周目・09:04から時間進行開始)
-    if (stepNum === 6) {
-      if (blackoutEl) blackoutEl.style.display = 'none';
-      const startMs = p.startTime || p.timestamp || Date.now();
-      gameState.loop = 3;
-      gameState.timerRunning = true;
-      gameState.clockSetTime = startMs;
-      gameState.clockStartISO = '2026-09-04T09:04:00';
-      localStorage.setItem('game_loop', '3');
-      localStorage.setItem('game_timer_running', 'true');
-      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
-      localStorage.setItem('fake_clock_set_time', String(startMs));
-      hideLockScreen();
-      return;
-    }
-
-    // ステップ7: 3周目終了（完全ブラックアウト・全画面漆黒・操作不能）
-    if (stepNum === 7) {
-      gameState.timerRunning = false;
-      localStorage.setItem('game_timer_running', 'false');
-      if (blackoutEl) blackoutEl.style.display = 'block';
-      closeAllWindowsSilent();
-      return;
-    }
-
-    // ステップ8: 公演終了（ログ集計・アンケート等）
-    if (stepNum === 8) {
-      gameState.timerRunning = false;
-      localStorage.setItem('game_timer_running', 'false');
-      return;
-    }
+    const startMs = p.startTime || p.timestamp || Date.now();
+    localStorage.setItem('current_flow_step', String(stepNum));
+    applyFlowStepState(stepNum, startMs, false);
+    return;
   }
 
   // ④ 周回強制移行（ホーム初期化 ＆ 09:04巻き戻し）
@@ -1204,7 +1134,13 @@ function loadStateFromStorage() {
 
   gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2026-09-04T09:04:00';
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
-  gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
+  
+  const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
+  if (savedFlowStep === 1 || savedFlowStep === 3 || savedFlowStep === 5 || savedFlowStep === 7 || savedFlowStep === 8) {
+    gameState.timerRunning = false;
+  } else {
+    gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
+  }
   
   try {
     gameState.unlockedHints = JSON.parse(localStorage.getItem('unlocked_hints') || '[]');
@@ -1381,6 +1317,12 @@ function startFakeClock() {
     }
   }
 
+  window.updateFakeClockDisplay = () => {
+    lastClockStr = "";
+    lastDateStr = "";
+    updateClock();
+  };
+
   // 起動時に最速で即時09:04を描画
   updateClock();
   setInterval(updateClock, 1000);
@@ -1544,6 +1486,137 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   updateAppUI();
 
   logWriteToGAS("LOOP_TRANSITION", `端末が周回 ${targetLoop} へ移行しました（全データ切替・09:04巻き戻し・タイマー:${startTimer ? '稼働' : '停止'}）。`);
+}
+
+// 🎬 シーン進行統制（8ステップ）の状態をiPadへ完全に成立させる関数
+function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
+  const step = parseInt(stepNum || 1, 10);
+  if (isNaN(step) || step < 1 || step > 8) return;
+
+  const blackoutEl = document.getElementById('complete-blackout-overlay');
+  const now = Date.now();
+  const startMs = startTime || now;
+
+  console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（初回同期: ${isInitialSync}）`);
+
+  if (step === 1) {
+    // 01. オープニング待機 (1周目・09:04固定・タイマー停止・操作ロック)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 1;
+    gameState.timerRunning = false;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = now;
+    localStorage.setItem('game_loop', '1');
+    localStorage.setItem('game_timer_running', 'false');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(now));
+    if (isInitialSync) {
+      updateAppUI();
+      showLockScreen();
+    } else {
+      triggerLoopTransition(1, null, false, true);
+    }
+  } else if (step === 2) {
+    // 02. 1周目スタート (1周目・09:04から計時開始・ロック解除)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 1;
+    gameState.timerRunning = true;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = startMs;
+    localStorage.setItem('game_loop', '1');
+    localStorage.setItem('game_timer_running', 'true');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(startMs));
+    updateAppUI();
+    hideLockScreen();
+  } else if (step === 3) {
+    // 03. 1周目終了 (2周目切替・09:04静止・タイマー停止・操作自由)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 2;
+    gameState.timerRunning = false;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = now;
+    localStorage.setItem('game_loop', '2');
+    localStorage.setItem('game_timer_running', 'false');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(now));
+    if (!isInitialSync) playSystemSound("distortion");
+    if (isInitialSync) {
+      updateAppUI();
+      hideLockScreen();
+    } else {
+      triggerLoopTransition(2, null, false, false);
+      hideLockScreen();
+    }
+  } else if (step === 4) {
+    // 04. 2周目スタート (2周目・09:04から計時開始)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 2;
+    gameState.timerRunning = true;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = startMs;
+    localStorage.setItem('game_loop', '2');
+    localStorage.setItem('game_timer_running', 'true');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(startMs));
+    updateAppUI();
+    hideLockScreen();
+  } else if (step === 5) {
+    // 05. 2周目終了 (3周目切替・09:04静止・タイマー停止・操作自由)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 3;
+    gameState.timerRunning = false;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = now;
+    localStorage.setItem('game_loop', '3');
+    localStorage.setItem('game_timer_running', 'false');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(now));
+    if (!isInitialSync) playSystemSound("alarm");
+    if (isInitialSync) {
+      updateAppUI();
+      hideLockScreen();
+    } else {
+      triggerLoopTransition(3, null, false, false);
+      hideLockScreen();
+    }
+  } else if (step === 6) {
+    // 06. 3周目スタート (3周目・09:04から計時開始)
+    if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = 3;
+    gameState.timerRunning = true;
+    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockSetTime = startMs;
+    localStorage.setItem('game_loop', '3');
+    localStorage.setItem('game_timer_running', 'true');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_set_time', String(startMs));
+    updateAppUI();
+    hideLockScreen();
+  } else if (step === 7) {
+    // 07. 3周目終了 (完全暗転・操作不能)
+    gameState.timerRunning = false;
+    localStorage.setItem('game_timer_running', 'false');
+    if (blackoutEl) blackoutEl.style.display = 'block';
+    closeAllWindowsSilent();
+  } else if (step === 8) {
+    // 08. ゲーム終了
+    gameState.timerRunning = false;
+    localStorage.setItem('game_timer_running', 'false');
+  }
+
+  // 演者ツール（actor.html）へも連動通知
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const bc = new BroadcastChannel('escape_game_channel');
+      bc.postMessage({ type: 'scene_flow_step', payload: { step: step, loop: gameState.loop, timerRunning: gameState.timerRunning } });
+    } catch(e) {}
+  }
+
+  // 即座に時計表示を更新（09:04静止や進行を反映）
+  if (typeof window.updateFakeClockDisplay === 'function') {
+    window.updateFakeClockDisplay();
+  }
 }
 
 // --- アプリUIの周回ごとの更新 ---

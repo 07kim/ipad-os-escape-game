@@ -37,11 +37,15 @@ function doGet(e) {
 
     // 2. 【超軽量・最速】30台の進行ステータス ＆ 最新運営コマンドを取得（iPad & GM画面用）
     if (action === "get_status" || action === "get_data") {
-      var currentLoop = getGlobalLoop(ss);
+      var flowState = getSceneFlowState(ss);
       return renderJson({
         success: true,
-        globalLoop: currentLoop,                 // ⭐ 現在の全体周回（1, 2, 3）
-        loop: currentLoop,                       // 互換用
+        flowStep: flowState.step,                // ⭐ 現在のシーンステップ（1〜8）
+        globalLoop: flowState.loop,              // ⭐ 現在の全体周回（1, 2, 3）
+        loop: flowState.loop,                    // 互換用
+        timerRunning: flowState.timerRunning,    // ⭐ タイマーが進行中か（false=09:04静止待機）
+        startTime: flowState.startTime,          // ⭐ 計時開始ミリ秒タイムスタンプ
+        blackout: flowState.blackout,            // ⭐ 完全暗転（ステップ7）
         devices: readAllDevicesStatus(ss),
         latestCommand: getLatestAdminCommand(ss),
         resetPending: getResetPendingFlag(ss),   // ⭐ リセット待機フラグ
@@ -83,11 +87,18 @@ function doGet(e) {
     if (action === "send_command" && e.parameter.cmd) {
       var cmdObj = JSON.parse(decodeURIComponent(e.parameter.cmd));
       if (cmdObj) {
-        if (cmdObj.type === "loop_change" || (cmdObj.params && cmdObj.params.loop)) {
+        if (cmdObj.type === "scene_flow_step" && cmdObj.params) {
+          var sNum = Number(cmdObj.params.step || 1);
+          var lNum = Number(cmdObj.params.loop || 1);
+          var isRun = (cmdObj.params.actionType === "start" || sNum === 2 || sNum === 4 || sNum === 6);
+          var sTime = cmdObj.params.startTime || Date.now();
+          var isBlk = (sNum === 7 || cmdObj.params.actionType === "blackout");
+          setSceneFlowState(ss, sNum, lNum, isRun, sTime, isBlk);
+        } else if (cmdObj.type === "loop_change" || (cmdObj.params && cmdObj.params.loop)) {
           var targetL = Number(cmdObj.loop || (cmdObj.params && cmdObj.params.loop));
           if (!isNaN(targetL)) setGlobalLoop(ss, targetL);
         } else if (cmdObj.type === "master_reset") {
-          setGlobalLoop(ss, 1);
+          setSceneFlowState(ss, 1, 1, false, null, false);
         }
       }
       var res = recordAdminCommand(ss, cmdObj);
@@ -133,11 +144,33 @@ function doGet(e) {
       return renderJson({ success: true, message: "リセット待機フラグを解除しました" });
     }
 
+    // 7c. 🎬 シーン進行統制（8ステップ）の直接更新 (GET)
+    if (action === "update_flow_step" && e.parameter.step) {
+      var fStep = Number(e.parameter.step);
+      var fLoop = Number(e.parameter.loop || 1);
+      var fTimerRun = (e.parameter.timerRunning === "true" || e.parameter.timerRunning === true || fStep === 2 || fStep === 4 || fStep === 6);
+      if (fStep === 1 || fStep === 3 || fStep === 5 || fStep === 7 || fStep === 8) fTimerRun = false;
+      var fStartT = e.parameter.startTime ? Number(e.parameter.startTime) : Date.now();
+      var fBlackout = (fStep === 7 || e.parameter.blackout === "true");
+
+      setResetPendingFlag(ss, false);
+      setSceneFlowState(ss, fStep, fLoop, fTimerRun, fStartT, fBlackout);
+      return renderJson({
+        success: true,
+        message: "シーン進行ステップを更新しました！",
+        flowStep: fStep,
+        globalLoop: fLoop,
+        timerRunning: fTimerRun,
+        startTime: fStartT,
+        blackout: fBlackout
+      });
+    }
+
     // 8. マスターリセット（全iPad・モニタリング初期化）
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
       setResetPendingFlag(ss, true);  // ⭐ リセット待機フラグを立てる（スリープ中の端末も次回起動時に必ずリセット）
-      setGlobalLoop(ss, 1);           // ⭐ 全体周回を1周目に初期化
+      setSceneFlowState(ss, 1, 1, false, null, false); // ⭐ ステップ1（オープニング待機・09:04固定・タイマー停止）に完全初期化
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット（1周目初期化）",
@@ -204,11 +237,18 @@ function doPost(e) {
     if (action === "send_admin_command") {
       var cmd = postData.command;
       if (cmd) {
-        if (cmd.type === "loop_change" || (cmd.params && cmd.params.loop)) {
+        if (cmd.type === "scene_flow_step" && cmd.params) {
+          var sNum = Number(cmd.params.step || 1);
+          var lNum = Number(cmd.params.loop || 1);
+          var isRun = (cmd.params.actionType === "start" || sNum === 2 || sNum === 4 || sNum === 6);
+          var sTime = cmd.params.startTime || Date.now();
+          var isBlk = (sNum === 7 || cmd.params.actionType === "blackout");
+          setSceneFlowState(ss, sNum, lNum, isRun, sTime, isBlk);
+        } else if (cmd.type === "loop_change" || (cmd.params && cmd.params.loop)) {
           var tLoop = Number(cmd.loop || (cmd.params && cmd.params.loop));
           if (!isNaN(tLoop)) setGlobalLoop(ss, tLoop);
         } else if (cmd.type === "master_reset") {
-          setGlobalLoop(ss, 1);
+          setSceneFlowState(ss, 1, 1, false, null, false);
         }
       }
       var res = recordAdminCommand(ss, cmd);
@@ -227,7 +267,7 @@ function doPost(e) {
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
       setResetPendingFlag(ss, true);
-      setGlobalLoop(ss, 1);
+      setSceneFlowState(ss, 1, 1, false, null, false);
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット",
@@ -740,4 +780,138 @@ function setGlobalLoop(ss, loopNum) {
     }
   }
   sheet.appendRow([GLOBAL_LOOP_KEY, String(val)]);
+}
+
+// ================================================================
+// 🎬 進行統制（8ステップ）＆ タイマー状態管理
+// 「オープニング待機」「各周回切替（09:04静止）」「タイマー始動」「完全暗転」を完全永続化
+// ================================================================
+
+var FLOW_STEP_KEY       = "flow_step";
+var TIMER_RUNNING_KEY   = "timer_running";
+var STEP_START_TIME_KEY = "step_start_time";
+var BLACKOUT_KEY        = "blackout";
+
+/**
+ * 8ステップ進行統制の現在状態を取得
+ * @return {Object} { step: 1..8, loop: 1..3, timerRunning: bool, startTime: number, blackout: bool }
+ */
+function getSceneFlowState(ss) {
+  var state = {
+    step: 1,
+    loop: 1,
+    timerRunning: false,
+    startTime: null,
+    blackout: false
+  };
+
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (!sheet) return state;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 1) return state;
+
+  var data = sheet.getRange(1, 1, lastRow, 2).getValues();
+  for (var i = 0; i < data.length; i++) {
+    var k = String(data[i][0]).trim();
+    var v = String(data[i][1]).trim();
+    if (k === FLOW_STEP_KEY) {
+      var s = parseInt(v, 10);
+      if (!isNaN(s) && s >= 1 && s <= 8) state.step = s;
+    } else if (k === GLOBAL_LOOP_KEY) {
+      var l = parseInt(v, 10);
+      if (!isNaN(l) && l >= 1 && l <= 3) state.loop = l;
+    } else if (k === TIMER_RUNNING_KEY) {
+      state.timerRunning = (v === "true");
+    } else if (k === STEP_START_TIME_KEY) {
+      var t = parseInt(v, 10);
+      if (!isNaN(t) && t > 0) state.startTime = t;
+    } else if (k === BLACKOUT_KEY) {
+      state.blackout = (v === "true");
+    }
+  }
+
+  // ⭐ ステップ番号からループ・タイマー状態の論理的整合性を厳密補正（安全策）
+  // 1: オープニング待機 (loop:1, timer:false, 09:04静止待機)
+  // 2: 1周目スタート (loop:1, timer:true)
+  // 3: 1周目終了・2周目切替 (loop:2, timer:false, 09:04静止待機)
+  // 4: 2周目スタート (loop:2, timer:true)
+  // 5: 2周目終了・3周目切替 (loop:3, timer:false, 09:04静止待機)
+  // 6: 3周目スタート (loop:3, timer:true)
+  // 7: 3周目終了・完全暗転 (loop:3, timer:false, blackout:true)
+  // 8: ゲーム終了 (loop:3, timer:false)
+  if (state.step === 1) {
+    state.loop = 1;
+    state.timerRunning = false;
+    state.blackout = false;
+  } else if (state.step === 2) {
+    state.loop = 1;
+    state.timerRunning = true;
+    state.blackout = false;
+  } else if (state.step === 3) {
+    state.loop = 2;
+    state.timerRunning = false;
+    state.blackout = false;
+  } else if (state.step === 4) {
+    state.loop = 2;
+    state.timerRunning = true;
+    state.blackout = false;
+  } else if (state.step === 5) {
+    state.loop = 3;
+    state.timerRunning = false;
+    state.blackout = false;
+  } else if (state.step === 6) {
+    state.loop = 3;
+    state.timerRunning = true;
+    state.blackout = false;
+  } else if (state.step === 7) {
+    state.loop = 3;
+    state.timerRunning = false;
+    state.blackout = true;
+  } else if (state.step === 8) {
+    state.loop = 3;
+    state.timerRunning = false;
+    state.blackout = false;
+  }
+
+  return state;
+}
+
+/**
+ * 8ステップ進行統制の状態を設定・保存
+ */
+function setSceneFlowState(ss, stepNum, loopNum, timerRunning, startTime, blackout) {
+  var s = parseInt(stepNum || 1, 10);
+  if (isNaN(s) || s < 1 || s > 8) s = 1;
+  var l = parseInt(loopNum || 1, 10);
+  if (isNaN(l) || l < 1 || l > 3) l = 1;
+
+  var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(RESET_FLAG_SHEET);
+  }
+
+  var updates = {};
+  updates[FLOW_STEP_KEY] = String(s);
+  updates[GLOBAL_LOOP_KEY] = String(l);
+  updates[TIMER_RUNNING_KEY] = timerRunning ? "true" : "false";
+  if (startTime) updates[STEP_START_TIME_KEY] = String(startTime);
+  if (blackout !== undefined) updates[BLACKOUT_KEY] = blackout ? "true" : "false";
+
+  var lastRow = sheet.getLastRow();
+  var data = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 2).getValues() : [];
+  var existingKeys = {};
+  for (var i = 0; i < data.length; i++) {
+    var k = String(data[i][0]).trim();
+    if (updates[k] !== undefined) {
+      sheet.getRange(i + 1, 2).setValue(updates[k]);
+      existingKeys[k] = true;
+    }
+  }
+
+  for (var uk in updates) {
+    if (!existingKeys[uk]) {
+      sheet.appendRow([uk, updates[uk]]);
+    }
+  }
 }

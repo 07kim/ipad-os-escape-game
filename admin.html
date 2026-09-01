@@ -3290,6 +3290,17 @@
           timestamp: now
         }
       }, `🎬 【0${stepNum}. ${config.name}】を全稼働iPadへ配信・同期しました！`);
+
+      // 📡 スプレッドシートへ8ステップ進行統制情報を確実に永続保存
+      const isTimerRunning = (stepNum === 2 || stepNum === 4 || stepNum === 6);
+      const isBlackout = (stepNum === 7);
+      const gasUrl = getAdminGasUrl();
+      if (gasUrl) {
+        const flowUpdateUrl = gasUrl.includes('?') 
+          ? `${gasUrl}&action=update_flow_step&step=${stepNum}&loop=${config.loop}&timerRunning=${isTimerRunning}&startTime=${now}&blackout=${isBlackout}&_t=${Date.now()}`
+          : `${gasUrl}?action=update_flow_step&step=${stepNum}&loop=${config.loop}&timerRunning=${isTimerRunning}&startTime=${now}&blackout=${isBlackout}&_t=${Date.now()}`;
+        fetch(flowUpdateUrl).catch(() => {});
+      }
     }
 
 
@@ -3639,6 +3650,21 @@
             if (json.globalLoop && json.globalLoop !== adminTimerState.currentLoop) {
               adminTimerState.currentLoop = Number(json.globalLoop);
               renderTimerUI();
+            }
+            if (json.flowStep && json.flowStep !== currentFlowStep) {
+              currentFlowStep = Number(json.flowStep);
+              updateFlowStepsUI();
+
+              // サーバーのシーン進行状態に合わせてタイマー稼働/停止を同期
+              const isTimerRunning = (currentFlowStep === 2 || currentFlowStep === 4 || currentFlowStep === 6);
+              if (!isTimerRunning && adminTimerState.isRunning) {
+                pauseAdminTimer();
+              } else if (isTimerRunning && !adminTimerState.isRunning && json.startTime) {
+                adminTimerState.startTime = Number(json.startTime);
+                adminTimerState.isRunning = true;
+                if (!adminTimerInterval) adminTimerInterval = setInterval(updateAdminTimerTick, 500);
+                renderTimerUI();
+              }
             }
             if (json.devices) {
               latestDevicesData = json.devices;
