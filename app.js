@@ -332,13 +332,25 @@ function fetchLatestDataFromSpreadsheet() {
           localStorage.removeItem('reset_pending_done');
         }
 
-        // 🎬 シーン進行統制（8ステップ）＆ タイマー状態の完全同期
-        // スプレッドシートから現在のステップ（flowStep: 1〜8）、周回、タイマー稼働状態、開始時刻を取得
+        // 🎬 周回（globalLoop）およびシーン進行統制（8ステップ）の完全同期
         const serverStep = parseInt(json.flowStep || (json.data && json.data.flowStep) || 0, 10);
         const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || (json.loop !== undefined ? json.loop : 0), 10);
         const serverTimerRunning = (json.timerRunning === true || json.timerRunning === "true");
         const serverStartTime = parseInt(json.startTime || (json.data && json.data.startTime) || 0, 10) || null;
 
+        // 1. 周回の更新チェック（管理画面で変更された周回を最優先で即時同期）
+        if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
+          const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10);
+          if (currentLoop !== serverLoop) {
+            console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${serverLoop}周目`);
+            gameState.loop = serverLoop;
+            localStorage.setItem('game_loop', String(serverLoop));
+            saveStateToStorage();
+            updateAppUI();
+          }
+        }
+
+        // 2. シーン進行ステップの同期
         if (serverStep >= 1 && serverStep <= 8) {
           const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
           if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep) {
@@ -346,23 +358,7 @@ function fetchLatestDataFromSpreadsheet() {
             window._hasInitialFlowSynced = true;
             localStorage.setItem('current_flow_step', String(serverStep));
             console.log(`🎬 サーバーのシーン進行状態（ステップ0${serverStep} / 周回${serverLoop} / タイマー:${serverTimerRunning}）を適用します (初回:${isFirst})`);
-            applyFlowStepState(serverStep, serverStartTime, isFirst);
-          }
-        } else if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
-          // フォールバック: 周回のみ返ってきた場合
-          const currentLoop = parseInt(gameState.loop || 1, 10);
-          if (!window._hasInitialLoopSynced) {
-            window._hasInitialLoopSynced = true;
-            if (currentLoop !== serverLoop) {
-              if (!gameState.activeApp) {
-                triggerLoopTransition(serverLoop);
-              } else {
-                gameState.loop = serverLoop;
-                saveStateToStorage();
-                localStorage.setItem('game_loop', String(serverLoop));
-                updateAppUI();
-              }
-            }
+            applyFlowStepState(serverStep, serverStartTime, isFirst, serverLoop);
           }
         }
 
@@ -1489,7 +1485,7 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
 }
 
 // 🎬 シーン進行統制（8ステップ）の状態をiPadへ完全に成立させる関数
-function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
+function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, explicitLoop = null) {
   const step = parseInt(stepNum || 1, 10);
   if (isNaN(step) || step < 1 || step > 8) return;
 
@@ -1497,16 +1493,21 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
   const now = Date.now();
   const startMs = startTime || now;
 
-  console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（初回同期: ${isInitialSync}）`);
+  // ⭐ 周回番号の決定: explicitLoop が指定されていれば最優先、なければステップ番号の周回
+  const defaultLoop = (step <= 2) ? 1 : (step <= 4) ? 2 : 3;
+  const loopToSet = (explicitLoop && explicitLoop >= 1 && explicitLoop <= 3) ? explicitLoop : defaultLoop;
+
+  console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（周回: ${loopToSet}, 初回同期: ${isInitialSync}）`);
+
+  gameState.loop = loopToSet;
+  localStorage.setItem('game_loop', String(loopToSet));
 
   if (step === 1) {
-    // 01. オープニング待機 (1周目・09:04固定・タイマー停止・操作ロック)
+    // 01. オープニング待機 (09:04固定・タイマー停止・操作ロック)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 1;
     gameState.timerRunning = false;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = now;
-    localStorage.setItem('game_loop', '1');
     localStorage.setItem('game_timer_running', 'false');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(now));
@@ -1514,7 +1515,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
       updateAppUI();
       showLockScreen();
     } else {
-      triggerLoopTransition(1, null, false, true);
+      triggerLoopTransition(loopToSet, null, false, true);
     }
   } else if (step === 2) {
     // 02. 1周目スタート (1周目・09:04から計時開始・ロック解除)
@@ -1532,11 +1533,9 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
   } else if (step === 3) {
     // 03. 1周目終了 (2周目切替・09:04静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 2;
     gameState.timerRunning = false;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = now;
-    localStorage.setItem('game_loop', '2');
     localStorage.setItem('game_timer_running', 'false');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(now));
@@ -1545,17 +1544,15 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
       updateAppUI();
       hideLockScreen();
     } else {
-      triggerLoopTransition(2, null, false, false);
+      triggerLoopTransition(loopToSet, null, false, false);
       hideLockScreen();
     }
   } else if (step === 4) {
     // 04. 2周目スタート (2周目・09:04から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 2;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', '2');
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
@@ -1564,11 +1561,9 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
   } else if (step === 5) {
     // 05. 2周目終了 (3周目切替・09:04静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 3;
     gameState.timerRunning = false;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = now;
-    localStorage.setItem('game_loop', '3');
     localStorage.setItem('game_timer_running', 'false');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(now));
@@ -1577,17 +1572,15 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false) {
       updateAppUI();
       hideLockScreen();
     } else {
-      triggerLoopTransition(3, null, false, false);
+      triggerLoopTransition(loopToSet, null, false, false);
       hideLockScreen();
     }
   } else if (step === 6) {
     // 06. 3周目スタート (3周目・09:04から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = 3;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:04:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', '3');
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
@@ -2520,15 +2513,35 @@ function renderMetaObservation(folderId = 'root') {
   const container = document.getElementById('meta-observation-grid') || document.getElementById('meta-overview-grid');
   const countEl = document.getElementById('observation-file-count') || document.getElementById('overview-file-count');
   const pathEl = document.getElementById('meta-observation-path');
-  const loopBadgeEl = document.getElementById('observation-loop-badge');
   if (!container) return;
 
-  // 1. 周回情報を確実に取得（gameState ＆ localStorageの双方から検証）
-  const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10);
+  // 現在の周回を確実に取得（1〜3）
+  const currentLoop = Math.max(1, Math.min(3, parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10)));
   const dbFolders = (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders);
   const allFolders = (dbFolders && dbFolders.length > 0) ? dbFolders : DEFAULT_OBSERVATION_FOLDERS;
 
-  // 2. アドレスバーの周回バッジを更新
+  // 各フォルダの解放周回を判定（プロパティ未設定時もIDや名前から確実に判定）
+  const getFolderUnlockLoop = (f) => {
+    if (f.unlockLoop !== undefined && !isNaN(f.unlockLoop)) return Number(f.unlockLoop);
+    if (f.id === 'obs_folder_2' || (f.folderName && f.folderName.includes('(2)'))) return 3;
+    if (f.id === 'obs_folder_1' || (f.folderName && f.folderName.includes('(1)'))) return 2;
+    return 1;
+  };
+
+  // 現在の周回以下のフォルダのみ抽出（未解禁のフォルダはDOMから完全に非表示）
+  // 1周目: [観測] (1個)
+  // 2周目: [観測, 観測(1)] (2個)
+  // 3周目: [観測, 観測(1), 観測(2)] (3個)
+  const visibleFolders = allFolders.filter(folder => getFolderUnlockLoop(folder) <= currentLoop);
+
+  // 開こうとしているフォルダが現在の周回で解放されていない場合はルート階層に戻す
+  if (folderId !== 'root' && !visibleFolders.some(f => f.id === folderId)) {
+    folderId = 'root';
+    metaObservationCurrentFolder = 'root';
+  }
+
+  // アドレスバーの周回バッジを更新
+  const loopBadgeEl = document.getElementById('observation-loop-badge');
   if (loopBadgeEl) {
     let loopText = "第1周回";
     let badgeBg = "rgba(2,132,199,0.12)";
@@ -2552,64 +2565,36 @@ function renderMetaObservation(folderId = 'root') {
   }
 
   if (folderId === 'root') {
-    // 最上位階層: 各周回に対応したフォルダ一覧を表示
+    // 最上位階層: 現在の周回で解禁済みのフォルダのみ表示
     if (pathEl) {
       pathEl.innerHTML = `<i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ`;
     }
-    const unlockedCount = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop).length;
     if (countEl) {
-      countEl.innerText = `${unlockedCount} / ${allFolders.length} フォルダ解禁`;
+      countEl.innerText = `${visibleFolders.length} フォルダ`;
     }
 
-    container.innerHTML = allFolders.map(folder => {
-      const isUnlocked = (folder.unlockLoop || 1) <= currentLoop;
-      const fileCount = folder.files ? folder.files.length : 0;
-
-      if (isUnlocked) {
-        // 解放中フォルダ（タップで開く）
-        return `
-          <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
-            <div class="finder-thumb-wrapper">
-              <div class="finder-folder-icon">
-                ${generateIpadosFolderSvg()}
-              </div>
-            </div>
-            <div class="finder-file-name" style="font-weight:700;">${folder.folderName}</div>
-            <div class="finder-file-desc" style="color:#64748b; font-size:11px;">${fileCount} 項目</div>
-            <span class="finder-loop-tag loop-${folder.unlockLoop || 1}">第${folder.unlockLoop || 1}周回 解放中</span>
+    container.innerHTML = visibleFolders.map(folder => `
+      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
+        <div class="finder-thumb-wrapper">
+          <div class="finder-folder-icon">
+            ${generateIpadosFolderSvg()}
           </div>
-        `;
-      } else {
-        // 未解放フォルダ（ロック中・タップで解放周回を案内）
-        return `
-          <div class="finder-item folder-type folder-locked" onclick="showToast('🔒 「${folder.folderName}」は【第${folder.unlockLoop}周回】へ突入すると自動解禁されます', false, 3500)" title="🔒 第${folder.unlockLoop}周回で解禁">
-            <div class="finder-thumb-wrapper" style="position:relative; background:#f1f5f9;">
-              <div class="finder-folder-icon" style="opacity:0.4;">
-                ${generateIpadosFolderSvg()}
-              </div>
-              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0.25); border-radius:8px;">
-                <i data-lucide="lock" style="width:24px; height:24px; color:#ffffff;"></i>
-              </div>
-            </div>
-            <div class="finder-file-name" style="color:#94a3b8;">${folder.folderName}</div>
-            <div class="finder-file-desc" style="color:#cbd5e1; font-size:11px;">非公開</div>
-            <span class="finder-loop-tag locked">🔒 第${folder.unlockLoop}周回で解禁</span>
-          </div>
-        `;
-      }
-    }).join('');
+        </div>
+        <div class="finder-file-name">${folder.folderName}</div>
+        <div class="finder-file-desc">${folder.files ? folder.files.length : 0} 項目</div>
+      </div>
+    `).join('');
   } else {
     // フォルダ内表示: 選択されたフォルダ内のファイル一覧
-    const targetFolder = allFolders.find(f => f.id === folderId);
-    // もし未解放フォルダに直接アクセスしようとした場合は root へ戻す
-    if (!targetFolder || (targetFolder.unlockLoop || 1) > currentLoop) {
+    const targetFolder = visibleFolders.find(f => f.id === folderId);
+    if (!targetFolder) {
       renderMetaObservation('root');
       return;
     }
     const files = targetFolder.files || [];
 
     if (pathEl) {
-      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong> <span class="finder-loop-tag loop-${targetFolder.unlockLoop || 1}" style="margin-left:6px;">第${targetFolder.unlockLoop || 1}周回</span>`;
+      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong>`;
     }
     if (countEl) {
       countEl.innerText = `${files.length} 項目`;
@@ -2623,23 +2608,17 @@ function renderMetaObservation(folderId = 'root') {
       `;
     } else {
       container.innerHTML = files.map(file => `
-        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="タップで拡大プレビュー">
+        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="タップでプレビュー">
           <div class="finder-thumb-wrapper">
             <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
-          <div class="finder-file-name" style="font-weight:600;">${file.fileName}</div>
-          <div class="finder-file-desc" style="font-size:11px; color:#64748b; margin-top:2px;">${file.desc || ''}</div>
+          <div class="finder-file-name">${file.fileName}</div>
         </div>
       `).join('');
     }
   }
 
-  const observationPanel = document.getElementById('meta-panel-observation');
-  if (observationPanel) {
-    safeCreateIcons(observationPanel);
-  } else {
-    safeCreateIcons(container);
-  }
+  safeCreateIcons(container);
 }
 
 // 🔍 フルスクリーン拡大プレビューモーダル（ギャラリーカルーセル・スワイプ・矢印送り対応）

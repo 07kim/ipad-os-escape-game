@@ -130,12 +130,17 @@ function doGet(e) {
       var newLoop = Number(e.parameter.loop);
       setResetPendingFlag(ss, false); // ゲーム再開 = リセット完了とみなしてフラグ解除
       setGlobalLoop(ss, newLoop);     // ⭐ 現在の全体周回を「システム設定」に永続保存
+      
+      // 周回に連動して進行ステップも更新 (1周目=>2, 2周目=>4, 3周目=>6)
+      var mappedStep = (newLoop === 1) ? 2 : (newLoop === 2) ? 4 : 6;
+      setSceneFlowState(ss, mappedStep, newLoop, true, Date.now());
+
       var loopCmd = recordAdminCommand(ss, {
         type: "loop_change",
         name: "周回変更 (Loop " + newLoop + ")",
         params: { loop: newLoop, timestamp: Date.now() }
       });
-      return renderJson({ success: true, message: "周回変更コマンドを発行しました！", loop: newLoop, globalLoop: newLoop, commandId: loopCmd.id });
+      return renderJson({ success: true, message: "周回変更コマンドを発行しました！", loop: newLoop, globalLoop: newLoop, flowStep: mappedStep, commandId: loopCmd.id });
     }
 
     // 7b. reset_pending フラグを手動解除（管理画面から呼べる緊急解除用）
@@ -154,6 +159,7 @@ function doGet(e) {
       var fBlackout = (fStep === 7 || e.parameter.blackout === "true");
 
       setResetPendingFlag(ss, false);
+      setGlobalLoop(ss, fLoop); // ⭐ 全体周回も同時に確実に永続保存
       setSceneFlowState(ss, fStep, fLoop, fTimerRun, fStartT, fBlackout);
       return renderJson({
         success: true,
@@ -170,6 +176,7 @@ function doGet(e) {
     if (action === "master_reset") {
       resetAllMonitoringData(ss);
       setResetPendingFlag(ss, true);  // ⭐ リセット待機フラグを立てる（スリープ中の端末も次回起動時に必ずリセット）
+      setGlobalLoop(ss, 1);           // ⭐ 全体周回を1周目に初期化
       setSceneFlowState(ss, 1, 1, false, null, false); // ⭐ ステップ1（オープニング待機・09:04固定・タイマー停止）に完全初期化
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
@@ -872,6 +879,12 @@ function getSceneFlowState(ss) {
     state.loop = 3;
     state.timerRunning = false;
     state.blackout = false;
+  }
+
+  // ⭐ 管理者が意図的に周回を変更している場合（global_loop）、その周回を最優先採用
+  var explicitGlobalLoop = getGlobalLoop(ss);
+  if (explicitGlobalLoop >= 1 && explicitGlobalLoop <= 3) {
+    state.loop = explicitGlobalLoop;
   }
 
   return state;
