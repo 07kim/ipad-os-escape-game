@@ -576,6 +576,128 @@
       min-width: 145px;
     }
 
+    /* 👑 大型カレント周回ヒーローボックス（一目でわかる周回表示） */
+    .timer-stat-box.current-loop-hero {
+      min-width: 165px;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 2px solid #3b82f6;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.18);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .timer-stat-box.current-loop-hero.loop-1 {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #3b82f6;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.18);
+    }
+    .timer-stat-box.current-loop-hero.loop-1 .timer-stat-label { color: #1d4ed8; }
+    .timer-stat-box.current-loop-hero.loop-1 .current-loop-title { color: #1e40af; }
+    .timer-stat-box.current-loop-hero.loop-1 .timer-stat-sub { color: #3b82f6; }
+
+    .timer-stat-box.current-loop-hero.loop-2 {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-color: #f97316;
+      box-shadow: 0 2px 12px rgba(249, 115, 22, 0.22);
+    }
+    .timer-stat-box.current-loop-hero.loop-2 .timer-stat-label { color: #c2410c; }
+    .timer-stat-box.current-loop-hero.loop-2 .current-loop-title { color: #9a3412; }
+    .timer-stat-box.current-loop-hero.loop-2 .timer-stat-sub { color: #ea580c; }
+
+    .timer-stat-box.current-loop-hero.loop-3 {
+      background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+      border-color: #e11d48;
+      box-shadow: 0 2px 14px rgba(225, 29, 72, 0.28);
+      animation: pulseLoop3Border 2s infinite ease-in-out;
+    }
+    @keyframes pulseLoop3Border {
+      0%, 100% { border-color: #e11d48; box-shadow: 0 0 10px rgba(225, 29, 72, 0.25); }
+      50% { border-color: #f43f5e; box-shadow: 0 0 18px rgba(244, 63, 94, 0.45); }
+    }
+    .timer-stat-box.current-loop-hero.loop-3 .timer-stat-label { color: #9f1239; }
+    .timer-stat-box.current-loop-hero.loop-3 .current-loop-title { color: #881337; }
+    .timer-stat-box.current-loop-hero.loop-3 .timer-stat-sub { color: #e11d48; }
+
+    .current-loop-title {
+      font-size: 24px !important;
+      font-weight: 900;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      line-height: 1.1;
+    }
+    .current-loop-title .loop-badge-num {
+      font-size: 26px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      letter-spacing: 0px;
+    }
+    .current-loop-title .loop-badge-unit {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .current-loop-quick-buttons {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .quick-loop-btn {
+      flex: 1;
+      padding: 2px 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 5px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      color: #334155;
+      transition: all 0.15s;
+    }
+    .quick-loop-btn:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+    }
+    .quick-loop-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* 進行統制カード内の大型周回バッジ */
+    .flow-current-loop-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1.5px solid #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+      box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
+      transition: all 0.3s;
+    }
+    .flow-current-loop-badge.loop-1 {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+    .flow-current-loop-badge.loop-2 {
+      background: #fff7ed;
+      border-color: #f97316;
+      color: #c2410c;
+    }
+    .flow-current-loop-badge.loop-3 {
+      background: #fff1f2;
+      border-color: #e11d48;
+      color: #9f1239;
+    }
+
     .timer-stat-label {
       font-size: 11px;
       font-weight: 800;
@@ -1496,8 +1618,22 @@
 
   <!-- ⏱️ 最上部一体型タイマーバー（高ジャンプ率・視認性重視） -->
   <div class="admin-compact-header-bar">
-    <!-- 左側：世界線時刻（作中） ＆ トータル時間 ＆ 周回時間 ＆ ラップ -->
+    <!-- 左側：現在の全体周回 ＆ 世界線時刻（作中） ＆ トータル時間 ＆ 周回時間 ＆ ラップ -->
     <div class="compact-timer-left">
+      <!-- 👑 0. 現在の全体周回（巨大・高視認性ヒーローボックス） -->
+      <div class="timer-stat-box current-loop-hero loop-1" id="hero-current-loop-box" title="現在iPad全体を統制している周回（クリックまたは下のボタンで周回切替）">
+        <div class="timer-stat-label"><i data-lucide="compass" style="width:13px; height:13px;"></i> 現在の全体周回</div>
+        <div class="timer-stat-val current-loop-title" id="hero-current-loop-display">
+          <span class="loop-badge-num" id="hero-current-loop-num">1</span><span class="loop-badge-unit">周目</span>
+        </div>
+        <div class="timer-stat-sub current-loop-sub" id="hero-current-loop-sub">INITIAL LOOP</div>
+        <div class="current-loop-quick-buttons">
+          <button type="button" class="quick-loop-btn active" id="quick-loop-btn-1" onclick="jumpToAdminLoop(1)" title="1周目に切り替え">1周</button>
+          <button type="button" class="quick-loop-btn" id="quick-loop-btn-2" onclick="jumpToAdminLoop(2)" title="2周目に切り替え">2周</button>
+          <button type="button" class="quick-loop-btn" id="quick-loop-btn-3" onclick="jumpToAdminLoop(3)" title="3周目に切り替え">3周</button>
+        </div>
+      </div>
+
       <!-- 1. 🌍 世界線時刻（作中時間 09:04基準） -->
       <div class="timer-stat-box world" title="iPad内の全アプリが同期する作中世界線時刻（26-09-04 09:04基準）">
         <div class="timer-stat-label"><i data-lucide="globe" style="width:12px; height:12px;"></i> 世界線時刻 (作中)</div>
@@ -1521,9 +1657,9 @@
 
       <!-- 4. 📊 各周回ラップ履歴 -->
       <div class="timer-laps-column" title="周回ごとの所要時間実績">
-        <div class="compact-lap-pill active" id="lap-card-1"><span>1周目</span><b id="lap-time-1">00:00</b></div>
-        <div class="compact-lap-pill" id="lap-card-2"><span>2周目</span><b id="lap-time-2">--:--</b></div>
-        <div class="compact-lap-pill" id="lap-card-3"><span>3周目</span><b id="lap-time-3">--:--</b></div>
+        <div class="compact-lap-pill active" id="lap-card-1" onclick="jumpToAdminLoop(1)" style="cursor:pointer;" title="クリックで1周目に切り替え"><span>1周目</span><b id="lap-time-1">00:00</b></div>
+        <div class="compact-lap-pill" id="lap-card-2" onclick="jumpToAdminLoop(2)" style="cursor:pointer;" title="クリックで2周目に切り替え"><span>2周目</span><b id="lap-time-2">--:--</b></div>
+        <div class="compact-lap-pill" id="lap-card-3" onclick="jumpToAdminLoop(3)" style="cursor:pointer;" title="クリックで3周目に切り替え"><span>3周目</span><b id="lap-time-3">--:--</b></div>
       </div>
     </div>
 
@@ -1575,9 +1711,14 @@
             <div class="card-title" style="margin-bottom:0;">
               <i data-lucide="play-circle" style="color:var(--primary);"></i> シーン進行統制（全iPad一括同期）
             </div>
-            <span id="flow-current-status-badge" style="font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; background:#e0f2fe; color:#0369a1;">
-              01. 待機中
-            </span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="flow-current-loop-badge" class="flow-current-loop-badge loop-1" title="現在の全体周回">
+                <i data-lucide="repeat" style="width:13px; height:13px;"></i> 現在：1周目
+              </span>
+              <span id="flow-current-status-badge" style="font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; background:#e0f2fe; color:#0369a1;">
+                01. 待機中
+              </span>
+            </div>
           </div>
           <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
             ステップに沿って進行をワンクリックで配信します。全稼働iPadへ即座に周回切替やコンテンツ解放が同期されます。
@@ -1815,6 +1956,9 @@
       <!-- 1. 全体進捗サマリーバー -->
       <div class="monitor-summary-banner">
         <div class="monitor-summary-left">
+          <span class="summary-stat-badge" id="summary-global-loop-badge" style="background:#eff6ff; color:#1d4ed8; border:1.5px solid #60a5fa; font-weight:900; font-size:12px; padding:4px 10px; border-radius:20px;">
+            👑 管理周回: 1周目
+          </span>
           <span class="summary-stat-badge main" id="summary-active-count">
             <i data-lucide="tablet" style="width:14px; height:14px;"></i> 現在アクセス中: 0台
           </span>
@@ -2832,6 +2976,17 @@
       showToast("🔄 公演タイマーをリセットしました（1周目・09:04固定状態）");
     }
 
+    // 👑 管理画面からワンクリックで周回切り替え
+    function jumpToAdminLoop(targetLoop) {
+      targetLoop = Number(targetLoop);
+      if (isNaN(targetLoop) || targetLoop < 1 || targetLoop > 3) return;
+      if (targetLoop === adminTimerState.currentLoop) {
+        showToast(`ℹ️ 現在すでに【${targetLoop}周目】です`);
+        return;
+      }
+      onAdminLoopChanged(targetLoop);
+    }
+
     // 周回が変更されたときに自動でラップを切り替え
     function onAdminLoopChanged(newLoop) {
       const targetLoop = parseInt(newLoop, 10);
@@ -2899,6 +3054,7 @@
 
     function renderTimerUI() {
       const now = Date.now();
+      const currentL = adminTimerState.currentLoop || 1;
       
       // 1. トータル時間計算
       let totalMs = adminTimerState.totalElapsedBeforePause;
@@ -2912,6 +3068,36 @@
         loopMs += (now - adminTimerState.loopStartTime);
       }
 
+      // 👑 3. 大型カレント周回ヒーローボックスの更新
+      const heroLoopBox = document.getElementById('hero-current-loop-box');
+      const heroLoopNum = document.getElementById('hero-current-loop-num');
+      const heroLoopSub = document.getElementById('hero-current-loop-sub');
+      if (heroLoopBox) {
+        heroLoopBox.className = `timer-stat-box current-loop-hero loop-${currentL}`;
+      }
+      if (heroLoopNum) {
+        heroLoopNum.innerText = currentL;
+      }
+      if (heroLoopSub) {
+        heroLoopSub.innerText = (currentL === 1) ? '1周目 (初期フェーズ)' : (currentL === 2) ? '2周目 (タイムリープ)' : '3周目 (最終局面・脱出 🚨)';
+      }
+
+      // クイック周回ボタンのアクティブ更新
+      for (let btnL = 1; btnL <= 3; btnL++) {
+        const qBtn = document.getElementById(`quick-loop-btn-${btnL}`);
+        if (qBtn) {
+          if (btnL === currentL) qBtn.classList.add('active');
+          else qBtn.classList.remove('active');
+        }
+      }
+
+      // 進行統制カード内の周回バッジ更新
+      const flowLoopBadge = document.getElementById('flow-current-loop-badge');
+      if (flowLoopBadge) {
+        flowLoopBadge.className = `flow-current-loop-badge loop-${currentL}`;
+        flowLoopBadge.innerHTML = `<i data-lucide="repeat" style="width:13px; height:13px;"></i> 現在：${currentL}周目`;
+      }
+
       // DOM更新
       const totalDigitsEl = document.getElementById('timer-total-digits');
       const loopDigitsEl = document.getElementById('timer-loop-digits');
@@ -2920,7 +3106,7 @@
 
       if (totalDigitsEl) totalDigitsEl.innerText = formatMs(totalMs);
       if (loopDigitsEl) loopDigitsEl.innerText = formatMs(loopMs);
-      if (loopNameEl) loopNameEl.innerText = `${adminTimerState.currentLoop}周目`;
+      if (loopNameEl) loopNameEl.innerText = `${currentL}周目`;
 
       // 🌍 世界線時刻（作中時間: 09:04:00 + カレント周回経過秒）の計算
       if (worldDigitsEl) {
@@ -2944,15 +3130,15 @@
 
         if (!cardEl) continue;
 
-        if (l === adminTimerState.currentLoop) {
-          cardEl.className = 'hero-lap-chip active';
-          if (timeEl) timeEl.innerText = formatMs(loopMs);
-        } else if (l < adminTimerState.currentLoop) {
-          cardEl.className = 'hero-lap-chip';
+        if (l === currentL) {
+          cardEl.className = 'compact-lap-pill active';
+          if (timeEl) timeEl.innerHTML = `${formatMs(loopMs)} <span style="font-size:9px; background:#0284c7; color:#fff; padding:1px 4px; border-radius:3px; margin-left:3px;">現在</span>`;
+        } else if (l < currentL) {
+          cardEl.className = 'compact-lap-pill';
           const dur = adminTimerState.loopLaps[l] ? adminTimerState.loopLaps[l].durationMs : 0;
           if (timeEl) timeEl.innerText = formatMs(dur) + ' ✓';
         } else {
-          cardEl.className = 'hero-lap-chip';
+          cardEl.className = 'compact-lap-pill';
           if (timeEl) timeEl.innerText = '--:--';
         }
       }
@@ -3041,10 +3227,24 @@
         }
       }
 
-      // 2. 最上部ステータスバッジ
+      // 2. 最上部ステータスバッジ ＆ 周回バッジ
       const statusBadge = document.getElementById('flow-current-status-badge');
       if (statusBadge) {
         statusBadge.innerText = `0${currentFlowStep}. ${FLOW_STEP_CONFIG[currentFlowStep]?.name || ''}`;
+      }
+      const flowLoopBadge = document.getElementById('flow-current-loop-badge');
+      const stepConfig = FLOW_STEP_CONFIG[currentFlowStep];
+      const stepLoop = stepConfig?.loop || adminTimerState.currentLoop || 1;
+      if (flowLoopBadge) {
+        flowLoopBadge.className = `flow-current-loop-badge loop-${stepLoop}`;
+        flowLoopBadge.innerHTML = `<i data-lucide="repeat" style="width:13px; height:13px;"></i> 現在：${stepLoop}周目`;
+      }
+      const summaryGlobalLoop = document.getElementById('summary-global-loop-badge');
+      if (summaryGlobalLoop) {
+        summaryGlobalLoop.innerText = `👑 管理周回: ${stepLoop}周目`;
+        summaryGlobalLoop.style.borderColor = (stepLoop === 1) ? '#60a5fa' : (stepLoop === 2) ? '#f97316' : '#e11d48';
+        summaryGlobalLoop.style.background = (stepLoop === 1) ? '#eff6ff' : (stepLoop === 2) ? '#fff7ed' : '#fff1f2';
+        summaryGlobalLoop.style.color = (stepLoop === 1) ? '#1d4ed8' : (stepLoop === 2) ? '#c2410c' : '#9f1239';
       }
 
       // 3. NEXT大型ボタンの更新
