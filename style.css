@@ -839,6 +839,48 @@ body {
   transform: scale(0.96);
 }
 
+.finder-item.folder-locked {
+  opacity: 0.65;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  cursor: pointer;
+}
+
+.finder-item.folder-locked:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.finder-loop-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.finder-loop-tag.loop-1 {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+}
+
+.finder-loop-tag.loop-2 {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.finder-loop-tag.loop-3 {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.finder-loop-tag.locked {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
 .finder-thumb-wrapper {
   width: 80px;
   height: 80px;

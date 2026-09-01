@@ -2520,49 +2520,96 @@ function renderMetaObservation(folderId = 'root') {
   const container = document.getElementById('meta-observation-grid') || document.getElementById('meta-overview-grid');
   const countEl = document.getElementById('observation-file-count') || document.getElementById('overview-file-count');
   const pathEl = document.getElementById('meta-observation-path');
+  const loopBadgeEl = document.getElementById('observation-loop-badge');
   if (!container) return;
 
-  const currentLoop = Number(gameState.loop) || 1;
+  // 1. 周回情報を確実に取得（gameState ＆ localStorageの双方から検証）
+  const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10);
   const dbFolders = (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.observationFolders);
   const allFolders = (dbFolders && dbFolders.length > 0) ? dbFolders : DEFAULT_OBSERVATION_FOLDERS;
-  
-  // 現在の周回以下で解放されているフォルダのみ取得（最低限第1周回フォルダは必ず含む）
-  let visibleFolders = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop);
-  if (visibleFolders.length === 0) {
-    visibleFolders = [allFolders[0]];
+
+  // 2. アドレスバーの周回バッジを更新
+  if (loopBadgeEl) {
+    let loopText = "第1周回";
+    let badgeBg = "rgba(2,132,199,0.12)";
+    let badgeColor = "#0284c7";
+    let badgeBorder = "rgba(2,132,199,0.3)";
+    if (currentLoop === 2) {
+      loopText = "第2周回";
+      badgeBg = "rgba(245,158,11,0.15)";
+      badgeColor = "#d97706";
+      badgeBorder = "rgba(245,158,11,0.35)";
+    } else if (currentLoop >= 3) {
+      loopText = "第3周回";
+      badgeBg = "rgba(220,38,38,0.15)";
+      badgeColor = "#dc2626";
+      badgeBorder = "rgba(220,38,38,0.35)";
+    }
+    loopBadgeEl.innerHTML = `<i data-lucide="repeat" style="width:12px; height:12px;"></i> <span>${loopText}</span>`;
+    loopBadgeEl.style.background = badgeBg;
+    loopBadgeEl.style.color = badgeColor;
+    loopBadgeEl.style.border = `1px solid ${badgeBorder}`;
   }
 
   if (folderId === 'root') {
-    // 最上位階層: 周回に応じたフォルダ一覧を表示
+    // 最上位階層: 各周回に対応したフォルダ一覧を表示
     if (pathEl) {
       pathEl.innerHTML = `<i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ`;
     }
+    const unlockedCount = allFolders.filter(f => (f.unlockLoop || 1) <= currentLoop).length;
     if (countEl) {
-      countEl.innerText = `${visibleFolders.length} フォルダ`;
+      countEl.innerText = `${unlockedCount} / ${allFolders.length} フォルダ解禁`;
     }
 
-    container.innerHTML = visibleFolders.map(folder => `
-      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
-        <div class="finder-thumb-wrapper">
-          <div class="finder-folder-icon">
-            ${generateIpadosFolderSvg()}
+    container.innerHTML = allFolders.map(folder => {
+      const isUnlocked = (folder.unlockLoop || 1) <= currentLoop;
+      const fileCount = folder.files ? folder.files.length : 0;
+
+      if (isUnlocked) {
+        // 解放中フォルダ（タップで開く）
+        return `
+          <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
+            <div class="finder-thumb-wrapper">
+              <div class="finder-folder-icon">
+                ${generateIpadosFolderSvg()}
+              </div>
+            </div>
+            <div class="finder-file-name" style="font-weight:700;">${folder.folderName}</div>
+            <div class="finder-file-desc" style="color:#64748b; font-size:11px;">${fileCount} 項目</div>
+            <span class="finder-loop-tag loop-${folder.unlockLoop || 1}">第${folder.unlockLoop || 1}周回 解放中</span>
           </div>
-        </div>
-        <div class="finder-file-name">${folder.folderName}</div>
-        <div class="finder-file-desc">${folder.files ? folder.files.length : 0} 項目</div>
-      </div>
-    `).join('');
+        `;
+      } else {
+        // 未解放フォルダ（ロック中・タップで解放周回を案内）
+        return `
+          <div class="finder-item folder-type folder-locked" onclick="showToast('🔒 「${folder.folderName}」は【第${folder.unlockLoop}周回】へ突入すると自動解禁されます', false, 3500)" title="🔒 第${folder.unlockLoop}周回で解禁">
+            <div class="finder-thumb-wrapper" style="position:relative; background:#f1f5f9;">
+              <div class="finder-folder-icon" style="opacity:0.4;">
+                ${generateIpadosFolderSvg()}
+              </div>
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0.25); border-radius:8px;">
+                <i data-lucide="lock" style="width:24px; height:24px; color:#ffffff;"></i>
+              </div>
+            </div>
+            <div class="finder-file-name" style="color:#94a3b8;">${folder.folderName}</div>
+            <div class="finder-file-desc" style="color:#cbd5e1; font-size:11px;">非公開</div>
+            <span class="finder-loop-tag locked">🔒 第${folder.unlockLoop}周回で解禁</span>
+          </div>
+        `;
+      }
+    }).join('');
   } else {
-    // フォルダ内表示: 選択されたフォルダ内のファイル一覧（上へ戻るボタンは排除しパンくずでナビゲート）
-    const targetFolder = allFolders.find(f => f.id === folderId) || visibleFolders.find(f => f.id === folderId) || visibleFolders[0];
-    if (!targetFolder) {
+    // フォルダ内表示: 選択されたフォルダ内のファイル一覧
+    const targetFolder = allFolders.find(f => f.id === folderId);
+    // もし未解放フォルダに直接アクセスしようとした場合は root へ戻す
+    if (!targetFolder || (targetFolder.unlockLoop || 1) > currentLoop) {
       renderMetaObservation('root');
       return;
     }
     const files = targetFolder.files || [];
 
     if (pathEl) {
-      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong>`;
+      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong> <span class="finder-loop-tag loop-${targetFolder.unlockLoop || 1}" style="margin-left:6px;">第${targetFolder.unlockLoop || 1}周回</span>`;
     }
     if (countEl) {
       countEl.innerText = `${files.length} 項目`;
@@ -2576,17 +2623,23 @@ function renderMetaObservation(folderId = 'root') {
       `;
     } else {
       container.innerHTML = files.map(file => `
-        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="ダブルクリック/タップでプレビュー">
+        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="タップで拡大プレビュー">
           <div class="finder-thumb-wrapper">
             <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
-          <div class="finder-file-name">${file.fileName}</div>
+          <div class="finder-file-name" style="font-weight:600;">${file.fileName}</div>
+          <div class="finder-file-desc" style="font-size:11px; color:#64748b; margin-top:2px;">${file.desc || ''}</div>
         </div>
       `).join('');
     }
   }
 
-  safeCreateIcons(container);
+  const observationPanel = document.getElementById('meta-panel-observation');
+  if (observationPanel) {
+    safeCreateIcons(observationPanel);
+  } else {
+    safeCreateIcons(container);
+  }
 }
 
 // 🔍 フルスクリーン拡大プレビューモーダル（ギャラリーカルーセル・スワイプ・矢印送り対応）
