@@ -1800,10 +1800,10 @@ const DEFAULT_LOCK_NOTIFICATIONS = {
 
 // --- アプリ種別に応じた通知アプリアイコンHTML生成 ---
 function getNotificationAppIconHtml(appName, iconName) {
-  if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square' || iconName === 'LINK.png' || iconName === 'LINK') {
-    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.png?v=2.48.0" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
+  if (appName === 'LINK' || iconName === 'message-circle' || iconName === 'message-square' || iconName === 'LINK.webp' || iconName === 'LINK') {
+    return `<div class="notif-app-icon link-icon" style="overflow:hidden; border-radius:6px; display:flex; align-items:center; justify-content:center; background:#fff;"><img src="./LINK.webp?v=2.48.0" style="width:100%; height:100%; object-fit:cover;" alt="LINK"></div>`;
   } else if (appName === 'メール' || iconName === 'mail') {
-    return `<div class="notif-app-icon mail-icon"><img src="./mail.png" style="width:100%; height:100%; object-fit:cover;" alt="メール"></div>`;
+    return `<div class="notif-app-icon mail-icon"><img src="./mail.webp" style="width:100%; height:100%; object-fit:cover;" alt="メール"></div>`;
   } else if (appName === 'カレンダー' || iconName === 'calendar') {
     return `<div class="notif-app-icon calendar-icon"><i data-lucide="calendar"></i></div>`;
   } else {
@@ -1880,11 +1880,11 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
 
   const iconWrap = document.getElementById('push-notif-icon-wrap');
   if (iconWrap) {
-    if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.png' || icon === 'LINK') {
-      iconWrap.innerHTML = '<img src="./LINK.png?v=2.48.0" id="push-notif-icon" class="push-notif-img" alt="LINK">';
+    if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.webp' || icon === 'LINK') {
+      iconWrap.innerHTML = '<img src="./LINK.webp?v=2.48.0" id="push-notif-icon" class="push-notif-img" alt="LINK">';
       iconWrap.style.background = '#ffffff';
     } else if (app === 'メール' || icon === 'mail') {
-      iconWrap.innerHTML = '<img src="./mail.png" id="push-notif-icon" class="push-notif-img" alt="メール">';
+      iconWrap.innerHTML = '<img src="./mail.webp" id="push-notif-icon" class="push-notif-img" alt="メール">';
       iconWrap.style.background = '#ffffff';
     } else {
       iconWrap.innerHTML = `<i data-lucide="${icon}" id="push-notif-icon" style="width:20px; height:20px; color:#fff;"></i>`;
@@ -2737,13 +2737,13 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測",
     unlockLoop: 1,
     files: [
-      { id: "f_story_1", fileName: "あらすじ.png", title: "あらすじ", image: "./あらすじ.png", desc: "2126年 タイムリープ事件概要" },
-      { id: "f_relation_1", fileName: "相関図.png", title: "相関図", image: "./相関図.png", desc: "関係者・学友会相関図" },
-      { id: "f_route_a", fileName: "順路A.png", title: "順路A", image: "./順路A.png", desc: "大ホール・PCルーム 探索ルート" },
-      { id: "f_route_b", fileName: "順路B.png", title: "順路B", image: "./順路B.png", desc: "研修室1〜3 探索ルート" },
-      { id: "f_route_c", fileName: "順路C.png", title: "順路C", image: "./順路C.png", desc: "未来資料保管庫 探索ルート" },
-      { id: "f_route_d", fileName: "順路D.png", title: "順路D", image: "./順路D.png", desc: "役員室・セキュリティエリア 探索ルート" },
-      { id: "f_route_f", fileName: "順路F.png", title: "順路F", image: "./順路F.png", desc: "最上階タイムマシン到達ルート" }
+      { id: "f_story_1", fileName: "あらすじ.webp", title: "あらすじ", image: "./あらすじ.webp", desc: "2126年 タイムリープ事件概要" },
+      { id: "f_relation_1", fileName: "相関図.webp", title: "相関図", image: "./相関図.webp", desc: "関係者・学友会相関図" },
+      { id: "f_route_a", fileName: "順路A.webp", title: "順路A", image: "./順路A.webp", desc: "大ホール・PCルーム 探索ルート" },
+      { id: "f_route_b", fileName: "順路B.webp", title: "順路B", image: "./順路B.webp", desc: "研修室1〜3 探索ルート" },
+      { id: "f_route_c", fileName: "順路C.webp", title: "順路C", image: "./順路C.webp", desc: "未来資料保管庫 探索ルート" },
+      { id: "f_route_d", fileName: "順路D.webp", title: "順路D", image: "./順路D.webp", desc: "役員室・セキュリティエリア 探索ルート" },
+      { id: "f_route_f", fileName: "順路F.webp", title: "順路F", image: "./順路F.webp", desc: "最上階タイムマシン到達ルート" }
     ]
   },
   {
@@ -2751,9 +2751,9 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測(1)",
     unlockLoop: 2,
     files: [
-      { id: "f_story_2", fileName: "あらすじ(1).png", title: "あらすじ(1)", image: "./あらすじ(1).png", desc: "第2周回 世界線分岐あらすじ" },
-      { id: "f_relation_2", fileName: "相関図(1).png", title: "相関図(1)", image: "./相関図(1).png", desc: "第2周回 改変後相関図" },
-      { id: "f_route_1", fileName: "順路(1).png", title: "順路(1)", image: "./順路(1).png", desc: "第2周回 調査順路マップ" }
+      { id: "f_story_2", fileName: "あらすじ(1).webp", title: "あらすじ(1)", image: "./あらすじ(1).webp", desc: "第2周回 世界線分岐あらすじ" },
+      { id: "f_relation_2", fileName: "相関図(1).webp", title: "相関図(1)", image: "./相関図(1).webp", desc: "第2周回 改変後相関図" },
+      { id: "f_route_1", fileName: "順路(1).webp", title: "順路(1)", image: "./順路(1).webp", desc: "第2周回 調査順路マップ" }
     ]
   },
   {
@@ -2761,9 +2761,9 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測(2)",
     unlockLoop: 3,
     files: [
-      { id: "f_story_3", fileName: "あらすじ(2).png", title: "あらすじ(2)", image: "./あらすじ(2).png", desc: "第3周回 最終決戦あらすじ" },
-      { id: "f_relation_3", fileName: "相関図(2).png", title: "相関図(2)", image: "./相関図(2).png", desc: "第3周回 完全真相相関図" },
-      { id: "f_route_2", fileName: "順路(2).png", title: "順路(2)", image: "./順路(2).png", desc: "第3周回 最終脱出順路マップ" }
+      { id: "f_story_3", fileName: "あらすじ(2).webp", title: "あらすじ(2)", image: "./あらすじ(2).webp", desc: "第3周回 最終決戦あらすじ" },
+      { id: "f_relation_3", fileName: "相関図(2).webp", title: "相関図(2)", image: "./相関図(2).webp", desc: "第3周回 完全真相相関図" },
+      { id: "f_route_2", fileName: "順路(2).webp", title: "順路(2)", image: "./順路(2).webp", desc: "第3周回 最終脱出順路マップ" }
     ]
   }
 ];
