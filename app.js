@@ -2980,12 +2980,16 @@ function renderMetaEvidence() {
     return;
   }
 
-  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
+  const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
+    || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
+    || [];
   
   container.innerHTML = collected.map(entry => {
-    const item = allItems.find(it => it.id === entry.id || it.qrKey === entry.id);
+    const entryId = String(entry.id || entry.qrKey || '').trim();
+    const item = allItems.find(it => it.id === entryId || it.qrKey === entryId || it.id.toUpperCase() === entryId.toUpperCase() || it.qrKey.toUpperCase() === entryId.toUpperCase());
     if (!item) return '';
 
+    const itemQr = item.qrKey || item.id;
     const itemName = item.name || item.id;
     const itemDesc = item.desc || '';
     const itemLoc = item.location || entry.location || '調査場所';
@@ -3008,9 +3012,12 @@ function renderMetaEvidence() {
           </div>
         </div>
 
-        <!-- 右カラム：名前 + 説明 -->
+        <!-- 右カラム：番号バッジ + 名前 + 説明 -->
         <div class="evidence-card-right">
-          <div class="evidence-card-title">${itemName}</div>
+          <div class="evidence-card-header-row" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span style="font-size:10px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-family:monospace; letter-spacing:0.5px;">${itemQr}</span>
+            <div class="evidence-card-title" style="margin:0;">${itemName}</div>
+          </div>
           <div class="evidence-card-desc">${itemDesc}</div>
         </div>
       </div>
@@ -3174,10 +3181,15 @@ function openMetaEvidenceDetail(itemId, timeStr) {
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (!modal) return;
 
-  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
-  const item = allItems.find(it => it.id === itemId || it.qrKey === itemId);
+  const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
+    || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
+    || [];
+  
+  const searchId = String(itemId || '').trim();
+  const item = allItems.find(it => it.id === searchId || it.qrKey === searchId || it.id.toUpperCase() === searchId.toUpperCase() || it.qrKey.toUpperCase() === searchId.toUpperCase());
   if (!item) return;
 
+  const itemQr = item.qrKey || item.id;
   const name = item.name || item.id;
   const descLong = item.detailDesc || item.desc || '';
   const loc = item.location || '調査場所';
@@ -3191,7 +3203,9 @@ function openMetaEvidenceDetail(itemId, timeStr) {
   const timeEl = document.getElementById('detail-time-text');
   const descEl = document.getElementById('detail-item-desc');
 
-  if (titleEl) titleEl.innerText = name;
+  if (titleEl) {
+    titleEl.innerHTML = `<span style="font-size:12px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-family:monospace; margin-right:8px; vertical-align:middle;">${itemQr}</span>${name}`;
+  }
   if (locEl) locEl.innerText = loc;
   if (timeEl) timeEl.innerText = `${displayTime} 取得`;
   if (descEl) descEl.innerText = descLong;

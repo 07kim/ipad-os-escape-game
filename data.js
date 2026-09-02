@@ -165,7 +165,7 @@ window.GAME_DATABASE = {
     // 【3. 調査資料タブ用アイテム】14点マスタデータ（カード形式、QRコード読取、固定仕様）
     evidenceItems: [
       {
-        id: "item_001",
+        id: "ITEM-001",
         qrKey: "ITEM-001",
         name: "資料",
         desc: "何か資料が入った封筒",
@@ -174,7 +174,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-001.webp"
       },
       {
-        id: "item_002",
+        id: "ITEM-002",
         qrKey: "ITEM-002",
         name: "謎のPC",
         desc: "謎のPC。誰のものかもわからない。",
@@ -183,7 +183,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-002.webp"
       },
       {
-        id: "item_003",
+        id: "ITEM-003",
         qrKey: "ITEM-003",
         name: "学生証",
         desc: "謎の人物の学生証。森野航とは誰なのだろうか。",
@@ -192,7 +192,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-003.webp"
       },
       {
-        id: "item_004",
+        id: "ITEM-004",
         qrKey: "ITEM-004",
         name: "レシート",
         desc: "花屋で何か買い物をしたレシート。",
@@ -201,16 +201,16 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-004.webp"
       },
       {
-        id: "item_005",
+        id: "ITEM-005",
         qrKey: "ITEM-005",
         name: "初期パスワード",
         desc: "マナバにログインできるパスワードが書かれているようだ。初回で変更することが望まれているが、、",
-        detailDesc: "マナバにログインできるパスワードが書かれているようだ。初回で変更することが望まれているが、、\nID：M25b1150\nPASS：0511b52M",
+        detailDesc: "マナバにログインできるパスワードが書かれているようだ。初回で変更することが望まれているが、、\nID：M25b1150 \nPASS：0511b52M",
         location: "討議室4",
         image: "./assets/evidence/ITEM-005.webp"
       },
       {
-        id: "item_006",
+        id: "ITEM-006",
         qrKey: "ITEM-006",
         name: "ノート",
         desc: "謎の人物のノート。数式が多く書かれている。\n何かの授業ノートだったのだろうか。",
@@ -219,7 +219,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-006.webp"
       },
       {
-        id: "item_007",
+        id: "ITEM-007",
         qrKey: "ITEM-007",
         name: "メモ",
         desc: "謎の人物のメモ。\n想いや行動の背景が察せられる。",
@@ -228,7 +228,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-007.webp"
       },
       {
-        id: "item_008",
+        id: "ITEM-008",
         qrKey: "ITEM-008",
         name: "外園の荷物",
         desc: "外園胡春の荷物。彼女の荷物は整理されており、几帳面かつ真面目な性格が表れている。",
@@ -237,7 +237,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-008.webp"
       },
       {
-        id: "item_009",
+        id: "ITEM-009",
         qrKey: "ITEM-009",
         name: "比嘉の荷物",
         desc: "比嘉俊希の荷物。彼の荷物は便利グッズに溢れており、どこか合理性を感じさせる。",
@@ -246,7 +246,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-009.webp"
       },
       {
-        id: "item_010",
+        id: "ITEM-010",
         qrKey: "ITEM-010",
         name: "七瀬の荷物",
         desc: "七瀬いろはの荷物。彼女の荷物はデザインや独創性に溢れている他、ノート等から勉強への意欲も感じられる。",
@@ -255,7 +255,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-010.webp"
       },
       {
-        id: "item_011",
+        id: "ITEM-011",
         qrKey: "ITEM-011",
         name: "犬飼の忘れ物",
         desc: "社会人である犬飼の忘れていったメモ。",
@@ -264,7 +264,7 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-011.webp"
       },
       {
-        id: "item_012",
+        id: "ITEM-012",
         qrKey: "ITEM-012",
         name: "高性能PC",
         desc: "誰のかもわからない、性能の高そうなパソコン。Syzen59の文字が貼られている。",
@@ -273,16 +273,16 @@ window.GAME_DATABASE = {
         image: "./assets/evidence/ITEM-012.webp"
       },
       {
-        id: "item_013",
+        id: "ITEM-013",
         qrKey: "ITEM-013",
         name: "ソフトロープ",
-        desc: "ポリプロピレン（PP）などの合成繊維で作られた、手触りが柔らかく扱いやすい結束用のロープや紐。",
-        detailDesc: "ポリプロピレン（PP）などの合成繊維で作られた、手触りが柔らかく扱いやすい結束用のロープや紐。学友会執行委員会では主にテントの保存に使用される。\n前代企画部長の割と好きな備品は、ソフトロープらしい",
+        desc: "ポリプロピレン（PP）などの合成繊維で作られた、手触りが柔らかく扱いやすい結束用のロープや紐 。",
+        detailDesc: "ポリプロピレン（PP）などの合成繊維で作られた、手触りが柔らかく扱いやすい結束用のロープや紐 。学友会執行委員会では主にテントの保存に使用される。\n前代企画部長の割と好きな備品は、ソフトロープらしい",
         location: "大ホール",
         image: "./assets/evidence/ITEM-013.webp"
       },
       {
-        id: "item_014",
+        id: "ITEM-014",
         qrKey: "ITEM-014",
         name: "資料",
         desc: "100年間の経済や流行、新技術等の変遷をまとめた資料。",
