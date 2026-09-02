@@ -3918,7 +3918,8 @@
         return;
       }
 
-      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
+      // 超軽量な get_data (数十msで即応答) を使用して端末状況とシーン状態を高速取得
+      const url = gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`;
       fetch(url)
         .then(async res => {
           const text = await res.text();
@@ -3926,10 +3927,16 @@
           try { return JSON.parse(text); } catch(e) { return null; }
         })
         .then(json => {
-          if (json && json.success) {
-            // 👑 サーバーのシーン進行状態・周回との同期
-            const sLoop = Number(json.globalLoop || (json.flowStep ? FLOW_STEP_CONFIG[json.flowStep]?.loop : 1));
-            const sStep = Number(json.flowStep || 1);
+          if (json && (json.success || json.data)) {
+            const data = json.data || json;
+            if (data.devicesStatus) {
+              latestDevicesData = data.devicesStatus;
+            } else if (json.devices) {
+              latestDevicesData = json.devices;
+            }
+
+            const sLoop = Number(data.globalLoop || data.loop || 1);
+            const sStep = Number(data.flowStep || data.step || 1);
 
             if (!window._hasAdminInitialLoopSynced && sLoop) {
               window._hasAdminInitialLoopSynced = true;
@@ -3939,41 +3946,8 @@
 
             if (sStep && sStep !== currentFlowStep) {
               currentFlowStep = sStep;
-              if (sLoop && sLoop !== adminTimerState.currentLoop) {
-                adminTimerState.currentLoop = sLoop;
-                if (adminTimerState.loopLaps && adminTimerState.loopLaps[sLoop]) {
-                  adminTimerState.loopLaps[sLoop].status = 'active';
-                }
-                renderTimerUI();
-              }
               updateFlowStepsUI();
-
-              // サーバーのシーン進行状態に合わせてタイマー稼働/停止を同期
-              const isTimerRunning = (currentFlowStep === 2 || currentFlowStep === 4 || currentFlowStep === 6);
-              if (!isTimerRunning && adminTimerState.isRunning) {
-                pauseAdminTimer();
-              } else if (isTimerRunning && !adminTimerState.isRunning) {
-                const sTime = json.startTime ? Number(json.startTime) : Date.now();
-                adminTimerState.isRunning = true;
-                adminTimerState.totalStartTime = sTime;
-                adminTimerState.loopStartTime = sTime;
-                startTimerInterval();
-                updateTimerButtonsUI(true);
-                renderTimerUI();
-                saveAdminTimerState();
-              }
             }
-            if (json.devices) {
-              latestDevicesData = json.devices;
-            }
-          } else {
-            fetch(gasUrl.includes('?') ? `${gasUrl}&action=get_data` : `${gasUrl}?action=get_data`)
-              .then(r => r.json())
-              .then(d => {
-                if (d && d.data && d.data.devicesStatus) latestDevicesData = d.data.devicesStatus;
-              })
-              .finally(() => renderDynamicMonitoringList());
-            return;
           }
           renderDynamicMonitoringList();
         })
