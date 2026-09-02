@@ -7651,3 +7651,25 @@ if (document.readyState === 'loading') {
   setupGlobalSwipeBackGestures();
 }
 
+
+// 🔄 browser.html (iframe) への周回情報同期
+function syncBrowserIframeLoop() {
+  const iframe = document.getElementById('browser-iframe');
+  if (iframe && iframe.contentWindow) {
+    const loop = Number(gameState.loop || localStorage.getItem('game_loop') || 1);
+    iframe.contentWindow.postMessage({ type: 'LOOP_CHANGE', loop: loop }, '*');
+  }
+}
+
+// 子iframeからの周回変更メッセージを受信
+window.addEventListener("message", e => {
+  if (e.data && e.data.type === "LOOP_CHANGE" && e.data.loop) {
+    const newLoop = Number(e.data.loop);
+    if (newLoop && newLoop !== Number(gameState.loop)) {
+      gameState.loop = newLoop;
+      localStorage.setItem('game_loop', String(newLoop));
+      updateLoopUI();
+      logWriteToGAS("LOOP_CHANGED_FROM_BROWSER", `ブラウザ内設定から第${newLoop}周へ切り替え`);
+    }
+  }
+});

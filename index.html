@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.99.0">
+  <link rel="stylesheet" href="style.css?v=3.0.0">
   <style>
     html, body {
       background-color: #0f172a !important; /* 💡 ロード中も白画面にならずiPadOSダークスレートを即時表示 */
@@ -347,80 +347,10 @@
       </div>
 
       <!-- ------------------------------------------ -->
-      <!-- ② Googleブラウザ（Yahoo!ニュース風リッチUI） -->
+      <!-- ② Safari / ニュースブラウザ（Google News再現） -->
       <!-- ------------------------------------------ -->
       <div class="app-window" id="app-browser-app">
-        <div class="browser-navbar">
-          <div class="browser-nav-buttons">
-            <button onclick="goBrowserHome()"><i data-lucide="home"></i></button>
-            <button onclick="backBrowserPage()" id="browser-back-btn" disabled><i data-lucide="chevron-left"></i></button>
-          </div>
-          <div class="browser-address-bar">
-            <i data-lucide="search" style="width: 14px; height: 14px; margin-right: 6px; color: #8e8e93;"></i>
-            <input type="text" id="browser-search-input" placeholder="Google で検索、または URL を入力..." onkeydown="handleBrowserSearch(event)">
-          </div>
-        </div>
-
-        <div class="browser-body" id="browser-body">
-          <!-- 検索トップ画面 -->
-          <div id="browser-home" class="browser-page-container">
-            <div class="browser-logo">
-              <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
-            </div>
-            <div class="browser-search-box">
-              <input type="text" id="browser-main-search" placeholder="Google で検索、または URL を入力" onkeydown="handleBrowserSearch(event)">
-            </div>
-            
-            <!-- サジェスト（3周目のみ表示） -->
-            <div class="search-suggests" id="search-suggests" style="display:none;">
-              <strong>急上昇ワード:</strong>
-              <div class="suggest-tags" id="suggest-tags"></div>
-            </div>
-
-            <!-- Yahoo!ニュース風ニュースフィード -->
-            <div class="yahoo-news-section">
-              <div class="yahoo-news-header">
-                <h3>NEWS FEED 2126</h3>
-                <!-- カテゴリタブ -->
-                <div class="news-category-tabs">
-                  <button class="cat-tab active" onclick="switchNewsCategory('all')">主要</button>
-                  <button class="cat-tab" onclick="switchNewsCategory('it')">IT・科学</button>
-                  <button class="cat-tab" onclick="switchNewsCategory('ent')">エンタメ</button>
-                  <button class="cat-tab" onclick="switchNewsCategory('campus')">学内・社会</button>
-                  <button class="cat-tab ranking-tab" onclick="openBrowserPage('market_ranking')">📈 時価総額</button>
-                </div>
-              </div>
-
-              <!-- Top Hero主要記事コンテナ -->
-              <div id="news-hero-container"></div>
-
-              <!-- 2列ニュースカードグリッド -->
-              <div id="news-grid-container" class="news-grid"></div>
-            </div>
-          </div>
-
-          <!-- 検索結果一覧画面 -->
-          <div id="browser-results" class="browser-page-container" style="display:none;">
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-              「<span id="search-query-text"></span>」の検索結果 (<span id="search-count">0</span>件)
-            </div>
-            <div id="search-results-list"></div>
-          </div>
-
-          <!-- 個別記事/ウェブページ画面 -->
-          <div id="browser-webpage" class="browser-page-container article-view" style="display:none;">
-            <div class="article-header">
-              <h1 class="webpage-title" id="webpage-title">ページタイトル</h1>
-              <div class="article-subbar">
-                <div class="webpage-meta" id="webpage-meta">2126/08/22 10:00 配信 | 東金タイムズ</div>
-                <button class="clip-memo-btn" onclick="clipCurrentPageToMemo()">
-                  <i data-lucide="clipboard-copy"></i> 調査メモに転記
-                </button>
-              </div>
-            </div>
-            <div class="webpage-content" id="webpage-content">ページ本文</div>
-          </div>
-        </div>
+        <iframe src="browser.html" id="browser-iframe" style="width:100%; height:100%; border:none; display:block; background:#fff;"></iframe>
       </div>
 
       <!-- ------------------------------------------ -->
@@ -2481,7 +2411,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.99.0"></script>
-  <script src="app.js?v=2.99.0"></script>
+  <script src="data.js?v=3.0.0"></script>
+  <script src="app.js?v=3.0.0"></script>
 </body>
 </html>
