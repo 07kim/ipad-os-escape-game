@@ -6580,8 +6580,8 @@ function renderMailList() {
     const isFlagged = mailState.flaggedIds.has(mail.id);
 
     container.innerHTML += `
-      <div class="mail-item ${isSelected ? 'active' : ''}" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
-        <div class="mail-item-top">
+      <div class="mail-item ${isSelected ? 'active' : ''}" onclick="handleMailItemTap('${mail.id}', event)" ontouchend="handleMailItemTap('${mail.id}', event)" id="mail-item-${mail.id}" style="touch-action:manipulation; cursor:pointer;">
+        <div class="mail-item-top" style="pointer-events:none;">
           <div class="mail-item-sender">
             <span class="mail-unread-dot"></span>
             ${mail.sender}
@@ -6589,8 +6589,8 @@ function renderMailList() {
           </div>
           <div class="mail-item-date">${mail.date}</div>
         </div>
-        <div class="mail-item-title">${mail.subject || mail.title}</div>
-        <div class="mail-item-snippet">${snippet}</div>
+        <div class="mail-item-title" style="pointer-events:none;">${mail.subject || mail.title}</div>
+        <div class="mail-item-snippet" style="pointer-events:none;">${snippet}</div>
       </div>
     `;
   });
@@ -6602,6 +6602,18 @@ function renderMailList() {
   if (currentSelected) {
     openMail(currentSelected.id);
   }
+}
+
+// 📧 メールアイテム即応タップハンドラー（二重発火防止ガード付き）
+let lastMailItemTapTime = 0;
+function handleMailItemTap(mailId, e) {
+  const now = Date.now();
+  if (now - lastMailItemTapTime < 220) return;
+  lastMailItemTapTime = now;
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+  }
+  openMail(mailId);
 }
 
 function openMail(mailId) {
@@ -7369,62 +7381,101 @@ function playSystemSound(type = "touch") {
   }
 }
 
-// GASへの非同期通信ログ送信（完全非ブロッキング ＆ 通信中インジケータ連動）
+// 🚀 GASへのログ送信: バッファリング＆バッチ送信エンジン（キュー飽和・WebKit同時接続上限枯渇を完全根絶）
+let _gasLogQueue = [];
+let _gasLogFlushTimer = null;
+let _lastLocalStorageLogTime = 0;
+let _isGasFlushing = false;
+
 function logWriteToGAS(logType, message) {
   console.log(`[LOG - ${logType}] ${message}`);
 
-  try {
-    localStorage.setItem('mon_last_update', Date.now());
-    localStorage.setItem('mon_log_latest', `[${logType}] ${message}`);
-  } catch (e) { }
+  // ① LocalStorage への同期書き込みをデバウンス（メインスレッドのディスクI/Oブロックを排除）
+  const now = Date.now();
+  if (now - _lastLocalStorageLogTime > 1200) {
+    _lastLocalStorageLogTime = now;
+    try {
+      localStorage.setItem('mon_last_update', now);
+      localStorage.setItem('mon_log_latest', `[${logType}] ${message}`);
+    } catch (e) { }
+  }
 
   const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
   if (!gasUrl) return;
 
-  // フォーム送信や重要イベント時は通信中インジケータを表示
-  if (logType.includes('SUBMIT') || logType.includes('COLLECTED') || logType.includes('LOOP')) {
+  const isUrgent = logType.includes('SUBMIT') || logType.includes('COLLECTED') || logType.includes('LOOP') || logType.includes('RESET');
+  if (isUrgent) {
     showNetworkLoadingIndicator("通信中…");
   }
 
-  const payload = {
-    action: "write_log",
+  // ② ログエントリをインメモリキューへ蓄積
+  _gasLogQueue.push({
+    time: now,
     teamId: gameState.teamId,
     loopNum: gameState.loop,
     logType: logType,
     message: message
-  };
+  });
 
-  const statusPayload = {
-    action: "update_status",
-    teamId: gameState.teamId,
-    loopNum: gameState.loop,
+  // ③ 緊急時またはキューが5件溜まったら即時フラッシュ、それ以外は2.5秒後にまとめて1回だけ非同期送信
+  if (isUrgent || _gasLogQueue.length >= 5) {
+    if (_gasLogFlushTimer) clearTimeout(_gasLogFlushTimer);
+    _gasLogFlushTimer = null;
+    flushGasLogQueue();
+  } else if (!_gasLogFlushTimer) {
+    _gasLogFlushTimer = setTimeout(() => {
+      _gasLogFlushTimer = null;
+      flushGasLogQueue();
+    }, 2500);
+  }
+}
+
+function flushGasLogQueue() {
+  if (_gasLogQueue.length === 0 || _isGasFlushing) return;
+
+  const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
+  if (!gasUrl) {
+    _gasLogQueue = [];
+    return;
+  }
+
+  _isGasFlushing = true;
+  const itemsToSend = [..._gasLogQueue];
+  _gasLogQueue = []; // キューをクリア
+
+  const latestLog = itemsToSend[itemsToSend.length - 1];
+  const combinedMessage = itemsToSend.map(it => `[${it.logType}] ${it.message}`).join(' \n ');
+
+  const batchPayload = {
+    action: "write_log",
+    teamId: latestLog.teamId,
+    loopNum: latestLog.loopNum,
+    logType: latestLog.logType,
+    message: combinedMessage,
     statusData: {
       hints: gameState.unlockedHints,
       manabaUser: gameState.manabaUser
     }
   };
 
-  // メインスレッドを妨げないよう非同期キューで送信
-  setTimeout(() => {
-    fetch(gasUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }).then(() => {
-      setTimeout(hideNetworkLoadingIndicator, 400);
-    }).catch(err => {
-      console.warn("GAS log sending failed: ", err);
-      hideNetworkLoadingIndicator();
-    });
-
-    fetch(gasUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(statusPayload)
-    }).catch(err => console.warn("GAS status update failed: ", err));
-  }, 0);
+  // 単一の軽量POSTで送信（ブラウザの同時接続キューを一切圧迫しない）
+  fetch(gasUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(batchPayload)
+  }).then(() => {
+    _isGasFlushing = false;
+    setTimeout(hideNetworkLoadingIndicator, 300);
+    // もし送信中に新しいキューが溜まっていたら再送
+    if (_gasLogQueue.length > 0 && !_gasLogFlushTimer) {
+      _gasLogFlushTimer = setTimeout(flushGasLogQueue, 2500);
+    }
+  }).catch(err => {
+    _isGasFlushing = false;
+    console.warn("GAS batch log send failed (offline/skip):", err);
+    hideNetworkLoadingIndicator();
+  });
 }
 
 // --- 運営画面からのリモートトリガー受信（ホットリロード ＆ 音響同期） ---
