@@ -1642,8 +1642,9 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(now));
     updateAppUI();
-    // 初回アクセス時のみ初期画面としてロック画面を表示。ユーザーが解除済みの場合は勝手に再ロックしない
-    if (isInitialSync) {
+    // ユーザーがすでにロック解除済みの場合は勝手に再ロックしない
+    const lsEl = document.getElementById('lock-screen');
+    if (isInitialSync && (!lsEl || !lsEl.classList.contains('hidden'))) {
       showLockScreen();
     }
   } else if (step === 2) {
@@ -2157,32 +2158,35 @@ function hideLockScreen() {
 
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
 function openApp(appId) {
-  // ロック中は開けない
-  const lockScreen = document.getElementById('lock-screen');
-  if (lockScreen && !lockScreen.classList.contains('hidden')) return;
+  if (!appId) return;
+
+  // 💡 アイコンタップ時はロック画面を即座に自動解除してアプリを開く
+  unlockScreen();
 
   closeAllWindowsSilent();
   
-  const win = document.getElementById(`app-${appId}`);
+  // 'meta' でも 'meta-app' でも確実に一致するよう正規化
+  const pureId = appId.replace(/-app$/, '');
+  const win = document.getElementById(`app-${pureId}-app`) || document.getElementById(`app-${appId}`);
   if (win) {
     win.classList.add('active');
-    gameState.activeApp = appId;
+    gameState.activeApp = `${pureId}-app`;
     
-    if (appId === 'meta-app') {
+    if (pureId === 'meta') {
       metaObservationCurrentFolder = 'root';
       switchMetaTab(gameState.activeMetaTab || 'observation');
-    } else if (appId === 'browser-app') {
+    } else if (pureId === 'browser') {
       goBrowserHome();
-    } else if (appId === 'link-app') {
+    } else if (pureId === 'link') {
       renderLinkChatList();
       openLinkChat('committee_group');
-    } else if (appId === 'manaba-app') {
+    } else if (pureId === 'manaba') {
       initManabaApp();
-    } else if (appId === 'mail-app') {
+    } else if (pureId === 'mail') {
       renderMailList();
     }
     
-    logWriteToGAS("APP_OPEN", `アプリを開きました: ${appId}`);
+    logWriteToGAS("APP_OPEN", `アプリを開きました: ${pureId}`);
   }
 }
 
