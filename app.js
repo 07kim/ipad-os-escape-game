@@ -2179,17 +2179,14 @@ function unlockScreen() {
   const lockScreen = document.getElementById('lock-screen');
   if (lockScreen) {
     lockScreen.classList.add('hidden');
+    lockScreen.style.pointerEvents = 'none';
+    lockScreen.style.display = 'none'; // 💡 遅延タイマーを待たず即時消滅させてタップ遮断を根絶
+    if (lockScreenHideTimer) {
+      clearTimeout(lockScreenHideTimer);
+      lockScreenHideTimer = null;
+    }
     playSystemSound("notif");
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
-
-    // 💡 0.5秒のアニメーション完了後、完全にdisplay:noneにして待機時GPU負荷を完全ゼロ化
-    if (lockScreenHideTimer) clearTimeout(lockScreenHideTimer);
-    lockScreenHideTimer = setTimeout(() => {
-      if (lockScreen.classList.contains('hidden')) {
-        lockScreen.style.display = 'none';
-      }
-      lockScreenHideTimer = null;
-    }, 520);
   }
 }
 
@@ -2201,6 +2198,13 @@ function hideLockScreen() {
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
 function openApp(appId) {
   if (!appId) return;
+  // 💡 アプリ起動時はロック画面の透明残留を100%防止
+  const ls = document.getElementById('lock-screen');
+  if (ls) {
+    ls.classList.add('hidden');
+    ls.style.display = 'none';
+    ls.style.pointerEvents = 'none';
+  }
 
   // 💡 アイコンタップ時はロック画面を即座に自動解除してアプリを開く
   unlockScreen();

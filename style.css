@@ -8546,3 +8546,26 @@ body {
 .mail-item * {
   pointer-events: none;
 }
+
+/* 🚀 全アプリのタブ・ナビゲーション・ドック即時タップ保証 */
+.meta-tab-btn,
+.cat-tab,
+.nav-tab,
+.settings-menu-item,
+.dock-icon,
+.app-icon-wrapper {
+  touch-action: manipulation !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.meta-tab-btn *,
+.cat-tab *,
+.nav-tab *,
+.settings-menu-item *,
+.dock-icon *,
+.app-icon-wrapper * {
+  pointer-events: none !important; /* 子要素（アイコン・SVG・テキスト）によるタップ妨害を完全排除 */
+}
