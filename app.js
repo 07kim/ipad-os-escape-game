@@ -2741,13 +2741,13 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測",
     unlockLoop: 1,
     files: [
-      { id: "f_story_1", fileName: "あらすじ.webp", title: "あらすじ", image: "./あらすじ.webp", desc: "2126年 タイムリープ事件概要" },
-      { id: "f_relation_1", fileName: "相関図.webp", title: "相関図", image: "./相関図.webp", desc: "関係者・学友会相関図" },
-      { id: "f_route_a", fileName: "順路A.webp", title: "順路A", image: "./順路A.webp", desc: "大ホール・PCルーム 探索ルート" },
-      { id: "f_route_b", fileName: "順路B.webp", title: "順路B", image: "./順路B.webp", desc: "研修室1〜3 探索ルート" },
-      { id: "f_route_c", fileName: "順路C.webp", title: "順路C", image: "./順路C.webp", desc: "未来資料保管庫 探索ルート" },
-      { id: "f_route_d", fileName: "順路D.webp", title: "順路D", image: "./順路D.webp", desc: "役員室・セキュリティエリア 探索ルート" },
-      { id: "f_route_f", fileName: "順路F.webp", title: "順路F", image: "./順路F.webp", desc: "最上階タイムマシン到達ルート" }
+      { id: "f_story_1", fileName: "あらすじ.png", title: "あらすじ", image: "./あらすじ.webp", desc: "2126年 タイムリープ事件概要" },
+      { id: "f_relation_1", fileName: "相関図.png", title: "相関図", image: "./相関図.webp", desc: "関係者・学友会相関図" },
+      { id: "f_route_a", fileName: "順路A.png", title: "順路A", image: "./順路A.webp", desc: "大ホール・PCルーム 探索ルート" },
+      { id: "f_route_b", fileName: "順路B.png", title: "順路B", image: "./順路B.webp", desc: "研修室1〜3 探索ルート" },
+      { id: "f_route_c", fileName: "順路C.png", title: "順路C", image: "./順路C.webp", desc: "未来資料保管庫 探索ルート" },
+      { id: "f_route_d", fileName: "順路D.png", title: "順路D", image: "./順路D.webp", desc: "役員室・セキュリティエリア 探索ルート" },
+      { id: "f_route_f", fileName: "順路F.png", title: "順路F", image: "./順路F.webp", desc: "最上階タイムマシン到達ルート" }
     ]
   },
   {
@@ -2755,9 +2755,9 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測(1)",
     unlockLoop: 2,
     files: [
-      { id: "f_story_2", fileName: "あらすじ(1).webp", title: "あらすじ(1)", image: "./あらすじ(1).webp", desc: "第2周回 世界線分岐あらすじ" },
-      { id: "f_relation_2", fileName: "相関図(1).webp", title: "相関図(1)", image: "./相関図(1).webp", desc: "第2周回 改変後相関図" },
-      { id: "f_route_1", fileName: "順路(1).webp", title: "順路(1)", image: "./順路(1).webp", desc: "第2周回 調査順路マップ" }
+      { id: "f_story_2", fileName: "あらすじ(1).png", title: "あらすじ(1)", image: "./あらすじ(1).webp", desc: "第2周回 世界線分岐あらすじ" },
+      { id: "f_relation_2", fileName: "相関図(1).png", title: "相関図(1)", image: "./相関図(1).webp", desc: "第2周回 改変後相関図" },
+      { id: "f_route_1", fileName: "順路(1).png", title: "順路(1)", image: "./順路(1).webp", desc: "第2周回 調査順路マップ" }
     ]
   },
   {
@@ -2765,9 +2765,9 @@ const DEFAULT_OBSERVATION_FOLDERS = [
     folderName: "観測(2)",
     unlockLoop: 3,
     files: [
-      { id: "f_story_3", fileName: "あらすじ(2).webp", title: "あらすじ(2)", image: "./あらすじ(2).webp", desc: "第3周回 最終決戦あらすじ" },
-      { id: "f_relation_3", fileName: "相関図(2).webp", title: "相関図(2)", image: "./相関図(2).webp", desc: "第3周回 完全真相相関図" },
-      { id: "f_route_2", fileName: "順路(2).webp", title: "順路(2)", image: "./順路(2).webp", desc: "第3周回 最終脱出順路マップ" }
+      { id: "f_story_3", fileName: "あらすじ(2).png", title: "あらすじ(2)", image: "./あらすじ(2).webp", desc: "第3周回 最終決戦あらすじ" },
+      { id: "f_relation_3", fileName: "相関図(2).png", title: "相関図(2)", image: "./相関図(2).webp", desc: "第3周回 完全真相相関図" },
+      { id: "f_route_2", fileName: "順路(2).png", title: "順路(2)", image: "./順路(2).webp", desc: "第3周回 最終脱出順路マップ" }
     ]
   }
 ];
@@ -2859,7 +2859,7 @@ function renderMetaObservation(folderId = 'root') {
           <div class="finder-thumb-wrapper">
             <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
-          <div class="finder-file-name">${file.fileName}</div>
+          <div class="finder-file-name">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
         </div>
       `).join('');
     }
