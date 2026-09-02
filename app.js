@@ -6299,49 +6299,216 @@ function backToManabaPortal() {
   switchManabaTab('mypage');
 }
 
+// 📊 応用量子力学 超軽量スライドビューア（全13回・0秒即時描画・前へ/次へ・一覧ナビ）
+let currentSlideMatId = 1;
+let currentSlidePageIdx = 0;
+let currentSlideList = [];
+
 function openPdfViewer(courseId, materialId) {
   const cid = courseId || "c_quantum";
-  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || window.GAME_DATABASE.manaba.courses["c_quantum"];
+  const course = (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses[cid]) || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]);
   const mat = course && course.materials && course.materials.find(m => m.id === materialId);
   if (!mat) return;
 
   const pdfViewer = document.getElementById('manaba-pdf-viewer');
-  if (pdfViewer) {
-    pdfViewer.style.display = 'flex';
-    const filenameEl = document.getElementById('pdf-filename');
-    if (filenameEl) filenameEl.innerText = mat.file;
-    const bodyEl = document.getElementById('pdf-viewer-body');
-    if (bodyEl) {
-      bodyEl.innerHTML = `
-        <div style="border-bottom: 2px solid var(--manaba-green); padding-bottom:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <h3 style="margin:0 0 4px 0;">千葉工業大学 講義配付資料</h3>
-            <strong>授業名: ${course.name} (第${mat.id}回)</strong>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mat.title}', '${mat.content.replace(/'/g, "\\'")}')"><i data-lucide="clipboard-copy"></i> メモに転記</button>
-        </div>
-        <p style="font-size:14px; font-weight:700; color:#333; margin-bottom:10px;">${mat.title}</p>
-        <div style="background:#fafafa; border:1px solid #ddd; padding:15px; border-radius:6px; font-family:monospace; line-height:1.8; font-size:13px; color:#222;">
-          ${mat.content}
-        </div>
-      `;
-    }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  } else {
+  if (!pdfViewer) {
     showIpadModal(mat.title, `${mat.content}\n\n[添付ファイル: ${mat.file}]`);
+    return;
   }
+
+  currentSlideMatId = mat.id;
+  currentSlideList = mat.slides || [];
+  currentSlidePageIdx = 0;
+
+  pdfViewer.style.display = 'flex';
+  const filenameEl = document.getElementById('pdf-filename');
+  if (filenameEl) filenameEl.innerText = mat.file || `${mat.title}.pdf`;
+
+  renderCurrentSlide();
   logWriteToGAS("MANABA_MATERIAL_OPEN", `講義資料閲覧: ${mat.title}`);
 }
 
-function clipTextToMemo(title, text) {
-  const memoArea = document.getElementById('meta-memo-area');
-  if (!memoArea) return;
+function renderCurrentSlide() {
+  const bodyEl = document.getElementById('pdf-viewer-body');
+  if (!bodyEl) return;
 
-  const clipText = `\n【資料転記: ${title}】\n${text}\n`;
-  memoArea.value = (memoArea.value + clipText).trim();
-  localStorage.setItem('game_memo', memoArea.value);
+  if (!currentSlideList || currentSlideList.length === 0) {
+    bodyEl.innerHTML = `<div style="padding:40px; text-align:center; color:#666;">スライド資料はありません。</div>`;
+    return;
+  }
 
-  playSystemSound("success");
+  const slide = currentSlideList[currentSlidePageIdx] || currentSlideList[0];
+  const total = currentSlideList.length;
+  const currentNum = currentSlidePageIdx + 1;
+
+  let slideContentHtml = '';
+
+  // 1. 表紙スライド
+  if (slide.subtitle || slide.author) {
+    slideContentHtml = `
+      <div class="slide-cover-layout" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; min-height:360px; text-align:center; padding:30px;">
+        <div style="font-size:18px; font-weight:700; color:#475569; margin-bottom:12px; letter-spacing:1px;">応用量子力学</div>
+        <h1 style="font-size:26px; font-weight:900; color:#0f172a; margin:0 0 24px 0; line-height:1.4;">${slide.subtitle || slide.title}</h1>
+        <div style="font-size:14px; color:#64748b; font-weight:600; margin-top:20px;">${slide.author || '連絡先：野沢夢佳 y.nozawa@chibakou.ac.jp'}</div>
+      </div>
+    `;
+  } else {
+    // 2. 本文スライド
+    let bodyElements = '';
+
+    if (slide.points) {
+      bodyElements += `
+        <ul style="margin:0 0 20px 0; padding-left:24px; font-size:14px; line-height:1.9; color:#1e293b;">
+          ${slide.points.map(p => `<li style="margin-bottom:10px;">${p.replace(/\n/g, '<br>')}</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    if (slide.questions) {
+      bodyElements += `
+        <div style="background:#f0f9ff; border-left:4px solid #0284c7; padding:14px 18px; border-radius:0 8px 8px 0; margin-bottom:20px;">
+          ${slide.questions.map(q => `<div style="font-size:13px; color:#0369a1; font-weight:600; margin-bottom:6px; line-height:1.6;">✓ ${q}</div>`).join('')}
+        </div>
+      `;
+    }
+
+    if (slide.terms) {
+      bodyElements += `
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+          ${slide.terms.map(t => `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px;">
+              <div style="font-size:14px; font-weight:800; color:#0f172a; margin-bottom:4px;">
+                <span style="color:#0284c7; margin-right:6px;">${t.num}</span>${t.name}
+              </div>
+              <div style="font-size:13px; color:#334155; line-height:1.6; white-space:pre-line;">${t.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (slide.flow) {
+      bodyElements += `
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin:24px 0; flex-wrap:wrap;">
+          ${slide.flow.map((f, i) => {
+            if (f.box) {
+              return `<div style="background:#0284c7; color:#fff; font-weight:700; font-size:13px; padding:16px 20px; border-radius:10px; text-align:center; box-shadow:0 4px 12px rgba(2,132,199,0.25); white-space:pre-line;">${f.box}</div>`;
+            } else if (f.arrow) {
+              return `<div style="font-size:12px; font-weight:700; color:#64748b; text-align:center; padding:4px 10px; background:#f1f5f9; border-radius:6px; white-space:pre-line;">➔ ${f.arrow}</div>`;
+            }
+            return '';
+          }).join('')}
+        </div>
+      `;
+    }
+
+    if (slide.highlightBox) {
+      bodyElements += `
+        <div style="border:2px solid #b91c1c; background:#fff1f2; border-radius:8px; padding:16px 20px; margin:18px 0; font-size:14px; font-weight:700; color:#881337; line-height:1.7; white-space:pre-line;">
+          ${slide.highlightBox}
+        </div>
+      `;
+    }
+
+    if (slide.example) {
+      bodyElements += `
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px 18px; margin:16px 0; font-size:13px; color:#1e293b; line-height:1.7; white-space:pre-line;">
+          ${slide.example}
+        </div>
+      `;
+    }
+
+    if (slide.table) {
+      bodyElements += `
+        <div style="margin:16px 0; overflow-x:auto;">
+          <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:8px;">${slide.table.title}</div>
+          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:center;">
+            <thead>
+              <tr style="background:#f1f5f9; border-bottom:2px solid #cbd5e1;">
+                ${slide.table.headers.map(h => `<th style="padding:8px 12px; color:#334155;">${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${slide.table.rows.map(r => `
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  ${r.map((c, idx) => `<td style="padding:8px 12px; font-weight:${idx===0?'700':'500'}; color:#0f172a;">${c}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    if (slide.notes) {
+      bodyElements += `
+        <div style="font-size:12px; color:#64748b; line-height:1.6; margin-top:16px; white-space:pre-line; border-top:1px solid #e2e8f0; padding-top:10px;">
+          ${slide.notes}
+        </div>
+      `;
+    }
+
+    slideContentHtml = `
+      <div class="slide-body-layout" style="min-height:360px; padding:10px 15px;">
+        <h2 style="font-size:20px; font-weight:800; color:#0f172a; margin:0 0 18px 0; border-bottom:2px solid #0284c7; padding-bottom:8px;">${slide.title}</h2>
+        ${bodyElements}
+      </div>
+    `;
+  }
+
+  bodyEl.innerHTML = `
+    <!-- スライド上部コントロールバー -->
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:10px 16px; border-radius:8px 8px 0 0;">
+      <div style="font-size:13px; font-weight:700; color:#334155;">
+        第${currentSlideMatId}回 スライド (${currentNum} / ${total} ページ)
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-secondary btn-sm" onclick="prevSlidePage()" ${currentSlidePageIdx <= 0 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding:4px 12px; font-size:12px; font-weight:700;">◀ 前へ</button>
+        <button class="btn btn-primary btn-sm" onclick="nextSlidePage()" ${currentSlidePageIdx >= total - 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding:4px 12px; font-size:12px; font-weight:700; background:#0284c7; border:none; color:#fff; border-radius:4px;">次へ ▶</button>
+      </div>
+    </div>
+
+    <!-- スライド本体キャンバス -->
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; box-shadow:0 4px 16px rgba(0,0,0,0.06); margin-bottom:14px; position:relative; overflow:hidden;">
+      ${slideContentHtml}
+      <div style="position:absolute; bottom:12px; right:16px; font-size:11px; font-weight:700; color:#94a3b8; font-family:monospace;">${currentNum}</div>
+    </div>
+
+    <!-- 下部サムネイル・ページジャンプバー -->
+    <div style="display:flex; gap:6px; overflow-x:auto; padding:6px 2px; align-items:center;">
+      ${currentSlideList.map((s, idx) => `
+        <button onclick="goToSlidePage(${idx})" style="padding:4px 8px; font-size:11px; font-weight:700; border-radius:4px; border:1px solid ${idx===currentSlidePageIdx?'#0284c7':'#cbd5e1'}; background:${idx===currentSlidePageIdx?'#e0f2fe':'#fff'}; color:${idx===currentSlidePageIdx?'#0369a1':'#475569'}; cursor:pointer; flex-shrink:0;">
+          p.${idx+1}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function prevSlidePage() {
+  if (currentSlidePageIdx > 0) {
+    currentSlidePageIdx--;
+    renderCurrentSlide();
+    try { playSystemSound('touch'); } catch (e) {}
+  }
+}
+
+function nextSlidePage() {
+  if (currentSlidePageIdx < currentSlideList.length - 1) {
+    currentSlidePageIdx++;
+    renderCurrentSlide();
+    try { playSystemSound('touch'); } catch (e) {}
+  }
+}
+
+function goToSlidePage(pageIdx) {
+  if (pageIdx >= 0 && pageIdx < currentSlideList.length) {
+    currentSlidePageIdx = pageIdx;
+    renderCurrentSlide();
+    try { playSystemSound('touch'); } catch (e) {}
+  }
 }
 
 function closePdfViewer() {
