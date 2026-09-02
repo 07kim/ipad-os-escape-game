@@ -48,7 +48,7 @@ html, body {
   top: 0;
   left: 0;
   overflow: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior: none !important;
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
   touch-action: none;
@@ -81,7 +81,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overscroll-behavior: none;
+  overscroll-behavior: none !important;
   touch-action: manipulation;
 }
 
@@ -95,7 +95,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  overscroll-behavior: none;
+  overscroll-behavior: none !important;
   touch-action: manipulation;
 }
 
@@ -748,6 +748,13 @@ body {
   cursor: pointer;
   text-align: left;
   color: #333;
+  touch-action: manipulation !important;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.meta-tab-btn * {
+  pointer-events: none; /* アイコンやテキストがクリックを阻害しないよう透過 */
 }
 .meta-tab-btn.active {
   background-color: rgba(0, 122, 255, 0.15);
@@ -833,6 +840,17 @@ body {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+}
+
+.finder-item {
+  touch-action: manipulation !important;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.finder-item * {
+  pointer-events: none;
 }
 
 .finder-item:hover {
@@ -1204,6 +1222,10 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: #0284c7;
+}
+
+.evidence-card * {
+  pointer-events: none; /* 写真やテキストのどこをタップしても親カードが100%即座に反応 */
 }
 
 .evidence-card:active {

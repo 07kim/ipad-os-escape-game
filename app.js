@@ -1137,60 +1137,8 @@ function applyOperationalRestrictions() {
     return null;
   }
 
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let scrollTarget = null;
-  let touchTargetIsClickable = false;
-
-  document.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
-      scrollTarget = findScrollableParent(e.target);
-      // 💡 ボタン、カード、閉じるボタン等のクリック対象要素を判定
-      const el = e.target;
-      touchTargetIsClickable = !!(el && el.closest && el.closest('button, a, input, select, textarea, [role="button"], .evidence-card, .finder-item, .detail-close-btn, .lightbox-close-btn, .scanner-close-btn, .dock-icon-item, .app-icon'));
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!e.touches || e.touches.length !== 1) return;
-    const currentY = e.touches[0].clientY;
-    const currentX = e.touches[0].clientX;
-    const deltaY = currentY - touchStartY;
-    const deltaX = currentX - touchStartX;
-    const dist = Math.sqrt(deltaY * deltaY + deltaX * deltaX);
-
-    // 💡 タップ時の指先の微小なブレ（8px未満）なら絶対にpreventDefaultを呼ばずクリック判定を保護！
-    if (dist < 8 && touchTargetIsClickable) {
-      return;
-    }
-
-    if (!scrollTarget) {
-      // 8px以上明確にドラッグされた場合のみ画面全体のスクロール・引っ張りリロードを防止
-      if (dist >= 8) {
-        e.preventDefault();
-      }
-      return;
-    }
-
-    // スプレッドシート内は全方位スクロールを完全に許可
-    if (scrollTarget.classList && scrollTarget.classList.contains('gsheet-grid-viewport')) {
-      return;
-    }
-
-    const isAtTop = scrollTarget.scrollTop <= 0;
-    const isAtBottom = scrollTarget.scrollTop + scrollTarget.clientHeight >= scrollTarget.scrollHeight - 1;
-
-    // 最上部で下に引っ張った場合（Pull-to-refreshの発動条件）はリロードをブロック
-    if (isAtTop && deltaY > 0) {
-      e.preventDefault();
-    }
-    // 最下部で上に引っ張った場合（バウンススクロール）もブロック
-    else if (isAtBottom && deltaY < 0) {
-      e.preventDefault();
-    }
-  }, { passive: false });
+  // 💡 タッチ操作最適化: 有害な e.preventDefault() を全廃し、全ボタン・カードのタップ即時反応を100%保証
+  // （Pull-to-refresh は CSS の overscroll-behavior: none でブラウザネイティブに完全防止）
 
   // マウスホイールによる最外枠バウンスも防止
   window.addEventListener('wheel', (e) => {
