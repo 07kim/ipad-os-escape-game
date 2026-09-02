@@ -3060,7 +3060,7 @@ function renderMetaEvidence() {
     const imgSrc = item.image || '';
 
     return `
-      <div class="evidence-card" role="button" tabindex="0" data-item-id="${item.id}" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
+      <div class="evidence-card" role="button" tabindex="0" data-item-id="${item.id}" onclick="handleEvidenceCardTap('${item.id}', '${timeStr}', event)" ontouchend="handleEvidenceCardTap('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
         <!-- 左カラム：写真スロット + 入手場所バッジ -->
         <div class="evidence-card-left">
           <div class="evidence-thumb-slot">
@@ -3240,9 +3240,25 @@ function showEvidenceRecordToast(itemName) {
   }, 1800);
 }
 
-// 🔍 調査資料 カード詳細モーダル開閉（チャタリング完全防止・3つ以上対応・説明長完全保証）
+// 🔍 調査資料 カード詳細モーダル開閉（超高速即時反応・チャタリング防止・誤爆閉鎖根絶）
 let isDetailModalOpen = false;
 let detailModalOpenTime = 0;
+let lastEvidenceCardTapTime = 0;
+let lastEvidenceCardTapId = '';
+
+function handleEvidenceCardTap(itemId, timeStr, e) {
+  const now = Date.now();
+  // 💡 二重発火防止ガード (touchend と click の重複を完全に弾く)
+  if (now - lastEvidenceCardTapTime < 280 && lastEvidenceCardTapId === itemId) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    return;
+  }
+  lastEvidenceCardTapTime = now;
+  lastEvidenceCardTapId = itemId;
+
+  openMetaEvidenceDetail(itemId, timeStr, e);
+}
 
 function openMetaEvidenceDetail(itemId, timeStr, e) {
   if (e) {
@@ -3253,7 +3269,7 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (!modal) return;
   
-  detailModalOpenTime = Date.now(); // 💡 開いた時刻を記録し、直後の背景誤タップ即死（チャタリング震え）を根絶
+  detailModalOpenTime = Date.now(); // 💡 開いた時刻を記録し、直後400msの背景誤タップ即死を根絶
   isDetailModalOpen = true;
 
   const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
@@ -3307,6 +3323,7 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   }
 
   if (imgEl) {
+    imgEl.decoding = 'async';
     imgEl.style.display = 'none';
     if (fallbackEl) fallbackEl.style.display = 'flex';
     imgEl.src = imgSrc;
@@ -3329,9 +3346,8 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
     closeBtn.onpointerup = doClose;
   }
 
-  safeCreateIcons(modal);
   modal.style.display = 'flex';
-  playSystemSound('touch');
+  try { playSystemSound('touch'); } catch (err) { }
 }
 
 function closeMetaEvidenceDetail(e, isBtn = false) {
@@ -3346,8 +3362,8 @@ function closeMetaEvidenceDetail(e, isBtn = false) {
     (e.target.closest && e.target.closest('.detail-close-btn'))
   ));
 
-  // 背景タップ時のみ、開いた直後300msの誤爆閉鎖を防止
-  if (!isCloseBtnClicked && (Date.now() - detailModalOpenTime < 300)) {
+  // 背景タップ時のみ、開いた直後400msの誤爆閉鎖を確実に防止
+  if (!isCloseBtnClicked && (Date.now() - detailModalOpenTime < 400)) {
     return;
   }
 
