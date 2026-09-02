@@ -42,9 +42,9 @@ window.GAME_DATABASE = {
     inukai: { id: "inukai", symbol: "M", name: "犬飼 玲", era: "2126年（未来）", role: "U.Z.W.鵜沢社長の冷酷な忠臣", studentId: "unknown", pass: "UZW119", icon: "zap", avatarBg: "#1c1c1e" }
   },
 
-  // --- メタアプリ 「26__0094」用コンテンツ ---
+  // --- メタアプリ 「26__094」用コンテンツ ---
   metaApp: {
-    title: "26__0094",
+    title: "26__094",
 
     // 【1. 観測タブ用フォルダ ＆ ファイルデータ（周回解放対応）】
     observationFolders: [
