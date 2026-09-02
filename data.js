@@ -1972,5 +1972,7 @@ window.INITIAL_GAME_DATABASE = {
   linkApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.linkApp)),
   mailApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.mailApp)),
   hacking: JSON.parse(JSON.stringify(window.GAME_DATABASE.hacking)),
-  manaba: JSON.parse(JSON.stringify(window.GAME_DATABASE.manaba))
+  manaba: JSON.parse(JSON.stringify(window.GAME_DATABASE.manaba)),
+  metaApp: JSON.parse(JSON.stringify(window.GAME_DATABASE.metaApp)),
+  adminPresets: JSON.parse(JSON.stringify(window.GAME_DATABASE.adminPresets))
 };

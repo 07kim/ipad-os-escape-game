@@ -2169,6 +2169,7 @@ function openApp(appId) {
   const pureId = appId.replace(/-app$/, '');
   const win = document.getElementById(`app-${pureId}-app`) || document.getElementById(`app-${appId}`);
   if (win) {
+    win.style.display = 'flex';
     win.classList.add('active');
     gameState.activeApp = `${pureId}-app`;
     
@@ -2232,10 +2233,6 @@ function initHomeBarEvents() {
 }
 
 function goHome() {
-  // ロック中はホームに行けない
-  const lockScreen = document.getElementById('lock-screen');
-  if (lockScreen && !lockScreen.classList.contains('hidden')) return;
-
   // すべてのカメラストリームを停止
   stopAllCameraStreams();
 
@@ -2246,6 +2243,7 @@ function goHome() {
 function closeAllWindowsSilent() {
   document.querySelectorAll('.app-window').forEach(win => {
     win.classList.remove('active');
+    win.style.display = 'none'; // 💡 物理的に完全非表示化してホーム画面のタップを一切遮らない
   });
   
   // すべてのモーダル・スキャナー・オーバーレイを確実に非表示化
@@ -2256,6 +2254,8 @@ function closeAllWindowsSilent() {
   if (inappForm) inappForm.style.display = 'none';
   const toast = document.getElementById('meta-evidence-toast');
   if (toast) toast.style.display = 'none';
+  const fab = document.getElementById('meta-evidence-fab');
+  if (fab) fab.style.display = 'none';
 
   closeHacking();
   endPhoneCall(true);
@@ -3062,10 +3062,25 @@ function closeMetaEvidenceQrScanner() {
 // 📦 調査資料 QRコード読み取り成功ハンドラー
 function handleEvidenceQrDetected(decodedText, statusBox) {
   if (!decodedText || evidenceScanCooldown) return;
-  const cleanKey = decodedText.trim();
+  let cleanKey = String(decodedText).trim();
 
-  const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
-  const matched = allItems.find(it => it.qrKey === cleanKey || it.id === cleanKey);
+  // URL形式（例: https://.../ITEM-001 や パス）の場合は末尾のコードを抽出
+  if (cleanKey.includes('/')) {
+    cleanKey = cleanKey.split('/').filter(Boolean).pop().trim();
+  }
+
+  const upperKey = cleanKey.toUpperCase();
+
+  // マスタデータ（最新の INITIAL_GAME_DATABASE または GAME_DATABASE から確実に取得）
+  const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
+    || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
+    || [];
+
+  const matched = allItems.find(it => {
+    const itQr = String(it.qrKey || '').toUpperCase().trim();
+    const itId = String(it.id || '').toUpperCase().trim();
+    return itQr === upperKey || itId === upperKey || upperKey.endsWith(itQr) || upperKey.endsWith(itId);
+  });
 
   if (!matched) {
     evidenceScanCooldown = true;

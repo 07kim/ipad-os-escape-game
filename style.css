@@ -407,6 +407,9 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .app-icon {
@@ -635,19 +638,20 @@ body {
   height: 100%;
   background-color: #fff;
   z-index: 500;
-  display: flex;
+  display: none; /* 💡 非アクティブ時は非表示にしてホーム画面のタップを完全に解放 */
   flex-direction: column;
   padding-top: 24px; /* ステータスバー避け */
   padding-bottom: 12px; /* ホームバー避け */
-  transform: translateZ(0) scale(0.95);
+  transform: translateZ(0) scale(0.98);
   opacity: 0;
   pointer-events: none;
   contain: layout style;
   will-change: transform, opacity;
-  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .app-window.active {
+  display: flex !important;
   transform: translateZ(0) scale(1);
   opacity: 1;
   pointer-events: auto;
