@@ -8576,3 +8576,19 @@ body {
 .app-icon-wrapper * {
   pointer-events: none !important; /* 子要素（アイコン・SVG・テキスト）によるタップ妨害を完全排除 */
 }
+
+.chibakou-official-logo-img {
+  height: 38px;
+  width: auto;
+  max-width: 190px;
+  object-fit: contain;
+  display: block;
+}
+
+.chibakou-official-logo-img-portal {
+  height: 30px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+  display: block;
+}
