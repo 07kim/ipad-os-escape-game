@@ -1621,26 +1621,37 @@ body {
 /* ❌ ユーザー指定デザイン：赤丸に白の✕閉じるボタン（詳細モーダル & ライトボックス） */
 .detail-close-btn, .lightbox-close-btn {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 38px; /* 💡 タップしやすいよう少し拡大 */
-  height: 38px;
+  top: 12px;
+  right: 12px;
+  width: 44px !important; /* 💡 Apple推奨最小タップサイズ 44×44px に拡大 */
+  height: 44px !important;
   border-radius: 50%;
   background: #ef4444 !important;
   border: none !important;
-  font-size: 18px !important;
+  font-size: 20px !important;
   font-weight: 900 !important;
   color: #ffffff !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   cursor: pointer;
-  z-index: 50; /* 💡 他の要素に埋もれないようz-indexを強化 */
-  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+  z-index: 999 !important; /* 💡 最前面を完全に保証 */
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
   transition: transform 0.1s ease, background 0.15s ease;
   touch-action: manipulation !important;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* 💡 指先が多少ズレても100%確実にタップ判定を拾う透明な拡張ヒットエリア（60×60px相当） */
+.detail-close-btn::before, .lightbox-close-btn::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
 }
 
 .detail-close-btn:active, .lightbox-close-btn:active {

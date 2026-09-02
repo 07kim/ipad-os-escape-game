@@ -3310,23 +3310,53 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
     imgEl.src = imgSrc;
   }
 
+  // 💡 閉じるボタンにダイレクト直結ハンドラーを登録（何があっても100%確実に瞬時に閉じる）
+  const closeBtn = modal.querySelector('.detail-close-btn');
+  if (closeBtn) {
+    const doClose = function(ev) {
+      if (ev) {
+        if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+        if (typeof ev.preventDefault === 'function') ev.preventDefault();
+      }
+      isDetailModalOpen = false;
+      modal.style.display = 'none';
+      try { playSystemSound('touch'); } catch (err) { }
+    };
+    closeBtn.onclick = doClose;
+    closeBtn.ontouchend = doClose;
+    closeBtn.onpointerup = doClose;
+  }
+
   safeCreateIcons(modal);
   modal.style.display = 'flex';
   playSystemSound('touch');
 }
 
 function closeMetaEvidenceDetail(e, isBtn = false) {
-  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+  }
 
-  // 💡 閉じるボタン以外（背景タップ）の場合、開いた直後400msは即時誤閉鎖（チャタリングによる小刻みな震え）を完全防止！
-  if (!isBtn && (Date.now() - detailModalOpenTime < 400)) {
+  // 💡 閉じるボタン（またはその内部）がクリックされた場合は無条件で即座に閉じる
+  const isCloseBtnClicked = isBtn || !!(e && e.target && (
+    e.target.classList.contains('detail-close-btn') || 
+    (e.target.closest && e.target.closest('.detail-close-btn'))
+  ));
+
+  // 背景タップ時のみ、開いた直後300msの誤爆閉鎖を防止
+  if (!isCloseBtnClicked && (Date.now() - detailModalOpenTime < 300)) {
     return;
   }
 
   isDetailModalOpen = false;
   const modal = document.getElementById('meta-evidence-detail-modal');
-  if (modal) modal.style.display = 'none';
-  playSystemSound('touch');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  try {
+    playSystemSound('touch');
+  } catch (err) { }
 }
 
 // ⌨️ Escapeキーで調査資料詳細モーダルを閉じる
