@@ -966,7 +966,7 @@ const A = [
 const TABS = ["おすすめ","日本","ビジネス","テクノロジー","エンタメ","スポーツ","科学","健康"];
 
 /* ---------------- state ---------------- */
-const S = {loop:1, tab:"おすすめ", nav:"home", saved:new Set(), followed:new Set(), article:null};
+const S = {loop:1, tab:"おすすめ", nav:"home", selectedSrc:null, saved:new Set(), followed:new Set(), article:null};
 try{
   const gameLoop = localStorage.getItem("game_loop");
   const raw = localStorage.getItem("newsprop");
@@ -1043,12 +1043,51 @@ function renderFeed(){
     return;
   }
   if(S.nav === "follow"){
+    if (S.selectedSrc) {
+      const sArticles = live().filter(a => a.src === S.selectedSrc).sort((x,y)=> mins(x.t) - mins(y.t));
+      const sInfo = SRC[S.selectedSrc];
+      let h = `
+        <div class="sectionhead" style="display:flex; align-items:center; gap:8px;">
+          <button class="iconbtn" id="srcBackBtn" style="margin-right:4px;"><span class="msym">arrow_back</span></button>
+          <span class="favi" style="background:${sInfo.c}; width:24px; height:24px; border-radius:6px; font-size:12px;">${sInfo.a}</span>
+          <h2 style="margin:0;">${esc(S.selectedSrc)}</h2>
+          <span style="font-size:12px; color:var(--on-surface-variant); margin-left:auto;">${sArticles.length} 件の記事</span>
+        </div>
+      `;
+      if (sArticles.length > 0) {
+        h += cardHTML(sArticles[0], true);
+        h += sArticles.slice(1).map(a => cardHTML(a, false)).join("");
+      } else {
+        h += `<div class="empty" style="grid-column:1/-1"><p>現在配信中の記事はありません</p></div>`;
+      }
+      feed.innerHTML = h;
+      return;
+    }
+
     const srcs = Object.keys(SRC);
     feed.innerHTML = `<div class="sectionhead"><span class="msym">bookmarks</span><h2>フォロー中の情報源</h2></div>` +
-      srcs.map(s=>`<button class="card"><div class="cardbody"><div class="cardrow"><div class="txt">
-        <div class="src"><span class="favi" style="background:${SRC[s].c}">${SRC[s].a}</span>${esc(s)}</div>
-        <h3 class="hl" style="font-size:15px">${esc(s)}</h3>
-        <div class="meta">${live().filter(a=>a.src===s).length} 件の新着</div></div></div></div></button>`).join("");
+      srcs.map(s => {
+        const sArticles = live().filter(a => a.src === s).sort((x,y)=> mins(x.t) - mins(y.t));
+        const latestHl = sArticles.length > 0 ? sArticles[0].hl : "新着記事なし";
+        const isFlw = S.followed.has(s);
+        return `
+          <button class="card" data-src-select="${esc(s)}" style="cursor:pointer;">
+            <div class="cardbody">
+              <div class="cardrow">
+                <div class="txt">
+                  <div class="src" style="display:flex; align-items:center; gap:8px;">
+                    <span class="favi" style="background:${SRC[s].c}">${SRC[s].a}</span>
+                    <span style="font-weight:700; font-size:14px; color:var(--on-surface);">${esc(s)}</span>
+                    <span style="font-size:11px; color:var(--primary); background:var(--primary-container); padding:2px 8px; border-radius:10px; margin-left:auto;">${sArticles.length}件</span>
+                  </div>
+                  <h3 class="hl" style="font-size:14px; margin-top:4px; color:var(--on-surface-variant); line-height:1.4;">最新: ${esc(latestHl)}</h3>
+                  <div class="meta" style="color:var(--primary); font-weight:500;">タップしてこの情報源の記事を読む ➔</div>
+                </div>
+              </div>
+            </div>
+          </button>
+        `;
+      }).join("");
     return;
   }
 
@@ -1323,6 +1362,8 @@ document.addEventListener("click", e => {
   const flw  = t.closest("[data-follow]");
   const loop = t.closest("[data-loop]");
   const site = t.closest("[data-site]");
+  const srcSel = t.closest("[data-src-select]");
+  const srcBack = t.closest("#srcBackBtn");
 
   if(save){ e.stopPropagation();
     const id = Number(save.dataset.save);
@@ -1331,8 +1372,15 @@ document.addEventListener("click", e => {
   if(site){ openSite(); return; }
   if(open){ openArticle(Number(open.dataset.open)); return; }
   if(tab){ S.tab = tab.dataset.tab; renderTabs(); renderFeed(); window.scrollTo(0,0); return; }
+  if(srcBack){
+    S.selectedSrc = null;
+    renderFeed(); window.scrollTo(0,0); return; }
+  if(srcSel){
+    S.selectedSrc = srcSel.dataset.srcSelect;
+    renderFeed(); window.scrollTo(0,0); return; }
   if(nav){
     S.nav = nav.dataset.nav;
+    S.selectedSrc = null;
     document.querySelectorAll("[data-nav]").forEach(b=>b.setAttribute("aria-selected", String(b===nav)));
     document.getElementById("tabs").style.display = (S.nav==="home"||S.nav==="foryou") ? "flex" : "none";
     renderFeed(); window.scrollTo(0,0); return; }
@@ -1442,8 +1490,13 @@ function handleBrowserSwipeBack() {
   } else if (document.getElementById("view-search").classList.contains("on")) {
     show("feed");
     window.scrollTo(0, 0);
+  } else if (S.selectedSrc) {
+    S.selectedSrc = null;
+    renderFeed();
+    window.scrollTo(0, 0);
   } else if (S.nav !== "home") {
     S.nav = "home";
+    S.selectedSrc = null;
     document.querySelectorAll("[data-nav]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.nav === "home")));
     document.getElementById("tabs").style.display = "flex";
     renderFeed();
