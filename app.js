@@ -4648,37 +4648,10 @@ function submitInAppForm() {
   const shortTimeStr = `2026/09/04 ${fakeHHMM}`;
   const userEmail = "s25b1150er@chibakou.ac.jp"; // 矢田逞（ログイン中ユーザー）
 
-  // ① フォーム編集画面の回答データ（GFORM_RESPONSES_DATA）へリアルタイム追加
-  const newRespObj = {
-    id: GFORM_RESPONSES_DATA.length + 1,
-    name: name || "無記名",
-    email: userEmail,
-    opinion: opinion || "（意見なし）",
-    tasks: selectedTasks.length > 0 ? selectedTasks : ["特になし"],
-    timestamp: shortTimeStr
-  };
-  GFORM_RESPONSES_DATA.push(newRespObj);
-
-  // ② 偽Googleスプレッドシート（Form_Responses / フォームの回答 1）へリアルタイムで1行追加
-  const newRowData = [
-    timeStampStr,
-    userEmail,
-    name || "無記名",
-    opinion || "（意見なし）",
-    selectedTasks.length > 0 ? selectedTasks.join(', ') : "特になし"
-  ];
-
-  if (window.GAME_DATABASE && window.GAME_DATABASE.hacking && window.GAME_DATABASE.hacking.spreadsheet) {
-    const sRows = window.GAME_DATABASE.hacking.spreadsheet.rows;
-    if (sRows) {
-      if (sRows["Form_Responses"]) sRows["Form_Responses"].push(newRowData);
-      if (sRows["フォームの回答 1"]) sRows["フォームの回答 1"].push(newRowData);
-    }
-  }
-
-  // 回答数バッジの更新
+  // 💡 ユーザー指定: フォーム送信を行ってもスプシおよび回答タブへは新規行を追加せず、公式3件を固定維持
+  // 回答数バッジの更新（3件固定）
   const respBadge = document.getElementById('editor-resp-count-badge');
-  if (respBadge) respBadge.innerText = `${GFORM_RESPONSES_DATA.length} 件`;
+  if (respBadge) respBadge.innerText = `3 件`;
 
   // 送信完了画面に切り替え（Google Forms公式仕様）
   const bodyEl = document.getElementById('link-inapp-form-body');
