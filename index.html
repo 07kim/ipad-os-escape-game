@@ -11,13 +11,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23007aff'><rect width='512' height='512' rx='128'/><path d='M160 128h192v256H160z' fill='white'/></svg>">
 
+  <!-- Google Fonts Preconnect (DNS・SSLハンドシェイク事前接続でフォント読み込み高速化) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <!-- Google Fonts & Lucide Icons & jsQR -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.82.0">
+  <link rel="stylesheet" href="style.css?v=2.88.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -39,12 +43,12 @@
       }
     } catch(e) {}
 
-    // 🧹 古いバージョンのCacheStorageを自動全削除（09:04・旧マスタデータの即時パージ）
+    // 🧹 古いバージョンのCacheStorageを自動全削除（最新のWebPキャッシュのみ保持）
     if ('caches' in window) {
       try {
         caches.keys().then(function(names) {
           names.forEach(function(name) {
-            if (name !== 'ipad-escape-v11-evidence') {
+            if (name !== 'ipad-escape-v12-webp') {
               caches.delete(name);
             }
           });
