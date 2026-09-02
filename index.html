@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.78.0">
+  <link rel="stylesheet" href="style.css?v=2.82.0">
   <style>
     .lock-screen.hidden {
       transform: translateY(-100%);
@@ -26,6 +26,39 @@
       visibility: hidden;
     }
   </style>
+  <script>
+    // ⚡ DOM構築前最速サニタイズ: LocalStorage内の古い09:04時計・フラグを即座に浄化
+    try {
+      var c = localStorage.getItem('fake_clock_start_iso');
+      if (!c || c.indexOf('09:04') !== -1 || c.indexOf('08-22') !== -1) {
+        localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
+      }
+      var step = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
+      if (step === 1 || step === 3 || step === 5 || step === 7 || step === 8) {
+        localStorage.setItem('game_timer_running', 'false');
+      }
+    } catch(e) {}
+
+    // 🧹 古いバージョンのCacheStorageを自動全削除（09:04・旧マスタデータの即時パージ）
+    if ('caches' in window) {
+      try {
+        caches.keys().then(function(names) {
+          names.forEach(function(name) {
+            if (name !== 'ipad-escape-v11-evidence') {
+              caches.delete(name);
+            }
+          });
+        });
+      } catch(e) {}
+    }
+
+    // 🚀 Service Worker 更新を即座にチェック・強制適用
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.update(); });
+      });
+    }
+  </script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -44,7 +77,7 @@
           <span style="font-size: 11px;">5G</span>
         </div>
         <div class="status-bar-center" id="sb-clock">
-          09:04
+          09:44
         </div>
         <div class="status-bar-right">
           <i data-lucide="bluetooth" style="width: 12px; height: 12px;"></i>
@@ -96,13 +129,13 @@
       <!-- ========================================== -->
       <div class="lock-screen" id="lock-screen">
         <div class="lock-info">
-          <div class="lock-clock" id="lock-clock">09:04</div>
+          <div class="lock-clock" id="lock-clock">09:44</div>
           <div class="lock-date" id="lock-date">9月4日</div>
         </div>
 
         <div class="lock-footer">
           <i data-lucide="chevron-up" class="lock-chevron"></i>
-          <span>上にスワイプしてロック解除</span>
+          <span>タップ または 上にスワイプしてロック解除</span>
         </div>
       </div>
 
@@ -209,11 +242,7 @@
               <div class="explorer-address-bar">
                 <i data-lucide="hard-drive"></i>
                 <span class="explorer-path" id="meta-observation-path">PC &gt; 内部ストレージ &gt; 観測</span>
-                <span class="loop-badge" id="observation-loop-badge" style="margin-left:auto; margin-right:8px; font-size:11px; font-weight:700; padding:3px 9px; border-radius:12px; background:rgba(2,132,199,0.12); color:#0284c7; border:1px solid rgba(2,132,199,0.3); display:inline-flex; align-items:center; gap:4px;">
-                  <i data-lucide="repeat" style="width:12px; height:12px;"></i>
-                  <span>第1周回</span>
-                </span>
-                <span class="explorer-file-count" id="observation-file-count">0 items</span>
+                <span class="explorer-file-count" id="observation-file-count" style="margin-left:auto;">0 items</span>
               </div>
               <div class="finder-grid" id="meta-observation-grid">
                 <!-- JSで動的レンダリング -->
@@ -222,13 +251,13 @@
 
             <!-- 2. 調査資料 (カード形式 2列グリッド & 右下＋専用QRスキャナー) -->
             <div class="meta-panel" id="meta-panel-evidence">
-              <div class="panel-header-row" style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <h2>📦 調査資料・証拠アーカイブ</h2>
-                  <span class="loop-badge" id="evidence-count-badge">0件 記録済み</span>
+              <div class="panel-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <h2 style="font-size:18px; margin:0; font-weight:800; color:#0f172a;">📦 調査資料・証拠アーカイブ</h2>
+                  <span class="loop-badge" id="evidence-count-badge" style="font-size:11.5px; padding:3px 8px; font-weight:700;">0件 記録済み</span>
                 </div>
-                <button class="nav-btn" onclick="openMetaEvidenceQrScanner()" style="padding:7px 14px; font-size:13px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.3); cursor:pointer;">
-                  <i data-lucide="qr-code" style="width:16px; height:16px;"></i>
+                <button class="nav-btn" onclick="openMetaEvidenceQrScanner()" style="padding:6px 12px; font-size:12.5px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.25); cursor:pointer;">
+                  <i data-lucide="qr-code" style="width:15px; height:15px;"></i>
                   <span>QR読取</span>
                 </button>
               </div>
@@ -241,11 +270,6 @@
                   <p>記録された調査資料はありません。<br>右下の「＋」ボタンからQRコードを読み取ってください。</p>
                 </div>
               </div>
-
-              <!-- 右下の丸型「＋」フローティングボタン -->
-              <button class="evidence-fab-btn" id="meta-evidence-fab" onclick="openMetaEvidenceQrScanner()" title="QRコードをスキャンして資料を追加">
-                <i data-lucide="plus"></i>
-              </button>
             </div>
 
             <!-- 4. メモ (タブ増設式 ノート罫線テキスト ＋ 手書きお絵描きCanvas) -->
@@ -306,6 +330,11 @@
               </div>
             </div>
           </div>
+
+          <!-- 右下の丸型「＋」フローティングボタン（スクロール枠外・右下常時フロート固定） -->
+          <button class="evidence-fab-btn" id="meta-evidence-fab" onclick="openMetaEvidenceQrScanner()" title="QRコードをスキャンして資料を追加" style="display:none;">
+            <i data-lucide="plus"></i>
+          </button>
         </div>
       </div>
 
@@ -561,7 +590,7 @@
             <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">メール <span class="req" style="color:#d93025;">*</span></label>
             <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#202124; cursor:pointer;">
               <input type="checkbox" checked disabled style="width:18px; height:18px; accent-color:#673ab7;">
-              <span>返信に表示するメールアドレスとして <strong>s23c1044kr@chibatech.ac.jp</strong> を記録する</span>
+              <span>返信に表示するメールアドレスとして <strong>s23c1044kr@chibakou.ac.jp</strong> を記録する</span>
             </label>
           </div>
 
@@ -763,9 +792,9 @@
                   </div>
                   <div style="font-size:13px; font-weight:600; color:#5f6368; margin-bottom:8px;">メール</div>
                   <div class="response-answers-list">
-                    <div class="response-answer-item">s2342098cl@chibatech.ac.jp</div>
-                    <div class="response-answer-item">s23a1058uw@chibatech.ac.jp</div>
-                    <div class="response-answer-item">s2341013qr@chibatech.ac.jp</div>
+                    <div class="response-answer-item">23e2036@chibakou.ac.jp</div>
+                    <div class="response-answer-item">23a1099@chibakou.ac.jp</div>
+                    <div class="response-answer-item">26d1094@chibakou.ac.jp</div>
                   </div>
                 </div>
 
@@ -2400,31 +2429,46 @@
     </div>
   </div>
 
-  <!-- 🎉 調査資料 記録完了ポップアップトースト -->
-  <div class="evidence-record-toast" id="meta-evidence-toast" style="display:none;">
-    <div class="toast-icon-badge">✨</div>
-    <div class="toast-body-text">
-      <strong id="meta-toast-item-name">アイテム名</strong>
-      <span>が調査資料に記録されました</span>
+  <!-- 🎉 調査資料 記録完了ポップアップ（ユーザー指定デザイン：中央大型カード） -->
+  <div class="evidence-record-toast" id="meta-evidence-toast" style="display:none;" onclick="this.style.display='none'">
+    <div class="evidence-toast-modal-card" onclick="event.stopPropagation()">
+      <div class="evidence-toast-item-title" id="meta-toast-item-name">アイテム情報名</div>
+      <div class="evidence-toast-particle">が</div>
+      <div class="evidence-toast-action">記録されました</div>
     </div>
   </div>
 
-  <!-- 🔍 調査資料 カード詳細モーダル -->
+  <!-- 🔍 調査資料 カード詳細モーダル（ゲームアイテム詳細画面風） -->
   <div class="modal-overlay" id="meta-evidence-detail-modal" style="display:none;" onclick="closeMetaEvidenceDetail()">
     <div class="evidence-detail-card" onclick="event.stopPropagation()">
       <button class="detail-close-btn" onclick="closeMetaEvidenceDetail()">✕</button>
-      <div class="evidence-detail-grid">
-        <div class="evidence-detail-media">
-          <img id="detail-item-img" src="" alt="アイテム画像">
-        </div>
-        <div class="evidence-detail-info">
-          <h3 id="detail-item-title">アイテム情報名</h3>
-          <div class="detail-meta-row">
-            <span class="detail-time-tag" id="detail-item-time">🕒 09:12 取得</span>
-            <span class="detail-loop-tag" id="detail-item-loop">周回 1</span>
+      <div class="evidence-detail-layout">
+        <!-- 左カラム：写真スロット + 入手場所 -->
+        <div class="evidence-detail-left">
+          <div class="evidence-detail-thumb-box" id="detail-thumb-box">
+            <img id="detail-item-img" src="" alt="アイテム画像" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+            <div class="evidence-slot-fallback" id="detail-slot-fallback">
+              <i data-lucide="package" class="slot-fallback-icon"></i>
+            </div>
           </div>
-          <div class="detail-desc-box" id="detail-item-desc">
-            詳細な説明文がここに表示されます。
+          <div class="evidence-location-pill" id="detail-item-location">
+            <i data-lucide="map-pin" style="width:12px; height:12px;"></i>
+            <span id="detail-location-text">研修室4</span>
+          </div>
+        </div>
+
+        <!-- 右カラム：名前・入手時刻 + 説明長テキストボックス -->
+        <div class="evidence-detail-right">
+          <div class="evidence-detail-header-block">
+            <h2 class="evidence-detail-title" id="detail-item-title">アイテム名</h2>
+            <div class="evidence-time-pill" id="detail-item-time">
+              <i data-lucide="clock" style="width:12px; height:12px;"></i>
+              <span id="detail-time-text">09:44 取得</span>
+            </div>
+          </div>
+
+          <div class="evidence-detail-desc-box" id="detail-item-desc">
+            説明長テキストがここに表示されます。
           </div>
         </div>
       </div>
@@ -2454,7 +2498,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.78.0"></script>
-  <script src="app.js?v=2.78.0"></script>
+  <script src="data.js?v=2.83.0"></script>
+  <script src="app.js?v=2.83.0"></script>
 </body>
 </html>

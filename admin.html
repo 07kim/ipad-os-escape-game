@@ -3,7 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>26__0094 - 進行統制 ＆ 運営ダッシュボード</title>
+  <script>
+    // ⚡ 管理画面におけるService Workerの強制登録解除＆キャッシュ全消去＆自動最新リロード
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        if (registrations.length > 0) {
+          var unregisterPromises = registrations.map(function(reg) { return reg.unregister(); });
+          Promise.all(unregisterPromises).then(function() {
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                return Promise.all(names.map(function(name) { return caches.delete(name); }));
+              }).then(function() {
+                console.log('🧹 Service Worker を完全解除しました。最新画面へ自動リロードします。');
+                location.reload();
+              });
+            } else {
+              location.reload();
+            }
+          });
+        }
+      });
+    }
+  </script>
   <!-- Google Fonts & Lucide Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -1634,10 +1659,10 @@
         </div>
       </div>
 
-      <!-- 1. 🌍 世界線時刻（作中時間 09:04基準） -->
-      <div class="timer-stat-box world" title="iPad内の全アプリが同期する作中世界線時刻（26-09-04 09:04基準）">
+      <!-- 1. 🌍 世界線時刻（作中時間 09:44基準） -->
+      <div class="timer-stat-box world" title="iPad内の全アプリが同期する作中世界線時刻（26-09-04 09:44基準）">
         <div class="timer-stat-label"><i data-lucide="globe" style="width:12px; height:12px;"></i> 世界線時刻 (作中)</div>
-        <div class="timer-stat-val world" id="hero-world-time-digits">09:04:00</div>
+        <div class="timer-stat-val world" id="hero-world-time-digits">09:44:00</div>
         <div class="timer-stat-sub world" id="hero-world-date-sub">26-09-04 (Fri)</div>
       </div>
 
@@ -1674,7 +1699,6 @@
           <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> リセット
         </button>
         <a href="index.html" target="_blank" class="nav-btn" style="padding:8px 12px; font-size:12px; font-weight:700;"><i data-lucide="tablet" style="width:14px; height:14px;"></i> iPad</a>
-        <a href="editor.html" class="nav-btn" style="padding:8px 12px; font-size:12px; font-weight:700;"><i data-lucide="edit-3" style="width:14px; height:14px;"></i> エディタ</a>
       </div>
 
       <div id="admin-cloud-indicator" class="compact-cloud-pill">
@@ -1732,7 +1756,7 @@
                 <div class="flow-step-num-badge">01</div>
                 <div class="flow-step-title-block">
                   <h3>オープニング待機</h3>
-                  <div class="flow-step-desc">09:04固定・操作ロック待機状態</div>
+                  <div class="flow-step-desc">09:44固定・操作ロック待機状態</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-1" style="background:#e2e8f0; color:#475569;">
@@ -1746,7 +1770,7 @@
                 <div class="flow-step-num-badge">02</div>
                 <div class="flow-step-title-block">
                   <h3>1周目スタート（ゲーム開始）</h3>
-                  <div class="flow-step-desc">ロック解除・09:04から計時開始・1周目解禁</div>
+                  <div class="flow-step-desc">ロック解除・09:44から計時開始・1周目解禁</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-2" style="background:#0284c7; color:#fff;">
@@ -1759,8 +1783,8 @@
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">03</div>
                 <div class="flow-step-title-block">
-                  <h3>1周目終了（2周目切替・09:04静止）</h3>
-                  <div class="flow-step-desc">2周目内容へ切替・09:04固定・操作自由</div>
+                  <h3>1周目終了（2周目切替・09:44静止）</h3>
+                  <div class="flow-step-desc">2周目内容へ切替・09:44固定・操作自由</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-3" style="background:#84cc16; color:#fff;">
@@ -1774,7 +1798,7 @@
                 <div class="flow-step-num-badge">04</div>
                 <div class="flow-step-title-block">
                   <h3>2周目スタート（タイマー始動）</h3>
-                  <div class="flow-step-desc">09:04から計時開始・2周目タイマー始動</div>
+                  <div class="flow-step-desc">09:44から計時開始・2周目タイマー始動</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-4" style="background:#f1f5f9; color:#94a3b8;">
@@ -1787,8 +1811,8 @@
               <div class="flow-step-left">
                 <div class="flow-step-num-badge">05</div>
                 <div class="flow-step-title-block">
-                  <h3>2周目終了（3周目切替・09:04静止）</h3>
-                  <div class="flow-step-desc">3周目内容へ切替・09:04固定・操作自由</div>
+                  <h3>2周目終了（3周目切替・09:44静止）</h3>
+                  <div class="flow-step-desc">3周目内容へ切替・09:44固定・操作自由</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-5" style="background:#f1f5f9; color:#94a3b8;">
@@ -1802,7 +1826,7 @@
                 <div class="flow-step-num-badge">06</div>
                 <div class="flow-step-title-block">
                   <h3>3周目スタート（タイマー始動）</h3>
-                  <div class="flow-step-desc">09:04から計時開始・3周目タイマー始動</div>
+                  <div class="flow-step-desc">09:44から計時開始・3周目タイマー始動</div>
                 </div>
               </div>
               <div class="flow-step-status-tag" id="flow-tag-6" style="background:#f1f5f9; color:#94a3b8;">
@@ -1919,7 +1943,7 @@
           <p style="font-size:12px; color:#991b1b; margin-bottom:14px; line-height:1.6;">
             次公演の開始前 / 公演終了後に使用します。<br>
             全端末のメモ・入力・周回・ログイン情報を完全消去し、<br>
-            09:04待機画面へリセットします。<strong>（2段階確認あり）</strong>
+            09:44待機画面へリセットします。<strong>（2段階確認あり）</strong>
           </p>
           <button class="btn" onclick="executeGlobalMasterReset()" style="width:100%; padding:12px 16px; font-size:13px; font-weight:800; background:#fef2f2; color:#b91c1c; border:2px solid #fecaca; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: all 0.18s ease;" onmouseover="this.style.background='#fee2e2'; this.style.borderColor='#f87171';" onmouseout="this.style.background='#fef2f2'; this.style.borderColor='#fecaca';" title="全iPadのメモ・入力・周回を完全初期化">
             <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
@@ -2119,9 +2143,9 @@
               <i data-lucide="history" style="width:13px; height:13px;"></i> 📜 端末アクション履歴（行動タイムライン）
             </div>
             <div class="timeline-list" id="detail-dev-timeline">
-              <div class="timeline-item"><span class="timeline-time">09:14:20</span> 講義資料PDFを閲覧</div>
-              <div class="timeline-item"><span class="timeline-time">09:08:15</span> manabaログイン (連城 観)</div>
-              <div class="timeline-item"><span class="timeline-time">09:04:00</span> 端末ロック解除</div>
+              <div class="timeline-item"><span class="timeline-time">09:54:20</span> 講義資料PDFを閲覧</div>
+              <div class="timeline-item"><span class="timeline-time">09:48:15</span> manabaログイン (連城 観)</div>
+              <div class="timeline-item"><span class="timeline-time">09:44:00</span> 端末ロック解除</div>
             </div>
           </div>
 
@@ -2485,7 +2509,7 @@
             <div style="padding:12px 14px; background:#fee2e2; border-radius:10px; border-left:4px solid #ef4444; margin-bottom:16px;">
               <div style="font-size:12px; font-weight:800; color:#991b1b; margin-bottom:4px;">⚠️ 次公演開始前・終了後の初期化</div>
               <div style="font-size:11.5px; color:#7f1d1d; line-height:1.5;">
-                全端末のメモ・入力・周回・ログイン状態を完全消去し、09:04待機画面へ一括リセットします。
+                全端末のメモ・入力・周回・ログイン状態を完全消去し、09:44待機画面へ一括リセットします。
               </div>
             </div>
 
@@ -2850,7 +2874,7 @@
           const ok = await showCustomConfirm({
             title: "🚀 公演ゲームスタート",
             subtitle: "全iPad端末の初期化・計時スタート",
-            message: "全iPad端末を一括初期化してロック解除し、タイマーを 00:00 からリセット開始（1周目スタート）します。\n\n全端末が作中世界線時刻（09:04:00）に同期して動き出します。よろしいですか？",
+            message: "全iPad端末を一括初期化してロック解除し、タイマーを 00:00 からリセット開始（1周目スタート）します。\n\n全端末が作中世界線時刻（09:44:00）に同期して動き出します。よろしいですか？",
             confirmText: "🚀 ゲームスタート",
             cancelText: "キャンセル",
             type: "info",
@@ -2886,15 +2910,16 @@
       saveAdminTimerState();
     }
 
-    // 🚀 公演開始時のiPad一括初期化（1周目セット ＆ 演者ツールリセット）
+    // 🚀 公演開始時のiPad一括初期化（1周目セット ＆ 演者ツールリセット ＆ キャッシュ全消去）
     function triggerInitialMasterResetForShow() {
       sendCloudAdminCommand({
         id: "START_RESET_" + Date.now(),
         type: "master_reset",
-        name: "公演開始一括リセット（1周目セット）",
+        name: "公演開始一括リセット（1周目セット・キャッシュ消去）",
         params: {
           loop: 1,
           resetActors: true,
+          clearCache: true,
           timestamp: Date.now()
         }
       }, "🚀 全30台のiPad ＆ 演者ツールを一斉初期化し、1周目にセットしました！");
@@ -2933,7 +2958,7 @@
       updateTimerButtonsUI(true);
       saveAdminTimerState();
 
-      // 📡 全iPadへゲームスタート＆09:04から時間始動シグナルを即時配信
+      // 📡 全iPadへゲームスタート＆09:44から時間始動シグナルを即時配信
       localStorage.setItem('game_timer_running', 'true');
       localStorage.setItem('fake_clock_set_time', String(now));
       if (typeof BroadcastChannel !== 'undefined') {
@@ -2946,9 +2971,9 @@
       sendCloudAdminCommand({
         id: "GAME_START_" + now,
         type: "game_start",
-        name: "ゲームスタート（09:04から時間進行開始）",
+        name: "ゲームスタート（09:44から時間進行開始）",
         params: { startTime: now, timestamp: now }
-      }, "⏱️ 公演タイマーを開始しました！（全iPadの時計が09:04から一斉に動き始めました）");
+      }, "⏱️ 公演タイマーを開始しました！（全iPadの時計が09:44から一斉に動き始めました）");
     }
 
     function pauseAdminTimer() {
@@ -3009,7 +3034,7 @@
           bc.postMessage({ type: 'master_reset', payload: { loop: 1 } });
         } catch(e) {}
       }
-      showToast("🔄 公演タイマーをリセットしました（1周目・09:04固定状態）");
+      showToast("🔄 公演タイマーをリセットしました（1周目・09:44固定状態）");
     }
 
     // 👑 管理画面からワンクリックで周回切り替え
@@ -3058,7 +3083,7 @@
         saveAdminTimerState();
       }
 
-      // 📡 演者ツール（actor.html）および全iPadへ周回変更＆新周回09:04巻き戻しを即時同期
+      // 📡 演者ツール（actor.html）および全iPadへ周回変更＆新周回09:44巻き戻しを即時同期
       localStorage.setItem('game_loop', String(targetLoop));
       localStorage.setItem('fake_clock_set_time', String(now));
       localStorage.setItem('game_timer_running', 'true');
@@ -3079,7 +3104,7 @@
         fetch(`${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=sync_admin&loop=${targetLoop}&step=${mappedStep}&timerRunning=true&startTime=${now}`).catch(() => {});
       }
 
-      showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（全iPadが09:04へ巻き戻り）`);
+      showToast(`⏱️ 【${targetLoop}周目】のタイマー計測を開始しました（全iPadが09:44へ巻き戻り）`);
     }
 
     function startTimerInterval() {
@@ -3145,12 +3170,12 @@
       if (loopDigitsEl) loopDigitsEl.innerText = formatMs(loopMs);
       if (loopNameEl) loopNameEl.innerText = `${currentL}周目`;
 
-      // 🌍 世界線時刻（作中時間: 09:04:00 + カレント周回経過秒）の計算
+      // 🌍 世界線時刻（作中時間: 09:44:00基準 ＆ タイマー非稼働時は09:44:00静止固定）
       if (worldDigitsEl) {
-        if (!adminTimerState.isRunning && adminTimerState.totalElapsedBeforePause === 0 && (!adminTimerState.totalStartTime)) {
-          worldDigitsEl.innerText = "09:04:00";
+        if (!adminTimerState.isRunning) {
+          worldDigitsEl.innerText = "09:44:00";
         } else {
-          const baseSec = (9 * 3600) + (4 * 60); // 09:04:00 in seconds
+          const baseSec = (9 * 3600) + (44 * 60); // 09:44:00 in seconds
           const elapsedSec = Math.floor(loopMs / 1000);
           const currentWorldSec = (baseSec + elapsedSec) % 86400;
           const h = String(Math.floor(currentWorldSec / 3600)).padStart(2, '0');
@@ -3214,12 +3239,12 @@
     let manualSceneUnlock = false;
 
     const FLOW_STEP_CONFIG = {
-      1: { name: "オープニング待機", loop: 1, desc: "09:04固定・操作ロック待機状態", actionType: "wait" },
-      2: { name: "1周目スタート（ゲーム開始）", loop: 1, desc: "ロック解除・09:04から計時開始・1周目解禁", actionType: "start" },
-      3: { name: "1周目終了（2周目切替・09:04静止）", loop: 2, desc: "2周目内容へ切替・09:04固定・操作自由", actionType: "loop_switch" },
-      4: { name: "2周目スタート（タイマー始動）", loop: 2, desc: "09:04から計時開始・2周目タイマー始動", actionType: "start" },
-      5: { name: "2周目終了（3周目切替・09:04静止）", loop: 3, desc: "3周目内容へ切替・09:04固定・操作自由", actionType: "loop_switch" },
-      6: { name: "3周目スタート（タイマー始動）", loop: 3, desc: "09:04から計時開始・3周目タイマー始動", actionType: "start" },
+      1: { name: "オープニング待機", loop: 1, desc: "09:44固定・操作ロック待機状態", actionType: "wait" },
+      2: { name: "1周目スタート（ゲーム開始）", loop: 1, desc: "ロック解除・09:44から計時開始・1周目解禁", actionType: "start" },
+      3: { name: "1周目終了（2周目切替・09:44静止）", loop: 2, desc: "2周目内容へ切替・09:44固定・操作自由", actionType: "loop_switch" },
+      4: { name: "2周目スタート（タイマー始動）", loop: 2, desc: "09:44から計時開始・2周目タイマー始動", actionType: "start" },
+      5: { name: "2周目終了（3周目切替・09:44静止）", loop: 3, desc: "3周目内容へ切替・09:44固定・操作自由", actionType: "loop_switch" },
+      6: { name: "3周目スタート（タイマー始動）", loop: 3, desc: "09:44から計時開始・3周目タイマー始動", actionType: "start" },
       7: { name: "3周目終了（完全暗転・操作不能）", loop: 3, desc: "画面完全ブラックアウト・全機能停止", actionType: "blackout" },
       8: { name: "ゲーム終了（ログ集計 ＆ アンケート）", loop: 3, desc: "タイマー停止・アンケート表示・ログ確定", actionType: "game_end" }
     };
@@ -3239,7 +3264,14 @@
         const tagEl = document.getElementById(`flow-tag-${s}`);
         if (!cardEl || !tagEl) continue;
 
-        cardEl.className = 'flow-step-card';
+        // 常に最新のタイトルと説明文（09:44基準）をDOMへ確実に反映（キャッシュ残存防止）
+        const titleEl = cardEl.querySelector('.flow-step-title-block h3');
+        const descEl = cardEl.querySelector('.flow-step-desc');
+        const cfg = FLOW_STEP_CONFIG[s];
+        if (cfg) {
+          if (titleEl) titleEl.innerText = cfg.name;
+          if (descEl) descEl.innerText = cfg.desc;
+        }
 
         if (s < currentFlowStep) {
           cardEl.classList.add('done');
@@ -3337,15 +3369,15 @@
         icon = "power";
       } else if (nextStep === 3 || nextStep === 5) {
         title = `🌀 【${config.loop}周目】へタイムループ切替確認`;
-        subtitle = `iPad全データを${config.loop}周目へ即時切替（09:04静止・操作自由）`;
-        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※前周回のタイマー計測を確定・停止し、全端末のコンテンツが即座に【${config.loop}周目】のものに切り替わります（操作自由）。時刻は09:04で静止します。\n\n進行してよろしいですか？`;
+        subtitle = `iPad全データを${config.loop}周目へ即時切替（09:44静止・操作自由）`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※前周回のタイマー計測を確定・停止し、全端末のコンテンツが即座に【${config.loop}周目】のものに切り替わります（操作自由）。時刻は09:44で静止します。\n\n進行してよろしいですか？`;
         btnText = `🌀 ${config.loop}周目へ切替`;
         type = "warning";
         icon = "repeat";
       } else if (nextStep === 2 || nextStep === 4 || nextStep === 6) {
         title = `⏱️ 【${config.loop}周目】タイマー始動確認`;
-        subtitle = `09:04から作中時計が動き出します`;
-        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※タイマー計測が始動し、作中世界線時刻（09:04:00）から時間が進み始めます。\n\nスタートしてよろしいですか？`;
+        subtitle = `09:44から作中時計が動き出します`;
+        msg = `全iPadを「0${nextStep}. ${config.name}」へ移行します。\n\n※タイマー計測が始動し、作中世界線時刻（09:44:00）から時間が進み始めます。\n\nスタートしてよろしいですか？`;
         btnText = `⏱️ ${config.loop}周目スタート`;
         type = "info";
         icon = "play";
@@ -3467,9 +3499,9 @@
         if (!adminTimerState.isRunning) startAdminTimer();
         onAdminLoopChanged(1);
       } else if (stepNum === 3) {
-        // 03. 1周目終了（2周目切替・09:04静止・タイマー一時停止）
+        // 03. 1周目終了（2周目切替・09:44静止・タイマー一時停止）
         pauseAdminTimer();
-        // 2周目へ事前切替（タイマーは動かさずデータだけ2周目・09:04巻き戻し）
+        // 2周目へ事前切替（タイマーは動かさずデータだけ2周目・09:44巻き戻し）
         adminTimerState.currentLoop = 2;
         adminTimerState.loopElapsedBeforePause = 0;
         adminTimerState.loopStartTime = null;
@@ -3490,7 +3522,7 @@
         localStorage.setItem('fake_clock_set_time', String(now));
         localStorage.setItem('game_timer_running', 'true');
       } else if (stepNum === 5) {
-        // 05. 2周目終了（3周目切替・09:04静止・タイマー一時停止）
+        // 05. 2周目終了（3周目切替・09:44静止・タイマー一時停止）
         pauseAdminTimer();
         // 3周目へ事前切替
         adminTimerState.currentLoop = 3;
@@ -3630,9 +3662,9 @@
 
       // data.js または安全なデフォルト定義
       const fallbackPresets = [
-        { id: "s1_start", stage: "S1", name: "1周目 開始（ゲームスタート）", loop: 1, clockISO: "2126-08-22T09:04:00", alertMsg: "", sound: "boot", forceLock: false, color: "#007aff", desc: "周回=1、時刻=09:04、全端末のロックを解除して探索スタート" },
-        { id: "s2_loop", stage: "S2", name: "1→2周目 ループ強制発生", loop: 2, clockISO: "2126-08-22T09:04:00", alertMsg: "【時間ループ発生】\n時空ゲートの変調により、時間が巻き戻されました。", sound: "distortion", forceLock: true, color: "#ff9500", desc: "全画面警告→強制ロック→周回=2へ切り替え（歴史改変発生）" },
-        { id: "s3_loop", stage: "S3", name: "2→3周目 世界線崩壊ループ", loop: 3, clockISO: "2126-08-22T09:04:00", alertMsg: "【警告：世界線崩壊】\nタイムパラドックスにより世界線が致命的に歪みました。", sound: "alarm", forceLock: true, color: "#ff3b30", desc: "全画面警告→強制ロック→周回=3へ切り替え（U.Z.W.支配世界）" },
+        { id: "s1_start", stage: "S1", name: "1周目 開始（ゲームスタート）", loop: 1, clockISO: "2026-09-04T09:44:00", alertMsg: "", sound: "boot", forceLock: false, color: "#007aff", desc: "周回=1、時刻=09:44、全端末のロックを解除して探索スタート" },
+        { id: "s2_loop", stage: "S2", name: "1→2周目 ループ強制発生", loop: 2, clockISO: "2026-09-04T09:44:00", alertMsg: "【時間ループ発生】\n時空ゲートの変調により、時間が巻き戻されました。", sound: "distortion", forceLock: true, color: "#ff9500", desc: "全画面警告→強制ロック→周回=2へ切り替え（歴史改変発生）" },
+        { id: "s3_loop", stage: "S3", name: "2→3周目 世界線崩壊ループ", loop: 3, clockISO: "2026-09-04T09:44:00", alertMsg: "【警告：世界線崩壊】\nタイムパラドックスにより世界線が致命的に歪みました。", sound: "alarm", forceLock: true, color: "#ff3b30", desc: "全画面警告→強制ロック→周回=3へ切り替え（U.Z.W.支配世界）" },
         { id: "e1_hack", stage: "E1", name: "不正アクセス緊急警報", loop: 3, clockISO: null, alertMsg: "【緊急警報】\n学内ネットワークへの不正侵入を検知。セキュリティロックを実行中。", sound: "alarm", forceLock: false, color: "#e74c3c", desc: "全画面赤色アラートを鳴らし、クライマックスの緊迫感を演出" },
         { id: "e2_time10", stage: "E2", name: "残り時間10分アナウンス", loop: null, clockISO: null, alertMsg: "【残り時間10分】\n時空ゲート閉鎖まであと10分です。速やかに帰還準備を完了してください。", sound: "alert", forceLock: false, color: "#f39c12", desc: "残り10分のラストスパートを促すアナウンス" },
         { id: "e3_clear", stage: "E3", name: "脱出成功（ゲームクリア）", loop: null, clockISO: null, alertMsg: "【脱出成功】\n時空ゲート同期完了！2024年の世界線への帰還に成功しました！", sound: "fanfare", forceLock: false, color: "#2ecc71", desc: "クリアファンファーレと脱出成功演出" },
@@ -3891,20 +3923,25 @@
         .then(res => res.json())
         .then(json => {
           if (json && json.success) {
-            // 👑 管理画面が絶対！初回のみサーバーを取り込み、以降は管理画面の周回を絶対としてサーバーへ上書き伝搬
-            if (!window._hasAdminInitialLoopSynced && json.globalLoop) {
+            // 👑 サーバーのシーン進行状態・周回との同期
+            const sLoop = Number(json.globalLoop || (json.flowStep ? FLOW_STEP_CONFIG[json.flowStep]?.loop : 1));
+            const sStep = Number(json.flowStep || 1);
+
+            if (!window._hasAdminInitialLoopSynced && sLoop) {
               window._hasAdminInitialLoopSynced = true;
-              adminTimerState.currentLoop = Number(json.globalLoop);
+              adminTimerState.currentLoop = sLoop;
               renderTimerUI();
-            } else if (adminTimerState.currentLoop && json.globalLoop !== adminTimerState.currentLoop) {
-              console.log(`👑 管理画面の周回(${adminTimerState.currentLoop}周目)をサーバー(${json.globalLoop}周目)へ強制同期します`);
-              const gasUrl = getAdminGasUrl();
-              if (gasUrl) {
-                fetch(`${gasUrl}${gasUrl.includes('?') ? '&' : '?'}action=sync_admin&loop=${adminTimerState.currentLoop}&step=${currentFlowStep}&timerRunning=${adminTimerState.isRunning}&startTime=${adminTimerState.startTime || ''}`).catch(() => {});
-              }
             }
-            if (json.flowStep && json.flowStep !== currentFlowStep) {
-              currentFlowStep = Number(json.flowStep);
+
+            if (sStep && sStep !== currentFlowStep) {
+              currentFlowStep = sStep;
+              if (sLoop && sLoop !== adminTimerState.currentLoop) {
+                adminTimerState.currentLoop = sLoop;
+                if (adminTimerState.loopLaps && adminTimerState.loopLaps[sLoop]) {
+                  adminTimerState.loopLaps[sLoop].status = 'active';
+                }
+                renderTimerUI();
+              }
               updateFlowStepsUI();
 
               // サーバーのシーン進行状態に合わせてタイマー稼働/停止を同期
@@ -4571,7 +4608,7 @@
       const ok1 = await showCustomConfirm({
         title: "🚨 全iPad一括完全初期化 (1/2)",
         subtitle: "公演前・公演後の全端末リセット",
-        message: "全iPad端末のメタアプリ、メモ・入力・管理番号・名前・進行状況を完全消去し、1周目・09:04待機画面へ初期化します。\n\n次の公演へ向けたセットアップを実行しますか？",
+        message: "全iPad端末のメタアプリ、メモ・入力・管理番号・名前・進行状況を完全消去し、1周目・09:44待機画面へ初期化します。\n\n次の公演へ向けたセットアップを実行しますか？",
         confirmText: "次へ進む（確認へ）",
         cancelText: "キャンセル",
         type: "danger",
@@ -4605,7 +4642,14 @@
       latestDevicesData = [];
       renderDynamicMonitoringList();
 
-      showToast("🧹 全iPad ＆ クラウドデータを一括完全初期化しました！（09:04待機画面へセット完了）");
+      // 5. 🧹 管理画面自身のCacheStorageも完全消去
+      if ('caches' in window) {
+        try {
+          caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+        } catch(e) {}
+      }
+
+      showToast("🧹 全iPad ＆ クラウドデータを一括完全初期化しました！（キャッシュ消去・09:44待機画面へセット完了）");
     }
 
     // 🔌 iPad接続リセット（接続登録解除 → 再接続が必要になる）

@@ -51,9 +51,9 @@ window.onerror = function(message, source, lineno, colno, error) {
 let gameState = {
   loop: 1,
   teamId: "",
-  clockStartISO: "2126-09-04T09:04:00",
+  clockStartISO: "2026-09-04T09:44:00",
   clockSetTime: Date.now(), // 設定されたタイミングの現実タイムスタンプ
-  timerRunning: false, // スタートするまでは時が進まない（09:04で静止待機）
+  timerRunning: false, // スタートするまでは時が進まない（09:44で静止待機）
   unlockedHints: [],
   manabaUser: null,
   addedFriends: ["committee_group"], // 初期友達（全体連絡グループのみ）
@@ -111,6 +111,15 @@ function loadGameDatabase() {
         if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.manaba) {
           window.GAME_DATABASE.manaba = window.INITIAL_GAME_DATABASE.manaba;
         }
+        // 進行プリセットも最新マスタに同期（09:04等の旧設定残存を完全防止）
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.adminPresets) {
+          window.GAME_DATABASE.adminPresets = window.INITIAL_GAME_DATABASE.adminPresets;
+        }
+        // 調査資料アイテムも最新マスタ（14点）に同期
+        if (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems) {
+          if (!window.GAME_DATABASE.metaApp) window.GAME_DATABASE.metaApp = {};
+          window.GAME_DATABASE.metaApp.evidenceItems = window.INITIAL_GAME_DATABASE.metaApp.evidenceItems;
+        }
         console.log("Loaded game database from LocalStorage cache (synchronized latest form card, hacking & manaba data).");
         return;
       }
@@ -135,12 +144,16 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       localStorage.setItem('game_loop', '1');
       localStorage.setItem('game_timer_running', 'false');
-      localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+      localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
       localStorage.setItem('fake_clock_set_time', String(Date.now()));
       localStorage.setItem('device_registered', '0');
       localStorage.setItem('team_id', '');
       localStorage.setItem('game_team_id', '');
-      if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+      localStorage.setItem('reset_pending_done', 'true');
+      if (gasUrl) {
+        localStorage.setItem('gas_url', gasUrl);
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+      }
       // パラメータを除いたクリーンURLへリダイレクト
       location.replace(location.pathname + '?reset_done=1');
       return;
@@ -149,7 +162,12 @@ window.addEventListener('DOMContentLoaded', () => {
     // ✅ ?reset_done=1 でのリロード: パラメータを除去してクリーンURLで確定 + 接続待機画面へ
     if (urlParams.get('reset_done') === '1') {
       console.log("✅ マスターリセット完了。接続待機画面で起動します。");
-      // last_exec_cmd_id は維持（GASの同一コマンドを再実行しない）
+      // リセット済みフラグを確実に維持（GASのresetPendingによる無限リロードループを絶対阻止）
+      localStorage.setItem('reset_pending_done', 'true');
+      const gasUrl = localStorage.getItem('gas_url');
+      if (gasUrl) {
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+      }
       // クリーンURLへ置き換え（ブラウザ履歴汚染防止）
       history.replaceState(null, '', location.pathname);
     }
@@ -249,6 +267,30 @@ window.addEventListener('DOMContentLoaded', () => {
     // スプレッドシート（Google Sheets / GAS）から10秒おきに自動同期（リロード不要）
     startAutoSpreadsheetSync();
 
+    // 🧪 調査資料 ユーザー指定デザイン4画面 検証用パラメータ (?test_view=grid|scanner|toast|modal)
+    const testView = urlParams.get('test_view') || (urlParams.get('test_evidence') === '1' ? 'grid' : null);
+    if (testView) {
+      setTimeout(() => {
+        dismissLockScreen();
+        openApp('meta');
+        switchMetaTab('evidence');
+        handleEvidenceQrDetected('ITEM-001');
+        handleEvidenceQrDetected('ITEM-003');
+        handleEvidenceQrDetected('ITEM-004');
+        handleEvidenceQrDetected('ITEM-007');
+        handleEvidenceQrDetected('ITEM-013');
+        handleEvidenceQrDetected('ITEM-014');
+
+        if (testView === 'scanner') {
+          setTimeout(() => openMetaEvidenceQrScanner(), 300);
+        } else if (testView === 'toast') {
+          setTimeout(() => showEvidenceRecordToast('学生証'), 300);
+        } else if (testView === 'modal') {
+          setTimeout(() => openMetaEvidenceDetail('item_003', '09:44'), 300);
+        }
+      }, 400);
+    }
+
   } catch(startupError) {
     // 起動時エラーを画面に直接表示（デバッグ用）
     document.body.style.background = '#fff';
@@ -323,10 +365,12 @@ function fetchLatestDataFromSpreadsheet() {
           const alreadyReset = localStorage.getItem('reset_pending_done') === 'true';
           if (!alreadyReset) {
             console.warn('🔴 GASのreset_pendingフラグを検出。即座にリセットを実行します。');
-            // ローカルに「処理済み」を記録（リロード後の再実行を防ぐ）
-            // ※ executeInstantMasterReset() で localStorage.clear() されるため、
-            //   リセット後はフラグが消え、再度 reset_pending=true なら再実行される（正しい動作）
             localStorage.setItem('reset_pending_done', 'true');
+            // GASへリセット完了を送信してフラグ解除
+            const gasUrl = localStorage.getItem('gas_url');
+            if (gasUrl) {
+              fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+            }
             setTimeout(() => { executeInstantMasterReset(); }, 300);
             return;
           }
@@ -341,44 +385,50 @@ function fetchLatestDataFromSpreadsheet() {
         const serverTimerRunning = (json.timerRunning === true || json.timerRunning === "true");
         const serverStartTime = parseInt(json.startTime || (json.data && json.data.startTime) || 0, 10) || null;
 
-        // 1. 周回の更新チェック（管理画面で変更された周回を最優先で即時同期 ＆ 初回アクセス時も確実にコンテンツ描画）
-        if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
-          const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || 1, 10);
-          const isFirstSync = !window._hasInitialContentSynced;
-          if (currentLoop !== serverLoop || isFirstSync) {
-            console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${serverLoop}周目 (初回アクセス:${isFirstSync})`);
-            window._hasInitialContentSynced = true;
-            gameState.loop = serverLoop;
-            localStorage.setItem('game_loop', String(serverLoop));
-            saveStateToStorage();
+        // 1. シーン進行ステップ（Step 01〜08）に基づく真の周回（1周目・2周目・3周目）を厳密判定
+        let targetLoop = 1;
+        if (serverStep >= 1 && serverStep <= 8) {
+          targetLoop = (serverStep <= 2) ? 1 : (serverStep <= 4) ? 2 : 3;
+        } else if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
+          targetLoop = serverLoop;
+        }
 
-            // 観測フォルダ・メール・LINK・ニュース・通知など全アプリをその周の内容に完全更新
-            metaObservationCurrentFolder = 'root';
-            updateAppUI();
+        // 2. 周回の同期（ステップに基づく真の周回を適用 ＆ 初回アクセス時も確実にコンテンツ描画）
+        const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || '1', 10);
+        const isFirstSync = !window._hasInitialContentSynced;
+        if (currentLoop !== targetLoop || isFirstSync) {
+          console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${targetLoop}周目 (ステップ:0${serverStep}, 初回:${isFirstSync})`);
+          window._hasInitialContentSynced = true;
+          gameState.loop = targetLoop;
+          localStorage.setItem('game_loop', String(targetLoop));
+          saveStateToStorage();
 
-            // 現在開いているアプリがある場合は、その画面も該当周回データで即座に再描画
-            if (gameState.activeApp === 'meta-app') {
-              renderMetaObservation('root');
-              renderMetaEvidence();
-            } else if (gameState.activeApp === 'mail-app') {
-              renderMailList();
-            } else if (gameState.activeApp === 'browser-app') {
-              renderBrowserNews();
-            } else if (gameState.activeApp === 'link-app') {
-              renderLinkChatList();
-            }
+          // 観測フォルダ・メール・LINK・ニュース・通知など全アプリをその周の内容に完全更新
+          metaObservationCurrentFolder = 'root';
+          updateAppUI();
+
+          // 現在開いているアプリがある場合は、その画面も該当周回データで即座に再描画
+          if (gameState.activeApp === 'meta-app') {
+            renderMetaObservation('root');
+            renderMetaEvidence();
+          } else if (gameState.activeApp === 'mail-app') {
+            renderMailList();
+          } else if (gameState.activeApp === 'browser-app') {
+            renderBrowserNews();
+          } else if (gameState.activeApp === 'link-app') {
+            renderLinkChatList();
           }
         }
 
-        // 2. シーン進行ステップの同期
+        // 3. シーン進行ステップの同期
         if (serverStep >= 1 && serverStep <= 8) {
           const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
           if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep) {
             const isFirst = !window._hasInitialFlowSynced;
             window._hasInitialFlowSynced = true;
             localStorage.setItem('current_flow_step', String(serverStep));
-            console.log(`🎬 サーバーのシーン進行状態（ステップ0${serverStep} / 周回${serverLoop} / タイマー:${serverTimerRunning}）を適用します (初回:${isFirst})`);
-            applyFlowStepState(serverStep, serverStartTime, isFirst, serverLoop);
+            console.log(`🎬 サーバーのシーン進行状態（ステップ0${serverStep} / 確定周回:${targetLoop}周目 / タイマー:${serverTimerRunning}）を適用します (初回:${isFirst})`);
+            applyFlowStepState(serverStep, serverStartTime, isFirst, targetLoop);
           }
         }
 
@@ -458,7 +508,7 @@ function executeRemoteAdminCommand(cmd) {
     return;
   }
 
-  // ④ 周回強制移行（ホーム初期化 ＆ 09:04巻き戻し）
+  // ④ 周回強制移行（ホーム初期化 ＆ 09:44巻き戻し）
   if (isLoopChange) {
     const blackoutEl = document.getElementById('complete-blackout-overlay');
     if (blackoutEl) blackoutEl.style.display = 'none';
@@ -477,17 +527,21 @@ function executeRemoteAdminCommand(cmd) {
     const startMs = p.startTime || p.timestamp || Date.now();
     gameState.timerRunning = true;
     gameState.clockSetTime = startMs;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     localStorage.setItem('game_timer_running', 'true');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
-    console.log(`⏱️ GMよりゲームスタートシグナルを受信しました（開始基準: ${startMs}）。09:04から時間が進みます。`);
+    console.log(`⏱️ GMよりゲームスタートシグナルを受信しました（開始基準: ${startMs}）。09:44から時間が進みます。`);
   }
 
   // ⑥ 時計強制同期（周回変化以外の場合）
   if (p.clockISO && !isLoopChange) {
-    localStorage.setItem('fake_clock_start_iso', p.clockISO);
-    gameState.clockStartISO = p.clockISO;
+    let safeClockISO = p.clockISO;
+    if (safeClockISO.includes('09:04') || safeClockISO.includes('08-22')) {
+      safeClockISO = '2026-09-04T09:44:00';
+    }
+    localStorage.setItem('fake_clock_start_iso', safeClockISO);
+    gameState.clockStartISO = safeClockISO;
     updateAppUI();
   }
 
@@ -577,7 +631,7 @@ function executeRemoteAdminCommand(cmd) {
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
     
-    // 🕒 送信時刻は現実時間ではなく、常にこのiPadの世界線時刻（09:04からのバーチャル時間）を採用
+    // 🕒 送信時刻は現実時間ではなく、常にこのiPadの世界線時刻（09:44からのバーチャル時間）を採用
     const msgTime = getFormattedFakeTime();
 
     if (text) {
@@ -765,7 +819,8 @@ function sendDeviceStatusHeartbeat() {
   const myTeamName = localStorage.getItem('game_team_name') || '';
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
-  const myManaba = gameState.manabaLoggedInUser ? `ログイン中: ${gameState.manabaLoggedInUser}` : "未ログイン";
+  const currentManaba = gameState.manabaUser || gameState.manabaLoggedInUser;
+  const myManaba = currentManaba ? `ログイン中: ${currentManaba}` : "未ログイン";
 
   // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
   const getUrl = gasUrl.includes('?') 
@@ -781,7 +836,7 @@ function sendDeviceStatusHeartbeat() {
   if (myTeamName) localStorage.setItem('game_team_name', myTeamName);
   localStorage.setItem('game_loop', String(myLoop));
   localStorage.setItem('game_unlocked_hints', JSON.stringify(gameState.unlockedHints || []));
-  localStorage.setItem('game_manaba_user', gameState.manabaLoggedInUser || "");
+  localStorage.setItem('game_manaba_user', currentManaba || "");
   localStorage.setItem('mon_last_update', String(Date.now()));
 }
 
@@ -1148,11 +1203,24 @@ function loadStateFromStorage() {
   }
   gameState.teamId = rawDevId;
 
-  gameState.clockStartISO = localStorage.getItem('fake_clock_start_iso') || '2026-09-04T09:04:00';
-  gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString());
+  // 🧹 過去の 09:04 / 2126-08-22 等の古い時計キャッシュの強制自動サニタイズ（09:44へ即時更新）
+  let storedClockStartISO = localStorage.getItem('fake_clock_start_iso');
+  if (!storedClockStartISO || storedClockStartISO.includes('09:04') || storedClockStartISO.includes('08-22')) {
+    storedClockStartISO = '2026-09-04T09:44:00';
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
+  }
+  gameState.clockStartISO = storedClockStartISO;
+  gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString(), 10);
   
+  // 🎯 シーン進行ステップから現在周回（1周目・2周目・3周目）を厳密に判定・同期
   const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
-  if (savedFlowStep === 1 || savedFlowStep === 3 || savedFlowStep === 5 || savedFlowStep === 7 || savedFlowStep === 8) {
+  const accurateLoop = (savedFlowStep <= 2) ? 1 : (savedFlowStep <= 4) ? 2 : 3;
+  gameState.loop = accurateLoop;
+  localStorage.setItem('game_loop', String(accurateLoop));
+
+  // タイマー稼働ステップ（02, 04, 06 のみ計時進行、それ以外は09:44静止）
+  const isRunningStep = (savedFlowStep === 2 || savedFlowStep === 4 || savedFlowStep === 6);
+  if (!isRunningStep) {
     gameState.timerRunning = false;
   } else {
     gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
@@ -1276,16 +1344,16 @@ function handleStorageEvent(e) {
 function getFormattedFakeTime() {
   try {
     if (!gameState.timerRunning) {
-      return '09:04';
+      return '09:44';
     }
     const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-    const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:04:00');
+    const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:44:00');
     const fakeCurrent = new Date(startMs + elapsed);
     const hh = String(fakeCurrent.getHours()).padStart(2, '0');
     const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
   } catch (e) {
-    return '09:04';
+    return '09:44';
   }
 }
 
@@ -1294,13 +1362,17 @@ function startFakeClock() {
   let lastDateStr = "";
 
   function updateClock() {
-    let clockStr = "09:04";
+    let clockStr = "09:44";
     let dateStr = "9月4日";
     let manabaDateStr = "2026-09-04 (Fri)";
 
     if (gameState.timerRunning) {
+      if (!gameState.clockStartISO || gameState.clockStartISO.includes('09:04') || gameState.clockStartISO.includes('08-22')) {
+        gameState.clockStartISO = '2026-09-04T09:44:00';
+        localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
+      }
       const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-      const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:04:00');
+      const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:44:00');
       const fakeCurrent = new Date(startMs + elapsed);
 
       const hh = String(fakeCurrent.getHours()).padStart(2, '0');
@@ -1339,7 +1411,7 @@ function startFakeClock() {
     updateClock();
   };
 
-  // 起動時に最速で即時09:04を描画
+  // 起動時に最速で即時09:44を描画
   updateClock();
   setInterval(updateClock, 1000);
 }
@@ -1427,6 +1499,46 @@ function resetLinkAppForLoop() {
   }
 }
 
+// 🔄 周回切り替え時に各アプリのステートを初期化するハンドラー群
+function resetManabaForLoop() {
+  gameState.manabaUser = null;
+  gameState.manabaLoggedInUser = null;
+  localStorage.removeItem('manaba_user');
+  localStorage.removeItem('game_manaba_user');
+  initManabaApp();
+}
+
+function resetSafariForLoop() {
+  gameState.currentBrowserPage = "home";
+  gameState.browserHistory = [];
+  gameState.browserSearchQuery = "";
+  const searchInput = document.getElementById('safari-search-input');
+  if (searchInput) searchInput.value = "";
+  const chromeInput = document.getElementById('chrome-search-input');
+  if (chromeInput) chromeInput.value = "";
+  if (typeof renderBrowserPortal === 'function') {
+    renderBrowserPortal();
+  }
+}
+
+function resetPhoneForLoop() {
+  gameState.phoneInput = "";
+  const display = document.getElementById('phone-number-display');
+  if (display) display.innerText = "";
+}
+
+function resetMailForLoop() {
+  if (typeof renderMailApp === 'function') {
+    renderMailApp();
+  }
+}
+
+function resetPhotoForLoop() {
+  if (typeof renderPhotoApp === 'function') {
+    renderPhotoApp();
+  }
+}
+
 // ==========================================================================
 // 🔄 ループ（周回）移行時：メタアプリ以外の全アプリ状態を初期状態へ完全復元
 // （※調査手帳・メタアプリのunlockedHintsのみループを超えて保持し続けます）
@@ -1445,7 +1557,7 @@ function resetAllAppsForNewLoop() {
   gameState.activeApp = null;
 }
 
-// --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ 09:04静止待機を完全徹底） ---
+// --- 周回（ループ）の強制切り替え演出（ホーム画面初期化 ＆ 09:44静止待機を完全徹底） ---
 function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true, showLock = false) {
   const targetLoop = parseInt(nextLoop || 1, 10);
   if (isNaN(targetLoop)) return;
@@ -1465,8 +1577,8 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   saveStateToStorage();
   localStorage.setItem('game_loop', String(targetLoop));
 
-  // 4. 時刻を 09:04（9月4日）に完全固定・巻き戻し
-  const loopClockISO = "2026-09-04T09:04:00";
+  // 4. 時刻を 09:44（9月4日）に完全固定・巻き戻し
+  const loopClockISO = "2026-09-04T09:44:00";
   const startTime = loopStartTime || Date.now();
   gameState.clockStartISO = loopClockISO;
   gameState.clockSetTime = startTime;
@@ -1475,11 +1587,11 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   localStorage.setItem('fake_clock_start_iso', loopClockISO);
   localStorage.setItem('fake_clock_set_time', String(startTime));
 
-  // 5. 時計表示（ロック画面 ＆ ステータスバー）を即座に「09:04」「9月4日」に強制描画
+  // 5. 時計表示（ロック画面 ＆ ステータスバー）を即座に「09:44」「9月4日」に強制描画
   const sbClock = document.getElementById('sb-clock');
-  if (sbClock) sbClock.innerText = "09:04";
+  if (sbClock) sbClock.innerText = "09:44";
   const lockClock = document.getElementById('lock-clock');
-  if (lockClock) lockClock.innerText = "09:04";
+  if (lockClock) lockClock.innerText = "09:44";
   const lockDate = document.getElementById('lock-date');
   if (lockDate) lockDate.innerText = "9月4日";
 
@@ -1501,7 +1613,7 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   // 8. コンテンツUI更新（ニュース・マスタデータの周回別表示切り替え）
   updateAppUI();
 
-  logWriteToGAS("LOOP_TRANSITION", `端末が周回 ${targetLoop} へ移行しました（全データ切替・09:04巻き戻し・タイマー:${startTimer ? '稼働' : '停止'}）。`);
+  logWriteToGAS("LOOP_TRANSITION", `端末が周回 ${targetLoop} へ移行しました（全データ切替・09:44巻き戻し・タイマー:${startTimer ? '稼働' : '停止'}）。`);
 }
 
 // 🎬 シーン進行統制（8ステップ）の状態をiPadへ完全に成立させる関数
@@ -1513,102 +1625,101 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   const now = Date.now();
   const startMs = startTime || now;
 
-  // ⭐ 周回番号の決定: explicitLoop が指定されていれば最優先、なければステップ番号の周回
-  const defaultLoop = (step <= 2) ? 1 : (step <= 4) ? 2 : 3;
-  const loopToSet = (explicitLoop && explicitLoop >= 1 && explicitLoop <= 3) ? explicitLoop : defaultLoop;
+  // ⭐ 周回番号の決定: ステップ番号（1〜8）から厳密に決定（1-2: 1周目, 3-4: 2周目, 5-8: 3周目）
+  const accurateLoop = (step <= 2) ? 1 : (step <= 4) ? 2 : 3;
+  gameState.loop = accurateLoop;
+  localStorage.setItem('game_loop', String(accurateLoop));
 
-  console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（周回: ${loopToSet}, 初回同期: ${isInitialSync}）`);
-
-  gameState.loop = loopToSet;
-  localStorage.setItem('game_loop', String(loopToSet));
+  console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（確定周回: ${accurateLoop}周目, 初回同期: ${isInitialSync}）`);
 
   if (step === 1) {
-    // 01. オープニング待機 (09:04固定・タイマー停止・操作ロック)
+    // 01. オープニング待機 (09:44固定・タイマー停止・操作ロック)
     if (blackoutEl) blackoutEl.style.display = 'none';
     gameState.timerRunning = false;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = now;
     localStorage.setItem('game_timer_running', 'false');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(now));
+    updateAppUI();
+    // 初回アクセス時のみ初期画面としてロック画面を表示。ユーザーが解除済みの場合は勝手に再ロックしない
     if (isInitialSync) {
-      updateAppUI();
       showLockScreen();
-    } else {
-      triggerLoopTransition(loopToSet, null, false, true);
     }
   } else if (step === 2) {
-    // 02. 1周目スタート (1周目・09:04から計時開始・ロック解除)
+    // 02. 1周目スタート (1周目・09:44から計時開始・ロック解除)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = loopToSet;
+    gameState.loop = accurateLoop;
     gameState.timerRunning = true;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', String(loopToSet));
+    localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
     updateAppUI();
     hideLockScreen();
   } else if (step === 3) {
-    // 03. 1周目終了 (2周目切替・09:04静止・タイマー停止・操作自由)
+    // 03. 1周目終了 (2周目切替・09:44静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    gameState.loop = accurateLoop;
     gameState.timerRunning = false;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = now;
+    localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'false');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(now));
     if (!isInitialSync) playSystemSound("distortion");
     if (isInitialSync) {
       updateAppUI();
       hideLockScreen();
     } else {
-      triggerLoopTransition(loopToSet, null, false, false);
+      triggerLoopTransition(accurateLoop, null, false, false);
       hideLockScreen();
     }
   } else if (step === 4) {
-    // 04. 2周目スタート (2周目・09:04から計時開始)
+    // 04. 2周目スタート (2周目・09:44から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = loopToSet;
+    gameState.loop = accurateLoop;
     gameState.timerRunning = true;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', String(loopToSet));
+    localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
     updateAppUI();
     hideLockScreen();
   } else if (step === 5) {
-    // 05. 2周目終了 (3周目切替・09:04静止・タイマー停止・操作自由)
+    // 05. 2周目終了 (3周目切替・09:44静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = loopToSet;
+    gameState.loop = accurateLoop;
     gameState.timerRunning = false;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = now;
-    localStorage.setItem('game_loop', String(loopToSet));
+    localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'false');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(now));
     if (!isInitialSync) playSystemSound("alarm");
     if (isInitialSync) {
       updateAppUI();
       hideLockScreen();
     } else {
-      triggerLoopTransition(loopToSet, null, false, false);
+      triggerLoopTransition(accurateLoop, null, false, false);
       hideLockScreen();
     }
   } else if (step === 6) {
-    // 06. 3周目スタート (3周目・09:04から計時開始)
+    // 06. 3周目スタート (3周目・09:44から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = loopToSet;
+    gameState.loop = accurateLoop;
     gameState.timerRunning = true;
-    gameState.clockStartISO = '2026-09-04T09:04:00';
+    gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = startMs;
-    localStorage.setItem('game_loop', String(loopToSet));
+    localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
-    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:04:00');
+    localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(startMs));
     updateAppUI();
     hideLockScreen();
@@ -1632,7 +1743,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     } catch(e) {}
   }
 
-  // 即座に時計表示を更新（09:04静止や進行を反映）
+  // 即座に時計表示を更新（09:44静止や進行を反映）
   if (typeof window.updateFakeClockDisplay === 'function') {
     window.updateFakeClockDisplay();
   }
@@ -1878,6 +1989,17 @@ function showLockScreen() {
     gameState.activeApp = null;
 
     lockScreen.classList.remove('hidden');
+    const lockClock = document.getElementById('lock-clock');
+    if (lockClock && !gameState.timerRunning) {
+      lockClock.innerText = "09:44";
+    }
+    const lockDate = document.getElementById('lock-date');
+    if (lockDate) {
+      lockDate.innerText = "9月4日";
+    }
+    if (typeof window.updateFakeClockDisplay === 'function') {
+      window.updateFakeClockDisplay();
+    }
     renderLockNotifications();
     playSystemSound("touch");
     logWriteToGAS("LOCK_TRIGGERED", "ロック画面が表示されました（背景をホーム画面に初期化）");
@@ -1888,15 +2010,21 @@ function showLockScreen() {
 function initTopSwipeForLockScreen() {
   let touchStartY = 0;
   let touchStartX = 0;
+  let touchStartTime = 0;
   let isTrackingTopSwipe = false;
 
   document.addEventListener('touchstart', (e) => {
+    const ls = document.getElementById('lock-screen');
+    // すでにロック画面が表示されている場合は上端スワイプを追跡しない
+    if (ls && !ls.classList.contains('hidden')) return;
+
     if (e.touches && e.touches.length === 1) {
       const touch = e.touches[0];
-      // 画面最上部（ステータスバー付近: 28px以内）でタッチ開始された場合のみ追跡
-      if (touch.clientY <= 28) {
+      // 画面最上部（ステータスバー付近: 24px以内）でタッチ開始された場合のみ追跡
+      if (touch.clientY <= 24) {
         touchStartY = touch.clientY;
         touchStartX = touch.clientX;
+        touchStartTime = Date.now();
         isTrackingTopSwipe = true;
       } else {
         isTrackingTopSwipe = false;
@@ -1909,9 +2037,10 @@ function initTopSwipeForLockScreen() {
     const touch = e.touches[0];
     const deltaY = touch.clientY - touchStartY;
     const deltaX = Math.abs(touch.clientX - touchStartX);
+    const elapsed = Date.now() - touchStartTime;
 
-    // 下方向に80px以上しっかりスワイプかつ横ブレが少ない場合のみロック画面呼び出し
-    if (deltaY >= 80 && deltaY > deltaX * 1.5) {
+    // 800ms以内、下方向に100px以上明確にスワイプし、かつ横ブレが少ない場合のみロック画面呼び出し
+    if (elapsed < 800 && deltaY >= 100 && deltaY > deltaX * 2) {
       isTrackingTopSwipe = false;
       showLockScreen();
     }
@@ -1921,23 +2050,29 @@ function initTopSwipeForLockScreen() {
     isTrackingTopSwipe = false;
   }, { passive: true });
 
-  // ステータスバー（PC用：明確に80px以上下ドラッグした場合のみ）
+  // ステータスバー（PC用：明確にステータスバー内でドラッグを開始し、800ms以内に100px以上下ドラッグした場合のみ）
   const statusBar = document.getElementById('status-bar') || document.querySelector('.status-bar');
   if (statusBar) {
     let mouseStartY = 0;
+    let mouseStartTime = 0;
     statusBar.addEventListener('mousedown', (e) => {
+      const ls = document.getElementById('lock-screen');
+      if (ls && !ls.classList.contains('hidden')) return;
       mouseStartY = e.clientY;
+      mouseStartTime = Date.now();
     });
     document.addEventListener('mouseup', (e) => {
-      if (mouseStartY > 0 && (e.clientY - mouseStartY) >= 80) {
+      const elapsed = Date.now() - mouseStartTime;
+      if (mouseStartY > 0 && elapsed < 800 && (e.clientY - mouseStartY) >= 100) {
         showLockScreen();
       }
       mouseStartY = 0;
+      mouseStartTime = 0;
     });
   }
 }
 
-// --- ロック画面操作 ＆ 解除ジェスチャー（純粋な上スワイプ操作のみ） ---
+// --- ロック画面操作 ＆ 解除ジェスチャー（タップ・クリック・上スワイプ・キーボード完全対応） ---
 function initLockScreenGestures() {
   const lockScreen = document.getElementById('lock-screen');
   if (!lockScreen) return;
@@ -1946,7 +2081,7 @@ function initLockScreenGestures() {
   let touchStartX = 0;
   let isDraggingLock = false;
 
-  // 1. タッチスワイプ（iPad / スマホ実機：上方向にフリック/スワイプした時のみ解除）
+  // 1. タッチ操作（iPad / スマホ実機：タップまたは上スワイプで即時解除）
   lockScreen.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length === 1) {
       touchStartY = e.touches[0].clientY;
@@ -1959,31 +2094,41 @@ function initLockScreenGestures() {
     if (isDraggingLock && e.changedTouches && e.changedTouches.length === 1) {
       const deltaY = touchStartY - e.changedTouches[0].clientY;
       const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX);
-      // 上方向に35px以上しっかりスワイプ（フリック）した場合のみロック解除
-      if (deltaY >= 35 && deltaY > deltaX) {
+      // 上スワイプ（15px以上）または タップ（指の移動が少ない）でロック解除
+      if ((deltaY >= 15 && deltaY > deltaX) || (Math.abs(deltaY) < 12 && deltaX < 12)) {
         unlockScreen();
       }
     }
     isDraggingLock = false;
   }, { passive: true });
 
-  // 2. マウスドラッグ（PCブラウザ：マウスで上方向に35px以上ドラッグした時のみ解除）
+  // 2. マウス操作（PCブラウザ：クリックまたは上ドラッグで解除）
   let mouseStartY = 0;
+  let mouseStartX = 0;
   lockScreen.addEventListener('mousedown', (e) => {
     mouseStartY = e.clientY;
+    mouseStartX = e.clientX;
   });
 
   lockScreen.addEventListener('mouseup', (e) => {
     if (mouseStartY > 0) {
       const deltaY = mouseStartY - e.clientY;
-      if (deltaY >= 35) {
+      const deltaX = Math.abs(mouseStartX - e.clientX);
+      // 上ドラッグ（15px以上）または通常のクリックで解除
+      if (deltaY >= 15 || (Math.abs(deltaY) < 12 && deltaX < 12)) {
         unlockScreen();
       }
     }
     mouseStartY = 0;
+    mouseStartX = 0;
   });
 
-  // 3. キーボード操作（Space, Enter, ArrowUp）
+  // 3. クリックイベント（直接クリック時の確実な解除）
+  lockScreen.addEventListener('click', (e) => {
+    unlockScreen();
+  });
+
+  // 4. キーボード操作（Space, Enter, ArrowUp）
   window.addEventListener('keydown', (e) => {
     const ls = document.getElementById('lock-screen');
     if (ls && !ls.classList.contains('hidden')) {
@@ -2003,6 +2148,11 @@ function unlockScreen() {
     playSystemSound("notif");
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
   }
+}
+
+// 互換用エイリアス
+function hideLockScreen() {
+  unlockScreen();
 }
 
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
@@ -2283,8 +2433,8 @@ function openPairingStaffModal() {
 }
 
 
-// 🚨 全iPad ＆ データを一括完全初期化（メタアプリ・管理番号・名前・進行等すべてリセット）
-function executeInstantMasterReset() {
+// 🚨 全iPad ＆ データを一括完全初期化（メタアプリ・管理番号・名前・進行・キャッシュ等すべてリセット）
+async function executeInstantMasterReset() {
   console.log("🚨 全iPad ＆ データを一括完全初期化を実行します。");
   const gasUrl = localStorage.getItem('gas_url');
 
@@ -2294,17 +2444,41 @@ function executeInstantMasterReset() {
   // ② SessionStorage もクリア（セッション内のキャッシュ残留を防止）
   try { sessionStorage.clear(); } catch(e) {}
 
-  // ③ window.GAME_DATABASE をマスタから完全復元（チャット履歴・状態変化を一切残さない）
+  // ③ 🧹 CacheStorage（オフラインキャッシュ）の完全消去（古い09:04・旧マスタを完全破棄）
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      console.log('🧹 全CacheStorageを完全消去しました。');
+    } catch(e) {
+      console.warn('キャッシュ消去エラー:', e);
+    }
+  }
+
+  // ④ 🚀 Service Worker へキャッシュ破棄メッセージ送信＆即時更新
+  if ('serviceWorker' in navigator) {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) {
+        if (reg.active) {
+          reg.active.postMessage({ action: 'clear_all_caches' });
+        }
+        await reg.update();
+      }
+    } catch(e) {}
+  }
+
+  // ⑤ window.GAME_DATABASE をマスタから完全復元（チャット履歴・状態変化を一切残さない）
   if (window.INITIAL_GAME_DATABASE) {
     try {
       window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE));
     } catch(e) {}
   }
 
-  // ④ gameState を初期値へ完全リセット（3周目・メタアプリ・メモ帳・証拠・友達等すべて）
+  // ⑥ gameState を初期値へ完全リセット（3周目・メタアプリ・メモ帳・証拠・友達等すべて）
   gameState.loop = 1;
   gameState.teamId = "";
-  gameState.clockStartISO = "2126-09-04T09:04:00";
+  gameState.clockStartISO = "2026-09-04T09:44:00";
   gameState.clockSetTime = Date.now();
   gameState.timerRunning = false;
   gameState.unlockedHints = [];
@@ -2326,22 +2500,26 @@ function executeInstantMasterReset() {
   gameState.memoMode = "text";
   gameState.dynamicLockNotifications = [];
 
-  // ⑤ メタアプリのモジュールレベル変数もリセット
+  // ⑦ メタアプリのモジュールレベル変数もリセット
   try { metaObservationCurrentFolder = 'root'; } catch(e) {}
 
-  // ⑥ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:04待機, 登録: 未設定, 通信設定維持）
+  // ⑧ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:44待機, 登録: 未設定, 通信設定維持）
   localStorage.setItem('game_loop', '1');
   localStorage.setItem('game_timer_running', 'false');
-  localStorage.setItem('fake_clock_start_iso', '2126-09-04T09:04:00');
+  localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
   localStorage.setItem('fake_clock_set_time', String(Date.now()));
   localStorage.setItem('device_registered', '0');
   // ⚠️ team_id・game_team_id を明示的に空文字にセット（loadStateFromStorage の 'iPad-01' 自動補完を防ぐ）
   localStorage.setItem('team_id', '');
   localStorage.setItem('game_team_id', '');
-  if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+  // リセット待機フラグ処理済みを書き戻し（無限リロードループを絶対防止）
+  localStorage.setItem('reset_pending_done', 'true');
+  if (gasUrl) {
+    localStorage.setItem('gas_url', gasUrl);
+    fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+  }
 
-  // ⑦ 実行済みコマンドIDを「リセット済み」として書き戻す
-  // → localStorage.clear() でIDが消えているため、再起動後に同じ master_reset が再実行されるのを防ぐ
+  // ⑨ 実行済みコマンドIDを「リセット済み」として書き戻す
   const savedCmdId = lastExecutedCommandId;
   if (savedCmdId) {
     localStorage.setItem('last_exec_cmd_id', savedCmdId);
@@ -2350,10 +2528,10 @@ function executeInstantMasterReset() {
 
   try { playSystemSound("fanfare"); } catch(e) {}
 
-  // ⑧ リロード（PWA/Service Worker 環境でも確実に発火するよう location.replace を使用）
+  // ⑩ リロード（最新ファイル強制取得のためタイムスタンプを付与して置換）
   setTimeout(() => {
-    location.replace(location.pathname + '?reset_done=1');
-  }, 500);
+    location.replace(location.pathname + '?reset_done=' + Date.now());
+  }, 400);
 }
 
 function performMasterReset() {
@@ -2424,6 +2602,11 @@ function switchMetaTab(tabId) {
   stopAllCameraStreams();
   const inlineScanner = document.getElementById('meta-qr-inline-scanner');
   if (inlineScanner) inlineScanner.style.display = 'none';
+
+  const fab = document.getElementById('meta-evidence-fab');
+  if (fab) {
+    fab.style.display = (tabId === 'evidence') ? 'flex' : 'none';
+  }
 
   if (tabId === 'observation') {
     renderMetaObservation(metaObservationCurrentFolder);
@@ -2566,28 +2749,10 @@ function renderMetaObservation(folderId = 'root') {
     metaObservationCurrentFolder = 'root';
   }
 
-  // アドレスバーの周回バッジを更新
+  // アドレスバーの周回バッジ（ユーザー指示により非表示）
   const loopBadgeEl = document.getElementById('observation-loop-badge');
   if (loopBadgeEl) {
-    let loopText = "第1周回";
-    let badgeBg = "rgba(2,132,199,0.12)";
-    let badgeColor = "#0284c7";
-    let badgeBorder = "rgba(2,132,199,0.3)";
-    if (currentLoop === 2) {
-      loopText = "第2周回";
-      badgeBg = "rgba(245,158,11,0.15)";
-      badgeColor = "#d97706";
-      badgeBorder = "rgba(245,158,11,0.35)";
-    } else if (currentLoop >= 3) {
-      loopText = "第3周回";
-      badgeBg = "rgba(220,38,38,0.15)";
-      badgeColor = "#dc2626";
-      badgeBorder = "rgba(220,38,38,0.35)";
-    }
-    loopBadgeEl.innerHTML = `<i data-lucide="repeat" style="width:12px; height:12px;"></i> <span>${loopText}</span>`;
-    loopBadgeEl.style.background = badgeBg;
-    loopBadgeEl.style.color = badgeColor;
-    loopBadgeEl.style.border = `1px solid ${badgeBorder}`;
+    loopBadgeEl.style.display = 'none';
   }
 
   if (folderId === 'root') {
@@ -2782,13 +2947,12 @@ function closeMetaLightbox() {
   if (modal) modal.style.display = 'none';
 }
 
-// 📦 【調査資料】タブ描画: 2列カードグリッド & 周回別テキスト動的解決 & 保持
+// 📦 【調査資料】タブ描画: 添付画像準拠（左: 写真+場所 / 右: 名前+説明）& 先行フォールバック対応
 function renderMetaEvidence() {
   const container = document.getElementById('meta-evidence-grid');
   const badge = document.getElementById('evidence-count-badge');
   if (!container) return;
 
-  const currentLoop = Number(gameState.loop) || 1;
   const collected = gameState.collectedEvidence || [];
 
   if (badge) {
@@ -2812,18 +2976,32 @@ function renderMetaEvidence() {
     const item = allItems.find(it => it.id === entry.id || it.qrKey === entry.id);
     if (!item) return '';
 
-    // 周回に応じた名称・説明文の解決
-    const itemName = (item.names && item.names[currentLoop]) || (item.names && item.names[1]) || item.id;
-    const itemDesc = (item.shortDescs && item.shortDescs[currentLoop]) || (item.shortDescs && item.shortDescs[1]) || '';
-    const timeStr = entry.collectedTime || "記録済み";
+    const itemName = item.name || item.id;
+    const itemDesc = item.desc || '';
+    const itemLoc = item.location || entry.location || '調査場所';
+    const timeStr = entry.collectedTime || "09:44";
+    const imgSrc = item.image || '';
 
     return `
-      <div class="evidence-card" onclick="openMetaEvidenceDetail('${item.id}', '${entry.collectedTime || ''}', ${entry.collectedLoop || currentLoop})">
-        <img src="${item.image}" class="evidence-card-thumb" alt="${itemName}" loading="lazy">
-        <div class="evidence-card-body">
+      <div class="evidence-card" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}')">
+        <!-- 左カラム：写真スロット + 入手場所バッジ -->
+        <div class="evidence-card-left">
+          <div class="evidence-thumb-slot">
+            <img src="${imgSrc}" alt="${itemName}" loading="lazy" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+            <div class="evidence-slot-fallback">
+              <i data-lucide="package" class="slot-fallback-icon"></i>
+            </div>
+          </div>
+          <div class="evidence-location-pill" title="${itemLoc}">
+            <i data-lucide="map-pin" style="width:10px; height:10px; flex-shrink:0;"></i>
+            <span>${itemLoc}</span>
+          </div>
+        </div>
+
+        <!-- 右カラム：名前 + 説明 -->
+        <div class="evidence-card-right">
           <div class="evidence-card-title">${itemName}</div>
           <div class="evidence-card-desc">${itemDesc}</div>
-          <div class="evidence-card-time"><i data-lucide="clock" style="width:12px; height:12px;"></i> ${timeStr} 取得</div>
         </div>
       </div>
     `;
@@ -2834,12 +3012,19 @@ function renderMetaEvidence() {
 
 let evidenceScanCooldown = false;
 
-// 📦 調査資料 専用QRスキャナーモーダル開閉
+// 📦 調査資料 専用QRスキャナーモーダル開閉（ユーザー図2：右下ボタンが✕に変化）
 function openMetaEvidenceQrScanner() {
   const modal = document.getElementById('meta-evidence-qr-modal');
   const statusEl = document.getElementById('evidence-scanner-status');
   const errToast = document.getElementById('evidence-scanner-error-toast');
+  const fab = document.getElementById('meta-evidence-fab');
   if (!modal) return;
+
+  // 既に開いている場合は閉じる（トグル動作）
+  if (modal.style.display === 'flex') {
+    closeMetaEvidenceQrScanner();
+    return;
+  }
 
   evidenceScanCooldown = false;
   if (errToast) errToast.style.display = 'none';
@@ -2848,6 +3033,10 @@ function openMetaEvidenceQrScanner() {
     statusEl.innerText = "カメラを起動中...";
     statusEl.className = "scanner-status-msg";
   }
+  if (fab) {
+    fab.innerHTML = '<i data-lucide="x"></i>';
+    safeCreateIcons(fab);
+  }
 
   startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
 }
@@ -2855,8 +3044,13 @@ function openMetaEvidenceQrScanner() {
 function closeMetaEvidenceQrScanner() {
   const modal = document.getElementById('meta-evidence-qr-modal');
   const errToast = document.getElementById('evidence-scanner-error-toast');
+  const fab = document.getElementById('meta-evidence-fab');
   if (modal) modal.style.display = 'none';
   if (errToast) errToast.style.display = 'none';
+  if (fab) {
+    fab.innerHTML = '<i data-lucide="plus"></i>';
+    safeCreateIcons(fab);
+  }
   evidenceScanCooldown = false;
   stopAllCameraStreams();
 }
@@ -2886,7 +3080,7 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
 
     logWriteToGAS("EVIDENCE_SCAN_NOT_FOUND", `未登録のQRコード読み取り: ${cleanKey}`);
 
-    // カメラは閉じず、約2.2秒後にポップアップを消して即座に再スキャン待機状態へ！
+    // カメラは閉じず、約2.2秒後にポップアップを消して即座に再スキャン待機状態へ
     setTimeout(() => {
       if (errToast) errToast.style.display = 'none';
       if (statusBox) {
@@ -2900,21 +3094,21 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
 
   // 既に所持しているか確認
   if (!gameState.collectedEvidence) gameState.collectedEvidence = [];
-  const alreadyHas = gameState.collectedEvidence.some(e => e.id === matched.id);
+  const alreadyHas = gameState.collectedEvidence.some(e => e.id === matched.id || e.id === matched.qrKey);
 
-  const currentLoop = Number(gameState.loop) || 1;
   const currentClock = getFormattedFakeTime();
-  const itemName = (matched.names && matched.names[currentLoop]) || matched.id;
+  const itemName = matched.name || matched.id;
 
   if (!alreadyHas) {
     gameState.collectedEvidence.push({
       id: matched.id,
+      qrKey: matched.qrKey,
       collectedTime: currentClock,
-      collectedLoop: currentLoop,
+      location: matched.location || '調査場所',
       timestamp: Date.now()
     });
     saveStateToStorage();
-    logWriteToGAS("EVIDENCE_COLLECTED", `調査資料取得: ${itemName} (${matched.id})`);
+    logWriteToGAS("EVIDENCE_COLLECTED", `調査資料取得: ${itemName} (${matched.qrKey})`);
   }
 
   // スキャナーを閉じる
@@ -2942,30 +3136,40 @@ function showEvidenceRecordToast(itemName) {
   }, 3500);
 }
 
-// 🔍 調査資料 カード詳細モーダル開閉
-function openMetaEvidenceDetail(itemId, timeStr, itemLoop) {
+// 🔍 調査資料 カード詳細モーダル開閉（添付画像配置 ＆ ゲームアイテムUI）
+function openMetaEvidenceDetail(itemId, timeStr) {
   const modal = document.getElementById('meta-evidence-detail-modal');
-  const imgEl = document.getElementById('detail-item-img');
-  const titleEl = document.getElementById('detail-item-title');
-  const timeEl = document.getElementById('detail-item-time');
-  const loopEl = document.getElementById('detail-item-loop');
-  const descEl = document.getElementById('detail-item-desc');
   if (!modal) return;
 
-  const currentLoop = Number(gameState.loop) || 1;
   const allItems = window.GAME_DATABASE.metaApp.evidenceItems || [];
-  const item = allItems.find(it => it.id === itemId);
+  const item = allItems.find(it => it.id === itemId || it.qrKey === itemId);
   if (!item) return;
 
-  const name = (item.names && item.names[currentLoop]) || (item.names && item.names[1]) || item.id;
-  const desc = (item.detailDescs && item.detailDescs[currentLoop]) || (item.detailDescs && item.detailDescs[1]) || '';
+  const name = item.name || item.id;
+  const descLong = item.detailDesc || item.desc || '';
+  const loc = item.location || '調査場所';
+  const displayTime = timeStr || getFormattedFakeTime();
+  const imgSrc = item.image || '';
 
-  if (imgEl) imgEl.src = item.image;
+  const imgEl = document.getElementById('detail-item-img');
+  const fallbackEl = document.getElementById('detail-slot-fallback');
+  const locEl = document.getElementById('detail-location-text');
+  const titleEl = document.getElementById('detail-item-title');
+  const timeEl = document.getElementById('detail-time-text');
+  const descEl = document.getElementById('detail-item-desc');
+
   if (titleEl) titleEl.innerText = name;
-  if (timeEl) timeEl.innerText = `🕒 ${timeStr || getFormattedFakeTime()} 取得`;
-  if (loopEl) loopEl.innerText = `周回 ${itemLoop || currentLoop}`;
-  if (descEl) descEl.innerText = desc;
+  if (locEl) locEl.innerText = loc;
+  if (timeEl) timeEl.innerText = `${displayTime} 取得`;
+  if (descEl) descEl.innerText = descLong;
 
+  if (imgEl) {
+    imgEl.style.display = 'none';
+    if (fallbackEl) fallbackEl.style.display = 'flex';
+    imgEl.src = imgSrc;
+  }
+
+  safeCreateIcons(modal);
   modal.style.display = 'flex';
 }
 
@@ -4127,7 +4331,7 @@ function openLinkInAppForm(formId) {
         <label class="gform-label" style="font-size:14px; font-weight:600; color:#202124; margin-bottom:10px; display:block;">メール <span class="req" style="color:#d93025;">*</span></label>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#202124; cursor:pointer;">
           <input type="checkbox" id="inapp-form-email-check" checked disabled style="width:18px; height:18px; accent-color:#673ab7;">
-          <span>返信に表示するメールアドレスとして <strong>s23c1044kr@chibatech.ac.jp</strong> を記録する</span>
+          <span>返信に表示するメールアドレスとして <strong>24e2135@chibakou.ac.jp</strong> を記録する</span>
         </label>
       </div>
 
@@ -4215,11 +4419,11 @@ function submitInAppForm() {
   const selectedTasks = [];
   document.querySelectorAll('.inapp-task-chk:checked').forEach(c => selectedTasks.push(c.value));
 
-  // 🕒 タイムスタンプ生成（09:04基準の現在世界線時刻）
+  // 🕒 タイムスタンプ生成（09:44基準の現在世界線時刻）
   const fakeHHMM = getFormattedFakeTime();
   const timeStampStr = `2026/09/04 ${fakeHHMM}:00`;
   const shortTimeStr = `2026/09/04 ${fakeHHMM}`;
-  const userEmail = "s25b1150er@chibatech.ac.jp"; // 矢田逞（ログイン中ユーザー）
+  const userEmail = "s25b1150er@chibakou.ac.jp"; // 矢田逞（ログイン中ユーザー）
 
   // ① フォーム編集画面の回答データ（GFORM_RESPONSES_DATA）へリアルタイム追加
   const newRespObj = {
@@ -4365,7 +4569,7 @@ let GFORM_RESPONSES_DATA = [
   {
     id: 1,
     name: "外園胡春",
-    email: "s2342098cl@chibatech.ac.jp",
+    email: "23e2036@chibakou.ac.jp",
     opinion: "良い記録だけでなく、批判や反省点などのネガティブな経緯等も客観的に残すべきだと思います。また、保存に関しては大学の資料として残してもらえればいいかなと。資料が活かされるのは再発防止の時やこれから挑戦するときが多いので、客観性を重視したいと個人的には思います",
     tasks: ["資料の分別作業", "デジタル化(スキャン等)の作業"],
     timestamp: "2026/08/30 20:50"
@@ -4373,7 +4577,7 @@ let GFORM_RESPONSES_DATA = [
   {
     id: 2,
     name: "比嘉俊希",
-    email: "s23a1058uw@chibatech.ac.jp",
+    email: "23a1099@chibakou.ac.jp",
     opinion: "「もう使わないなら消してもいいのでは」と思うこともありますが、後々検証が必要になるかもしれないので残すのが無難かなと思っています。今後データが増えない保存用であれば、できる限り長持ちする物理媒体にまとめて一括保管しておくのが手っ取り早くていいんじゃないかなって あとはせっかくならみんなの写真とかもどこかに保存して、OBが見れるようにしたら嬉しい",
     tasks: ["資料の分別作業", "指定場所までの運搬", "デジタル化(スキャン等)の作業"],
     timestamp: "2026/08/30 20:55"
@@ -4381,7 +4585,7 @@ let GFORM_RESPONSES_DATA = [
   {
     id: 3,
     name: "七瀬いろは",
-    email: "s2341013qr@chibatech.ac.jp",
+    email: "26d1094@chibakou.ac.jp",
     opinion: "保存の精度や何を保存するかも大事ですが、何より誰かが使いやすいデータとして残すのが大事だと思います！フォルダ整理をしっかりするとか、AIを活かして検索しやすくするとか。こういう資料が活かされるケースを調べて、それに合わせてまとまった資料を作るのもいいんじゃないかと思います！全然私やりますよ！",
     tasks: ["資料の分別作業"],
     timestamp: "2026/08/30 20:59"
@@ -6866,11 +7070,11 @@ window.addEventListener('storage', (e) => {
     try {
       const presetData = JSON.parse(e.newValue);
       if (presetData) {
-        if (presetData.loop) triggerLoopReset(presetData.loop);
+        if (presetData.loop) triggerLoopTransition(presetData.loop, null, false, !!presetData.forceLock);
         if (presetData.alertMsg) showSystemAlert(presetData.alertMsg);
         if (presetData.sound) playSystemSound(presetData.sound);
         if (presetData.forceLock) {
-          document.getElementById('lock-screen').classList.remove('hidden');
+          showLockScreen();
         }
       }
     } catch(err) {}

@@ -37,16 +37,15 @@ function doGet(e) {
 
     // 2. 【超軽量・最速】30台の進行ステータス ＆ 最新運営コマンドを取得（iPad & GM画面用）
     if (action === "get_status" || action === "get_data") {
-      var currentGlobalLoop = getGlobalLoop(ss);
       var flowState = getSceneFlowState(ss);
-      var effectiveLoop = (currentGlobalLoop >= 1 && currentGlobalLoop <= 3) ? currentGlobalLoop : flowState.loop;
+      var effectiveLoop = flowState.loop;
 
       return renderJson({
         success: true,
         flowStep: flowState.step,                // ⭐ 現在のシーンステップ（1〜8）
         globalLoop: effectiveLoop,               // ⭐ 現在の全体周回（1, 2, 3）
         loop: effectiveLoop,                     // 互換用
-        timerRunning: flowState.timerRunning,    // ⭐ タイマーが進行中か（false=09:04静止待機）
+        timerRunning: flowState.timerRunning,    // ⭐ タイマーが進行中か（false=09:44静止待機）
         startTime: flowState.startTime,          // ⭐ 計時開始ミリ秒タイムスタンプ
         blackout: flowState.blackout,            // ⭐ 完全暗転（ステップ7）
         devices: readAllDevicesStatus(ss),
@@ -199,7 +198,7 @@ function doGet(e) {
       resetAllMonitoringData(ss);
       setResetPendingFlag(ss, true);  // ⭐ リセット待機フラグを立てる（スリープ中の端末も次回起動時に必ずリセット）
       setGlobalLoop(ss, 1);           // ⭐ 全体周回を1周目に初期化
-      setSceneFlowState(ss, 1, 1, false, null, false); // ⭐ ステップ1（オープニング待機・09:04固定・タイマー停止）に完全初期化
+      setSceneFlowState(ss, 1, 1, false, null, false); // ⭐ ステップ1（オープニング待機・09:44固定・タイマー停止）に完全初期化
       var resetCmd = recordAdminCommand(ss, {
         type: "master_reset",
         name: "マスターリセット（1周目初期化）",
@@ -788,18 +787,27 @@ function setGlobalLoop(ss, loopNum) {
   }
   var lastRow = sheet.getLastRow();
   var data = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 2).getValues() : [];
+  var matchedRows = [];
   for (var i = 0; i < data.length; i++) {
     if (String(data[i][0]).trim() === GLOBAL_LOOP_KEY) {
-      sheet.getRange(i + 1, 2).setValue(String(val));
-      return;
+      matchedRows.push(i + 1);
     }
   }
-  sheet.appendRow([GLOBAL_LOOP_KEY, String(val)]);
+
+  if (matchedRows.length > 0) {
+    sheet.getRange(matchedRows[0], 2).setValue(String(val));
+    // 重複行（2行目以降）を削除してマージ
+    for (var j = matchedRows.length - 1; j >= 1; j--) {
+      sheet.deleteRow(matchedRows[j]);
+    }
+  } else {
+    sheet.appendRow([GLOBAL_LOOP_KEY, String(val)]);
+  }
 }
 
 // ================================================================
 // 🎬 進行統制（8ステップ）＆ タイマー状態管理
-// 「オープニング待機」「各周回切替（09:04静止）」「タイマー始動」「完全暗転」を完全永続化
+// 「オープニング待機」「各周回切替（09:44静止）」「タイマー始動」「完全暗転」を完全永続化
 // ================================================================
 
 var FLOW_STEP_KEY       = "flow_step";
@@ -846,12 +854,12 @@ function getSceneFlowState(ss) {
     }
   }
 
-  // ⭐ ステップ番号からループ・タイマー状態の論理的整合性を厳密補正（安全策）
-  // 1: オープニング待機 (loop:1, timer:false, 09:04静止待機)
+  // ⭐ ステップ番号からループ・タイマー状態の論理的整合性を一意に決定（Single Source of Truth）
+  // 1: オープニング待機 (loop:1, timer:false, 09:44静止待機)
   // 2: 1周目スタート (loop:1, timer:true)
-  // 3: 1周目終了・2周目切替 (loop:2, timer:false, 09:04静止待機)
+  // 3: 1周目終了・2周目切替 (loop:2, timer:false, 09:44静止待機)
   // 4: 2周目スタート (loop:2, timer:true)
-  // 5: 2周目終了・3周目切替 (loop:3, timer:false, 09:04静止待機)
+  // 5: 2周目終了・3周目切替 (loop:3, timer:false, 09:44静止待機)
   // 6: 3周目スタート (loop:3, timer:true)
   // 7: 3周目終了・完全暗転 (loop:3, timer:false, blackout:true)
   // 8: ゲーム終了 (loop:3, timer:false)
@@ -889,20 +897,6 @@ function getSceneFlowState(ss) {
     state.blackout = false;
   }
 
-  // ⭐ 管理者が意図的に周回を変更している場合（global_loop）、その周回を最優先採用
-  var explicitGlobalLoop = getGlobalLoop(ss);
-  if (explicitGlobalLoop >= 1 && explicitGlobalLoop <= 3) {
-    state.loop = explicitGlobalLoop;
-    // 周回とステップ番号が矛盾している場合は、その周回に適合したステップへ自動補正
-    if (state.loop === 1 && state.step > 2) {
-      state.step = 2;
-    } else if (state.loop === 2 && (state.step < 3 || state.step > 4)) {
-      state.step = 4;
-    } else if (state.loop === 3 && state.step < 5) {
-      state.step = 6;
-    }
-  }
-
   return state;
 }
 
@@ -913,7 +907,9 @@ function setSceneFlowState(ss, stepNum, loopNum, timerRunning, startTime, blacko
   var s = parseInt(stepNum || 1, 10);
   if (isNaN(s) || s < 1 || s > 8) s = 1;
   var l = parseInt(loopNum || 1, 10);
-  if (isNaN(l) || l < 1 || l > 3) l = 1;
+  if (isNaN(l) || l < 1 || l > 3) {
+    l = (s <= 2) ? 1 : (s <= 4) ? 2 : 3;
+  }
 
   var sheet = ss.getSheetByName(RESET_FLAG_SHEET);
   if (!sheet) {
@@ -930,14 +926,28 @@ function setSceneFlowState(ss, stepNum, loopNum, timerRunning, startTime, blacko
   var lastRow = sheet.getLastRow();
   var data = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 2).getValues() : [];
   var existingKeys = {};
+  var rowsToDelete = [];
+
   for (var i = 0; i < data.length; i++) {
     var k = String(data[i][0]).trim();
     if (updates[k] !== undefined) {
-      sheet.getRange(i + 1, 2).setValue(updates[k]);
-      existingKeys[k] = true;
+      if (!existingKeys[k]) {
+        // 最初の行を更新
+        sheet.getRange(i + 1, 2).setValue(updates[k]);
+        existingKeys[k] = true;
+      } else {
+        // 重複行は削除対象として記録
+        rowsToDelete.push(i + 1);
+      }
     }
   }
 
+  // 重複行を下から順に削除
+  for (var d = rowsToDelete.length - 1; d >= 0; d--) {
+    sheet.deleteRow(rowsToDelete[d]);
+  }
+
+  // 未存在キーを新規追加
   for (var uk in updates) {
     if (!existingKeys[uk]) {
       sheet.appendRow([uk, updates[uk]]);

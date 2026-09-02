@@ -67,12 +67,11 @@ body {
   overflow: hidden;
 }
 
-/* --- iPad筐体・画面アスペクト比維持 --- */
+/* --- iPad筐体・画面アスペクト比維持（画面内に完全に収まるレスポンシブ設計） --- */
 .ipad-frame {
-  width: 100vw;
-  height: 133.33vw; /* 3:4 */
-  max-width: var(--ipad-w);
-  max-height: var(--ipad-h);
+  height: min(calc(100vh - 16px), var(--ipad-h));
+  max-height: calc(100vh - 16px);
+  max-width: min(calc((100vh - 16px) * 0.75), var(--ipad-w), calc(100vw - 16px));
   aspect-ratio: 3 / 4;
   background-color: #000;
   border-radius: 40px;
@@ -198,7 +197,8 @@ body {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 100px 24px 50px 24px;
+  padding: 60px 24px 36px 24px;
+  cursor: pointer;
   transition: transform 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.5s ease;
 }
 
@@ -717,6 +717,7 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .meta-sidebar {
@@ -1146,19 +1147,14 @@ body {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-/* 📦 調査資料 (2列カードグリッド & 右下＋FAB & モーダル) */
+/* 📦 調査資料 (アイテムスロット一覧 & 右下＋FAB & モーダル) */
+/* 📦 調査資料 (ユーザー指定デザイン：2列カードグリッド & 右下＋FAB & モーダル) */
 .evidence-cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 12px;
-  padding-bottom: 80px; /* FAB避け */
-}
-
-@media (max-width: 768px) {
-  .evidence-cards-grid {
-    grid-template-columns: 1fr;
-  }
+  gap: 12px;
+  margin-top: 14px;
+  padding-bottom: 84px; /* FAB避け */
 }
 
 .evidence-empty-state {
@@ -1182,14 +1178,15 @@ body {
   margin: 0;
 }
 
+/* 📦 調査資料カード（ユーザー指定デザイン：左=写真+場所 / 右=名前+説明） */
 .evidence-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
-  gap: 14px;
-  align-items: center;
+  gap: 10px;
+  align-items: flex-start;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
@@ -1197,54 +1194,110 @@ body {
 
 .evidence-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: #0284c7;
 }
 
 .evidence-card:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
-.evidence-card-thumb {
-  width: 80px;
-  height: 80px;
-  border-radius: 10px;
-  object-fit: cover;
+/* 左カラム：写真 + 入手場所 */
+.evidence-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
-  background: #f1f5f9;
+  width: 62px;
 }
 
-.evidence-card-body {
+/* 正方形サムネイル（完全統一 62×62px） */
+.evidence-thumb-slot {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evidence-thumb-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 画像未配置時のフォールバックアイコンスロット */
+.evidence-slot-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); /* ユーザー図に合わせた温かみのあるスロット */
+  color: #ef4444;
+}
+
+.slot-fallback-icon {
+  width: 26px;
+  height: 26px;
+  color: #ef4444;
+  opacity: 0.9;
+}
+
+/* 入手場所バッジ（カード用） */
+.evidence-location-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 1.5px 5px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  max-width: 62px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 右カラム：名前 + 説明 */
+.evidence-card-right {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .evidence-card-title {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 14.5px;
+  font-weight: 800;
   color: #0f172a;
-  margin-bottom: 4px;
   line-height: 1.3;
+  letter-spacing: 0.01em;
 }
 
 .evidence-card-desc {
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.4;
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.evidence-card-time {
-  font-size: 11px;
-  color: var(--system-blue);
-  font-weight: 600;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  white-space: pre-line;
 }
 
 /* ➕ 右下丸型フローティング「＋」ボタン (FAB) */
@@ -1456,158 +1509,209 @@ body {
   }
 }
 
-/* 🎉 調査資料 記録完了ポップアップトースト */
+/* 🎉 調査資料 記録完了ポップアップ（ユーザー指定デザイン：画面中央大型カード） */
 .evidence-record-toast {
   position: fixed;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  z-index: 2000;
-  animation: slideDownToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.toast-icon-badge {
-  font-size: 24px;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #f0fdf4;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 99999;
+  animation: fadeIn 0.18s ease;
 }
 
-.toast-body-text {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.toast-body-text strong {
-  font-size: 15px;
-  color: #0f172a;
-}
-
-.toast-body-text span {
-  font-size: 12px;
-  color: #16a34a;
-  font-weight: 600;
-}
-
-@keyframes slideDownToast {
-  from { transform: translate(-50%, -30px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
-}
-
-/* 🔍 調査資料 カード詳細モーダル */
-.evidence-detail-card {
-  width: 90vw;
-  max-width: 640px;
+.evidence-toast-modal-card {
   background: #ffffff;
   border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 34px 36px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  border: 1.5px solid #e2e8f0;
+  animation: zoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 280px;
+  max-width: 82vw;
+  box-sizing: border-box;
 }
 
-.detail-close-btn {
+.evidence-toast-item-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.evidence-toast-particle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 6px 0;
+}
+
+.evidence-toast-action {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+/* 🔍 調査資料 カード詳細モーダル（ゲームアイテム詳細画面風・添付画像配置） */
+.evidence-detail-card {
+  width: 92vw;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
+  animation: zoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+/* ❌ ユーザー指定デザイン：赤丸に白の✕閉じるボタン（詳細モーダル & スキャナー共通） */
+.detail-close-btn, .scanner-close-btn {
   position: absolute;
   top: 14px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #f1f5f9;
-  border: none;
-  font-size: 16px;
-  color: #64748b;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: #ef4444 !important;
+  border: none !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
   cursor: pointer;
-  z-index: 10;
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.45);
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.detail-close-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+.detail-close-btn:hover, .scanner-close-btn:hover {
+  background: #dc2626 !important;
+  transform: scale(1.08);
 }
 
-.evidence-detail-grid {
+.evidence-detail-layout {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+
+/* 左カラム：写真 + 入手場所 */
+.evidence-detail-left {
   display: flex;
   flex-direction: column;
-}
-
-.evidence-detail-media {
-  width: 100%;
-  height: 240px;
-  background: #090d16;
-  display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 180px;
 }
 
-.evidence-detail-media img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.evidence-detail-info {
-  padding: 24px;
-}
-
-.evidence-detail-info h3 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 10px;
-}
-
-.detail-meta-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.detail-time-tag {
-  font-size: 12px;
-  background: #e0f2fe;
-  color: #0369a1;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 600;
-}
-
-.detail-loop-tag {
-  font-size: 12px;
+/* 拡大正方形写真スロット（完全統一 180×180px） */
+.evidence-detail-thumb-box {
+  width: 180px;
+  height: 180px;
+  min-width: 180px;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  overflow: hidden;
   background: #f1f5f9;
-  color: #64748b;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 600;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.detail-desc-box {
+.evidence-detail-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.evidence-detail-thumb-box .evidence-slot-fallback .slot-fallback-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.evidence-detail-left .evidence-location-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  max-width: 180px;
+}
+
+/* 右カラム：名前・時刻 + 説明長ボックス */
+.evidence-detail-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.evidence-detail-header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 36px; /* 閉じるボタンのスペース */
+}
+
+/* ジャンプ率：超太字の大型アイテムタイトル */
+.evidence-detail-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+/* 入手時刻ピルバッジ（ゲーム内世界線時刻） */
+.evidence-time-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+/* ゲームのメッセージウィンドウ風 説明長テキストボックス */
+.evidence-detail-desc-box {
   background: #f8fafc;
-  border-radius: 12px;
-  padding: 16px;
   border: 1px solid #e2e8f0;
-  font-size: 13px;
-  line-height: 1.7;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 13.5px;
   color: #334155;
-  white-space: pre-wrap;
-  max-height: 220px;
+  line-height: 1.75;
+  white-space: pre-line;
+  max-height: 280px;
   overflow-y: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.evidence-detail-desc-box::-webkit-scrollbar {
+  width: 6px;
+}
+.evidence-detail-desc-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
 /* 📝 メモ帳 (タブ増設式 ノート罫線テキスト ＋ 手書きCanvas) */
