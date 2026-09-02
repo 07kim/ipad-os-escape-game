@@ -154,53 +154,53 @@
         <!-- アプリアイコングリッド (4×n) -->
         <div class="app-grid">
           
-          <div class="app-icon-wrapper" onclick="openApp('meta-app')">
-            <div class="app-icon app-meta-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('meta-app', event)" ontouchend="handleAppIconTap('meta-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-meta-icon" style="pointer-events:none;">
               <i data-lucide="folder"></i>
             </div>
-            <span class="app-name">26__0094</span>
+            <span class="app-name" style="pointer-events:none;">26__0094</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('browser-app')">
-            <div class="app-icon app-safari-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('browser-app', event)" ontouchend="handleAppIconTap('browser-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-safari-icon" style="pointer-events:none;">
               <i data-lucide="compass"></i>
             </div>
-            <span class="app-name">Safari</span>
+            <span class="app-name" style="pointer-events:none;">Safari</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('link-app')">
-            <div class="app-icon app-link-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('link-app', event)" ontouchend="handleAppIconTap('link-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-link-icon" style="pointer-events:none;">
               <img src="./LINK.webp?v=2.47.0" class="app-icon-img" alt="LINK">
             </div>
-            <span class="app-name">LINK</span>
+            <span class="app-name" style="pointer-events:none;">LINK</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('manaba-app')">
-            <div class="app-icon app-manaba-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('manaba-app', event)" ontouchend="handleAppIconTap('manaba-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-manaba-icon" style="pointer-events:none;">
               <img src="./manaba.webp" class="app-icon-img" alt="manaba">
             </div>
-            <span class="app-name">manaba</span>
+            <span class="app-name" style="pointer-events:none;">manaba</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('mail-app')">
-            <div class="app-icon app-mail-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('mail-app', event)" ontouchend="handleAppIconTap('mail-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-mail-icon" style="pointer-events:none;">
               <img src="./mail.webp" class="app-icon-img" alt="メール">
             </div>
-            <span class="app-name">メール</span>
+            <span class="app-name" style="pointer-events:none;">メール</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('phone-app')">
-            <div class="app-icon app-phone-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('phone-app', event)" ontouchend="handleAppIconTap('phone-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-phone-icon" style="pointer-events:none;">
               <img src="./phone.webp" class="app-icon-img" alt="電話">
             </div>
-            <span class="app-name">電話</span>
+            <span class="app-name" style="pointer-events:none;">電話</span>
           </div>
 
-          <div class="app-icon-wrapper" onclick="openApp('settings-app')">
-            <div class="app-icon app-settings-icon">
+          <div class="app-icon-wrapper" onclick="handleAppIconTap('settings-app', event)" ontouchend="handleAppIconTap('settings-app', event)" style="touch-action:manipulation; cursor:pointer;">
+            <div class="app-icon app-settings-icon" style="pointer-events:none;">
               <img src="./setting.webp" class="app-icon-img" alt="設定">
             </div>
-            <span class="app-name">設定</span>
+            <span class="app-name" style="pointer-events:none;">設定</span>
           </div>
 
         </div>
@@ -208,18 +208,18 @@
         <!-- 下部ドック (Dock) -->
         <div class="dock-container">
           <div class="dock">
-            <div class="dock-icon" onclick="openApp('meta-app')"><i data-lucide="folder-open"></i></div>
-            <div class="dock-icon" onclick="openApp('browser-app')"><i data-lucide="globe"></i></div>
-            <div class="dock-icon link-dock-icon" onclick="openApp('link-app')">
-              <img src="./LINK.webp?v=2.47.0" class="dock-icon-img" alt="LINK">
-              <span class="dock-badge" id="dock-link-badge" style="display:none;">1</span>
+            <div class="dock-icon" onclick="handleAppIconTap('meta-app', event)" ontouchend="handleAppIconTap('meta-app', event)" style="touch-action:manipulation; cursor:pointer;"><i data-lucide="folder-open" style="pointer-events:none;"></i></div>
+            <div class="dock-icon" onclick="handleAppIconTap('browser-app', event)" ontouchend="handleAppIconTap('browser-app', event)" style="touch-action:manipulation; cursor:pointer;"><i data-lucide="globe" style="pointer-events:none;"></i></div>
+            <div class="dock-icon link-dock-icon" onclick="handleAppIconTap('link-app', event)" ontouchend="handleAppIconTap('link-app', event)" style="touch-action:manipulation; cursor:pointer;">
+              <img src="./LINK.webp?v=2.47.0" class="dock-icon-img" alt="LINK" style="pointer-events:none;">
+              <span class="dock-badge" id="dock-link-badge" style="display:none; pointer-events:none;">1</span>
             </div>
-            <div class="dock-icon manaba-dock-icon" onclick="openApp('manaba-app')">
-              <img src="./manaba.webp" class="dock-icon-img" alt="manaba">
+            <div class="dock-icon manaba-dock-icon" onclick="handleAppIconTap('manaba-app', event)" ontouchend="handleAppIconTap('manaba-app', event)" style="touch-action:manipulation; cursor:pointer;">
+              <img src="./manaba.webp" class="dock-icon-img" alt="manaba" style="pointer-events:none;">
             </div>
             <!-- 🔄 再読み込み（リフレッシュ）ボタン -->
-            <div class="dock-icon refresh-dock-icon" id="dock-refresh-btn" onclick="refreshApp()" title="再読み込み (リフレッシュ)">
-              <i data-lucide="rotate-cw"></i>
+            <div class="dock-icon refresh-dock-icon" id="dock-refresh-btn" onclick="refreshApp()" ontouchend="refreshApp()" title="再読み込み (リフレッシュ)" style="touch-action:manipulation; cursor:pointer;">
+              <i data-lucide="rotate-cw" style="pointer-events:none;"></i>
             </div>
           </div>
         </div>
@@ -2507,7 +2507,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.96.0"></script>
-  <script src="app.js?v=2.96.0"></script>
+  <script src="data.js?v=2.97.0"></script>
+  <script src="app.js?v=2.97.0"></script>
 </body>
 </html>

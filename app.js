@@ -2182,6 +2182,21 @@ function hideLockScreen() {
 }
 
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
+// 🚀 アプリアイコン・ドックアイコン即応タップハンドラー（タップブレ・スワイプ誤判定によるクリック破棄を完全根絶）
+let lastAppIconTapTime = 0;
+function handleAppIconTap(appId, e) {
+  const now = Date.now();
+  if (now - lastAppIconTapTime < 240) return;
+  lastAppIconTapTime = now;
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (e.cancelable && typeof e.preventDefault === 'function' && e.type === 'touchend') {
+      e.preventDefault();
+    }
+  }
+  openApp(appId);
+}
+
 function openApp(appId) {
   if (!appId) return;
   // 💡 アプリ起動時はロック画面の透明残留を100%防止
@@ -5161,7 +5176,7 @@ function showManabaKeychainPopup() {
     const list = popup.querySelector('.chrome-autofill-list');
     if (list) {
       list.innerHTML = `
-        <div class="chrome-autofill-item" onclick="autofillManabaLogin('24e2135', '24E2135', '連城 観')">
+        <div class="chrome-autofill-item" onclick="autofillManabaLogin('M24e2135', '5312e42M', '連城 観')" ontouchend="autofillManabaLogin('M24e2135', '5312e42M', '連城 観')" onmousedown="event.preventDefault()">
           <div class="manaba-item-leaf-icon">
             <svg viewBox="0 0 40 40" width="18" height="18">
               <ellipse cx="14" cy="12" rx="7" ry="12" transform="rotate(25 14 12)" fill="#84cc16"/>
@@ -5171,7 +5186,7 @@ function showManabaKeychainPopup() {
             </svg>
           </div>
           <div class="chrome-item-info">
-            <span class="chrome-item-id">24e2135</span>
+            <span class="chrome-item-id">M24e2135</span>
             <span class="chrome-item-dots">••••••••</span>
           </div>
         </div>
