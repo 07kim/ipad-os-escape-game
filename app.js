@@ -2105,49 +2105,33 @@ function initTopSwipeForLockScreen() {
   }
 }
 
-// --- ロック画面操作 ＆ 解除ジェスチャー（タップ・スワイプ・クリック・キーボード 100%即時解除） ---
+// --- ロック画面操作 ＆ 解除ジェスチャー（完全非ブロッキング・タップ/スワイプ 0ms即時解除） ---
 function initLockScreenGestures() {
   const lockScreen = document.getElementById('lock-screen');
   if (!lockScreen) return;
 
   let touchStartY = 0;
   let touchStartX = 0;
-  let isTouching = false;
+  let isDragging = false;
 
-  // 1. タッチ操作（iPad実機: 上スワイプ・斜めスワイプ・タップすべてで即解除）
   lockScreen.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length > 0) {
       touchStartY = e.touches[0].clientY;
       touchStartX = e.touches[0].clientX;
-      isTouching = true;
+      isDragging = true;
     }
   }, { passive: true });
 
-  lockScreen.addEventListener('touchmove', (e) => {
-    if (isTouching && e.cancelable) {
-      // Safariのオーバースクロール/ページバウンスを防止
-      e.preventDefault();
-    }
-  }, { passive: false });
-
   lockScreen.addEventListener('touchend', (e) => {
-    if (isTouching) {
-      isTouching = false;
-      // 画面から指が離れたら、タップ・スワイプ問わず即座にロック解除
+    if (isDragging) {
+      isDragging = false;
       unlockScreen();
     }
   }, { passive: true });
 
-  // 2. ポインター / マウス操作（PCブラウザ・ペン入力）
-  lockScreen.addEventListener('pointerup', (e) => {
-    unlockScreen();
-  });
+  lockScreen.addEventListener('pointerup', () => { unlockScreen(); }, { passive: true });
+  lockScreen.addEventListener('click', () => { unlockScreen(); }, { passive: true });
 
-  lockScreen.addEventListener('click', (e) => {
-    unlockScreen();
-  });
-
-  // 3. キーボード操作（Space, Enter, ArrowUp）
   window.addEventListener('keydown', (e) => {
     const ls = document.getElementById('lock-screen');
     if (ls && !ls.classList.contains('hidden')) {
@@ -2633,7 +2617,8 @@ function performMasterReset() {
 // ==========================================================================
 let metaObservationCurrentFolder = 'root';
 
-function switchMetaTab(tabId) {
+function switchMetaTab(tabId, e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   if (tabId === 'overview') tabId = 'observation';
   gameState.activeMetaTab = tabId;
 
@@ -2642,15 +2627,14 @@ function switchMetaTab(tabId) {
 
   const btnId = `meta-tab-${tabId}-btn`;
   const activeBtn = document.getElementById(btnId) || Array.from(document.querySelectorAll('.meta-tab-btn')).find(btn => {
-    const oc = btn.getAttribute('onclick');
-    return oc && oc.includes(tabId);
+    const oc = btn.getAttribute('onclick') || '';
+    return oc.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
 
   const panel = document.getElementById(`meta-panel-${tabId}`);
   if (panel) panel.classList.add('active');
 
-  stopAllCameraStreams();
   const inlineScanner = document.getElementById('meta-qr-inline-scanner');
   if (inlineScanner) inlineScanner.style.display = 'none';
   const qrModal = document.getElementById('meta-evidence-qr-modal');
@@ -2672,6 +2656,8 @@ function switchMetaTab(tabId) {
   } else if (tabId === 'memo') {
     initMetaMemo();
   }
+
+  try { playSystemSound('touch'); } catch (err) {}
 }
 
 // 📁 Apple純正 iPadOS「ファイル」アプリ風 中身が入ったリアルなフォルダSVGジェネレーター
@@ -2822,14 +2808,14 @@ function renderMetaObservation(folderId = 'root') {
     }
 
     container.innerHTML = visibleFolders.map(folder => `
-      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" title="タップして「${folder.folderName}」を開く">
-        <div class="finder-thumb-wrapper">
+      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" ontouchend="renderMetaObservation('${folder.id}')" style="touch-action:manipulation; cursor:pointer;" title="タップして「${folder.folderName}」を開く">
+        <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <div class="finder-folder-icon">
             ${generateIpadosFolderSvg()}
           </div>
         </div>
-        <div class="finder-file-name">${folder.folderName}</div>
-        <div class="finder-file-desc">${folder.files ? folder.files.length : 0} 項目</div>
+        <div class="finder-file-name" style="pointer-events:none;">${folder.folderName}</div>
+        <div class="finder-file-desc" style="pointer-events:none;">${folder.files ? folder.files.length : 0} 項目</div>
       </div>
     `).join('');
   } else {
@@ -2856,11 +2842,11 @@ function renderMetaObservation(folderId = 'root') {
       `;
     } else {
       container.innerHTML = files.map(file => `
-        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" title="タップでプレビュー">
-          <div class="finder-thumb-wrapper">
+        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" ontouchend="openMetaLightbox('${file.image}', '${file.fileName}')" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
+          <div class="finder-thumb-wrapper" style="pointer-events:none;">
             <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
           </div>
-          <div class="finder-file-name">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
+          <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
         </div>
       `).join('');
     }
@@ -4523,8 +4509,6 @@ function refreshLinkMyQr() {
 // 📱 LINK専用 LINE風 アプリ内フォームオーバーレイ
 // ==========================================================================
 function openLinkInAppForm(formId) {
-  openHackingForm();
-  return;
   const overlay = document.getElementById('link-inapp-form-overlay');
   const bodyEl = document.getElementById('link-inapp-form-body');
   if (!overlay || !bodyEl) {

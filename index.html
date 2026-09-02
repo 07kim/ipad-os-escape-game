@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
   
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=2.98.0">
+  <link rel="stylesheet" href="style.css?v=2.99.0">
   <style>
     html, body {
       background-color: #0f172a !important; /* 💡 ロード中も白画面にならずiPadOSダークスレートを即時表示 */
@@ -239,9 +239,9 @@
         <div class="meta-container">
           <!-- サイドメニュー -->
           <div class="meta-sidebar">
-            <button class="meta-tab-btn active" id="meta-tab-observation-btn" onclick="switchMetaTab('observation')"><i data-lucide="eye"></i> 観測</button>
-            <button class="meta-tab-btn" id="meta-tab-evidence-btn" onclick="switchMetaTab('evidence')"><i data-lucide="folder-archive"></i> 調査資料</button>
-            <button class="meta-tab-btn" id="meta-tab-memo-btn" onclick="switchMetaTab('memo')"><i data-lucide="edit-3"></i> メモ</button>
+            <button class="meta-tab-btn active" id="meta-tab-observation-btn" onclick="switchMetaTab('observation', event)" ontouchend="switchMetaTab('observation', event)" style="touch-action:manipulation; cursor:pointer;"><i data-lucide="eye" style="pointer-events:none;"></i> 観測</button>
+            <button class="meta-tab-btn" id="meta-tab-evidence-btn" onclick="switchMetaTab('evidence', event)" ontouchend="switchMetaTab('evidence', event)" style="touch-action:manipulation; cursor:pointer;"><i data-lucide="folder-archive" style="pointer-events:none;"></i> 調査資料</button>
+            <button class="meta-tab-btn" id="meta-tab-memo-btn" onclick="switchMetaTab('memo', event)" ontouchend="switchMetaTab('memo', event)" style="touch-action:manipulation; cursor:pointer;"><i data-lucide="edit-3" style="pointer-events:none;"></i> メモ</button>
           </div>
           <!-- コンテンツ表示エリア -->
           <div class="meta-content">
@@ -2481,7 +2481,7 @@
   <audio id="master-system-audio" preload="auto" playsinline style="display:none;"></audio>
 
   <!-- Scripts -->
-  <script src="data.js?v=2.98.0"></script>
-  <script src="app.js?v=2.98.0"></script>
+  <script src="data.js?v=2.99.0"></script>
+  <script src="app.js?v=2.99.0"></script>
 </body>
 </html>
