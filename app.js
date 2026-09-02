@@ -2039,18 +2039,16 @@ function initTopSwipeForLockScreen() {
 
   document.addEventListener('touchstart', (e) => {
     const ls = document.getElementById('lock-screen');
-    // すでにロック画面が表示されている場合は上端スワイプを追跡しない
     if (ls && !ls.classList.contains('hidden')) return;
 
+    // 💡 タップ遮断バグ根絶: 勝手にロック画面をスタンバイ（display:flex）させず、明示的な下スワイプのみで制御
     if (e.touches && e.touches.length === 1) {
       const touch = e.touches[0];
-      // 画面最上部（ステータスバー付近: 24px以内）でタッチ開始された場合のみ追跡
-      if (touch.clientY <= 24) {
+      if (touch.clientY <= 16) {
         touchStartY = touch.clientY;
         touchStartX = touch.clientX;
         touchStartTime = Date.now();
         isTrackingTopSwipe = true;
-        if (ls) ls.style.display = 'flex'; // スワイプ準備で即時スタンバイ
       } else {
         isTrackingTopSwipe = false;
       }
@@ -3981,7 +3979,7 @@ function handleBrowserSearch(e) {
     if (q) {
       // GoogleフォームURLが入力された場合は直接フォームを開く
       if (q.includes('docs.google.com/forms') || q.includes('1FAIpQLSdXFpfSG')) {
-        openLinkInAppForm('form_mental_scan');
+        openHackingForm();
         return;
       }
       searchBrowserKeyword(q);
@@ -4241,7 +4239,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
     const urls = formattedText.match(urlRegex);
 
     formattedText = formattedText.replace(urlRegex, (url) => {
-      return `<a href="javascript:void(0)" onclick="openLinkInAppForm()" style="color:#0284c7; text-decoration:underline; word-break:break-all; font-weight:500;">${url}</a>`;
+      return `<a href="javascript:void(0)" onclick="openHackingForm(event)" style="color:#0284c7; text-decoration:underline; word-break:break-all; font-weight:600; cursor:pointer;">${url}</a>`;
     });
     formattedText = formattedText.replace(/\n/g, '<br>');
 
@@ -4249,7 +4247,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
     if (msg.ogpCard) {
       const ogp = msg.ogpCard;
       ogpHtml = `
-        <div class="line-ogp-card" onclick="openLinkInAppForm('${ogp.formId || ''}')">
+        <div class="line-ogp-card" onclick="openHackingForm(event)" style="cursor:pointer;">
           <img src="${ogp.image}" class="line-ogp-thumb" alt="${ogp.title}" loading="lazy">
           <div class="line-ogp-body">
             <div class="line-ogp-title">${ogp.title}</div>
@@ -4268,7 +4266,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
         : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600";
 
       ogpHtml = `
-        <div class="line-ogp-card" onclick="openLinkInAppForm()">
+        <div class="line-ogp-card" onclick="openHackingForm(event)" style="cursor:pointer;">
           <img src="${ogpImg}" class="line-ogp-thumb" alt="${ogpTitle}" loading="lazy">
           <div class="line-ogp-body">
             <div class="line-ogp-title">${ogpTitle}</div>
@@ -4385,12 +4383,11 @@ function sendCustomLinkMessage() {
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const msgId = "msg_" + Date.now();
 
-  // 1. 自分の吹き出しを即座に追加
+  // 1. 自分の吹き出しを即座に追加（💡 ユーザー指示により時間を削除）
   messageArea.innerHTML += `
     <div class="message-bubble outgoing" id="${msgId}">
       ${text}
-      <span class="message-time">${timeStr}</span>
-      <div class="msg-status-sending" style="font-size:10px; color:#a1a1aa; margin-top:2px;">送信中…</div>
+      <div class="msg-status-sending" style="font-size:10px; color:#a1a1aa; margin-top:4px;">送信中…</div>
     </div>
   `;
   input.value = "";
@@ -4505,6 +4502,8 @@ function refreshLinkMyQr() {
 // 📱 LINK専用 LINE風 アプリ内フォームオーバーレイ
 // ==========================================================================
 function openLinkInAppForm(formId) {
+  openHackingForm();
+  return;
   const overlay = document.getElementById('link-inapp-form-overlay');
   const bodyEl = document.getElementById('link-inapp-form-body');
   if (!overlay || !bodyEl) {
@@ -6358,9 +6357,9 @@ function switchMailFolder(folder) {
   if (select) select.value = folder;
   const badge = document.getElementById('mail-current-folder-badge');
   const title = document.getElementById('mail-folder-title');
-  const folderNames = { inbox: '受信', sent: '送信済み', trash: 'ゴミ箱', flagged: 'フラグ付き' };
+  const folderNames = { inbox: '受信', spam: '迷惑メール', sent: '送信済み', trash: 'ゴミ箱', flagged: 'フラグ付き' };
   if (badge) badge.innerText = folderNames[folder] || '受信';
-  if (title) title.innerText = (folderNames[folder] || '受信') + (folder === 'inbox' ? 'トレイ' : '');
+  if (title) title.innerText = folder === 'inbox' ? '受信トレイ' : (folderNames[folder] || '受信');
   renderMailList();
 }
 
@@ -6373,7 +6372,7 @@ function getMailItemsForCurrentFolder() {
   const dbMails = window.GAME_DATABASE.mailApp[gameState.loop] || [];
   let list = [];
 
-  if (mailState.currentFolder === 'inbox') {
+  if (mailState.currentFolder === 'inbox' || mailState.currentFolder === 'spam') {
     list = dbMails.filter(m => !mailState.trashIds.has(m.id));
   } else if (mailState.currentFolder === 'sent') {
     list = mailState.sentMails.filter(m => !mailState.trashIds.has(m.id));
