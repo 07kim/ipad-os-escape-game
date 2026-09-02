@@ -1,6 +1,6 @@
 // ネットワーク優先戦略（Network First）
 // 常に最新ファイルをネットワークから取得し、オフライン時のみキャッシュを使用
-const CACHE_NAME = "ipad-escape-v11-evidence";
+const CACHE_NAME = "ipad-escape-v12-webp";
 
 self.addEventListener("install", () => {
   self.skipWaiting(); // 即座に有効化
