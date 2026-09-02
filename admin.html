@@ -3653,7 +3653,7 @@
     // 4秒おきに30台ステータスを自動更新
     setInterval(() => {
       try { refreshMonitoringDashboard(); } catch(e) {}
-    }, 4000);
+    }, 7000);
 
     // 進行プリセットボタンの描画
     function renderPresetButtons() {
@@ -3920,7 +3920,11 @@
 
       const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
       fetch(url)
-        .then(res => res.json())
+        .then(async res => {
+          const text = await res.text();
+          if (text.includes('<!DOCTYPE') || text.includes('<html')) return null;
+          try { return JSON.parse(text); } catch(e) { return null; }
+        })
         .then(json => {
           if (json && json.success) {
             // 👑 サーバーのシーン進行状態・周回との同期
@@ -3993,7 +3997,11 @@
 
       const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
       fetch(url)
-        .then(res => res.json())
+        .then(async res => {
+          const text = await res.text();
+          if (text.includes('<!DOCTYPE') || text.includes('<html')) return null;
+          try { return JSON.parse(text); } catch(e) { return null; }
+        })
         .then(json => {
           let count = 0;
           if (json && json.success && json.devices) {

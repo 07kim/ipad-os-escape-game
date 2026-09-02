@@ -919,7 +919,7 @@ function startAutoSpreadsheetSync() {
   // 起動直後（1.5秒後）にも再同期をかけてアクセス時の即時周回一致を確実化
   setTimeout(fetchLatestDataFromSpreadsheet, 1500);
   // 8秒おきに裏側で自動チェック・コマンド受信（超軽量数十バイト・リロード不要）
-  setInterval(fetchLatestDataFromSpreadsheet, 8000);
+  setInterval(fetchLatestDataFromSpreadsheet, 10000);
 }
 
 // ==========================================================================
