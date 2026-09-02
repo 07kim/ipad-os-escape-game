@@ -1,3 +1,4 @@
+// 🛡️ モーダル開閉時のゴーストクリック・タップスルー遮断システム
 // 2126年 架空iPadOS型 脱出ゲームシステム - アプリ制御ロジック (app.js)
 
 // ⚡ 超軽量スコープ付きLucideアイコンレンダラー（全画面再スキャンを防止し高速化）
@@ -5,23 +6,34 @@ function safeCreateIcons(target = null) {
   if (typeof lucide === 'undefined') return;
   try {
     if (target && target.nodeType === 1) {
-      lucide.createIcons({ root: target });
+      // 未変換の [data-lucide] が存在する場合のみ実行
+      if (target.querySelector('[data-lucide]')) {
+        lucide.createIcons({ roots: [target] });
+      }
     } else {
       lucide.createIcons();
     }
-  } catch(e) {
-    try { lucide.createIcons(); } catch(err) {}
+  } catch (e) {
+    try { lucide.createIcons(); } catch (err) { }
   }
 }
 
-// 🔄 通信中・ロード中インジケータ表示コントローラ
+// 🔄 通信中・ロード中インジケータ表示コントローラ（非表示時はdisplay:noneでGPU負荷ゼロ化）
 let loadingIndicatorTimer = null;
+let loadingIndicatorHideTimer = null;
 function showNetworkLoadingIndicator(text = "ロード中…") {
   const indicator = document.getElementById('network-loading-indicator');
   const textEl = document.getElementById('network-loading-text');
   if (indicator) {
+    if (loadingIndicatorHideTimer) {
+      clearTimeout(loadingIndicatorHideTimer);
+      loadingIndicatorHideTimer = null;
+    }
     if (textEl) textEl.innerText = text;
-    indicator.classList.add('show');
+    indicator.style.display = 'flex';
+    requestAnimationFrame(() => {
+      indicator.classList.add('show');
+    });
     if (loadingIndicatorTimer) clearTimeout(loadingIndicatorTimer);
     // 3秒後に自動で非表示（タイムアウト安全策）
     loadingIndicatorTimer = setTimeout(() => {
@@ -34,6 +46,13 @@ function hideNetworkLoadingIndicator() {
   const indicator = document.getElementById('network-loading-indicator');
   if (indicator) {
     indicator.classList.remove('show');
+    if (loadingIndicatorHideTimer) clearTimeout(loadingIndicatorHideTimer);
+    loadingIndicatorHideTimer = setTimeout(() => {
+      if (!indicator.classList.contains('show')) {
+        indicator.style.display = 'none';
+      }
+      loadingIndicatorHideTimer = null;
+    }, 220);
   }
   if (loadingIndicatorTimer) {
     clearTimeout(loadingIndicatorTimer);
@@ -42,7 +61,7 @@ function hideNetworkLoadingIndicator() {
 }
 
 // --- グローバルエラーハンドラー（alertによる画面停止を防止） ---
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, error) {
   console.warn(`[JSエラー検知] ${message} at ${source}:${lineno}:${colno}`, error);
   return true; // ブラウザの同期エラー中断を抑制
 };
@@ -138,9 +157,9 @@ window.addEventListener('DOMContentLoaded', () => {
       console.log("🔄 URLパラメータによる完全初期化クリーン起動を実行します。");
       const gasUrl = localStorage.getItem('gas_url');
       localStorage.clear();
-      try { sessionStorage.clear(); } catch(e) {}
+      try { sessionStorage.clear(); } catch (e) { }
       if (window.INITIAL_GAME_DATABASE) {
-        try { window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE)); } catch(e) {}
+        try { window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE)); } catch (e) { }
       }
       localStorage.setItem('game_loop', '1');
       localStorage.setItem('game_timer_running', 'false');
@@ -152,7 +171,7 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('reset_pending_done', 'true');
       if (gasUrl) {
         localStorage.setItem('gas_url', gasUrl);
-        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => { });
       }
       // パラメータを除いたクリーンURLへリダイレクト
       location.replace(location.pathname + '?reset_done=1');
@@ -166,7 +185,7 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('reset_pending_done', 'true');
       const gasUrl = localStorage.getItem('gas_url');
       if (gasUrl) {
-        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => { });
       }
       // クリーンURLへ置き換え（ブラウザ履歴汚染防止）
       history.replaceState(null, '', location.pathname);
@@ -225,7 +244,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         };
         console.log('✅ BroadcastChannelリスナーを起動しました (escape_game_channel)');
-      } catch(e) {
+      } catch (e) {
         console.warn('BroadcastChannel初期化エラー:', e);
       }
     }
@@ -245,7 +264,7 @@ window.addEventListener('DOMContentLoaded', () => {
               executeRemoteAdminCommand(cmd);
             }
           }
-        } catch(e) { console.warn('actor command parse error:', e); }
+        } catch (e) { console.warn('actor command parse error:', e); }
       }
     }, 1000);
 
@@ -291,7 +310,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }, 400);
     }
 
-  } catch(startupError) {
+  } catch (startupError) {
     // 起動時エラーを画面に直接表示（デバッグ用）
     document.body.style.background = '#fff';
     document.body.innerHTML = `
@@ -343,7 +362,7 @@ function fetchLatestDataFromSpreadsheet() {
   const startTime = Date.now();
   // 🚀 超軽量ステータス・最新コマンドのみを取得（数十バイトの極小通信）
   const url = gasUrl.includes('?') ? `${gasUrl}&action=get_status` : `${gasUrl}?action=get_status`;
-  
+
   fetch(url)
     .then(res => {
       if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
@@ -369,7 +388,7 @@ function fetchLatestDataFromSpreadsheet() {
             // GASへリセット完了を送信してフラグ解除
             const gasUrl = localStorage.getItem('gas_url');
             if (gasUrl) {
-              fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+              fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => { });
             }
             setTimeout(() => { executeInstantMasterReset(); }, 300);
             return;
@@ -465,7 +484,7 @@ function executeRemoteAdminCommand(cmd) {
   // params のアンパック（2重ネスト・文字列JSONを完全吸収）
   let p = cmd.params || {};
   if (typeof p === 'string') {
-    try { p = JSON.parse(p); } catch (e) {}
+    try { p = JSON.parse(p); } catch (e) { }
   }
   if (p.params && typeof p.params === 'object') {
     p = Object.assign({}, p, p.params);
@@ -630,7 +649,7 @@ function executeRemoteAdminCommand(cmd) {
     const text = cmd.text || p.text;
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
-    
+
     // 🕒 送信時刻は現実時間ではなく、常にこのiPadの世界線時刻（09:44からのバーチャル時間）を採用
     const msgTime = getFormattedFakeTime();
 
@@ -653,7 +672,7 @@ function executeRemoteAdminCommand(cmd) {
 function formatChatTime(rawTime) {
   if (!rawTime) return getFormattedFakeTime();
   const str = String(rawTime).trim();
-  
+
   // すでに "09:09" や "15:38" 形式の場合
   if (/^\d{1,2}:\d{2}$/.test(str)) {
     const parts = str.split(':');
@@ -669,7 +688,7 @@ function formatChatTime(rawTime) {
         const minutes = String(d.getMinutes()).padStart(2, '0');
         return `${hours}:${minutes}`;
       }
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // 文字列中から "HH:mm" を抽出
@@ -722,7 +741,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   // LocalStorageキャッシュを最新データで保存
   try {
     localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
-  } catch(e) {}
+  } catch (e) { }
 
   // 2. LINKアプリが開いている場合は即座に画面へ描画 ＆ スクロール
   const isLinkOpen = (
@@ -796,7 +815,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
       try {
         const bc = new BroadcastChannel('escape_game_channel');
         bc.postMessage({ type: 'actor_message_ack', triggerId: cleanId, timestamp: Date.now() });
-      } catch(e) {}
+      } catch (e) { }
     }
     console.log(`✅ 演者トリガー [${cleanId}] のLINK反映ACKを送信しました`);
   }
@@ -823,11 +842,11 @@ function sendDeviceStatusHeartbeat() {
   const myManaba = currentManaba ? `ログイン中: ${currentManaba}` : "未ログイン";
 
   // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
-  const getUrl = gasUrl.includes('?') 
+  const getUrl = gasUrl.includes('?')
     ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`
     : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`;
 
-  fetch(getUrl).catch(() => {});
+  fetch(getUrl).catch(() => { });
 
   // 2. 同一端末テスト用 LocalStorage 更新
   localStorage.setItem('team_id', myDeviceId);
@@ -923,7 +942,7 @@ async function requestScreenWakeLock() {
         console.log('[WakeLock] スリープロック解除');
       });
       console.log('[WakeLock] 画面スリープ防止ロック取得成功');
-    } catch(err) {
+    } catch (err) {
       console.warn('[WakeLock] スリープロック取得失敗 (バッテリー節約等):', err);
     }
   }
@@ -934,7 +953,7 @@ function initNoSleepAudio() {
 
   if (_noSleepAudioCtx) {
     if (_noSleepAudioCtx.state === 'suspended') {
-      _noSleepAudioCtx.resume().catch(() => {});
+      _noSleepAudioCtx.resume().catch(() => { });
     }
     return;
   }
@@ -943,7 +962,7 @@ function initNoSleepAudio() {
     _keepAudioContextAlive();
     _noSleepActive = true;
     console.log('[NoSleep] AudioContext 起動 - スリープ防止モード開始');
-  } catch(e) {
+  } catch (e) {
     console.warn('[NoSleep] AudioContext 初期化失敗:', e);
   }
 }
@@ -961,7 +980,7 @@ function _keepAudioContextAlive() {
     source.start(0);
     _noSleepSourceNode = source;
     _noSleepActive = true;
-  } catch(e) {
+  } catch (e) {
     console.warn('[NoSleep] 無音ループ開始失敗:', e);
   }
 }
@@ -977,12 +996,12 @@ function stopNoSleepAudio() {
       _noSleepAudioCtx.suspend();
     }
     if (_screenWakeLock) {
-      _screenWakeLock.release().catch(() => {});
+      _screenWakeLock.release().catch(() => { });
       _screenWakeLock = null;
     }
     _noSleepActive = false;
     console.log('[NoSleep] スリープ防止 停止');
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // 画面の表示状態変化（スリープ暗転 ➔ 復帰）を監視
@@ -993,7 +1012,7 @@ document.addEventListener('visibilitychange', () => {
     if (_noSleepAudioCtx && _noSleepAudioCtx.state === 'suspended') {
       _noSleepAudioCtx.resume().then(() => {
         console.log('[NoSleep] 画面復帰: AudioContext resume 成功');
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     // 🚨 スリープ中に master_reset が届いていた場合は即時完全初期化（漏れ防止）
@@ -1010,7 +1029,7 @@ document.addEventListener('visibilitychange', () => {
     // 画面が暗くなった ➔ ステータスを記録
     try {
       localStorage.setItem('device_sleep_since', String(Date.now()));
-    } catch(e) {}
+    } catch (e) { }
     console.log('[NoSleep] 画面暗転検知 - バックグラウンド維持中');
   }
 });
@@ -1041,7 +1060,7 @@ function _processQueuedSleepCommands() {
       }
       localStorage.removeItem('sleep_cmd_queue');
     }
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // 🚨 スリープ・バックグラウンド中に届いた master_reset を復帰時に確認して即時実行
@@ -1068,7 +1087,7 @@ function _checkAndExecutePendingMasterReset() {
         }
       }
     })
-    .catch(() => {}); // ネットワークエラーは無視
+    .catch(() => { }); // ネットワークエラーは無視
 }
 
 // ユーザー操作（タップ・クリック・キー入力）で自動的に起動
@@ -1084,7 +1103,7 @@ function _onFirstUserInteraction() {
 function applyOperationalRestrictions() {
   // 右クリック・長押しコンテキストメニュー禁止
   document.addEventListener('contextmenu', e => e.preventDefault());
-  
+
   // ピンチイン・アウトによる拡大縮小禁止（マルチタッチのみ、シングルタップは影響なし）
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length > 1) {
@@ -1093,34 +1112,65 @@ function applyOperationalRestrictions() {
   }, { passive: false });
 
   // Pull-to-refresh（上からの引っ張りリロード）および画面全体のオーバースクロールを完全防止
-  let touchStartY = 0;
-  let scrollTarget = null;
+
+  // ⚡ 超高速スクロール可能要素判定（getComputedStyleを全廃し強制リフロー・メインスレッド凍結を根絶）
+  const SCROLLABLE_CLASSES = [
+    'gsheet-grid-viewport', 'meta-content', 'finder-grid', 'evidence-cards-grid',
+    'evidence-detail-desc-box', 'memo-notebook-area', 'memo-canvas-container',
+    'browser-content', 'link-chat-messages', 'link-user-list', 'mail-list',
+    'mail-body-content', 'settings-content', 'modal-body', 'scrollable'
+  ];
 
   function findScrollableParent(el) {
     while (el && el !== document.body && el !== document.documentElement) {
-      if (el.classList && el.classList.contains('gsheet-grid-viewport')) return el;
-      const style = window.getComputedStyle(el);
-      const overflowY = style.overflowY;
-      const overflowX = style.overflowX;
-      const isScrollableY = (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
-      const isScrollableX = (overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth;
-      if (isScrollableY || isScrollableX) return el;
+      if (el.tagName === 'TEXTAREA') return el;
+      if (el.classList) {
+        for (let i = 0; i < SCROLLABLE_CLASSES.length; i++) {
+          if (el.classList.contains(SCROLLABLE_CLASSES[i])) return el;
+        }
+      }
+      if (el.scrollHeight > el.clientHeight + 2 && (el.scrollTop > 0 || el.scrollHeight > 100)) {
+        return el;
+      }
       el = el.parentElement;
     }
     return null;
   }
 
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let scrollTarget = null;
+  let touchTargetIsClickable = false;
+
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
       scrollTarget = findScrollableParent(e.target);
+      // 💡 ボタン、カード、閉じるボタン等のクリック対象要素を判定
+      const el = e.target;
+      touchTargetIsClickable = !!(el && el.closest && el.closest('button, a, input, select, textarea, [role="button"], .evidence-card, .finder-item, .detail-close-btn, .lightbox-close-btn, .scanner-close-btn, .dock-icon-item, .app-icon'));
     }
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - touchStartY;
+    const deltaX = currentX - touchStartX;
+    const dist = Math.sqrt(deltaY * deltaY + deltaX * deltaX);
+
+    // 💡 タップ時の指先の微小なブレ（8px未満）なら絶対にpreventDefaultを呼ばずクリック判定を保護！
+    if (dist < 8 && touchTargetIsClickable) {
+      return;
+    }
+
     if (!scrollTarget) {
-      // スクロール可能要素以外の場所（背景、ツールバー、Dock、ロック画面等）でのドラッグを全面禁止
-      e.preventDefault();
+      // 8px以上明確にドラッグされた場合のみ画面全体のスクロール・引っ張りリロードを防止
+      if (dist >= 8) {
+        e.preventDefault();
+      }
       return;
     }
 
@@ -1129,8 +1179,6 @@ function applyOperationalRestrictions() {
       return;
     }
 
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - touchStartY;
     const isAtTop = scrollTarget.scrollTop <= 0;
     const isAtBottom = scrollTarget.scrollTop + scrollTarget.clientHeight >= scrollTarget.scrollHeight - 1;
 
@@ -1211,7 +1259,7 @@ function loadStateFromStorage() {
   }
   gameState.clockStartISO = storedClockStartISO;
   gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString(), 10);
-  
+
   // 🎯 シーン進行ステップから現在周回（1周目・2周目・3周目）を厳密に判定・同期
   const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
   const accurateLoop = (savedFlowStep <= 2) ? 1 : (savedFlowStep <= 4) ? 2 : 3;
@@ -1225,7 +1273,7 @@ function loadStateFromStorage() {
   } else {
     gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
   }
-  
+
   try {
     gameState.unlockedHints = JSON.parse(localStorage.getItem('unlocked_hints') || '[]');
   } catch (e) {
@@ -1273,7 +1321,7 @@ function loadStateFromStorage() {
         window.GAME_DATABASE.hacking.spreadsheet.rows = customRows;
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // 画面表示反映（nullチェック付き）
   const sbTeamEl = document.getElementById('sb-team-id');
@@ -1336,7 +1384,7 @@ function handleStorageEvent(e) {
           executeRemoteAdminCommand(cmd);
         }
       }
-    } catch(err) { console.warn('actor storage event parse error:', err); }
+    } catch (err) { console.warn('actor storage event parse error:', err); }
   }
 }
 
@@ -1382,7 +1430,7 @@ function startFakeClock() {
       const month = fakeCurrent.getMonth() + 1;
       const day = fakeCurrent.getDate();
       dateStr = `${month}月${day}日`;
-      manabaDateStr = `2026-09-04 (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][fakeCurrent.getDay()]})`;
+      manabaDateStr = `2026-09-04 (${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][fakeCurrent.getDay()]})`;
     }
 
     if (clockStr !== lastClockStr) {
@@ -1397,7 +1445,7 @@ function startFakeClock() {
       lastDateStr = dateStr;
       const lockDate = document.getElementById('lock-date');
       if (lockDate) lockDate.innerText = dateStr;
-      
+
       const mDateEl = document.getElementById('manaba-header-date');
       if (mDateEl) {
         mDateEl.innerText = manabaDateStr;
@@ -1466,7 +1514,7 @@ function resetLinkAppForLoop() {
     window.GAME_DATABASE.linkApp = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE.linkApp));
     try {
       localStorage.setItem('game_db_cache', JSON.stringify(window.GAME_DATABASE));
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // 以前の周回で受信した動的ロック画面通知もクリア
@@ -1607,7 +1655,7 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
     try {
       const bc = new BroadcastChannel('escape_game_channel');
       bc.postMessage({ type: 'loop_change', payload: { loop: targetLoop, startTime: startTime } });
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // 8. コンテンツUI更新（ニュース・マスタデータの周回別表示切り替え）
@@ -1741,7 +1789,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     try {
       const bc = new BroadcastChannel('escape_game_channel');
       bc.postMessage({ type: 'scene_flow_step', payload: { step: step, loop: gameState.loop, timerRunning: gameState.timerRunning } });
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // 即座に時計表示を更新（09:44静止や進行を反映）
@@ -1855,14 +1903,19 @@ function handleLockNotificationClick(n) {
   }, 150);
 }
 
-// --- iPadOS風 オリジナル通知システム ---
-// --- iPadOS風 オリジナル通知システム ---
+// --- iPadOS風 オリジナル通知システム（非表示時はdisplay:noneでGPUブラー負荷ゼロ化） ---
 let currentPushAction = null;
 let pushBannerTimer = null;
+let pushBannerHideTimer = null;
 
 function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   const banner = document.getElementById('push-notification-banner');
   if (!banner) return;
+
+  if (pushBannerHideTimer) {
+    clearTimeout(pushBannerHideTimer);
+    pushBannerHideTimer = null;
+  }
 
   const appEl = document.getElementById('push-notif-app');
   if (appEl) appEl.innerText = app || "通知";
@@ -1876,7 +1929,7 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
   }
   const descEl = document.getElementById('push-notif-desc');
   if (descEl) descEl.innerText = cleanBody;
-  
+
   const iconWrap = document.getElementById('push-notif-icon-wrap');
   if (iconWrap) {
     if (app === 'LINK' || icon === 'message-circle' || icon === 'message-square' || icon === 'LINK.png' || icon === 'LINK') {
@@ -1906,19 +1959,37 @@ function showPushNotification(app, title, body, icon = "bell", onClick = null) {
     currentPushAction = null;
   }
 
-  banner.classList.add('show');
+  banner.style.display = 'flex';
+  requestAnimationFrame(() => {
+    banner.classList.add('show');
+  });
   playSystemSound("notif");
 
   if (pushBannerTimer) clearTimeout(pushBannerTimer);
   pushBannerTimer = setTimeout(() => {
-    banner.classList.remove('show');
+    hidePushNotification();
   }, 4500);
 }
 
-function handleBannerClick() {
+function hidePushNotification() {
   const banner = document.getElementById('push-notification-banner');
-  if (banner) banner.classList.remove('show');
-  if (pushBannerTimer) clearTimeout(pushBannerTimer);
+  if (!banner) return;
+  banner.classList.remove('show');
+  if (pushBannerTimer) {
+    clearTimeout(pushBannerTimer);
+    pushBannerTimer = null;
+  }
+  if (pushBannerHideTimer) clearTimeout(pushBannerHideTimer);
+  pushBannerHideTimer = setTimeout(() => {
+    if (!banner.classList.contains('show')) {
+      banner.style.display = 'none';
+    }
+    pushBannerHideTimer = null;
+  }, 420);
+}
+
+function handleBannerClick() {
+  hidePushNotification();
 
   const action = currentPushAction;
   currentPushAction = null;
@@ -1989,7 +2060,11 @@ function showLockScreen() {
     closeAllWindowsSilent();
     gameState.activeApp = null;
 
-    lockScreen.classList.remove('hidden');
+    lockScreen.style.display = 'flex';
+    requestAnimationFrame(() => {
+      lockScreen.classList.remove('hidden');
+    });
+
     const lockClock = document.getElementById('lock-clock');
     if (lockClock && !gameState.timerRunning) {
       lockClock.innerText = "09:44";
@@ -2027,6 +2102,7 @@ function initTopSwipeForLockScreen() {
         touchStartX = touch.clientX;
         touchStartTime = Date.now();
         isTrackingTopSwipe = true;
+        if (ls) ls.style.display = 'flex'; // スワイプ準備で即時スタンバイ
       } else {
         isTrackingTopSwipe = false;
       }
@@ -2048,6 +2124,12 @@ function initTopSwipeForLockScreen() {
   }, { passive: true });
 
   document.addEventListener('touchend', () => {
+    if (isTrackingTopSwipe) {
+      const ls = document.getElementById('lock-screen');
+      if (ls && ls.classList.contains('hidden')) {
+        ls.style.display = 'none';
+      }
+    }
     isTrackingTopSwipe = false;
   }, { passive: true });
 
@@ -2061,11 +2143,15 @@ function initTopSwipeForLockScreen() {
       if (ls && !ls.classList.contains('hidden')) return;
       mouseStartY = e.clientY;
       mouseStartTime = Date.now();
+      if (ls) ls.style.display = 'flex';
     });
     document.addEventListener('mouseup', (e) => {
       const elapsed = Date.now() - mouseStartTime;
       if (mouseStartY > 0 && elapsed < 800 && (e.clientY - mouseStartY) >= 100) {
         showLockScreen();
+      } else {
+        const ls = document.getElementById('lock-screen');
+        if (ls && ls.classList.contains('hidden')) ls.style.display = 'none';
       }
       mouseStartY = 0;
       mouseStartTime = 0;
@@ -2142,12 +2228,22 @@ function initLockScreenGestures() {
 }
 
 // --- ロック画面解除 ---
+let lockScreenHideTimer = null;
 function unlockScreen() {
   const lockScreen = document.getElementById('lock-screen');
   if (lockScreen) {
     lockScreen.classList.add('hidden');
     playSystemSound("notif");
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
+
+    // 💡 0.5秒のアニメーション完了後、完全にdisplay:noneにして待機時GPU負荷を完全ゼロ化
+    if (lockScreenHideTimer) clearTimeout(lockScreenHideTimer);
+    lockScreenHideTimer = setTimeout(() => {
+      if (lockScreen.classList.contains('hidden')) {
+        lockScreen.style.display = 'none';
+      }
+      lockScreenHideTimer = null;
+    }, 520);
   }
 }
 
@@ -2164,7 +2260,7 @@ function openApp(appId) {
   unlockScreen();
 
   closeAllWindowsSilent();
-  
+
   // 'meta' でも 'meta-app' でも確実に一致するよう正規化
   const pureId = appId.replace(/-app$/, '');
   const win = document.getElementById(`app-${pureId}-app`) || document.getElementById(`app-${appId}`);
@@ -2172,7 +2268,7 @@ function openApp(appId) {
     win.style.display = 'flex';
     win.classList.add('active');
     gameState.activeApp = `${pureId}-app`;
-    
+
     if (pureId === 'meta') {
       metaObservationCurrentFolder = 'root';
       switchMetaTab(gameState.activeMetaTab || 'observation');
@@ -2186,7 +2282,7 @@ function openApp(appId) {
     } else if (pureId === 'mail') {
       renderMailList();
     }
-    
+
     logWriteToGAS("APP_OPEN", `アプリを開きました: ${pureId}`);
   }
 }
@@ -2245,7 +2341,7 @@ function closeAllWindowsSilent() {
     win.classList.remove('active');
     win.style.display = 'none'; // 💡 物理的に完全非表示化してホーム画面のタップを一切遮らない
   });
-  
+
   // すべてのモーダル・スキャナー・オーバーレイを確実に非表示化
   document.querySelectorAll('.modal-overlay').forEach(modal => {
     modal.style.display = 'none';
@@ -2284,7 +2380,7 @@ function showStaffModal() {
   const modal = document.getElementById('staff-modal');
   if (!modal) return;
   modal.style.display = 'flex';
-  
+
   // 1. 管理番号 (1〜30 選択式)
   const inputEl = document.getElementById('staff-team-id');
   const badgeEl = document.getElementById('staff-selected-id-badge');
@@ -2392,10 +2488,10 @@ function saveStaffConfig() {
   // 🚀 GASスプレッドシートへ即座に「設定済み」＆代名詞・番号を送信（確実上書き）
   const gasUrl = getResolvedGasUrl();
   if (gasUrl) {
-    const updateUrl = gasUrl.includes('?') 
+    const updateUrl = gasUrl.includes('?')
       ? `${gasUrl}&action=update_device_name&oldTeamId=${encodeURIComponent(newDevId)}&newTeamId=${encodeURIComponent(newDevId)}&teamName=${encodeURIComponent(newAlias)}&registered=1&_t=${Date.now()}`
       : `${gasUrl}?action=update_device_name&oldTeamId=${encodeURIComponent(newDevId)}&newTeamId=${encodeURIComponent(newDevId)}&teamName=${encodeURIComponent(newAlias)}&registered=1&_t=${Date.now()}`;
-    fetch(updateUrl).catch(() => {});
+    fetch(updateUrl).catch(() => { });
   }
 
   if (typeof updateAppUI === 'function') updateAppUI();
@@ -2446,7 +2542,7 @@ async function executeInstantMasterReset() {
   localStorage.clear();
 
   // ② SessionStorage もクリア（セッション内のキャッシュ残留を防止）
-  try { sessionStorage.clear(); } catch(e) {}
+  try { sessionStorage.clear(); } catch (e) { }
 
   // ③ 🧹 CacheStorage（オフラインキャッシュ）の完全消去（古い09:04・旧マスタを完全破棄）
   if ('caches' in window) {
@@ -2454,7 +2550,7 @@ async function executeInstantMasterReset() {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
       console.log('🧹 全CacheStorageを完全消去しました。');
-    } catch(e) {
+    } catch (e) {
       console.warn('キャッシュ消去エラー:', e);
     }
   }
@@ -2469,14 +2565,14 @@ async function executeInstantMasterReset() {
         }
         await reg.update();
       }
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // ⑤ window.GAME_DATABASE をマスタから完全復元（チャット履歴・状態変化を一切残さない）
   if (window.INITIAL_GAME_DATABASE) {
     try {
       window.GAME_DATABASE = JSON.parse(JSON.stringify(window.INITIAL_GAME_DATABASE));
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // ⑥ gameState を初期値へ完全リセット（3周目・メタアプリ・メモ帳・証拠・友達等すべて）
@@ -2505,7 +2601,7 @@ async function executeInstantMasterReset() {
   gameState.dynamicLockNotifications = [];
 
   // ⑦ メタアプリのモジュールレベル変数もリセット
-  try { metaObservationCurrentFolder = 'root'; } catch(e) {}
+  try { metaObservationCurrentFolder = 'root'; } catch (e) { }
 
   // ⑧ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:44待機, 登録: 未設定, 通信設定維持）
   localStorage.setItem('game_loop', '1');
@@ -2520,7 +2616,7 @@ async function executeInstantMasterReset() {
   localStorage.setItem('reset_pending_done', 'true');
   if (gasUrl) {
     localStorage.setItem('gas_url', gasUrl);
-    fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => {});
+    fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_complete` : `${gasUrl}?action=reset_complete`, { mode: 'no-cors' }).catch(() => { });
   }
 
   // ⑨ 実行済みコマンドIDを「リセット済み」として書き戻す
@@ -2530,7 +2626,7 @@ async function executeInstantMasterReset() {
   }
   lastExecutedCommandId = savedCmdId;
 
-  try { playSystemSound("fanfare"); } catch(e) {}
+  try { playSystemSound("fanfare"); } catch (e) { }
 
   // ⑩ リロード（最新ファイル強制取得のためタイムスタンプを付与して置換）
   setTimeout(() => {
@@ -2599,7 +2695,7 @@ function switchMetaTab(tabId) {
     return oc && oc.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
-  
+
   const panel = document.getElementById(`meta-panel-${tabId}`);
   if (panel) panel.classList.add('active');
 
@@ -2827,7 +2923,9 @@ let currentLightboxGallery = [];
 let currentLightboxIndex = 0;
 let lightboxSwipeInitialized = false;
 
-function openMetaLightbox(imgUrl, title, galleryList = null) {
+function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  const now = Date.now();
   const modal = document.getElementById('meta-lightbox-modal');
   const img = document.getElementById('lightbox-img');
   if (!modal || !img) return;
@@ -2952,12 +3050,15 @@ function initLightboxSwipe() {
   });
 }
 
-function closeMetaLightbox() {
+function closeMetaLightbox(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  
   const modal = document.getElementById('meta-lightbox-modal');
   if (modal) modal.style.display = 'none';
+  playSystemSound('touch');
 }
 
-// 📦 【調査資料】タブ描画: 添付画像準拠（左: 写真+場所 / 右: 名前+説明）& 先行フォールバック対応
+// 📦 【調査資料】タブ描画: 添付画像準拠（左: 写真+場所 / 右: 名前+説明）& タップ詳細表示完全保証
 function renderMetaEvidence() {
   const container = document.getElementById('meta-evidence-grid');
   const badge = document.getElementById('evidence-count-badge');
@@ -2983,10 +3084,15 @@ function renderMetaEvidence() {
   const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
     || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
     || [];
-  
+
   container.innerHTML = collected.map(entry => {
     const entryId = String(entry.id || entry.qrKey || '').trim();
-    const item = allItems.find(it => it.id === entryId || it.qrKey === entryId || it.id.toUpperCase() === entryId.toUpperCase() || it.qrKey.toUpperCase() === entryId.toUpperCase());
+    const cleanUpper = entryId.replace(/_/g, '-').toUpperCase();
+    const item = allItems.find(it => {
+      const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
+      const itQr = String(it.qrKey || '').replace(/_/g, '-').toUpperCase().trim();
+      return itId === cleanUpper || itQr === cleanUpper || itId.endsWith(cleanUpper) || cleanUpper.endsWith(itId);
+    });
     if (!item) return '';
 
     const itemQr = item.qrKey || item.id;
@@ -2997,11 +3103,11 @@ function renderMetaEvidence() {
     const imgSrc = item.image || '';
 
     return `
-      <div class="evidence-card" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}')">
+      <div class="evidence-card" role="button" tabindex="0" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
         <!-- 左カラム：写真スロット + 入手場所バッジ -->
-        <div class="evidence-card-left">
+        <div class="evidence-card-left" style="pointer-events:none;">
           <div class="evidence-thumb-slot">
-            <img src="${imgSrc}" alt="${itemName}" loading="lazy" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+            <img src="${imgSrc}" alt="${itemName}" loading="lazy" decoding="async" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
             <div class="evidence-slot-fallback">
               <i data-lucide="package" class="slot-fallback-icon"></i>
             </div>
@@ -3013,7 +3119,7 @@ function renderMetaEvidence() {
         </div>
 
         <!-- 右カラム：番号バッジ + 名前 + 説明 -->
-        <div class="evidence-card-right">
+        <div class="evidence-card-right" style="pointer-events:none;">
           <div class="evidence-card-header-row" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
             <span style="font-size:10px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-family:monospace; letter-spacing:0.5px;">${itemQr}</span>
             <div class="evidence-card-title" style="margin:0;">${itemName}</div>
@@ -3176,17 +3282,26 @@ function showEvidenceRecordToast(itemName) {
   }, 1800);
 }
 
-// 🔍 調査資料 カード詳細モーダル開閉（添付画像配置 ＆ ゲームアイテムUI）
-function openMetaEvidenceDetail(itemId, timeStr) {
+// 🔍 調査資料 カード詳細モーダル開閉（添付画像配置 ＆ ゲームアイテムUI・表記揺れ完全対応・ゼロ遅延）
+let isDetailModalOpen = false;
+function openMetaEvidenceDetail(itemId, timeStr, e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (!modal) return;
+  isDetailModalOpen = true;
 
   const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
     || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
     || [];
   
   const searchId = String(itemId || '').trim();
-  const item = allItems.find(it => it.id === searchId || it.qrKey === searchId || it.id.toUpperCase() === searchId.toUpperCase() || it.qrKey.toUpperCase() === searchId.toUpperCase());
+  const cleanSearch = searchId.replace(/_/g, '-').toUpperCase();
+  const item = allItems.find(it => {
+    const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
+    const itQr = String(it.qrKey || '').replace(/_/g, '-').toUpperCase().trim();
+    return itId === cleanSearch || itQr === cleanSearch || itId.endsWith(cleanSearch) || cleanSearch.endsWith(itId);
+  }) || allItems[0]; // 万一ID不一致でも先頭要素で安全フォールバック表示
+
   if (!item) return;
 
   const itemQr = item.qrKey || item.id;
@@ -3218,12 +3333,26 @@ function openMetaEvidenceDetail(itemId, timeStr) {
 
   safeCreateIcons(modal);
   modal.style.display = 'flex';
+  playSystemSound('touch');
 }
 
-function closeMetaEvidenceDetail() {
+function closeMetaEvidenceDetail(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  isDetailModalOpen = false;
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (modal) modal.style.display = 'none';
+  playSystemSound('touch');
 }
+
+// ⌨️ Escapeキーで調査資料詳細モーダルを閉じる
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('meta-evidence-detail-modal');
+    if (modal && modal.style.display !== 'none') {
+      closeMetaEvidenceDetail(e);
+    }
+  }
+});
 
 // ==========================================================================
 // 📝 【メモ】タブ ロジック: タブ増設 & テキスト/手書きCanvasデュアルモード & 永続保存
@@ -3244,7 +3373,7 @@ function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-resu
   const video = document.getElementById(videoId);
   const canvas = document.getElementById(canvasId);
   const resultBox = document.getElementById(resultBoxId);
-  
+
   if (resultBox) {
     resultBox.innerText = "📷 カメラを起動しています...";
     resultBox.className = "qr-result-box";
@@ -3302,13 +3431,13 @@ function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-resu
           video.play().catch(e => console.warn("Video play error:", e));
         };
         // 即時playも呼び出し
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       }
       if (resultBox) {
         resultBox.innerText = "🔍 QRコードをスキャン枠に合わせてください...";
         resultBox.className = "qr-result-box";
       }
-      
+
       let lastScanTime = 0;
       function tick(timestamp) {
         if (video && canvas && video.readyState >= 2) { // HAVE_CURRENT_DATA以上
@@ -3359,12 +3488,12 @@ function stopAllCameraStreams() {
   if (activeStream) {
     try {
       activeStream.getTracks().forEach(track => {
-        try { track.stop(); } catch(e) {}
+        try { track.stop(); } catch (e) { }
       });
-    } catch(e) {}
+    } catch (e) { }
     activeStream = null;
   }
-  // 🍎 iOS Safari 向けカメラバッファ完全解放（2回目以降のカメラ起動を100%保証）
+  // 🍎 iOS Safari 向けカメラ安全停止（有害な v.load() を全廃し AbortError・再起動フリーズを完全根絶）
   ['evidence-scanner-video', 'meta-qr-video', 'link-scanner-video'].forEach(id => {
     const v = document.getElementById(id);
     if (v) {
@@ -3372,8 +3501,7 @@ function stopAllCameraStreams() {
         v.pause();
         v.srcObject = null;
         v.removeAttribute('src');
-        v.load();
-      } catch(e) {}
+      } catch (e) { }
     }
   });
 }
@@ -3466,7 +3594,7 @@ function deleteMemoTab(index, event) {
 // 現在のアクティブタブの内容を画面にロード
 function loadActiveMemoContent() {
   const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex] || { text: "", drawData: null };
-  
+
   // テキストエリア更新
   const textarea = document.getElementById('meta-memo-textarea');
   if (textarea) {
@@ -3491,7 +3619,7 @@ function saveCurrentMemoTabContent() {
   if (canvas && memoCanvasInitialized) {
     try {
       activeTab.drawData = canvas.toDataURL();
-    } catch (e) {}
+    } catch (e) { }
   }
 
   saveStateToStorage();
@@ -3549,7 +3677,7 @@ function initMemoCanvas() {
     // 既存の画像データを一時退避
     let prevData = null;
     if (memoCanvasInitialized) {
-      try { prevData = canvas.toDataURL(); } catch (e) {}
+      try { prevData = canvas.toDataURL(); } catch (e) { }
     } else {
       const activeTab = gameState.memoTabs[gameState.activeMemoTabIndex];
       if (activeTab && activeTab.drawData) prevData = activeTab.drawData;
@@ -3727,7 +3855,7 @@ let currentNewsCategory = 'all';
 function switchNewsCategory(cat) {
   currentNewsCategory = cat;
   document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-  
+
   const activeTab = Array.from(document.querySelectorAll('.cat-tab')).find(t => {
     const oc = t.getAttribute('onclick');
     return oc && oc.includes(cat);
@@ -3743,7 +3871,7 @@ function renderBrowserNews() {
   if (!heroContainer || !gridContainer) return;
 
   const newsList = (window.GAME_DATABASE && window.GAME_DATABASE.browser && window.GAME_DATABASE.browser.news[gameState.loop]) || [];
-  
+
   // カテゴリフィルタリング
   let filtered = newsList;
   if (currentNewsCategory === 'it') {
@@ -3864,7 +3992,7 @@ function searchBrowserKeyword(q) {
       }
     }
   }
-  
+
   // 周回制限で厳密にフィルタリング（型安全：数値・文字列どちらでも確実判定）
   const filtered = results.filter(item => {
     const min = (item.minLoop !== undefined && item.minLoop !== "" && item.minLoop !== null) ? parseInt(item.minLoop, 10) : null;
@@ -3881,7 +4009,7 @@ function searchBrowserKeyword(q) {
   if (bPage) bPage.style.display = 'none';
   const bResults = document.getElementById('browser-results');
   if (bResults) bResults.style.display = 'block';
-  
+
   const qText = document.getElementById('search-query-text');
   if (qText) qText.innerText = q;
   const countEl = document.getElementById('search-count');
@@ -3932,7 +4060,7 @@ function openBrowserPage(pageId) {
 
   const wTitle = document.getElementById('webpage-title');
   if (wTitle) wTitle.innerHTML = page.title;
-  
+
   const wMeta = document.getElementById('webpage-meta');
   if (wMeta) {
     const sourceName = page.source || "東金タイムズ";
@@ -3957,12 +4085,12 @@ function goBrowserHome() {
   if (bPage) bPage.style.display = 'none';
   const bHome = document.getElementById('browser-home');
   if (bHome) bHome.style.display = 'block';
-  
+
   const input1 = document.getElementById('browser-search-input');
   if (input1) input1.value = "";
   const input2 = document.getElementById('browser-main-search');
   if (input2) input2.value = "";
-  
+
   gameState.browserHistory = [];
   const backBtn = document.getElementById('browser-back-btn');
   if (backBtn) backBtn.disabled = true;
@@ -3979,7 +4107,7 @@ function backBrowserPage() {
     goBrowserHome();
     return;
   }
-  
+
   gameState.browserHistory.pop(); // 現在を破棄
   const prevState = gameState.browserHistory[gameState.browserHistory.length - 1];
 
@@ -4001,8 +4129,8 @@ function renderLinkChatList() {
   container.innerHTML = "";
 
   // 3周目の場合は不気味変化後の友達リストを使用
-  const contactSource = (gameState.loop === 3) 
-    ? window.GAME_DATABASE.linkApp.contactsLoop3 
+  const contactSource = (gameState.loop === 3)
+    ? window.GAME_DATABASE.linkApp.contactsLoop3
     : window.GAME_DATABASE.linkApp.contacts;
 
   // 現在追加されている友達のみにフィルター
@@ -4035,14 +4163,14 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
   gameState.activeChatContact = contactId;
   renderLinkChatList();
 
-  const contactSource = (gameState.loop === 3) 
-    ? window.GAME_DATABASE.linkApp.contactsLoop3 
+  const contactSource = (gameState.loop === 3)
+    ? window.GAME_DATABASE.linkApp.contactsLoop3
     : window.GAME_DATABASE.linkApp.contacts;
-  
+
   const c = contactSource.find(item => item.id === contactId);
   const headerNameEl = document.getElementById('chat-contact-name');
   const memberCountEl = document.getElementById('chat-member-count');
-  
+
   if (headerNameEl) headerNameEl.innerText = c ? c.name : "トークルーム";
   if (memberCountEl) {
     memberCountEl.innerText = (c && c.id === 'exec_group') ? "(5)" : "";
@@ -4063,7 +4191,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
     if (msg.maxLoop && gameState.loop > msg.maxLoop) return false;
     return true;
   });
-  
+
   const SENDER_METAS = {
     "jinnai": { name: "陣内 樹", avatar: "J", avatarClass: "avatar-j" },
     "fukasawa": { name: "深澤 文哉", avatar: "F", avatarClass: "avatar-f" },
@@ -4090,7 +4218,7 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
 
     const isMe = msg.sender === "me" || msg.sender === "yada";
     const meta = SENDER_METAS[msg.sender] || { name: msg.sender || "メンバー", avatar: (msg.sender || "M")[0].toUpperCase(), avatarClass: "avatar-default" };
-    
+
     // URLの自動リンク化 ＆ OGPカード自動生成
     let formattedText = msg.text || '';
     let ogpHtml = '';
@@ -4120,8 +4248,8 @@ function openLinkChat(contactId, forceScrollToBottom = false) {
       const isGForm = firstUrl.includes('google.com/forms');
       const ogpTitle = isGForm ? "資料の取り扱いに関して" : "共有リンク";
       const ogpDesc = isGForm ? "資料の保存・廃棄について、皆様のご意見を伺います。" : firstUrl;
-      const ogpImg = isGForm 
-        ? "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=600" 
+      const ogpImg = isGForm
+        ? "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=600"
         : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600";
 
       ogpHtml = `
@@ -4557,7 +4685,7 @@ function submitInAppForm() {
 function showLinkDialog(title, message, btnText = "確認") {
   const modal = document.getElementById('link-dialog-modal');
   if (!modal) return;
-  
+
   const titleEl = document.getElementById('link-dialog-title');
   const msgEl = document.getElementById('link-dialog-msg');
   const btnEl = document.getElementById('link-dialog-btn');
@@ -4588,7 +4716,7 @@ function openHackingForm(e) {
   document.getElementById('gform-view').style.display = 'block';
   document.getElementById('gform-editor-view').style.display = 'none';
   document.getElementById('gsheet-view').style.display = 'none';
-  
+
   const form = window.GAME_DATABASE.hacking.form;
   const titleEl = document.getElementById('gform-title');
   const descEl = document.getElementById('gform-desc');
@@ -4882,7 +5010,7 @@ function toggleGSheetEdit() {
   gameState.isGSheetEditing = !gameState.isGSheetEditing;
   const btn = document.getElementById('gsheet-edit-btn');
   const label = document.getElementById('gsheet-edit-label');
-  
+
   if (btn && label) {
     if (gameState.isGSheetEditing) {
       btn.classList.add('editing');
@@ -4925,7 +5053,7 @@ function renderGSpreadsheet() {
   const colLetters = headers.map((_, i) => String.fromCharCode(65 + i));
 
   let html = `<thead>`;
-  
+
   // Form_Responses 上部ピルバー（画像準拠デザイン）
   if (isFormResponses) {
     html += `
@@ -4948,7 +5076,7 @@ function renderGSpreadsheet() {
     const headerBg = isFormResponses ? 'background:#4a148c; color:#ffffff; border-right:1px solid rgba(255,255,255,0.2);' : '';
     const textStyle = isFormResponses ? 'color:#ffffff; font-weight:600; display:flex; justify-content:space-between; align-items:center;' : 'color:#202124; font-weight:500;';
     const arrowHtml = isFormResponses ? `<span style="font-size:10px; opacity:0.8; margin-left:6px;">▼</span>` : '';
-    
+
     html += `
       <th style="${headerBg} padding:8px 12px; min-width:140px;">
         <div style="font-size:10px; opacity:0.7; margin-bottom:2px;">${colLetters[i] || ''}</div>
@@ -5006,7 +5134,7 @@ function handleCellEdit(cellEl, tab, rIdx, cIdx) {
     if (fxInput) fxInput.value = cellEl.innerText;
     try {
       localStorage.setItem('game_custom_gsheet_rows', JSON.stringify(ss.rows));
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -5037,6 +5165,25 @@ function initManabaApp() {
 function showManabaKeychainPopup() {
   const popup = document.getElementById('manaba-keychain-popup');
   if (popup) {
+    const list = popup.querySelector('.chrome-autofill-list');
+    if (list) {
+      list.innerHTML = `
+        <div class="chrome-autofill-item" onclick="autofillManabaLogin('24e2135', '24E2135', '連城 観')">
+          <div class="manaba-item-leaf-icon">
+            <svg viewBox="0 0 40 40" width="18" height="18">
+              <ellipse cx="14" cy="12" rx="7" ry="12" transform="rotate(25 14 12)" fill="#84cc16"/>
+              <ellipse cx="15" cy="28" rx="6" ry="10" transform="rotate(-35 15 28)" fill="#78be20"/>
+              <ellipse cx="26" cy="22" rx="6" ry="11" transform="rotate(75 26 22)" fill="#84cc16"/>
+              <path d="M14 18 Q17 22 20 20 Q18 15 14 18 Z" fill="#0099e5"/>
+            </svg>
+          </div>
+          <div class="chrome-item-info">
+            <span class="chrome-item-id">24e2135</span>
+            <span class="chrome-item-dots">••••••••</span>
+          </div>
+        </div>
+      `;
+    }
     popup.style.display = 'flex';
     safeCreateIcons(popup);
   }
@@ -5144,8 +5291,8 @@ function switchCourseViewMode(mode) {
 function renderManabaPortal() {
   const user = window.GAME_DATABASE.manaba.users[gameState.manabaUser] || {
     name: "連城 観",
-    department: "情報科学部 / 学友会執行部",
-    studentId: "s23c1044kr",
+    department: "デジタル革命科学科 / 学友会執行部",
+    studentId: "24e2135",
     timetable: {},
     courses: []
   };
@@ -5164,19 +5311,19 @@ function renderManabaPortal() {
   if (timetableBody) {
     timetableBody.innerHTML = "";
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    
+
     // 最大時限数（1〜10限）
     const maxPeriod = 10;
-    
+
     for (let period = 1; period <= maxPeriod; period++) {
       let rowHtml = `<tr><td class="col-period">${period}</td>`;
       days.forEach(day => {
         const periodIdx = period - 1;
         const rawCourse = (user.timetable && user.timetable[day] && user.timetable[day][periodIdx]) || "";
-        
+
         if (rawCourse) {
           const coursesList = Array.isArray(rawCourse) ? rawCourse : [rawCourse];
-          
+
           let cellInnerHtml = "";
           coursesList.forEach(cItem => {
             const isObj = typeof cItem === 'object';
@@ -5434,7 +5581,7 @@ function openManabaCourse(courseIdOrName) {
   if (courseIdOrName && allCourses[courseIdOrName]) {
     course = allCourses[courseIdOrName];
   }
-  
+
   // 2. 講義名（日本語）での完全一致検索
   if (!course && courseIdOrName) {
     for (const [cid, cobj] of Object.entries(allCourses)) {
@@ -5508,7 +5655,7 @@ function openManabaCourse(courseIdOrName) {
   if (termEl) termEl.innerText = course.term || "2026 前期 月曜 2限";
 
   // 講義が独自資料を持つか（陣内樹の応用量子力学、21世紀会計史など。Lの授業はすべて完全空データ）
-  const isLUser = (gameState.manabaUser === 's23c1044kr' || gameState.manabaUser === 'U24c3040' || gameState.manabaUser === '2024B0159');
+  const isLUser = (gameState.manabaUser === '24e2135' || gameState.manabaUser === 's23c1044kr' || gameState.manabaUser === 'U24c3040' || gameState.manabaUser === '2024B0159');
   const isCustomCourse = !isLUser && (course.id === 'c_quantum' || course.id === 'c_accounting' || (course.materials && course.materials.length > 2));
   gameState._isCurrentCourseExpired = !isCustomCourse;
 
@@ -5559,7 +5706,7 @@ function openManabaCourse(courseIdOrName) {
   const contentsFooterLink = document.getElementById('manaba-course-contents-footer-link');
   if (cardGrid) {
     cardGrid.innerHTML = "";
-    
+
     if (isCustomCourse) {
       if (contentsFooterLink) contentsFooterLink.style.display = 'flex';
       // 1. 授業動画カード
@@ -5913,7 +6060,7 @@ function openManabaCoursePageView(pageIdx) {
   const course = gameState._currentCourseObj || (window.GAME_DATABASE.manaba.courses && window.GAME_DATABASE.manaba.courses["c_quantum"]) || {};
   const isCustomCourse = (course.id === 'c_quantum' || course.id === 'c_accounting' || course.id === 'c_uiux' || (course.materials && course.materials.length > 2));
   const materials = course.materials || [];
-  
+
   let coursePages = [];
 
   if (isCustomCourse) {
@@ -5968,7 +6115,7 @@ function openManabaCoursePageView(pageIdx) {
 
   if (titleEl) titleEl.innerText = pageData.title;
   if (verEl) verEl.innerText = `${pageData.date} - ${course.teacher || '森 信一郎'} - ${pageData.ver}`;
-  
+
   if (limitEl) {
     if (pageData.type === 'schedule') {
       limitEl.style.display = 'none';
@@ -6257,7 +6404,7 @@ function renderMailList() {
     const isSelected = mail.id === mailState.selectedMailId || (!mailState.selectedMailId && idx === 0);
     const snippet = (mail.body || "").replace(/\n/g, " ").slice(0, 48) + "...";
     const isFlagged = mailState.flaggedIds.has(mail.id);
-    
+
     container.innerHTML += `
       <div class="mail-item ${isSelected ? 'active' : ''}" onclick="openMail('${mail.id}')" id="mail-item-${mail.id}">
         <div class="mail-item-top">
@@ -6497,7 +6644,7 @@ function makePhoneCall() {
     showIpadModal("電話", "電話番号を入力してください。");
     return;
   }
-  
+
   const dialNum = gameState.phoneInput.trim();
 
   // 隠しコマンド判定（『**##**』を入力して電話ボタンを押した時にスタッフシステム起動）
@@ -6517,7 +6664,7 @@ function makePhoneCall() {
   overlay.style.display = 'flex';
 
   playSystemSound("ringback");
-  
+
   // 1.4秒後に2回目の「プルルルルル……」
   const timer1 = setTimeout(() => {
     const ov = document.getElementById('phone-calling-overlay');
@@ -6537,7 +6684,7 @@ function makePhoneCall() {
     document.getElementById('phone-calling-status').innerText = "ガイダンス応答";
     const guidanceText = "おかけになった電話は、電波の届かない場所にあるか、電源が入っていないためかかりません。もう一度お掛け直しください。";
     document.getElementById('phone-audio-subtitles').innerText = `「${guidanceText}」`;
-    
+
     // Web Speech API で音声合成アナウンス（日本語女性トーン）
     speakGuidanceAudio(guidanceText);
 
@@ -6559,23 +6706,23 @@ function speakGuidanceAudio(text) {
       utterance.rate = 0.95;
       utterance.pitch = 1.1;
       window.speechSynthesis.speak(utterance);
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
 function endPhoneCall(isSilent = false) {
   clearAllPhoneTimers();
-  
+
   if ('speechSynthesis' in window) {
     try {
       window.speechSynthesis.cancel();
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // AudioContextがsuspendedになっていれば即座に復帰
   const ctx = getAudioContext();
   if (ctx && ctx.state === 'suspended') {
-    ctx.resume().catch(() => {});
+    ctx.resume().catch(() => { });
   }
 
   const overlay = document.getElementById('phone-calling-overlay');
@@ -6601,7 +6748,7 @@ function reloadIpadPage() {
 
 // 🔄 下部ドックから呼び出される軽量リフレッシュ（状態を保存してメモリ解放・再読み込み）
 function refreshApp() {
-  try { playSystemSound("beep"); } catch(e) {}
+  try { playSystemSound("beep"); } catch (e) { }
 
   // 1. アイコンのアニメーション回転
   const btn = document.getElementById('dock-refresh-btn');
@@ -6618,7 +6765,7 @@ function refreshApp() {
     if (typeof saveStateToStorage === 'function') {
       saveStateToStorage();
     }
-  } catch(e) {
+  } catch (e) {
     console.warn("State save before refresh failed:", e);
   }
 
@@ -6702,7 +6849,7 @@ function getAudioContext() {
     }
   }
   if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-    globalAudioCtx.resume().catch(() => {});
+    globalAudioCtx.resume().catch(() => { });
   }
   return globalAudioCtx;
 }
@@ -6711,7 +6858,7 @@ function getAudioContext() {
 function unlockSafariAudio() {
   const ctx = getAudioContext();
   if (ctx && ctx.state === 'suspended') {
-    ctx.resume().catch(() => {});
+    ctx.resume().catch(() => { });
   }
   try {
     if (ctx) {
@@ -6721,7 +6868,7 @@ function unlockSafariAudio() {
       source.connect(ctx.destination);
       source.start(0);
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // HTML5 Audio 側も確実にアンロック
   try {
@@ -6729,8 +6876,8 @@ function unlockSafariAudio() {
     dummy.volume = 0.01;
     dummy.play().then(() => {
       dummy.pause();
-    }).catch(() => {});
-  } catch (e) {}
+    }).catch(() => { });
+  } catch (e) { }
 }
 
 // 画面タッチ・クリック・キー入力で自動アンロックを登録
@@ -6886,7 +7033,7 @@ function playSystemSound(type = "touch") {
     const ctx = getAudioContext();
     if (ctx) {
       if (ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
+        ctx.resume().catch(() => { });
       }
       const now = ctx.currentTime;
 
@@ -7032,16 +7179,19 @@ function playSystemSound(type = "touch") {
         playedWebAudio = true;
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
-  // 2. iPadOS で Web Audio が無効化・ミュートされている場合の HTML5 Audio 連動再生
+  // 2. iPadOS で Web Audio が無効化・ミュートされている場合の HTML5 Audio 連動再生（単一インスタンス再利用でフリーズ根絶）
   if (!playedWebAudio || (globalAudioCtx && globalAudioCtx.state === 'suspended')) {
     try {
+      if (!window.__sharedSystemAudio) {
+        window.__sharedSystemAudio = new Audio();
+      }
       const uri = generateWavDataUri(type);
-      const snd = new Audio(uri);
-      snd.volume = 0.9;
-      snd.play().catch(() => {});
-    } catch (e) {}
+      window.__sharedSystemAudio.src = uri;
+      window.__sharedSystemAudio.volume = 0.9;
+      window.__sharedSystemAudio.play().catch(() => { });
+    } catch (e) { }
   }
 }
 
@@ -7052,8 +7202,8 @@ function logWriteToGAS(logType, message) {
   try {
     localStorage.setItem('mon_last_update', Date.now());
     localStorage.setItem('mon_log_latest', `[${logType}] ${message}`);
-  } catch(e) {}
-  
+  } catch (e) { }
+
   const gasUrl = localStorage.getItem('gas_url') || (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl);
   if (!gasUrl) return;
 
@@ -7112,15 +7262,15 @@ window.addEventListener('storage', (e) => {
       // 🚨 緊急全停止 - AudioContextを一時停止して全音を即時カット
       try {
         if (globalAudioCtx) {
-          globalAudioCtx.suspend().catch(() => {});
+          globalAudioCtx.suspend().catch(() => { });
           // 1秒後にresumeを復元（次の音が鳴るようにしておく）
           setTimeout(() => {
             if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-              globalAudioCtx.resume().catch(() => {});
+              globalAudioCtx.resume().catch(() => { });
             }
           }, 1000);
         }
-      } catch(e) {}
+      } catch (e) { }
     } else {
       playSystemSound(soundType);
     }
@@ -7139,14 +7289,14 @@ window.addEventListener('storage', (e) => {
           showLockScreen();
         }
       }
-    } catch(err) {}
+    } catch (err) { }
   } else if (e.key === 'admin_device_info_trigger') {
     try {
       const info = JSON.parse(e.newValue);
       const currentDevId = gameState.teamId || localStorage.getItem('game_team_id') || "iPad-01";
       const myTeam = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.teamId) || "";
       const myDeviceOwner = (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.deviceOwner) || "";
-      
+
       if (info && (!info.target || info.target === currentDevId || info.target === myDeviceOwner || info.target === myTeam || info.target === 'all')) {
         if (info.newDeviceId) {
           gameState.teamId = info.newDeviceId;
@@ -7171,7 +7321,7 @@ window.addEventListener('storage', (e) => {
         if (typeof updateAppUI === 'function') updateAppUI();
         if (typeof sendDeviceStatusHeartbeat === 'function') sendDeviceStatusHeartbeat();
       }
-    } catch(err) {}
+    } catch (err) { }
   } else if (e.key === 'admin_reload_trigger') {
     location.reload();
   } else if (e.key === 'game_db_cache_trigger') {

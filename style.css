@@ -82,7 +82,7 @@ body {
   justify-content: center;
   align-items: center;
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 /* インナーディスプレイ */
@@ -96,7 +96,7 @@ body {
   display: flex;
   flex-direction: column;
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 /* --- ステータスバー --- */
@@ -600,7 +600,7 @@ body {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  display: flex;
+  display: none; /* 💡 待機時は非表示にしてGPUブラー負荷ゼロ化 */
   align-items: center;
   gap: 8px;
   z-index: 3100;
@@ -612,6 +612,7 @@ body {
 }
 
 .network-loading-indicator.show {
+  display: flex;
   opacity: 1;
   transform: translateY(0);
 }
@@ -1194,6 +1195,9 @@ body {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .evidence-card:hover {
@@ -1367,18 +1371,33 @@ body {
 }
 
 .scanner-close-btn {
-  background: none;
+  background: #e2e8f0;
   border: none;
-  font-size: 18px;
-  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 700;
+  color: #475569;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .scanner-close-btn:hover {
-  background: #e2e8f0;
+  background: #cbd5e1;
   color: #0f172a;
+}
+
+.scanner-close-btn:active {
+  transform: scale(0.92);
+  background: #94a3b8;
+  color: #ffffff;
 }
 
 .scanner-card-body {
@@ -1524,6 +1543,7 @@ body {
   align-items: center;
   z-index: 99999;
   animation: fadeIn 0.18s ease;
+  pointer-events: none; /* 💡 背後の操作を遮断しないよう背景は透過 */
 }
 
 .evidence-toast-modal-card {
@@ -1537,6 +1557,7 @@ body {
   min-width: 280px;
   max-width: 82vw;
   box-sizing: border-box;
+  pointer-events: auto; /* カード本体のタップは受け付ける */
 }
 
 .evidence-toast-item-title {
@@ -1575,29 +1596,37 @@ body {
   box-sizing: border-box;
 }
 
-/* ❌ ユーザー指定デザイン：赤丸に白の✕閉じるボタン（詳細モーダル & スキャナー共通） */
-.detail-close-btn, .scanner-close-btn {
+/* ❌ ユーザー指定デザイン：赤丸に白の✕閉じるボタン（詳細モーダル & ライトボックス） */
+.detail-close-btn, .lightbox-close-btn {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 34px;
-  height: 34px;
+  width: 38px; /* 💡 タップしやすいよう少し拡大 */
+  height: 38px;
   border-radius: 50%;
   background: #ef4444 !important;
   border: none !important;
-  font-size: 17px !important;
+  font-size: 18px !important;
   font-weight: 900 !important;
   color: #ffffff !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   cursor: pointer;
-  z-index: 15;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.45);
-  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 50; /* 💡 他の要素に埋もれないようz-indexを強化 */
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+  transition: transform 0.1s ease, background 0.15s ease;
+  touch-action: manipulation !important;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.detail-close-btn:hover, .scanner-close-btn:hover {
+.detail-close-btn:active, .lightbox-close-btn:active {
+  transform: scale(0.90) !important;
+  background: #b91c1c !important;
+}
+
+.detail-close-btn:hover, .lightbox-close-btn:hover {
   background: #dc2626 !important;
   transform: scale(1.08);
 }
@@ -8218,7 +8247,7 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   border: 1px solid rgba(255, 255, 255, 0.6);
   z-index: 3000;
-  display: flex;
+  display: none; /* 💡 待機時は非表示にして画面外GPUブラー計算ゼロ化 */
   align-items: center;
   gap: 12px;
   cursor: pointer;
@@ -8227,6 +8256,7 @@ body {
 }
 
 .push-notification-banner.show {
+  display: flex;
   top: 36px;
 }
 
