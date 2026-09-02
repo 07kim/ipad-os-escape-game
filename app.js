@@ -2105,63 +2105,49 @@ function initTopSwipeForLockScreen() {
   }
 }
 
-// --- ロック画面操作 ＆ 解除ジェスチャー（タップ・クリック・上スワイプ・キーボード完全対応） ---
+// --- ロック画面操作 ＆ 解除ジェスチャー（タップ・スワイプ・クリック・キーボード 100%即時解除） ---
 function initLockScreenGestures() {
   const lockScreen = document.getElementById('lock-screen');
   if (!lockScreen) return;
 
   let touchStartY = 0;
   let touchStartX = 0;
-  let isDraggingLock = false;
+  let isTouching = false;
 
-  // 1. タッチ操作（iPad / スマホ実機：タップまたは上スワイプで即時解除）
+  // 1. タッチ操作（iPad実機: 上スワイプ・斜めスワイプ・タップすべてで即解除）
   lockScreen.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches.length === 1) {
+    if (e.touches && e.touches.length > 0) {
       touchStartY = e.touches[0].clientY;
       touchStartX = e.touches[0].clientX;
-      isDraggingLock = true;
+      isTouching = true;
     }
   }, { passive: true });
+
+  lockScreen.addEventListener('touchmove', (e) => {
+    if (isTouching && e.cancelable) {
+      // Safariのオーバースクロール/ページバウンスを防止
+      e.preventDefault();
+    }
+  }, { passive: false });
 
   lockScreen.addEventListener('touchend', (e) => {
-    if (isDraggingLock && e.changedTouches && e.changedTouches.length === 1) {
-      const deltaY = touchStartY - e.changedTouches[0].clientY;
-      const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX);
-      // 上スワイプ（15px以上）または タップ（指の移動が少ない）でロック解除
-      if ((deltaY >= 15 && deltaY > deltaX) || (Math.abs(deltaY) < 12 && deltaX < 12)) {
-        unlockScreen();
-      }
+    if (isTouching) {
+      isTouching = false;
+      // 画面から指が離れたら、タップ・スワイプ問わず即座にロック解除
+      unlockScreen();
     }
-    isDraggingLock = false;
   }, { passive: true });
 
-  // 2. マウス操作（PCブラウザ：クリックまたは上ドラッグで解除）
-  let mouseStartY = 0;
-  let mouseStartX = 0;
-  lockScreen.addEventListener('mousedown', (e) => {
-    mouseStartY = e.clientY;
-    mouseStartX = e.clientX;
+  // 2. ポインター / マウス操作（PCブラウザ・ペン入力）
+  lockScreen.addEventListener('pointerup', (e) => {
+    unlockScreen();
   });
 
-  lockScreen.addEventListener('mouseup', (e) => {
-    if (mouseStartY > 0) {
-      const deltaY = mouseStartY - e.clientY;
-      const deltaX = Math.abs(mouseStartX - e.clientX);
-      // 上ドラッグ（15px以上）または通常のクリックで解除
-      if (deltaY >= 15 || (Math.abs(deltaY) < 12 && deltaX < 12)) {
-        unlockScreen();
-      }
-    }
-    mouseStartY = 0;
-    mouseStartX = 0;
-  });
-
-  // 3. クリックイベント（直接クリック時の確実な解除）
   lockScreen.addEventListener('click', (e) => {
     unlockScreen();
   });
 
-  // 4. キーボード操作（Space, Enter, ArrowUp）
+  // 3. キーボード操作（Space, Enter, ArrowUp）
   window.addEventListener('keydown', (e) => {
     const ls = document.getElementById('lock-screen');
     if (ls && !ls.classList.contains('hidden')) {

@@ -199,7 +199,14 @@ body {
   align-items: center;
   padding: 60px 24px 36px 24px;
   cursor: pointer;
-  transition: transform 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.5s ease;
+  touch-action: none !important; /* 💡 Safariのバウンスにスワイプを奪わせない */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.4s ease;
+}
+
+.lock-screen * {
+  pointer-events: none !important; /* 💡 子要素がタップやスワイプイベントを奪うのを防止 */
 }
 
 .lock-screen.hidden {
