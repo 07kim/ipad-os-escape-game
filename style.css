@@ -1177,7 +1177,7 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-top: 14px;
-  padding-bottom: 84px; /* FAB避け */
+  padding-bottom: 120px !important; /* 💡 3つ以上増えてもFABボタンに被らない十分な余白 */
 }
 
 .evidence-empty-state {
@@ -1219,9 +1219,8 @@ body {
 }
 
 .evidence-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: #0284c7;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
 }
 
 .evidence-card * {
@@ -1229,7 +1228,8 @@ body {
 }
 
 .evidence-card:active {
-  transform: scale(0.985);
+  opacity: 0.85;
+  background-color: #f8fafc;
 }
 
 /* 左カラム：写真 + 入手場所 */

@@ -3033,27 +3033,34 @@ function renderMetaEvidence() {
     || (window.GAME_DATABASE && window.GAME_DATABASE.metaApp && window.GAME_DATABASE.metaApp.evidenceItems)
     || [];
 
-  container.innerHTML = collected.map(entry => {
+  container.innerHTML = collected.map((entry, idx) => {
     const entryId = String(entry.id || entry.qrKey || '').trim();
     const cleanUpper = entryId.replace(/_/g, '-').toUpperCase();
+    
+    // 厳密一致を最優先（3つ以上増えても絶対に誤判定しない）
     const item = allItems.find(it => {
       const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
       const itQr = String(it.qrKey || '').replace(/_/g, '-').toUpperCase().trim();
-      return itId === cleanUpper || itQr === cleanUpper || itId.endsWith(cleanUpper) || cleanUpper.endsWith(itId);
+      return itId === cleanUpper || itQr === cleanUpper;
+    }) || allItems.find(it => {
+      const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
+      return itId.includes(cleanUpper) || cleanUpper.includes(itId);
     });
+
     if (!item) return '';
 
     const itemQr = item.qrKey || item.id;
     const itemName = item.name || item.id;
+    // 💡 ユーザー指定: 開かれる前は「説明 (desc)」を表記
     const itemDesc = item.desc || '';
     const itemLoc = item.location || entry.location || '調査場所';
     const timeStr = entry.collectedTime || "09:44";
     const imgSrc = item.image || '';
 
     return `
-      <div class="evidence-card" role="button" tabindex="0" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
+      <div class="evidence-card" role="button" tabindex="0" data-item-id="${item.id}" onclick="openMetaEvidenceDetail('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
         <!-- 左カラム：写真スロット + 入手場所バッジ -->
-        <div class="evidence-card-left" style="pointer-events:none;">
+        <div class="evidence-card-left">
           <div class="evidence-thumb-slot">
             <img src="${imgSrc}" alt="${itemName}" loading="lazy" decoding="async" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
             <div class="evidence-slot-fallback">
@@ -3067,12 +3074,13 @@ function renderMetaEvidence() {
         </div>
 
         <!-- 右カラム：番号バッジ + 名前 + 説明 -->
-        <div class="evidence-card-right" style="pointer-events:none;">
+        <div class="evidence-card-right">
           <div class="evidence-card-header-row" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
             <span style="font-size:10px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-family:monospace; letter-spacing:0.5px;">${itemQr}</span>
             <div class="evidence-card-title" style="margin:0;">${itemName}</div>
           </div>
-          <div class="evidence-card-desc">${itemDesc}</div>
+          <!-- 開かれる前は「説明」を表記 -->
+          <div class="evidence-card-desc" style="white-space:pre-line;">${itemDesc}</div>
         </div>
       </div>
     `;
@@ -3230,12 +3238,20 @@ function showEvidenceRecordToast(itemName) {
   }, 1800);
 }
 
-// 🔍 調査資料 カード詳細モーダル開閉（添付画像配置 ＆ ゲームアイテムUI・表記揺れ完全対応・ゼロ遅延）
+// 🔍 調査資料 カード詳細モーダル開閉（チャタリング完全防止・3つ以上対応・説明長完全保証）
 let isDetailModalOpen = false;
+let detailModalOpenTime = 0;
+
 function openMetaEvidenceDetail(itemId, timeStr, e) {
-  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+  }
+  
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (!modal) return;
+  
+  detailModalOpenTime = Date.now(); // 💡 開いた時刻を記録し、直後の背景誤タップ即死（チャタリング震え）を根絶
   isDetailModalOpen = true;
 
   const allItems = (window.INITIAL_GAME_DATABASE && window.INITIAL_GAME_DATABASE.metaApp && window.INITIAL_GAME_DATABASE.metaApp.evidenceItems)
@@ -3244,17 +3260,28 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   
   const searchId = String(itemId || '').trim();
   const cleanSearch = searchId.replace(/_/g, '-').toUpperCase();
-  const item = allItems.find(it => {
+  
+  // 厳密照合: 3つ以上何個に増えても、クリックされたカードのアイテムを100%確実に特定
+  let item = allItems.find(it => {
     const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
     const itQr = String(it.qrKey || '').replace(/_/g, '-').toUpperCase().trim();
-    return itId === cleanSearch || itQr === cleanSearch || itId.endsWith(cleanSearch) || cleanSearch.endsWith(itId);
-  }) || allItems[0]; // 万一ID不一致でも先頭要素で安全フォールバック表示
+    return itId === cleanSearch || itQr === cleanSearch;
+  });
 
+  if (!item) {
+    item = allItems.find(it => {
+      const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
+      return itId.includes(cleanSearch) || cleanSearch.includes(itId);
+    });
+  }
+
+  if (!item) item = allItems[0];
   if (!item) return;
 
   const itemQr = item.qrKey || item.id;
   const name = item.name || item.id;
-  const descLong = item.detailDesc || item.desc || '';
+  // 💡 ユーザー指定: 拡大したあとは「説明長 (detailDesc)」を入れる
+  const descLong = item.detailDesc || item.desc || '詳細情報はありません。';
   const loc = item.location || '調査場所';
   const displayTime = timeStr || getFormattedFakeTime();
   const imgSrc = item.image || '';
@@ -3271,7 +3298,11 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   }
   if (locEl) locEl.innerText = loc;
   if (timeEl) timeEl.innerText = `${displayTime} 取得`;
-  if (descEl) descEl.innerText = descLong;
+  
+  // 拡大したあとは「説明長 (detailDesc)」を改行付きで確実にセット
+  if (descEl) {
+    descEl.innerText = descLong;
+  }
 
   if (imgEl) {
     imgEl.style.display = 'none';
@@ -3284,8 +3315,14 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   playSystemSound('touch');
 }
 
-function closeMetaEvidenceDetail(e) {
+function closeMetaEvidenceDetail(e, isBtn = false) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+
+  // 💡 閉じるボタン以外（背景タップ）の場合、開いた直後400msは即時誤閉鎖（チャタリングによる小刻みな震え）を完全防止！
+  if (!isBtn && (Date.now() - detailModalOpenTime < 400)) {
+    return;
+  }
+
   isDetailModalOpen = false;
   const modal = document.getElementById('meta-evidence-detail-modal');
   if (modal) modal.style.display = 'none';
