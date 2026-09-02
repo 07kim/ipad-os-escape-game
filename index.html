@@ -2429,9 +2429,9 @@
     </div>
   </div>
 
-  <!-- 🎉 調査資料 記録完了ポップアップ（ユーザー指定デザイン：中央大型カード） -->
-  <div class="evidence-record-toast" id="meta-evidence-toast" style="display:none;" onclick="this.style.display='none'">
-    <div class="evidence-toast-modal-card" onclick="event.stopPropagation()">
+  <!-- 🎉 調査資料 記録完了ポップアップ（タップで即座に閉じる安全仕様） -->
+  <div class="evidence-record-toast" id="meta-evidence-toast" style="display:none;" onclick="this.style.display='none';">
+    <div class="evidence-toast-modal-card" onclick="document.getElementById('meta-evidence-toast').style.display='none';">
       <div class="evidence-toast-item-title" id="meta-toast-item-name">アイテム情報名</div>
       <div class="evidence-toast-particle">が</div>
       <div class="evidence-toast-action">記録されました</div>

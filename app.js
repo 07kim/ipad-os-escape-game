@@ -2606,6 +2606,12 @@ function switchMetaTab(tabId) {
   stopAllCameraStreams();
   const inlineScanner = document.getElementById('meta-qr-inline-scanner');
   if (inlineScanner) inlineScanner.style.display = 'none';
+  const qrModal = document.getElementById('meta-evidence-qr-modal');
+  if (qrModal) qrModal.style.display = 'none';
+  const detailModal = document.getElementById('meta-evidence-detail-modal');
+  if (detailModal) detailModal.style.display = 'none';
+  const toast = document.getElementById('meta-evidence-toast');
+  if (toast) toast.style.display = 'none';
 
   const fab = document.getElementById('meta-evidence-fab');
   if (fab) {
@@ -3030,6 +3036,7 @@ function openMetaEvidenceQrScanner() {
     return;
   }
 
+  stopAllCameraStreams();
   evidenceScanCooldown = false;
   if (errToast) errToast.style.display = 'none';
   modal.style.display = 'flex';
@@ -3141,18 +3148,25 @@ function handleEvidenceQrDetected(decodedText, statusBox) {
   renderMetaEvidence();
 }
 
+let evidenceToastTimer = null;
 // 🎉 調査資料 記録完了ポップアップトースト
 function showEvidenceRecordToast(itemName) {
   const toast = document.getElementById('meta-evidence-toast');
   const nameEl = document.getElementById('meta-toast-item-name');
   if (!toast) return;
 
+  if (evidenceToastTimer) {
+    clearTimeout(evidenceToastTimer);
+    evidenceToastTimer = null;
+  }
+
   if (nameEl) nameEl.innerText = itemName;
   toast.style.display = 'flex';
 
-  setTimeout(() => {
+  evidenceToastTimer = setTimeout(() => {
     toast.style.display = 'none';
-  }, 3500);
+    evidenceToastTimer = null;
+  }, 1800);
 }
 
 // 🔍 調査資料 カード詳細モーダル開閉（添付画像配置 ＆ ゲームアイテムUI）
@@ -3330,10 +3344,24 @@ function stopAllCameraStreams() {
   }
   if (activeStream) {
     try {
-      activeStream.getTracks().forEach(track => track.stop());
+      activeStream.getTracks().forEach(track => {
+        try { track.stop(); } catch(e) {}
+      });
     } catch(e) {}
     activeStream = null;
   }
+  // 🍎 iOS Safari 向けカメラバッファ完全解放（2回目以降のカメラ起動を100%保証）
+  ['evidence-scanner-video', 'meta-qr-video', 'link-scanner-video'].forEach(id => {
+    const v = document.getElementById(id);
+    if (v) {
+      try {
+        v.pause();
+        v.srcObject = null;
+        v.removeAttribute('src');
+        v.load();
+      } catch(e) {}
+    }
+  });
 }
 
 // メモ帳初期化 (起動時およびタブ表示時)
@@ -4538,7 +4566,8 @@ function closeLinkDialog() {
 // ==========================================================================
 // ④ 偽Googleフォーム & 編集画面 & 偽スプレッドシート（ハッキング）
 // ==========================================================================
-function openHackingForm() {
+function openHackingForm(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const modal = document.getElementById('hacking-modal');
   if (!modal) return;
   modal.style.display = 'flex';
