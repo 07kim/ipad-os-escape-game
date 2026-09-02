@@ -425,7 +425,6 @@ h1.ahl{margin:0 0 12px;font-size:24px;line-height:1.42;font-weight:500;text-wrap
       <div class="searchbar" style="cursor:default">
         <button class="msym" id="openSearch" style="cursor:pointer" aria-label="検索">search</button>
         <span class="ph" id="openSearch2" role="button" tabindex="0">検索</span>
-        <button class="avatar" id="openStaff" aria-label="アカウント">R</button>
       </div>
     </header>
     <nav class="tabs" id="tabs" role="tablist"></nav>
@@ -476,20 +475,7 @@ h1.ahl{margin:0 0 12px;font-size:24px;line-height:1.42;font-weight:500;text-wrap
     <button class="navitem" data-nav="saved" aria-selected="false"><span class="pill"><span class="msym">bookmark</span></span><span class="lb">保存済み</span></button>
   </nav>
 
-  <!-- ========== STAFF SHEET ========== -->
-  <div class="scrim" id="scrim"></div>
-  <div class="sheet" id="sheet" role="dialog" aria-label="スタッフ設定">
-    <div class="grabber"></div>
-    <h3>スタッフ設定</h3>
-    <p class="sub">現在の周回を切り替えます。表示される記事と検索結果が連動して変わります。</p>
-    <div class="segmented" id="loopseg">
-      <button data-loop="1" aria-pressed="true">1周目</button>
-      <button data-loop="2" aria-pressed="false">2周目</button>
-      <button data-loop="3" aria-pressed="false">3周目</button>
-    </div>
-    <div class="loopnote" id="loopnote"></div>
-    <button class="close" id="closeSheet">閉じる</button>
-  </div>
+  <!-- ========== STAFF SHEET (REMOVED) ========== -->
 </div>
 
 <script>
@@ -1307,7 +1293,8 @@ const LOOPNOTES = {
 3:`<b>3周目</b>：119歳の記事2本が<b>消滅</b>し、代わりに UZW 関連4本（企業紹介・誕生日会・不正疑惑・時価総額）が出現します。<br>検索欄に「United Zillion」と入れるとサジェストに<b>「やばい」</b>が出ます。<br>「学友会執行委員会」で検索 → 0件＋AI概要「<b>35年前に解体</b>」。`
 };
 function renderLoopNote(){
-  document.getElementById("loopnote").innerHTML = LOOPNOTES[S.loop];
+  const note = document.getElementById("loopnote");
+  if (note) note.innerHTML = LOOPNOTES[S.loop] || "";
   document.querySelectorAll("#loopseg button").forEach(b=>
     b.setAttribute("aria-pressed", String(Number(b.dataset.loop) === S.loop)));
 }
@@ -1417,6 +1404,56 @@ function logActionToParent(action, msg) {
       window.parent.logWriteToGAS(action, msg);
     }
   } catch (err) {}
+}
+
+
+// 👈 ブラウザ内スワイプ戻るジェスチャー（右スワイプで確実に1個前の画面に戻る）
+let browserTouchStartX = 0;
+let browserTouchStartY = 0;
+let isBrowserSwiping = false;
+
+window.addEventListener("touchstart", e => {
+  if (e.touches && e.touches.length === 1) {
+    browserTouchStartX = e.touches[0].clientX;
+    browserTouchStartY = e.touches[0].clientY;
+    isBrowserSwiping = true;
+  }
+}, { passive: true });
+
+window.addEventListener("touchend", e => {
+  if (!isBrowserSwiping || !e.changedTouches || e.changedTouches.length !== 1) return;
+  isBrowserSwiping = false;
+  const deltaX = e.changedTouches[0].clientX - browserTouchStartX;
+  const deltaY = Math.abs(e.changedTouches[0].clientY - browserTouchStartY);
+
+  // 水平右スワイプ（50px以上右へ、かつ縦スクロールよりも横方向が大きい）
+  if (deltaX >= 50 && deltaX > deltaY * 1.3) {
+    handleBrowserSwipeBack();
+  }
+}, { passive: true });
+
+function handleBrowserSwipeBack() {
+  if (document.getElementById("view-article").classList.contains("on")) {
+    show("feed");
+    window.scrollTo(0, 0);
+  } else if (document.getElementById("view-site").classList.contains("on")) {
+    show("search");
+    window.scrollTo(0, 0);
+  } else if (document.getElementById("view-search").classList.contains("on")) {
+    show("feed");
+    window.scrollTo(0, 0);
+  } else if (S.nav !== "home") {
+    S.nav = "home";
+    document.querySelectorAll("[data-nav]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.nav === "home")));
+    document.getElementById("tabs").style.display = "flex";
+    renderFeed();
+    window.scrollTo(0, 0);
+  } else if (S.tab !== "おすすめ") {
+    S.tab = "おすすめ";
+    renderTabs();
+    renderFeed();
+    window.scrollTo(0, 0);
+  }
 }
 
 /* ---------------- init ---------------- */

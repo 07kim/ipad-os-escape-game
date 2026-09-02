@@ -7572,6 +7572,12 @@ function setupGlobalSwipeBackGestures() {
 }
 
 function handleGlobalSwipeBack() {
+  // 0. 🌐 Safari（ブラウザ）アプリが開いている場合は、iframe側にスワイプ戻りを任せて本体側はスキップ
+  const browserApp = document.getElementById('app-browser-app');
+  if (browserApp && browserApp.style.display !== 'none') {
+    return;
+  }
+
   // 1. 🎓 LMS「manaba」内の戻る処理
   const manabaApp = document.getElementById('app-manaba-app');
   if (manabaApp && manabaApp.style.display !== 'none') {
