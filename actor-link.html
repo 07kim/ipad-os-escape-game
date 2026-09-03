@@ -211,7 +211,7 @@
         <div class="line-myqr-body">
           <div class="line-myqr-avatar"><i data-lucide="heart"></i></div>
           <h4 class="line-myqr-name">七瀬 いろは</h4>
-          <p class="line-myqr-desc">知能メディア工学科 1年 / 副委員長<br>QRコードやリンクを使って、友だち追加しましょう。</p>
+          <p class="line-myqr-desc">頭脳メディア工学科 1年<br>QRコードやリンクを使って、友だち追加しましょう。</p>
           <div class="line-myqr-image-box">
             <img id="nanase-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_26d1094_NANASE_IROHA_CIT2126" alt="七瀬いろは QRコード">
           </div>
@@ -478,17 +478,88 @@ function closeNanaseQr() { document.getElementById('nanase-qr-modal').style.disp
 function copyNanaseLink() { const url = 'https://link.line.me/ti/p/cit_nanase_iroha_26d1094'; if (navigator.clipboard) navigator.clipboard.writeText(url); showLinkDialog('コピー完了', 'LINKのリンクをクリップボードにコピーしました。'); }
 function refreshNanaseQr() { const img = document.getElementById('nanase-qr-img'); if (img) { img.style.opacity = '0.3'; setTimeout(() => { img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_26d1094_NANASE_REFRESH_${Date.now()}`; img.style.opacity = '1'; }, 400); } }
 
-// 警告音・アラーム制御（演者用スマホLINK）
-let _alarmLastTap = 0, _alarmAudioCtx = null, _alarmGain = null, _alarmPlaying = false, _alarmNodes = [];
+// 🚨 警告音・アラーム制御（演者用スマホLINK: HTML5 Audio + Web Audio ハイブリッド完全確実再生）
+let _alarmLastTap = 0;
 let _videoAlarmLastTap = 0;
+let _alarmAudioCtx = null;
+let _alarmGain = null;
+let _alarmPlaying = false;
+let _alarmNodes = [];
 let _pendingAlarmTimer = null;
+let _alarmAudioEl = null;
+
+// 🚨 大音量アラーム音のWAVデータURI生成（高音ピーポー緊急サイレン波形）
+function getAlarmSirenWavDataUri() {
+  const sampleRate = 22050;
+  const dur = 4.8;
+  const numSamples = Math.floor(sampleRate * dur);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // モノラル
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  // 0.3秒おきに 980Hz と 740Hz が交互に鳴る非常警告サイレン
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const cycle = Math.floor(t / 0.3) % 2;
+    const freq = cycle === 0 ? 980 : 740;
+    const s1 = Math.sin(2 * Math.PI * freq * t);
+    const s2 = Math.sin(2 * Math.PI * (freq * 1.5) * t) * 0.35;
+    const sample = Math.max(-1, Math.min(1, s1 + s2)) * 0.75;
+    view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return 'data:audio/wav;base64,' + btoa(binary);
+}
+
+function unlockAlarmAudioContext() {
+  try {
+    if (!_alarmAudioCtx) {
+      _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_alarmAudioCtx.state === 'suspended') {
+      _alarmAudioCtx.resume().catch(() => {});
+    }
+    // HTML5 Audio 要素もタップ時に先回り初期化
+    if (!_alarmAudioEl) {
+      _alarmAudioEl = new Audio(getAlarmSirenWavDataUri());
+      _alarmAudioEl.volume = 1.0;
+      _alarmAudioEl.playsInline = true;
+    }
+    _alarmAudioEl.load();
+  } catch(e) {
+    console.warn("Audio unlock error:", e);
+  }
+}
 
 // 📞 電話／警告ボタン2回タップ ➔ 5秒後にアラーム再生
 function handleAlarmBtnClick() {
   const btn = document.getElementById('alarm-btn');
   const now = Date.now();
-  if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+  unlockAlarmAudioContext();
   
   if (_alarmPlaying || _pendingAlarmTimer) {
     stopAlarm();
@@ -496,7 +567,7 @@ function handleAlarmBtnClick() {
     return;
   }
 
-  if (now - _alarmLastTap < 600) {
+  if (now - _alarmLastTap < 700) {
     _alarmLastTap = 0;
     if (btn) btn.classList.add('alarm-active');
     showToast("📞 電話トリガー待機中: 【5秒後】にアラームが鳴ります", false, 4500);
@@ -512,8 +583,7 @@ function handleAlarmBtnClick() {
 // 📹 ビデオ通話ボタン2回タップ ➔ 10秒後にアラーム再生
 function handleVideoTriggerTap() {
   const now = Date.now();
-  if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+  unlockAlarmAudioContext();
 
   if (_alarmPlaying || _pendingAlarmTimer) {
     stopAlarm();
@@ -521,7 +591,7 @@ function handleVideoTriggerTap() {
     return;
   }
 
-  if (now - _videoAlarmLastTap < 600) {
+  if (now - _videoAlarmLastTap < 700) {
     _videoAlarmLastTap = 0;
     const btn = document.getElementById('alarm-btn');
     if (btn) btn.classList.add('alarm-active');
@@ -536,28 +606,60 @@ function handleVideoTriggerTap() {
 }
 
 function playAlarm(btn) {
-  if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
   _alarmPlaying = true;
   if (btn) btn.classList.add('alarm-active');
-  _alarmNodes = [];
-  _alarmGain = _alarmAudioCtx.createGain();
-  _alarmGain.gain.setValueAtTime(0.0, _alarmAudioCtx.currentTime);
-  _alarmGain.connect(_alarmAudioCtx.destination);
-  const melody = [[880,0.0,0.2,'square'],[1109,0.2,0.2,'square'],[1319,0.4,0.3,'square'],[988,0.7,0.15,'sawtooth'],[1175,0.85,0.15,'sawtooth'],[1319,1.0,0.4,'square'],[880,1.4,0.1,'square'],[1047,1.5,0.1,'square'],[880,1.6,0.1,'square'],[1047,1.7,0.1,'square'],[880,1.8,0.1,'square'],[1319,1.9,0.5,'square'],[440,2.4,0.08,'sawtooth'],[440,2.55,0.08,'sawtooth'],[440,2.7,0.08,'sawtooth'],[880,2.85,0.08,'sawtooth'],[880,3.0,0.08,'sawtooth'],[1319,3.15,0.15,'square'],[1109,3.3,0.15,'square'],[880,3.45,0.15,'square'],[1319,3.6,0.6,'square'],[660,4.2,0.3,'square']];
-  _alarmGain.gain.linearRampToValueAtTime(0.5, _alarmAudioCtx.currentTime + 0.05);
-  melody.forEach(([freq, start, dur, type]) => {
-    const osc = _alarmAudioCtx.createOscillator(); const g = _alarmAudioCtx.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, _alarmAudioCtx.currentTime + start);
-    g.gain.setValueAtTime(0.0, _alarmAudioCtx.currentTime + start);
-    g.gain.linearRampToValueAtTime(1.0, _alarmAudioCtx.currentTime + start + 0.02);
-    g.gain.setValueAtTime(1.0, _alarmAudioCtx.currentTime + start + dur - 0.02);
-    g.gain.linearRampToValueAtTime(0.0, _alarmAudioCtx.currentTime + start + dur);
-    osc.connect(g); g.connect(_alarmGain);
-    osc.start(_alarmAudioCtx.currentTime + start); osc.stop(_alarmAudioCtx.currentTime + start + dur + 0.02);
-    _alarmNodes.push(osc);
-  });
-  setTimeout(() => stopAlarm(), 4700);
+
+  // 1. HTML5 Audio での即時再生（モバイルで最も強い）
+  try {
+    if (!_alarmAudioEl) {
+      _alarmAudioEl = new Audio(getAlarmSirenWavDataUri());
+      _alarmAudioEl.volume = 1.0;
+    }
+    _alarmAudioEl.currentTime = 0;
+    _alarmAudioEl.play().catch(err => {
+      console.warn("HTML5 audio play blocked, falling back to Web Audio:", err);
+    });
+  } catch(e) { }
+
+  // 2. Web Audio API での和音オシレーター同時再生（多重化）
+  try {
+    if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+    _alarmNodes = [];
+    _alarmGain = _alarmAudioCtx.createGain();
+    _alarmGain.gain.setValueAtTime(0.0, _alarmAudioCtx.currentTime);
+    _alarmGain.connect(_alarmAudioCtx.destination);
+    
+    const melody = [
+      [880,0.0,0.25,'square'],[1175,0.25,0.25,'square'],[880,0.5,0.25,'square'],[1175,0.75,0.25,'square'],
+      [880,1.0,0.25,'square'],[1175,1.25,0.25,'square'],[880,1.5,0.25,'square'],[1175,1.75,0.25,'square'],
+      [880,2.0,0.25,'square'],[1175,2.25,0.25,'square'],[880,2.5,0.25,'square'],[1175,2.75,0.25,'square'],
+      [880,3.0,0.25,'square'],[1175,3.25,0.25,'square'],[880,3.5,0.25,'square'],[1175,3.75,0.25,'square'],
+      [880,4.0,0.25,'square'],[1175,4.25,0.25,'square']
+    ];
+    _alarmGain.gain.linearRampToValueAtTime(0.8, _alarmAudioCtx.currentTime + 0.05);
+
+    melody.forEach(([freq, start, dur, type]) => {
+      const osc = _alarmAudioCtx.createOscillator(); 
+      const g = _alarmAudioCtx.createGain();
+      osc.type = type; 
+      osc.frequency.setValueAtTime(freq, _alarmAudioCtx.currentTime + start);
+      g.gain.setValueAtTime(0.0, _alarmAudioCtx.currentTime + start);
+      g.gain.linearRampToValueAtTime(1.0, _alarmAudioCtx.currentTime + start + 0.02);
+      g.gain.setValueAtTime(1.0, _alarmAudioCtx.currentTime + start + dur - 0.02);
+      g.gain.linearRampToValueAtTime(0.0, _alarmAudioCtx.currentTime + start + dur);
+      osc.connect(g); 
+      g.connect(_alarmGain);
+      osc.start(_alarmAudioCtx.currentTime + start); 
+      osc.stop(_alarmAudioCtx.currentTime + start + dur + 0.02);
+      _alarmNodes.push(osc);
+    });
+  } catch(e) {
+    console.warn("WebAudio alarm error:", e);
+  }
+
+  showToast("🚨 アラームが鳴動中！（タップで停止可能）", false, 4800);
+  setTimeout(() => stopAlarm(), 4800);
 }
 
 function stopAlarm() {
@@ -566,9 +668,22 @@ function stopAlarm() {
     _pendingAlarmTimer = null;
   }
   _alarmPlaying = false;
-  const btn = document.getElementById('alarm-btn'); if (btn) btn.classList.remove('alarm-active');
-  _alarmNodes.forEach(n => { try { n.stop(); } catch(e){} }); _alarmNodes = [];
-  if (_alarmGain && _alarmAudioCtx) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
+  const btn = document.getElementById('alarm-btn'); 
+  if (btn) btn.classList.remove('alarm-active');
+  
+  if (_alarmAudioEl) {
+    try {
+      _alarmAudioEl.pause();
+      _alarmAudioEl.currentTime = 0;
+    } catch(e) {}
+  }
+  _alarmNodes.forEach(n => { try { n.stop(); } catch(e){} }); 
+  _alarmNodes = [];
+  if (_alarmGain && _alarmAudioCtx) {
+    try {
+      _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.05);
+    } catch(e){}
+  }
 }
 
 // 🔔 チャット着信通知音（LINE風 ポロン♪ ピロリン♪ - Web Audio API + HTML5 Audio ハイブリッド二重再生）
