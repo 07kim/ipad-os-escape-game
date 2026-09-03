@@ -298,6 +298,26 @@ window.addEventListener('DOMContentLoaded', () => {
     // 初期画面構築（ローカルデータで即時描画）
     updateAppUI();
 
+    // ⭐ シーン進行状態の復元（リロード時に誤ってロック画面が覆いかぶさるのを完全防止）
+    const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || localStorage.getItem('admin_flow_step') || '0', 10);
+    const blackoutOverlay = document.getElementById('complete-blackout-overlay');
+    if (savedFlowStep >= 2 && savedFlowStep <= 6) {
+      // 02〜06はゲーム進行中・プレイ中のためロック画面を解除
+      unlockScreen();
+      if (blackoutOverlay) blackoutOverlay.style.display = 'none';
+    } else if (savedFlowStep === 7) {
+      // 07は3周目終了（完全暗転）
+      unlockScreen();
+      if (blackoutOverlay) blackoutOverlay.style.display = 'block';
+    } else if (savedFlowStep === 8) {
+      // 08はゲーム終了
+      unlockScreen();
+      if (blackoutOverlay) blackoutOverlay.style.display = 'none';
+    } else if (savedFlowStep === 1) {
+      // 01オープニング待機中のみロック画面を表示
+      showLockScreen();
+    }
+
     // 🔋 実機バッテリー連動の開始
     initBatterySync();
 
@@ -5000,7 +5020,7 @@ function submitInAppForm() {
   const fakeHHMM = getFormattedFakeTime();
   const timeStampStr = `2026/09/04 ${fakeHHMM}:00`;
   const shortTimeStr = `2026/09/04 ${fakeHHMM}`;
-  const userEmail = "s25b1150er@chibakou.ac.jp"; // 矢田逞（ログイン中ユーザー）
+  const userEmail = "24e2135@chibakou.ac.jp"; // L（連城 観）のメールアドレス
 
   // 💡 ユーザー指定: フォーム送信を行ってもスプシおよび回答タブへは新規行を追加せず、公式3件を固定維持
   // 回答数バッジの更新（3件固定）
@@ -7008,9 +7028,6 @@ function openMail(mailId) {
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
               <span class="mail-sent-date-badge">${mail.date}</span>
-              <button class="btn btn-secondary btn-sm" onclick="clipTextToMemo('${mail.subject || mail.title}', '${mail.body.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')" style="display:flex; align-items:center; gap:4px; font-size:11px; padding:4px 8px;">
-                <i data-lucide="clipboard-copy" style="width:13px; height:13px;"></i> メモ転記
-              </button>
             </div>
           </div>
         </div>
