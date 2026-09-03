@@ -2298,12 +2298,21 @@
     <div class="lightbox-content-wrapper" onclick="event.stopPropagation()">
       <button class="lightbox-close-btn" role="button" aria-label="閉じる" onclick="closeMetaLightbox(event)" ontouchend="closeMetaLightbox(event)" title="閉じる">✕</button>
 
-      <div class="lightbox-header">
-        <span id="lightbox-title">プレビュー</span>
-        <span class="lightbox-counter" id="lightbox-counter"></span>
+      <div class="lightbox-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="lightbox-title">プレビュー</span>
+          <span class="lightbox-counter" id="lightbox-counter"></span>
+        </div>
+        <!-- 🔍 ズーム操作ツールバー -->
+        <div class="lightbox-zoom-toolbar" style="display:flex; align-items:center; gap:6px; margin-right:32px;">
+          <button type="button" class="lightbox-zoom-btn" onclick="zoomMetaLightbox(-0.35, event)" title="縮小"><i data-lucide="zoom-out" style="width:16px; height:16px;"></i></button>
+          <span id="lightbox-zoom-level" style="font-size:11px; font-weight:700; color:#e2e8f0; min-width:40px; text-align:center; font-family:monospace;">100%</span>
+          <button type="button" class="lightbox-zoom-btn" onclick="zoomMetaLightbox(0.35, event)" title="拡大"><i data-lucide="zoom-in" style="width:16px; height:16px;"></i></button>
+          <button type="button" class="lightbox-zoom-btn" onclick="resetMetaLightboxZoom(event)" title="等倍に戻す"><i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i></button>
+        </div>
       </div>
-      <div class="lightbox-body" id="lightbox-body-swipe-area">
-        <img id="lightbox-img" src="" alt="拡大プレビュー">
+      <div class="lightbox-body" id="lightbox-body-swipe-area" style="overflow:hidden; position:relative; touch-action:none; display:flex; justify-content:center; align-items:center;">
+        <img id="lightbox-img" src="" alt="拡大プレビュー" style="transition:transform 0.15s ease-out; transform-origin:center center; max-width:100%; max-height:85vh; object-fit:contain; user-select:none; -webkit-user-drag:none;">
       </div>
     </div>
   </div>

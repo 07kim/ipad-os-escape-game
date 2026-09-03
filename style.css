@@ -1217,6 +1217,37 @@ body {
   border-radius: 12px;
 }
 
+.lightbox-zoom-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lightbox-zoom-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.lightbox-zoom-btn:hover {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border-color: #0284c7;
+}
+
+.lightbox-zoom-btn:active {
+  transform: scale(0.92);
+}
+
 .lightbox-body {
   flex: 1;
   background: #000000;

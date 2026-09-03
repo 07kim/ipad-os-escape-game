@@ -3096,10 +3096,43 @@ function renderMetaObservation(folderId = 'root', e = null) {
   try { playSystemSound('touch'); } catch (err) {}
 }
 
-// 🔍 フルスクリーン拡大プレビューモーダル（ギャラリーカルーセル・スワイプ・矢印送り対応）
+// 🔍 フルスクリーン拡大プレビューモーダル（ズーム拡大・カルーセル・スワイプ・ピンチ対応）
 let currentLightboxGallery = [];
 let currentLightboxIndex = 0;
 let lightboxSwipeInitialized = false;
+let lightboxZoomScale = 1.0;
+let lightboxPanX = 0;
+let lightboxPanY = 0;
+
+function updateLightboxTransform() {
+  const img = document.getElementById('lightbox-img');
+  const levelEl = document.getElementById('lightbox-zoom-level');
+  if (!img) return;
+  img.style.transform = `translate(${lightboxPanX}px, ${lightboxPanY}px) scale(${lightboxZoomScale})`;
+  if (levelEl) {
+    levelEl.innerText = `${Math.round(lightboxZoomScale * 100)}%`;
+  }
+}
+
+function zoomMetaLightbox(delta, e = null) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  lightboxZoomScale = Math.max(0.75, Math.min(4.0, lightboxZoomScale + delta));
+  if (lightboxZoomScale <= 1.05) {
+    lightboxPanX = 0;
+    lightboxPanY = 0;
+  }
+  updateLightboxTransform();
+}
+window.zoomMetaLightbox = zoomMetaLightbox;
+
+function resetMetaLightboxZoom(e = null) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  lightboxZoomScale = 1.0;
+  lightboxPanX = 0;
+  lightboxPanY = 0;
+  updateLightboxTransform();
+}
+window.resetMetaLightboxZoom = resetMetaLightboxZoom;
 
 function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -3107,6 +3140,8 @@ function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
   const modal = document.getElementById('meta-lightbox-modal');
   const img = document.getElementById('lightbox-img');
   if (!modal || !img) return;
+
+  resetMetaLightboxZoom();
 
   // ギャラリーリストの特定（現在開いているフォルダの全ファイル）
   if (galleryList && galleryList.length > 0) {
@@ -3131,7 +3166,7 @@ function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
   modal.style.display = 'flex';
   safeCreateIcons(modal);
 
-  // スワイプ＆キーボードイベントの登録
+  // スワイプ＆キーボード＆ピンチズームイベントの登録
   initLightboxSwipe();
 
   logWriteToGAS("META_LIGHTBOX_OPEN", `プレビュー拡大: ${title || imgUrl}`);
@@ -3144,6 +3179,8 @@ function updateLightboxView() {
   const prevBtn = document.getElementById('lightbox-prev-btn');
   const nextBtn = document.getElementById('lightbox-next-btn');
   if (!img || currentLightboxGallery.length === 0) return;
+
+  resetMetaLightboxZoom();
 
   const currentItem = currentLightboxGallery[currentLightboxIndex];
   if (!currentItem) return;
@@ -3194,30 +3231,84 @@ function initLightboxSwipe() {
   lightboxSwipeInitialized = true;
 
   const swipeArea = document.getElementById('lightbox-body-swipe-area') || document.getElementById('meta-lightbox-modal');
+  const img = document.getElementById('lightbox-img');
   if (!swipeArea) return;
 
   let touchStartX = 0;
   let touchStartY = 0;
+  let initialPinchDist = 0;
+  let initialScale = 1.0;
+  let lastTapTime = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+
+  // 🔍 ダブルタップで 1.0x ➔ 2.0x ➔ 3.0x ➔ 1.0x ズーム切り替え
+  swipeArea.addEventListener('click', (e) => {
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      lastTapTime = 0;
+      if (lightboxZoomScale >= 2.8) {
+        resetMetaLightboxZoom();
+      } else if (lightboxZoomScale >= 1.8) {
+        lightboxZoomScale = 3.0;
+        updateLightboxTransform();
+      } else {
+        lightboxZoomScale = 2.0;
+        updateLightboxTransform();
+      }
+    } else {
+      lastTapTime = now;
+    }
+  });
 
   swipeArea.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
+      if (lightboxZoomScale > 1.05) {
+        isDragging = true;
+        dragStartX = touchStartX - lightboxPanX;
+        dragStartY = touchStartY - lightboxPanY;
+      }
+    } else if (e.touches.length === 2) {
+      // 2本指ピンチ開始
+      isDragging = false;
+      initialPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialScale = lightboxZoomScale;
+    }
+  }, { passive: true });
+
+  swipeArea.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && isDragging && lightboxZoomScale > 1.05) {
+      lightboxPanX = e.touches[0].clientX - dragStartX;
+      lightboxPanY = e.touches[0].clientY - dragStartY;
+      updateLightboxTransform();
+    } else if (e.touches.length === 2 && initialPinchDist > 0) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scaleDelta = currentDist / initialPinchDist;
+      lightboxZoomScale = Math.max(0.75, Math.min(4.0, initialScale * scaleDelta));
+      updateLightboxTransform();
     }
   }, { passive: true });
 
   swipeArea.addEventListener('touchend', (e) => {
-    if (e.changedTouches.length === 1) {
+    isDragging = false;
+    if (e.changedTouches.length === 1 && lightboxZoomScale <= 1.05) {
       const deltaX = e.changedTouches[0].clientX - touchStartX;
       const deltaY = e.changedTouches[0].clientY - touchStartY;
 
-      // 横スワイプ判定（40px以上の移動かつ縦より横の移動が大きい場合）
+      // 横スワイプ送り判定（等倍表示時のみ）
       if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
         if (deltaX < 0) {
-          // 左スワイプ -> 次の画像へ
           navigateMetaLightbox(1);
         } else {
-          // 右スワイプ -> 前の画像へ
           navigateMetaLightbox(-1);
         }
       }
@@ -3234,6 +3325,12 @@ function initLightboxSwipe() {
         navigateMetaLightbox(-1);
       } else if (e.key === 'Escape') {
         closeMetaLightbox();
+      } else if (e.key === '+' || e.key === '=') {
+        zoomMetaLightbox(0.3);
+      } else if (e.key === '-' || e.key === '_') {
+        zoomMetaLightbox(-0.3);
+      } else if (e.key === '0') {
+        resetMetaLightboxZoom();
       }
     }
   });
@@ -3241,13 +3338,33 @@ function initLightboxSwipe() {
 
 function closeMetaLightbox(e) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  
+  resetMetaLightboxZoom();
   const modal = document.getElementById('meta-lightbox-modal');
   if (modal) modal.style.display = 'none';
   playSystemSound('touch');
 }
 
-// 📦 【調査資料】タブ描画: 添付画像準拠（左: 写真+場所 / 右: 名前+説明）& タップ詳細表示完全保証
+// 🖼️ 調査資料画像の安全な実体URL解決（.webp ➔ .png ➔ ルート/assets自動フォールバック）
+function getEvidenceItemImageSrc(item) {
+  if (!item) return './assets/evidence/ITEM-001.webp';
+  let raw = typeof item === 'string' ? item : (item.image || item.photo || '');
+  if (!raw) {
+    const idNum = String(item.id || item.qrKey || 'ITEM-001').replace(/[^0-9]/g, '');
+    const padded = idNum ? String(idNum).padStart(3, '0') : '001';
+    return `./assets/evidence/ITEM-${padded}.webp`;
+  }
+  if (raw.startsWith('data:') || raw.startsWith('http')) return raw;
+  
+  let clean = raw.replace(/^\.\//, '');
+  if (!clean.includes('assets/evidence/')) {
+    const fn = clean.split('/').pop();
+    clean = 'assets/evidence/' + fn;
+  }
+  clean = clean.replace(/\.png$/i, '.webp');
+  return './' + clean;
+}
+
+// 📦 【調査資料】タブ描画: 実体画像を最初から表示（アイコンではなく本物の画像）
 function renderMetaEvidence() {
   const container = document.getElementById('meta-evidence-grid');
   const badge = document.getElementById('evidence-count-badge');
@@ -3278,7 +3395,7 @@ function renderMetaEvidence() {
     const entryId = String(entry.id || entry.qrKey || '').trim();
     const cleanUpper = entryId.replace(/_/g, '-').toUpperCase();
     
-    // 厳密一致を最優先（3つ以上増えても絶対に誤判定しない）
+    // 厳密一致を最優先
     const item = allItems.find(it => {
       const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
       const itQr = String(it.qrKey || '').replace(/_/g, '-').toUpperCase().trim();
@@ -3286,27 +3403,21 @@ function renderMetaEvidence() {
     }) || allItems.find(it => {
       const itId = String(it.id || '').replace(/_/g, '-').toUpperCase().trim();
       return itId.includes(cleanUpper) || cleanUpper.includes(itId);
-    });
-
-    if (!item) return '';
+    }) || { id: entryId, name: entryId, desc: "調査資料", location: entry.location || "調査場所" };
 
     const itemQr = item.qrKey || item.id;
     const itemName = item.name || item.id;
-    // 💡 ユーザー指定: 開かれる前は「説明 (desc)」を表記
     const itemDesc = item.desc || '';
     const itemLoc = item.location || entry.location || '調査場所';
     const timeStr = entry.collectedTime || "09:44";
-    const imgSrc = item.image || '';
+    const imgSrc = getEvidenceItemImageSrc(item);
 
     return `
       <div class="evidence-card" role="button" tabindex="0" data-item-id="${item.id}" onclick="handleEvidenceCardTap('${item.id}', '${timeStr}', event)" ontouchend="handleEvidenceCardTap('${item.id}', '${timeStr}', event)" style="touch-action:manipulation; cursor:pointer;">
         <!-- 左カラム：写真スロット + 入手場所バッジ -->
         <div class="evidence-card-left">
           <div class="evidence-thumb-slot">
-            <img src="${imgSrc}" alt="${itemName}" loading="lazy" decoding="async" style="display:none;" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-            <div class="evidence-slot-fallback">
-              <i data-lucide="package" class="slot-fallback-icon"></i>
-            </div>
+            <img src="${imgSrc}" class="evidence-thumb-img" alt="${itemName}" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src=this.src.replace(/\.webp$/i, '.png');}else{this.src='./chibakou_logo.webp';}">
           </div>
           <div class="evidence-location-pill" title="${itemLoc}">
             <i data-lucide="map-pin" style="width:10px; height:10px; flex-shrink:0;"></i>
@@ -3320,7 +3431,6 @@ function renderMetaEvidence() {
             <span style="font-size:10px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-family:monospace; letter-spacing:0.5px;">${itemQr}</span>
             <div class="evidence-card-title" style="margin:0;">${itemName}</div>
           </div>
-          <!-- 開かれる前は「説明」を表記 -->
           <div class="evidence-card-desc" style="white-space:pre-line;">${itemDesc}</div>
         </div>
       </div>
@@ -3541,7 +3651,7 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
   const descLong = item.detailDesc || item.desc || '詳細情報はありません。';
   const loc = item.location || '調査場所';
   const displayTime = timeStr || getFormattedFakeTime();
-  const imgSrc = item.image || '';
+  const imgSrc = getEvidenceItemImageSrc(item);
 
   const imgEl = document.getElementById('detail-item-img');
   const fallbackEl = document.getElementById('detail-slot-fallback');
@@ -3563,9 +3673,16 @@ function openMetaEvidenceDetail(itemId, timeStr, e) {
 
   if (imgEl) {
     imgEl.decoding = 'async';
-    imgEl.style.display = 'none';
-    if (fallbackEl) fallbackEl.style.display = 'flex';
+    imgEl.style.display = 'block';
+    if (fallbackEl) fallbackEl.style.display = 'none';
     imgEl.src = imgSrc;
+    imgEl.onerror = () => {
+      if (imgEl.src.endsWith('.webp')) {
+        imgEl.src = imgEl.src.replace(/\.webp$/i, '.png');
+      } else {
+        imgEl.src = './chibakou_logo.webp';
+      }
+    };
   }
 
   // 💡 閉じるボタンにダイレクト直結ハンドラーを登録（何があっても100%確実に瞬時に閉じる）
