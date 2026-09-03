@@ -970,6 +970,48 @@
       background: #059669;
       transform: translateY(-1px);
     }
+    .flow-next-hero-btn:active {
+      transform: scale(0.97);
+      background: #047857;
+    }
+    .flow-next-hero-btn.loading {
+      opacity: 0.85;
+      pointer-events: none;
+      background: #059669;
+    }
+    .flow-step-card {
+      transition: all 0.15s ease;
+    }
+    .flow-step-card:active {
+      transform: scale(0.985);
+    }
+    .modal-btn-confirm:active {
+      transform: scale(0.96);
+    }
+    .modal-btn-confirm.loading {
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    @keyframes spinAnimation {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .rotating-spinner {
+      animation: spinAnimation 0.8s linear infinite !important;
+      display: inline-block;
+    }
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spinAnimation 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
 
     .flow-sub-actions-row {
       display: flex;
@@ -2785,10 +2827,15 @@
         if (titleEl) titleEl.innerText = title;
         if (subEl) subEl.innerText = subtitle;
         if (msgEl) msgEl.innerText = message;
-        if (btnCancel) btnCancel.innerText = cancelText;
+        if (btnCancel) {
+          btnCancel.innerText = cancelText;
+          btnCancel.disabled = false;
+        }
         if (btnConfirm) {
-          btnConfirm.innerText = confirmText;
+          btnConfirm.innerHTML = confirmText;
           btnConfirm.className = `modal-btn-confirm type-${type}`;
+          btnConfirm.disabled = false;
+          btnConfirm.classList.remove('loading');
         }
         if (iconWrapEl) {
           iconWrapEl.className = `custom-modal-icon-wrap type-${type}`;
@@ -2805,10 +2852,31 @@
 
     function closeAdminCustomModal(result) {
       const modal = document.getElementById('admin-confirm-modal');
-      if (modal) modal.classList.remove('open');
-      if (customModalResolve) {
-        customModalResolve(result);
-        customModalResolve = null;
+      const btnConfirm = document.getElementById('custom-modal-btn-confirm');
+      const btnCancel = document.getElementById('custom-modal-btn-cancel');
+
+      if (result) {
+        // 確定時: スピナー表示 ＆ 連打防止
+        if (btnConfirm) {
+          btnConfirm.innerHTML = `<span class="btn-spinner"></span> 配信中...`;
+          btnConfirm.disabled = true;
+          btnConfirm.classList.add('loading');
+        }
+        if (btnCancel) btnCancel.disabled = true;
+
+        setTimeout(() => {
+          if (modal) modal.classList.remove('open');
+          if (customModalResolve) {
+            customModalResolve(result);
+            customModalResolve = null;
+          }
+        }, 220);
+      } else {
+        if (modal) modal.classList.remove('open');
+        if (customModalResolve) {
+          customModalResolve(result);
+          customModalResolve = null;
+        }
       }
     }
 
@@ -3374,16 +3442,16 @@
       }
 
       // 3. NEXT大型ボタンの更新
-      const nextBtnText = document.getElementById('text-flow-next-hero');
       const nextBtn = document.getElementById('btn-flow-next-hero');
-      if (nextBtn && nextBtnText) {
+      if (nextBtn) {
+        nextBtn.classList.remove('loading');
         if (currentFlowStep >= 8) {
-          nextBtnText.innerText = "🏁 全シーン進行完了（公演終了）";
+          nextBtn.innerHTML = `<i data-lucide="flag" style="width:20px; height:20px;"></i> <span id="text-flow-next-hero">🏁 全シーン進行完了（公演終了）</span>`;
           nextBtn.style.background = "#64748b";
           nextBtn.disabled = true;
         } else {
           const nextNum = currentFlowStep + 1;
-          nextBtnText.innerText = `▶ 次のシーンへ進行 (0${nextNum}. ${FLOW_STEP_CONFIG[nextNum]?.name || ''})`;
+          nextBtn.innerHTML = `<i data-lucide="fast-forward" style="width:20px; height:20px;"></i> <span id="text-flow-next-hero">▶ 次のシーンへ進行 (0${nextNum}. ${FLOW_STEP_CONFIG[nextNum]?.name || ''})</span>`;
           nextBtn.style.background = "#10b981";
           nextBtn.disabled = false;
         }
@@ -3541,10 +3609,20 @@
     function executeFlowStep(stepNum) {
       _lastManualAdminStepTime = Date.now();
       currentFlowStep = stepNum;
+
+      const nextBtn = document.getElementById('btn-flow-next-hero');
+      if (nextBtn) {
+        nextBtn.classList.add('loading');
+        nextBtn.innerHTML = `<i data-lucide="loader-2" class="rotating-spinner" style="width:20px; height:20px;"></i> <span>🚀 シーン進行中...</span>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+
       updateFlowStepsUI();
 
       const config = FLOW_STEP_CONFIG[stepNum];
       if (!config) return;
+
+      showToast(`🚀 【0${stepNum}. ${config.name}】へ進行指示を配信中...`, false, 2500);
 
       const now = Date.now();
 
