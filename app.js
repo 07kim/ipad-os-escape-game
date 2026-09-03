@@ -3544,9 +3544,10 @@ function renderMetaEvidence() {
 }
 
 let evidenceScanCooldown = false;
+let currentEvidenceInputMode = 'camera'; // 'camera' | 'manual'
 
-// 📦 調査資料 専用QRスキャナーモーダル開閉（ユーザー図2：右下ボタンが✕に変化）
-function openMetaEvidenceQrScanner() {
+// 📦 調査資料 専用スキャナー＆番号入力モーダル開閉
+function openMetaEvidenceQrScanner(initialMode = 'camera') {
   const modal = document.getElementById('meta-evidence-qr-modal');
   const statusEl = document.getElementById('evidence-scanner-status');
   const errToast = document.getElementById('evidence-scanner-error-toast');
@@ -3554,7 +3555,7 @@ function openMetaEvidenceQrScanner() {
   if (!modal) return;
 
   // 既に開いている場合は閉じる（トグル動作）
-  if (modal.style.display === 'flex') {
+  if (modal.style.display === 'flex' && initialMode === currentEvidenceInputMode) {
     closeMetaEvidenceQrScanner();
     return;
   }
@@ -3563,16 +3564,123 @@ function openMetaEvidenceQrScanner() {
   evidenceScanCooldown = false;
   if (errToast) errToast.style.display = 'none';
   modal.style.display = 'flex';
-  if (statusEl) {
-    statusEl.innerText = "カメラを起動中...";
-    statusEl.className = "scanner-status-msg";
-  }
+
+  // 入力フィールド初期化
+  const numInput = document.getElementById('evidence-manual-num-input');
+  if (numInput) numInput.value = '';
+  const quickInput = document.getElementById('evidence-quick-num-input');
+  if (quickInput) quickInput.value = '';
+
   if (fab) {
     fab.innerHTML = '<i data-lucide="x"></i>';
     safeCreateIcons(fab);
   }
 
-  startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
+  switchEvidenceInputMode(initialMode);
+}
+
+// 🔄 カメラ / 手動番号入力のモード切り替え
+function switchEvidenceInputMode(mode = 'camera') {
+  currentEvidenceInputMode = mode;
+  const camTab = document.getElementById('scanner-tab-camera-btn');
+  const manualTab = document.getElementById('scanner-tab-manual-btn');
+  const camView = document.getElementById('evidence-scanner-camera-view');
+  const manualView = document.getElementById('evidence-scanner-manual-view');
+  const quickBar = document.getElementById('evidence-scanner-quick-input-bar');
+  const statusEl = document.getElementById('evidence-scanner-status');
+  const errToast = document.getElementById('evidence-scanner-error-toast');
+
+  if (errToast) errToast.style.display = 'none';
+
+  if (mode === 'manual') {
+    if (camTab) camTab.classList.remove('active');
+    if (manualTab) manualTab.classList.add('active');
+    if (camView) camView.style.display = 'none';
+    if (manualView) manualView.style.display = 'block';
+    if (quickBar) quickBar.style.display = 'none';
+    stopAllCameraStreams();
+    const input = document.getElementById('evidence-manual-num-input');
+    if (input) {
+      setTimeout(() => input.focus(), 150);
+    }
+  } else {
+    if (camTab) camTab.classList.add('active');
+    if (manualTab) manualTab.classList.remove('active');
+    if (camView) camView.style.display = 'block';
+    if (manualView) manualView.style.display = 'none';
+    if (quickBar) quickBar.style.display = 'flex';
+    if (statusEl) {
+      statusEl.innerText = "カメラを起動中...";
+      statusEl.className = "scanner-status-msg";
+    }
+    startQrScanner('evidence-scanner-video', 'evidence-scanner-canvas', handleEvidenceQrDetected, 'evidence-scanner-status');
+  }
+
+  safeCreateIcons(document.getElementById('meta-evidence-qr-modal'));
+}
+
+// 🔢 調査資料の番号手動入力ハンドラー（1〜14, ITEM-001 等の柔軟パース）
+function handleEvidenceManualInput(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  
+  const manualInput = document.getElementById('evidence-manual-num-input');
+  const quickInput = document.getElementById('evidence-quick-num-input');
+  
+  let rawVal = '';
+  if (currentEvidenceInputMode === 'manual' && manualInput && manualInput.value.trim()) {
+    rawVal = manualInput.value.trim();
+  } else if (quickInput && quickInput.value.trim()) {
+    rawVal = quickInput.value.trim();
+  } else if (manualInput && manualInput.value.trim()) {
+    rawVal = manualInput.value.trim();
+  }
+
+  if (!rawVal) {
+    playSystemSound("error");
+    showEvidenceScannerError("番号を入力してください", "1〜14の数字を入力してください");
+    return;
+  }
+
+  // 全角数字 ➔ 半角数字変換
+  let normalized = rawVal.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).trim();
+  normalized = normalized.toUpperCase().replace(/\s+/g, '');
+
+  // 数字のみ（例: 1, 01, 001, 14）の場合は ITEM-XXX 形式に整形
+  let targetQrKey = '';
+  const numMatch = normalized.match(/^(\d{1,3})$/);
+  if (numMatch) {
+    const n = parseInt(numMatch[1], 10);
+    if (n >= 1 && n <= 14) {
+      targetQrKey = `ITEM-${String(n).padStart(3, '0')}`;
+    }
+  } else if (normalized.startsWith('ITEM-') || normalized.startsWith('ITEM')) {
+    const numPart = normalized.replace(/^ITEM-?/, '');
+    const n = parseInt(numPart, 10);
+    if (!isNaN(n) && n >= 1 && n <= 14) {
+      targetQrKey = `ITEM-${String(n).padStart(3, '0')}`;
+    } else {
+      targetQrKey = normalized;
+    }
+  } else {
+    targetQrKey = normalized;
+  }
+
+  handleEvidenceQrDetected(targetQrKey);
+}
+
+function showEvidenceScannerError(title, subtitle) {
+  const errToast = document.getElementById('evidence-scanner-error-toast');
+  const titleEl = document.getElementById('evidence-scanner-error-title');
+  const subEl = document.getElementById('evidence-scanner-error-desc');
+  if (errToast) {
+    if (titleEl) titleEl.innerText = title || "該当する調査資料はありません";
+    if (subEl) subEl.innerText = subtitle || "番号をお確かめの上、再度お試しください";
+    errToast.style.display = 'flex';
+    safeCreateIcons(errToast);
+    setTimeout(() => {
+      if (errToast) errToast.style.display = 'none';
+    }, 2400);
+  }
 }
 
 function closeMetaEvidenceQrScanner() {
@@ -3966,8 +4074,13 @@ function startQrScanner(videoId, canvasId, callback, resultBoxId = 'meta-qr-resu
     .catch(err => {
       console.warn("📷 カメラアクセス失敗/拒否:", err);
       if (resultBox) {
-        resultBox.innerText = "📷 カメラへのアクセスが許可されていません（ブラウザの設定でカメラを許可してください）";
+        resultBox.innerText = "📷 カメラが使用できないため、番号入力モードに切り替えました";
         resultBox.className = "qr-result-box error";
+      }
+      if (resultBoxId === 'evidence-scanner-status') {
+        setTimeout(() => {
+          switchEvidenceInputMode('manual');
+        }, 500);
       }
     });
 }

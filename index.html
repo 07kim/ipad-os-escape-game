@@ -264,10 +264,16 @@
                   <h2 style="font-size:18px; margin:0; font-weight:800; color:#0f172a;">📦 調査資料・証拠アーカイブ</h2>
                   <span class="loop-badge" id="evidence-count-badge" style="font-size:11.5px; padding:3px 8px; font-weight:700;">0件 記録済み</span>
                 </div>
-                <button class="nav-btn" onclick="openMetaEvidenceQrScanner()" style="padding:6px 12px; font-size:12.5px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.25); cursor:pointer;">
-                  <i data-lucide="qr-code" style="width:15px; height:15px;"></i>
-                  <span>QR読取</span>
-                </button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <button class="nav-btn" onclick="openMetaEvidenceQrScanner('manual')" style="padding:6px 12px; font-size:12.5px; font-weight:700; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:8px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                    <i data-lucide="hash" style="width:15px; height:15px; color:#0284c7;"></i>
+                    <span>番号入力</span>
+                  </button>
+                  <button class="nav-btn" onclick="openMetaEvidenceQrScanner('camera')" style="padding:6px 12px; font-size:12.5px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.25); cursor:pointer;">
+                    <i data-lucide="qr-code" style="width:15px; height:15px;"></i>
+                    <span>QR読取</span>
+                  </button>
+                </div>
               </div>
               <p class="panel-subtext">探索で入手したアイテムや証拠資料がカード形式で記録されます。</p>
 
@@ -2317,36 +2323,80 @@
     </div>
   </div>
 
-  <!-- 📦 調査資料専用 QRコードスキャナーモーダル -->
+  <!-- 📦 調査資料専用 QRコードスキャン ＆ 番号手動入力モーダル -->
   <div class="modal-overlay" id="meta-evidence-qr-modal" style="display:none;" onclick="closeMetaEvidenceQrScanner()">
     <div class="evidence-scanner-card" onclick="event.stopPropagation()">
       <div class="scanner-card-header">
-        <span class="scanner-header-title">📷 調査資料 QRコードスキャン</span>
+        <div class="scanner-mode-tab-group">
+          <button type="button" class="scanner-mode-tab active" id="scanner-tab-camera-btn" onclick="switchEvidenceInputMode('camera')">
+            <i data-lucide="camera" style="width:14px; height:14px;"></i> QRカメラ
+          </button>
+          <button type="button" class="scanner-mode-tab" id="scanner-tab-manual-btn" onclick="switchEvidenceInputMode('manual')">
+            <i data-lucide="hash" style="width:14px; height:14px;"></i> 番号入力
+          </button>
+        </div>
         <button class="scanner-close-btn" onclick="closeMetaEvidenceQrScanner()">✕</button>
       </div>
+
       <div class="scanner-card-body" style="position:relative;">
         <!-- ⚠️ スキャナー内 大型エラーポップアップカード（即時再スキャン対応） -->
         <div id="evidence-scanner-error-toast" class="scanner-large-error-popup" style="display:none;">
           <div class="large-popup-icon-box">
             <i data-lucide="alert-circle" style="width:34px; height:34px; color:#ef4444;"></i>
           </div>
-          <div class="large-popup-title">該当する調査資料はありません</div>
-          <div class="large-popup-subtitle">QRコードをお確かめの上、再度かざしてください</div>
+          <div class="large-popup-title" id="evidence-scanner-error-title">該当する調査資料はありません</div>
+          <div class="large-popup-subtitle" id="evidence-scanner-error-desc">番号またはQRコードをお確かめの上、再度お試しください</div>
         </div>
 
-        <div class="scanner-viewport-box">
-          <video id="evidence-scanner-video" autoplay playsinline></video>
-          <canvas id="evidence-scanner-canvas" style="display:none;"></canvas>
-          <div class="scanner-frame-overlay">
-            <div class="scan-corner tl"></div>
-            <div class="scan-corner tr"></div>
-            <div class="scan-corner bl"></div>
-            <div class="scan-corner br"></div>
-            <div class="scan-laser"></div>
+        <!-- 1. カメラモード画面 -->
+        <div id="evidence-scanner-camera-view">
+          <div class="scanner-viewport-box">
+            <video id="evidence-scanner-video" autoplay playsinline></video>
+            <canvas id="evidence-scanner-canvas" style="display:none;"></canvas>
+            <div class="scanner-frame-overlay">
+              <div class="scan-corner tl"></div>
+              <div class="scan-corner tr"></div>
+              <div class="scan-corner bl"></div>
+              <div class="scan-corner br"></div>
+              <div class="scan-laser"></div>
+            </div>
+          </div>
+          <p class="scanner-guidance-text">枠内にアイテムや資料のQRコードを合わせてください</p>
+          <div class="scanner-status-msg" id="evidence-scanner-status">カメラを準備中...</div>
+        </div>
+
+        <!-- 2. 番号手動入力モード画面 -->
+        <div id="evidence-scanner-manual-view" style="display:none;">
+          <div class="scanner-manual-box">
+            <div class="scanner-manual-icon-wrap">
+              <i data-lucide="file-text" style="width:32px; height:32px; color:#0284c7;"></i>
+            </div>
+            <h4 style="margin:0 0 6px 0; font-size:15px; font-weight:800; color:#0f172a;">調査資料の番号を入力</h4>
+            <p style="margin:0 0 16px 0; font-size:12px; color:#64748b; line-height:1.5;">アイテムや資料に記載された番号（1〜14）を入力してください。</p>
+
+            <form onsubmit="handleEvidenceManualInput(event)" style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+              <div class="scanner-manual-input-wrapper">
+                <span class="scanner-manual-prefix">ITEM-</span>
+                <input type="text" id="evidence-manual-num-input" class="scanner-manual-input" placeholder="001 (1〜14)" maxlength="8" autocomplete="off" inputmode="numeric">
+              </div>
+              <div style="display:flex; gap:8px; width:100%; max-width:280px;">
+                <button type="submit" class="btn btn-primary" style="flex:1; padding:10px 16px; font-size:13.5px; font-weight:700; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                  <i data-lucide="plus-circle" style="width:16px; height:16px;"></i> 資料を記録する
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-        <p class="scanner-guidance-text">枠内にアイテムや資料のQRコードを合わせてください</p>
-        <div class="scanner-status-msg" id="evidence-scanner-status">カメラを準備中...</div>
+
+        <!-- 下部 クイック番号入力フォーム（カメラモード時も常に利用可能） -->
+        <div id="evidence-scanner-quick-input-bar" class="scanner-quick-input-bar">
+          <span style="font-size:11px; font-weight:700; color:#64748b;">カメラが使えない場合:</span>
+          <form onsubmit="handleEvidenceManualInput(event)" style="display:inline-flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
+            <input type="text" id="evidence-quick-num-input" class="scanner-quick-input" placeholder="番号入力 (1〜14)" maxlength="8" inputmode="numeric">
+            <button type="submit" class="scanner-quick-submit-btn">登録</button>
+          </form>
+        </div>
+
       </div>
     </div>
   </div>
