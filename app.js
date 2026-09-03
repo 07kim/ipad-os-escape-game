@@ -238,6 +238,21 @@ window.addEventListener('DOMContentLoaded', () => {
           } else if (type === 'preset' && payload && payload.loop) {
             console.log('🎬 BroadcastChannel経由でプリセットを受信:', payload.loop);
             triggerLoopTransition(payload.loop, null, false, true);
+          } else if (type === 'world_time_sync' && payload) {
+            if (payload.worldTime) {
+              localStorage.setItem('admin_world_time_str', payload.worldTime);
+            }
+            if (payload.startTime) {
+              gameState.clockSetTime = payload.startTime;
+              localStorage.setItem('fake_clock_set_time', String(payload.startTime));
+            }
+            if (payload.isRunning !== undefined) {
+              gameState.timerRunning = !!payload.isRunning;
+              localStorage.setItem('game_timer_running', gameState.timerRunning ? 'true' : 'false');
+            }
+            if (typeof window.updateFakeClockDisplay === 'function') {
+              window.updateFakeClockDisplay();
+            }
           } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
             console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
             executeInstantMasterReset();
@@ -442,7 +457,9 @@ function fetchLatestDataFromSpreadsheet() {
         // 3. シーン進行ステップの同期
         if (serverStep >= 1 && serverStep <= 8) {
           const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
-          if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep) {
+          const timerStateChanged = (gameState.timerRunning !== serverTimerRunning);
+          const startTimeChanged = serverStartTime && (Math.abs(serverStartTime - (gameState.clockSetTime || 0)) > 3000);
+          if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep || timerStateChanged || startTimeChanged) {
             const isFirst = !window._hasInitialFlowSynced;
             window._hasInitialFlowSynced = true;
             localStorage.setItem('current_flow_step', String(serverStep));
@@ -1206,7 +1223,6 @@ function loadStateFromStorage() {
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
   }
   gameState.clockStartISO = storedClockStartISO;
-  gameState.clockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || Date.now().toString(), 10);
 
   // 🎯 シーン進行ステップから現在周回（1周目・2周目・3周目）を厳密に判定・同期
   const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
@@ -1214,13 +1230,31 @@ function loadStateFromStorage() {
   gameState.loop = accurateLoop;
   localStorage.setItem('game_loop', String(accurateLoop));
 
-  // タイマー稼働ステップ（02, 04, 06 のみ計時進行、それ以外は09:44静止）
+  // 🕒 タイマー稼働ステップ（02, 04, 06 のみ計時進行、それ以外は09:44静止）
   const isRunningStep = (savedFlowStep === 2 || savedFlowStep === 4 || savedFlowStep === 6);
   if (!isRunningStep) {
     gameState.timerRunning = false;
   } else {
-    gameState.timerRunning = (localStorage.getItem('game_timer_running') === 'true');
+    const storedRunning = localStorage.getItem('game_timer_running');
+    gameState.timerRunning = (storedRunning === 'true' || storedRunning === null);
   }
+
+  // ⏱️ 計時開始タイムスタンプの復元（リロード時に直ちに作中時刻を復元）
+  let storedClockSetTime = parseInt(localStorage.getItem('fake_clock_set_time') || '0', 10);
+  if (!storedClockSetTime && gameState.timerRunning) {
+    // 同一オリジンの管理画面タイマーデータがあればそこから復元
+    try {
+      const adminTimerRaw = localStorage.getItem('admin_timeline_timer');
+      if (adminTimerRaw) {
+        const adm = JSON.parse(adminTimerRaw);
+        if (adm && adm.isRunning && adm.loopStartTime) {
+          storedClockSetTime = adm.loopStartTime;
+          localStorage.setItem('fake_clock_set_time', String(storedClockSetTime));
+        }
+      }
+    } catch (e) { }
+  }
+  gameState.clockSetTime = storedClockSetTime || Date.now();
 
   try {
     gameState.unlockedHints = JSON.parse(localStorage.getItem('unlocked_hints') || '[]');
@@ -1309,9 +1343,12 @@ function handleStorageEvent(e) {
   } else if (e.key === 'game_reset') {
     // マスターリセット
     performMasterReset();
-  } else if (e.key === 'fake_clock_start_iso') {
-    // 時計更新
+  } else if (e.key === 'fake_clock_start_iso' || e.key === 'fake_clock_set_time' || e.key === 'admin_world_time_str' || e.key === 'game_timer_running') {
+    // 🌍 管理画面の世界線時刻（作中）の更新を即時キャッチして時計へ反映
     loadStateFromStorage();
+    if (typeof window.updateFakeClockDisplay === 'function') {
+      window.updateFakeClockDisplay();
+    }
   } else if (e.key === 'game_db_cache_trigger') {
     // キャッシュ更新（エディタからのリアルタイム反映）
     loadGameDatabase();
@@ -1336,11 +1373,17 @@ function handleStorageEvent(e) {
   }
 }
 
-// --- 嘘の時計ロジック ---
+// --- 嘘の時計ロジック（管理画面の世界線時刻(作中)を完全反映） ---
 function getFormattedFakeTime() {
   try {
-    if (!gameState.timerRunning) {
+    const isRunning = (localStorage.getItem('game_timer_running') === 'true') || gameState.timerRunning;
+    if (!isRunning) {
       return '09:44';
+    }
+    // 🌍 管理画面の世界線時刻(作中)がLocalStorageにあれば最優先で参照
+    const directTime = localStorage.getItem('admin_world_time_str');
+    if (directTime && directTime.match(/^\d{2}:\d{2}$/)) {
+      return directTime;
     }
     const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
     const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:44:00');
@@ -1362,23 +1405,32 @@ function startFakeClock() {
     let dateStr = "9月4日";
     let manabaDateStr = "2026-09-04 (Fri)";
 
-    if (gameState.timerRunning) {
+    const isRunning = (localStorage.getItem('game_timer_running') === 'true') || gameState.timerRunning;
+
+    if (isRunning) {
       if (!gameState.clockStartISO || gameState.clockStartISO.includes('09:04') || gameState.clockStartISO.includes('08-22')) {
         gameState.clockStartISO = '2026-09-04T09:44:00';
         localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
       }
-      const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
-      const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:44:00');
-      const fakeCurrent = new Date(startMs + elapsed);
 
-      const hh = String(fakeCurrent.getHours()).padStart(2, '0');
-      const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
-      clockStr = `${hh}:${mm}`;
+      // 🌍 管理画面の世界線時刻(作中)を最優先でダイレクト参照
+      const directTime = localStorage.getItem('admin_world_time_str');
+      if (directTime && directTime.match(/^\d{2}:\d{2}$/)) {
+        clockStr = directTime;
+      } else {
+        const elapsed = Date.now() - (gameState.clockSetTime || Date.now());
+        const startMs = Date.parse(gameState.clockStartISO || '2026-09-04T09:44:00');
+        const fakeCurrent = new Date(startMs + elapsed);
 
-      const month = fakeCurrent.getMonth() + 1;
-      const day = fakeCurrent.getDate();
+        const hh = String(fakeCurrent.getHours()).padStart(2, '0');
+        const mm = String(fakeCurrent.getMinutes()).padStart(2, '0');
+        clockStr = `${hh}:${mm}`;
+      }
+
+      const month = 9;
+      const day = 4;
       dateStr = `${month}月${day}日`;
-      manabaDateStr = `2026-09-04 (${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][fakeCurrent.getDay()]})`;
+      manabaDateStr = `2026-09-04 (Fri)`;
     }
 
     if (clockStr !== lastClockStr) {
@@ -1646,14 +1698,15 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 2) {
     // 02. 1周目スタート (1周目・09:44から計時開始・ロック解除)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    const resolvedSetTime = startTime || (gameState.clockSetTime && gameState.clockSetTime > 0 ? gameState.clockSetTime : now);
     gameState.loop = accurateLoop;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:44:00';
-    gameState.clockSetTime = startMs;
+    gameState.clockSetTime = resolvedSetTime;
     localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
-    localStorage.setItem('fake_clock_set_time', String(startMs));
+    localStorage.setItem('fake_clock_set_time', String(resolvedSetTime));
     updateAppUI();
     hideLockScreen();
   } else if (step === 3) {
@@ -1678,14 +1731,15 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 4) {
     // 04. 2周目スタート (2周目・09:44から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    const resolvedSetTime = startTime || (gameState.clockSetTime && gameState.clockSetTime > 0 ? gameState.clockSetTime : now);
     gameState.loop = accurateLoop;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:44:00';
-    gameState.clockSetTime = startMs;
+    gameState.clockSetTime = resolvedSetTime;
     localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
-    localStorage.setItem('fake_clock_set_time', String(startMs));
+    localStorage.setItem('fake_clock_set_time', String(resolvedSetTime));
     updateAppUI();
     hideLockScreen();
   } else if (step === 5) {
@@ -1710,14 +1764,15 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 6) {
     // 06. 3周目スタート (3周目・09:44から計時開始)
     if (blackoutEl) blackoutEl.style.display = 'none';
+    const resolvedSetTime = startTime || (gameState.clockSetTime && gameState.clockSetTime > 0 ? gameState.clockSetTime : now);
     gameState.loop = accurateLoop;
     gameState.timerRunning = true;
     gameState.clockStartISO = '2026-09-04T09:44:00';
-    gameState.clockSetTime = startMs;
+    gameState.clockSetTime = resolvedSetTime;
     localStorage.setItem('game_loop', String(accurateLoop));
     localStorage.setItem('game_timer_running', 'true');
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
-    localStorage.setItem('fake_clock_set_time', String(startMs));
+    localStorage.setItem('fake_clock_set_time', String(resolvedSetTime));
     updateAppUI();
     hideLockScreen();
   } else if (step === 7) {

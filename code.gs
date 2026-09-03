@@ -920,7 +920,11 @@ function setSceneFlowState(ss, stepNum, loopNum, timerRunning, startTime, blacko
   updates[FLOW_STEP_KEY] = String(s);
   updates[GLOBAL_LOOP_KEY] = String(l);
   updates[TIMER_RUNNING_KEY] = timerRunning ? "true" : "false";
-  if (startTime) updates[STEP_START_TIME_KEY] = String(startTime);
+  if (startTime) {
+    updates[STEP_START_TIME_KEY] = String(startTime);
+  } else if (timerRunning) {
+    updates[STEP_START_TIME_KEY] = String(Date.now());
+  }
   if (blackout !== undefined) updates[BLACKOUT_KEY] = blackout ? "true" : "false";
 
   var lastRow = sheet.getLastRow();
