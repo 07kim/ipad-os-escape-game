@@ -254,8 +254,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 window.updateFakeClockDisplay();
               }
             } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
-              console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
-              executeInstantMasterReset();
+              const preserve = payload ? (payload.preserveDeviceNames !== false) : true;
+              console.log('🚨 BroadcastChannel経由でマスターリセットを受信（端末名保持:', preserve, '）');
+              executeInstantMasterReset(preserve);
             }
           } finally {
             window._isHandlingBroadcast = false;
@@ -658,8 +659,9 @@ function executeRemoteAdminCommand(cmd) {
   if (type === 'master_reset' || p.action === 'master_reset' || cmd.action === 'master_reset') {
     const target = cmd.target || p.target || 'ALL';
     const myTeam = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
+    const preserve = (cmd.preserveDeviceNames !== false && p.preserveDeviceNames !== false);
     if (target === 'ALL' || target === myTeam) {
-      executeInstantMasterReset();
+      executeInstantMasterReset(preserve);
       return;
     }
   }
@@ -2701,18 +2703,22 @@ function openPairingStaffModal() {
 }
 
 
-// 🚨 全iPad ＆ データを一括完全初期化（メタアプリ・管理番号・名前・進行・キャッシュ等すべてリセット）
-async function executeInstantMasterReset() {
-  console.log("🚨 全iPad ＆ データを一括完全初期化を実行します。");
+// 🚨 全iPad ＆ データを一括完全初期化（メタアプリ・メモ・手書き・進行・ログイン・キャッシュ等すべてリセット）
+async function executeInstantMasterReset(preserveDeviceNames = true) {
+  console.log(`🚨 全iPad ＆ データを一括完全初期化を実行します（端末名保持: ${preserveDeviceNames}）`);
   const gasUrl = localStorage.getItem('gas_url');
+  
+  // 保持すべき端末固有識別情報の退避
+  const savedTeamId = localStorage.getItem('game_team_id') || localStorage.getItem('team_id') || gameState.teamId || '';
+  const savedDeviceRegistered = localStorage.getItem('device_registered') || '0';
 
-  // ① LocalStorage を完全クリア（3周目進行・メタアプリ・メモ帳・手書き・管理番号・名前・ログイン・証拠リスト等すべて消去）
+  // ① LocalStorage を完全クリア（3周目進行・メタアプリ・メモ帳・手書き・ログイン・証拠リスト等すべて消去）
   localStorage.clear();
 
   // ② SessionStorage もクリア（セッション内のキャッシュ残留を防止）
   try { sessionStorage.clear(); } catch (e) { }
 
-  // ③ 🧹 CacheStorage（オフラインキャッシュ）の完全消去（古い09:04・旧マスタを完全破棄）
+  // ③ 🧹 CacheStorage（オフラインキャッシュ）の完全消去
   if ('caches' in window) {
     try {
       const cacheNames = await caches.keys();
@@ -2745,7 +2751,7 @@ async function executeInstantMasterReset() {
 
   // ⑥ gameState を初期値へ完全リセット（3周目・メタアプリ・メモ帳・証拠・友達等すべて）
   gameState.loop = 1;
-  gameState.teamId = "";
+  gameState.teamId = preserveDeviceNames ? savedTeamId : "";
   gameState.clockStartISO = "2026-09-04T09:44:00";
   gameState.clockSetTime = Date.now();
   gameState.timerRunning = false;
@@ -2771,15 +2777,22 @@ async function executeInstantMasterReset() {
   // ⑦ メタアプリのモジュールレベル変数もリセット
   try { metaObservationCurrentFolder = 'root'; } catch (e) { }
 
-  // ⑧ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:44待機, 登録: 未設定, 通信設定維持）
+  // ⑧ 初期待機状態の最小限の設定（周回: 1, タイマー: 停止, 時計: 09:44待機, 登録: 設定維持/クリア）
   localStorage.setItem('game_loop', '1');
   localStorage.setItem('game_timer_running', 'false');
   localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
   localStorage.setItem('fake_clock_set_time', String(Date.now()));
-  localStorage.setItem('device_registered', '0');
-  // ⚠️ team_id・game_team_id を明示的に空文字にセット（loadStateFromStorage の 'iPad-01' 自動補完を防ぐ）
-  localStorage.setItem('team_id', '');
-  localStorage.setItem('game_team_id', '');
+  
+  if (preserveDeviceNames && savedTeamId) {
+    localStorage.setItem('team_id', savedTeamId);
+    localStorage.setItem('game_team_id', savedTeamId);
+    localStorage.setItem('device_registered', savedDeviceRegistered);
+  } else {
+    localStorage.setItem('team_id', '');
+    localStorage.setItem('game_team_id', '');
+    localStorage.setItem('device_registered', '0');
+  }
+
   // リセット待機フラグ処理済みを書き戻し（無限リロードループを絶対防止）
   localStorage.setItem('reset_pending_done', 'true');
   if (gasUrl) {

@@ -1748,6 +1748,28 @@
             ステップに沿って進行をワンクリックで配信します。全稼働iPadへ即座に周回切替やコンテンツ解放が同期されます。
           </p>
 
+          <!-- 🔄 スタート前完全リセット専用コントロールバー -->
+          <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; padding:10px 14px; margin-bottom:12px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+            <div>
+              <div style="font-size:12.5px; font-weight:800; color:#991b1b; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> スタート前完全リセット
+              </div>
+              <div style="font-size:11px; color:#b91c1c; margin-top:2px;">
+                周回・シーン進行・エビデンス・メモ・演者ツール・スプシログを1周目待機へ一括完全初期化
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <!-- 1. 端末名保持リセット（日常・公演前用） -->
+              <button class="nav-btn" onclick="executeMasterResetPreserveNames()" style="background:#ef4444; color:#fff; border-color:#dc2626; font-weight:800; font-size:12px; padding:7px 14px; border-radius:8px; box-shadow:0 2px 6px rgba(239,68,68,0.3); display:flex; align-items:center; gap:6px; cursor:pointer;" title="全iPadのデータ・演者ツール・スプシログを1周目初期状態へ完全リセット（iPadの名前・チーム名は保持）">
+                <i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> 🔄 公演前完全リセット（端末名保持）
+              </button>
+              <!-- 2. 工場出荷時全リセット（端末名も消去） -->
+              <button class="nav-btn" onclick="executeMasterResetFactoryFull()" style="background:#ffffff; color:#991b1b; border-color:#fca5a5; font-weight:700; font-size:11.5px; padding:7px 11px; border-radius:8px; display:flex; align-items:center; gap:5px; cursor:pointer;" title="iPadの端末名・チーム名も含めたすべての設定データを完全初期化します">
+                <i data-lucide="trash-2" style="width:13px; height:13px;"></i> 💣 端末名も全消去
+              </button>
+            </div>
+          </div>
+
           <!-- 🚀 NEXT大型進行ボタン（最上部に配置） -->
           <button class="flow-next-hero-btn" id="btn-flow-next-hero" onclick="advanceToNextScene()" style="margin-top:0; margin-bottom:10px;">
             <i data-lucide="fast-forward" style="width:20px; height:20px;"></i>
@@ -2930,42 +2952,118 @@
       saveAdminTimerState();
     }
 
-    // 🚀 公演開始時のiPad一括初期化（1周目セット ＆ 演者ツールリセット ＆ キャッシュ全消去）
-    function triggerInitialMasterResetForShow() {
+    // 🔄 1. 公演開始前完全リセット（iPad端末名・チーム名を保持）
+    async function executeMasterResetPreserveNames() {
+      const confirmMsg1 = "🚨【公演前リセット確認 1/2】\n全iPadの進行・調査資料・メモ・ログイン状況・演者ツール・スプシログを【1周目の開始前（待機状態）】に完全初期化しますか？\n\n※iPadの端末名（iPad-01等）やチーム名は保持されます。";
+      if (!confirm(confirmMsg1)) return;
+
+      const confirmMsg2 = "⚠️【最終確認 2/2】\n本当に全端末・演者ツール・スプシログを一括初期化しますか？\nシーン進行は「01. オープニング待機」に戻ります。";
+      if (!confirm(confirmMsg2)) return;
+
+      // シーン進行統制を 01（オープニング待機）へリセット
+      currentFlowStep = 1;
+      _lastManualAdminStepTime = Date.now();
+      localStorage.setItem('current_flow_step', '1');
+      localStorage.setItem('admin_flow_step', '1');
+      updateFlowStepsUI();
+
+      // タイマー初期化
+      resetAdminTimerSilent();
+
+      // クラウドコマンド配信（端末名保持フラグ付き）
       sendCloudAdminCommand({
-        id: "START_RESET_" + Date.now(),
+        id: "MASTER_RESET_" + Date.now(),
         type: "master_reset",
-        name: "公演開始一括リセット（1周目セット・キャッシュ消去）",
+        name: "公演前完全リセット（端末名保持）",
         params: {
+          action: "master_reset",
           loop: 1,
+          step: 1,
           resetActors: true,
           clearCache: true,
+          preserveDeviceNames: true,
+          clearLogs: true,
           timestamp: Date.now()
         }
-      }, "🚀 全30台のiPad ＆ 演者ツールを一斉初期化し、1周目にセットしました！");
+      }, "🔄 全iPad・演者ツール・スプシログを完全初期化（1周目待機へ）しました！");
 
-      // 演者ツール用リセットフラグをLocalStorageに記録
-      localStorage.setItem('admin_reset_trigger_time', Date.now());
-      localStorage.setItem('game_loop', '1');
-
+      // GASへのリセット要求
       const gasUrl = getAdminGasUrl();
       if (gasUrl) {
-        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset` : `${gasUrl}?action=master_reset`).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset&preserve=1` : `${gasUrl}?action=master_reset&preserve=1`).catch(() => {});
         fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_actor_triggers` : `${gasUrl}?action=reset_actor_triggers`).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=clear_logs` : `${gasUrl}?action=clear_logs`).catch(() => {});
       }
 
-      // 演者ツールへも周回リセットシグナルを送信
+      // BroadcastChannelで同一ブラウザ内の全タブへ即時配信
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const bc = new BroadcastChannel('escape_game_channel');
-          bc.postMessage({ type: 'master_reset', payload: { loop: 1, resetActors: true } });
+          bc.postMessage({ type: 'master_reset', payload: { loop: 1, step: 1, resetActors: true, preserveDeviceNames: true } });
           bc.postMessage({ type: 'reset_actor_triggers', payload: { loop: 1 } });
+          bc.postMessage({ type: 'scene_flow_step', payload: { step: 1, loop: 1, startTime: Date.now() } });
         } catch(e) {}
       }
 
-      // ローカルモニタリングデータ初期化
-      latestDevicesData = [];
-      renderMonitoringCards();
+      showToast("✅ 全iPad・演者ツール・スプシログを初期化しました（端末名は保持）");
+    }
+
+    // 💣 2. 工場出荷時完全リセット（iPad端末名も含めて全消去）
+    async function executeMasterResetFactoryFull() {
+      const confirmMsg1 = "💣【工場出荷時リセット確認 1/2】\niPadの端末名・チーム名も含め、すべての設定・ゲームデータ・ログを完全に初期化しますか？\n\n※iPadの端末登録（iPad-01等の名前）も消去され未設定に戻ります。";
+      if (!confirm(confirmMsg1)) return;
+
+      const confirmMsg2 = "⚠️【最終確認 2/2】\n本当にすべてのデータを完全に消去しますか？\nこの操作は取り消せません。";
+      if (!confirm(confirmMsg2)) return;
+
+      // シーン進行統制を 01（オープニング待機）へリセット
+      currentFlowStep = 1;
+      _lastManualAdminStepTime = Date.now();
+      localStorage.setItem('current_flow_step', '1');
+      localStorage.setItem('admin_flow_step', '1');
+      updateFlowStepsUI();
+
+      // タイマー初期化
+      resetAdminTimerSilent();
+
+      // クラウドコマンド配信（端末名も消去）
+      sendCloudAdminCommand({
+        id: "FACTORY_RESET_" + Date.now(),
+        type: "master_reset",
+        name: "工場出荷時全初期化（端末名も消去）",
+        params: {
+          action: "master_reset",
+          loop: 1,
+          step: 1,
+          resetActors: true,
+          clearCache: true,
+          preserveDeviceNames: false,
+          clearLogs: true,
+          timestamp: Date.now()
+        }
+      }, "💣 全端末・全設定を工場出荷時状態へ完全リセットしました！");
+
+      const gasUrl = getAdminGasUrl();
+      if (gasUrl) {
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=master_reset&preserve=0` : `${gasUrl}?action=master_reset&preserve=0`).catch(() => {});
+        fetch(gasUrl.includes('?') ? `${gasUrl}&action=reset_actor_triggers` : `${gasUrl}?action=reset_actor_triggers`).catch(() => {});
+      }
+
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'master_reset', payload: { loop: 1, step: 1, resetActors: true, preserveDeviceNames: false } });
+          bc.postMessage({ type: 'reset_actor_triggers', payload: { loop: 1 } });
+          bc.postMessage({ type: 'scene_flow_step', payload: { step: 1, loop: 1, startTime: Date.now() } });
+        } catch(e) {}
+      }
+
+      showToast("💣 全端末名も含め、全データを完全にリセットしました");
+    }
+
+    // 互換エイリアス
+    function triggerInitialMasterResetForShow() {
+      executeMasterResetPreserveNames();
     }
 
     function startAdminTimer() {
