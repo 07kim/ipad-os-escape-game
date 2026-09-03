@@ -488,7 +488,15 @@ function fetchLatestDataFromSpreadsheet() {
         // 🎭 演者トリガー（マスターデータ / GAS）からのLINKメッセージ自動同期
         const actorCmd = json.latestActorCommand || (json.data && json.data.latestActorCommand);
         if (actorCmd && actorCmd.triggerId) {
-          syncActorTriggerToLink(actorCmd.triggerId, targetLoop, actorCmd.time || null, true);
+          const lastProcessedActorCmd = localStorage.getItem('last_processed_actor_cmd_id');
+          const cmdId = actorCmd.id || `${actorCmd.triggerId}_${actorCmd.timestamp || actorCmd.time || ''}`;
+          const isNewCommand = (cmdId !== lastProcessedActorCmd);
+          if (isNewCommand) {
+            localStorage.setItem('last_processed_actor_cmd_id', cmdId);
+            syncActorTriggerToLink(actorCmd.triggerId, targetLoop, actorCmd.time || null, true);
+          } else {
+            syncActorTriggerToLink(actorCmd.triggerId, targetLoop, actorCmd.time || null, false);
+          }
         }
         const actorCmdList = json.actorCommands || (json.data && json.data.actorCommands) || json.sentTriggers || (json.data && json.data.sentTriggers);
         if (Array.isArray(actorCmdList)) {
@@ -1082,13 +1090,16 @@ function initNoSleepAudio() {
 function _keepAudioContextAlive() {
   if (!_noSleepAudioCtx) return;
   try {
-    // 1秒の無音バッファを作成してループ再生（CPU負荷ほぼゼロ・Safariのバックグラウンド停止を防止）
+    // 1秒の完全無音バッファ（Gain=0）を作成してループ再生（CPU負荷ほぼゼロ・Safariのバックグラウンド停止を防止）
     const bufferSize = _noSleepAudioCtx.sampleRate * 1;
     const buffer = _noSleepAudioCtx.createBuffer(1, bufferSize, _noSleepAudioCtx.sampleRate);
     const source = _noSleepAudioCtx.createBufferSource();
+    const gainNode = _noSleepAudioCtx.createGain();
+    gainNode.gain.setValueAtTime(0, _noSleepAudioCtx.currentTime);
     source.buffer = buffer;
     source.loop = true;
-    source.connect(_noSleepAudioCtx.destination);
+    source.connect(gainNode);
+    gainNode.connect(_noSleepAudioCtx.destination);
     source.start(0);
     _noSleepSourceNode = source;
     _noSleepActive = true;
