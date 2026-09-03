@@ -173,10 +173,10 @@
             <button class="link-tool-icon-btn" onclick="manualRefreshLinkData()" title="再読み込み">
               <i data-lucide="refresh-cw" id="room-refresh-icon"></i>
             </button>
-            <button class="link-tool-icon-btn" id="alarm-btn" onclick="handleAlarmBtnClick()" title="警告音（2回タップ）">
+            <button class="link-tool-icon-btn" id="alarm-btn" onclick="handleAlarmBtnClick(event)" title="電話アラーム（2回タップで5秒後）">
               <i data-lucide="phone"></i>
             </button>
-            <button class="link-tool-icon-btn" onclick="handleVideoTriggerTap ? handleVideoTriggerTap() : null; showLinkDialog('ビデオ通話','ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話">
+            <button class="link-tool-icon-btn" id="video-alarm-btn" onclick="handleVideoTriggerTap(event)" title="ビデオ通話アラーム（2回タップで10秒後）">
               <i data-lucide="video"></i>
             </button>
             <button class="link-tool-icon-btn" onclick="showLinkDialog('トーク設定','グループ設定の変更は現在制限されています。')" title="メニュー">
@@ -184,6 +184,8 @@
             </button>
           </div>
         </div>
+        <!-- 🚨 ネイティブアラーム再生用オーディオ -->
+        <audio id="actor-alarm-audio" src="./alarm.wav" preload="auto" playsinline style="display:none;"></audio>
         <div class="link-messages" id="link-messages-container">
           <div style="text-align:center;color:rgba(255,255,255,0.8);font-size:13px;margin-top:50px;">
             左のリストから会話を選択してください
@@ -543,20 +545,29 @@ function unlockAlarmAudioContext() {
     if (_alarmAudioCtx.state === 'suspended') {
       _alarmAudioCtx.resume().catch(() => {});
     }
-    // HTML5 Audio 要素もタップ時に先回り初期化
-    if (!_alarmAudioEl) {
-      _alarmAudioEl = new Audio(getAlarmSirenWavDataUri());
-      _alarmAudioEl.volume = 1.0;
-      _alarmAudioEl.playsInline = true;
+    const audioEl = document.getElementById('actor-alarm-audio');
+    if (audioEl) {
+      audioEl.volume = 1.0;
+      audioEl.muted = false;
+      // タップ時にサイレント再生でアンロック
+      const p = audioEl.play();
+      if (p !== undefined) {
+        p.then(() => {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+        }).catch(() => {});
+      }
     }
-    _alarmAudioEl.load();
   } catch(e) {
     console.warn("Audio unlock error:", e);
   }
 }
 
+let _countdownInterval = null;
+
 // 📞 電話／警告ボタン2回タップ ➔ 5秒後にアラーム再生
-function handleAlarmBtnClick() {
+function handleAlarmBtnClick(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const btn = document.getElementById('alarm-btn');
   const now = Date.now();
   unlockAlarmAudioContext();
@@ -567,21 +578,39 @@ function handleAlarmBtnClick() {
     return;
   }
 
-  if (now - _alarmLastTap < 700) {
+  // 1200ms以内の2回連続タップで発動
+  if (now - _alarmLastTap < 1200) {
     _alarmLastTap = 0;
     if (btn) btn.classList.add('alarm-active');
-    showToast("📞 電話トリガー待機中: 【5秒後】にアラームが鳴ります", false, 4500);
+    
+    let remain = 5;
+    showToast(`🚨 電話トリガー発火！【${remain}秒後】にアラームが鳴ります`, false, 1200);
+    
+    if (_countdownInterval) clearInterval(_countdownInterval);
+    _countdownInterval = setInterval(() => {
+      remain--;
+      if (remain > 0) {
+        showToast(`⏱️ アラーム鳴動まで: あと ${remain} 秒...`, false, 950);
+      } else {
+        clearInterval(_countdownInterval);
+        _countdownInterval = null;
+      }
+    }, 1000);
+
     _pendingAlarmTimer = setTimeout(() => {
       _pendingAlarmTimer = null;
       playAlarm(btn);
     }, 5000);
   } else {
     _alarmLastTap = now;
+    showToast("💡 もう一度タップすると【5秒後】にアラームが鳴ります", false, 1200);
   }
 }
 
 // 📹 ビデオ通話ボタン2回タップ ➔ 10秒後にアラーム再生
-function handleVideoTriggerTap() {
+function handleVideoTriggerTap(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  const btn = document.getElementById('video-alarm-btn') || document.getElementById('alarm-btn');
   const now = Date.now();
   unlockAlarmAudioContext();
 
@@ -591,17 +620,32 @@ function handleVideoTriggerTap() {
     return;
   }
 
-  if (now - _videoAlarmLastTap < 700) {
+  // 1200ms以内の2回連続タップで発動
+  if (now - _videoAlarmLastTap < 1200) {
     _videoAlarmLastTap = 0;
-    const btn = document.getElementById('alarm-btn');
     if (btn) btn.classList.add('alarm-active');
-    showToast("📹 ビデオ通話トリガー待機中: 【10秒後】にアラームが鳴ります", false, 9000);
+    
+    let remain = 10;
+    showToast(`🚨 ビデオ通話トリガー発火！【${remain}秒後】にアラームが鳴ります`, false, 1200);
+
+    if (_countdownInterval) clearInterval(_countdownInterval);
+    _countdownInterval = setInterval(() => {
+      remain--;
+      if (remain > 0) {
+        showToast(`⏱️ アラーム鳴動まで: あと ${remain} 秒...`, false, 950);
+      } else {
+        clearInterval(_countdownInterval);
+        _countdownInterval = null;
+      }
+    }, 1000);
+
     _pendingAlarmTimer = setTimeout(() => {
       _pendingAlarmTimer = null;
       playAlarm(btn);
     }, 10000);
   } else {
     _videoAlarmLastTap = now;
+    showToast("💡 もう一度タップすると【10秒後】にアラームが鳴ります", false, 1200);
   }
 }
 
@@ -609,17 +653,21 @@ function playAlarm(btn) {
   _alarmPlaying = true;
   if (btn) btn.classList.add('alarm-active');
 
-  // 1. HTML5 Audio での即時再生（モバイルで最も強い）
-  try {
-    if (!_alarmAudioEl) {
-      _alarmAudioEl = new Audio(getAlarmSirenWavDataUri());
-      _alarmAudioEl.volume = 1.0;
-    }
-    _alarmAudioEl.currentTime = 0;
-    _alarmAudioEl.play().catch(err => {
-      console.warn("HTML5 audio play blocked, falling back to Web Audio:", err);
-    });
-  } catch(e) { }
+  // 1. ネイティブ <audio> 要素での再生（最も確実）
+  const audioEl = document.getElementById('actor-alarm-audio');
+  if (audioEl) {
+    try {
+      audioEl.currentTime = 0;
+      audioEl.volume = 1.0;
+      audioEl.muted = false;
+      const p = audioEl.play();
+      if (p !== undefined) {
+        p.catch(err => {
+          console.warn("Native audio play warning, falling back to Web Audio:", err);
+        });
+      }
+    } catch(e) { }
+  }
 
   // 2. Web Audio API での和音オシレーター同時再生（多重化）
   try {
@@ -631,13 +679,13 @@ function playAlarm(btn) {
     _alarmGain.connect(_alarmAudioCtx.destination);
     
     const melody = [
-      [880,0.0,0.25,'square'],[1175,0.25,0.25,'square'],[880,0.5,0.25,'square'],[1175,0.75,0.25,'square'],
-      [880,1.0,0.25,'square'],[1175,1.25,0.25,'square'],[880,1.5,0.25,'square'],[1175,1.75,0.25,'square'],
-      [880,2.0,0.25,'square'],[1175,2.25,0.25,'square'],[880,2.5,0.25,'square'],[1175,2.75,0.25,'square'],
-      [880,3.0,0.25,'square'],[1175,3.25,0.25,'square'],[880,3.5,0.25,'square'],[1175,3.75,0.25,'square'],
-      [880,4.0,0.25,'square'],[1175,4.25,0.25,'square']
+      [960,0.0,0.25,'square'],[770,0.25,0.25,'square'],[960,0.5,0.25,'square'],[770,0.75,0.25,'square'],
+      [960,1.0,0.25,'square'],[770,1.25,0.25,'square'],[960,1.5,0.25,'square'],[770,1.75,0.25,'square'],
+      [960,2.0,0.25,'square'],[770,2.25,0.25,'square'],[960,2.5,0.25,'square'],[770,2.75,0.25,'square'],
+      [960,3.0,0.25,'square'],[770,3.25,0.25,'square'],[960,3.5,0.25,'square'],[770,3.75,0.25,'square'],
+      [960,4.0,0.25,'square'],[770,4.25,0.25,'square'],[960,4.5,0.4,'square']
     ];
-    _alarmGain.gain.linearRampToValueAtTime(0.8, _alarmAudioCtx.currentTime + 0.05);
+    _alarmGain.gain.linearRampToValueAtTime(0.9, _alarmAudioCtx.currentTime + 0.05);
 
     melody.forEach(([freq, start, dur, type]) => {
       const osc = _alarmAudioCtx.createOscillator(); 
@@ -658,8 +706,8 @@ function playAlarm(btn) {
     console.warn("WebAudio alarm error:", e);
   }
 
-  showToast("🚨 アラームが鳴動中！（タップで停止可能）", false, 4800);
-  setTimeout(() => stopAlarm(), 4800);
+  showToast("🚨 アラームが鳴動中！（ボタンをタップすると停止します）", false, 5000);
+  setTimeout(() => stopAlarm(), 5000);
 }
 
 function stopAlarm() {
@@ -667,14 +715,22 @@ function stopAlarm() {
     clearTimeout(_pendingAlarmTimer);
     _pendingAlarmTimer = null;
   }
+  if (_countdownInterval) {
+    clearInterval(_countdownInterval);
+    _countdownInterval = null;
+  }
   _alarmPlaying = false;
-  const btn = document.getElementById('alarm-btn'); 
-  if (btn) btn.classList.remove('alarm-active');
   
-  if (_alarmAudioEl) {
+  const btn1 = document.getElementById('alarm-btn'); 
+  if (btn1) btn1.classList.remove('alarm-active');
+  const btn2 = document.getElementById('video-alarm-btn'); 
+  if (btn2) btn2.classList.remove('alarm-active');
+  
+  const audioEl = document.getElementById('actor-alarm-audio');
+  if (audioEl) {
     try {
-      _alarmAudioEl.pause();
-      _alarmAudioEl.currentTime = 0;
+      audioEl.pause();
+      audioEl.currentTime = 0;
     } catch(e) {}
   }
   _alarmNodes.forEach(n => { try { n.stop(); } catch(e){} }); 
