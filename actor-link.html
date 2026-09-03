@@ -478,19 +478,69 @@ function closeNanaseQr() { document.getElementById('nanase-qr-modal').style.disp
 function copyNanaseLink() { const url = 'https://link.line.me/ti/p/cit_nanase_iroha_26d1094'; if (navigator.clipboard) navigator.clipboard.writeText(url); showLinkDialog('コピー完了', 'LINKのリンクをクリップボードにコピーしました。'); }
 function refreshNanaseQr() { const img = document.getElementById('nanase-qr-img'); if (img) { img.style.opacity = '0.3'; setTimeout(() => { img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=LINK_USER_26d1094_NANASE_REFRESH_${Date.now()}`; img.style.opacity = '1'; }, 400); } }
 
-// 警告音
+// 警告音・アラーム制御（演者用スマホLINK）
 let _alarmLastTap = 0, _alarmAudioCtx = null, _alarmGain = null, _alarmPlaying = false, _alarmNodes = [];
+let _videoAlarmLastTap = 0;
+let _pendingAlarmTimer = null;
+
+// 📞 電話／警告ボタン2回タップ ➔ 5秒後にアラーム再生
 function handleAlarmBtnClick() {
   const btn = document.getElementById('alarm-btn');
   const now = Date.now();
   if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
-  if (_alarmPlaying) { stopAlarm(); return; }
-  if (now - _alarmLastTap < 500) { _alarmLastTap = 0; playAlarm(btn); } else { _alarmLastTap = now; }
+  
+  if (_alarmPlaying || _pendingAlarmTimer) {
+    stopAlarm();
+    showToast("🔇 アラームを停止・解除しました");
+    return;
+  }
+
+  if (now - _alarmLastTap < 600) {
+    _alarmLastTap = 0;
+    if (btn) btn.classList.add('alarm-active');
+    showToast("📞 電話トリガー待機中: 【5秒後】にアラームが鳴ります", false, 4500);
+    _pendingAlarmTimer = setTimeout(() => {
+      _pendingAlarmTimer = null;
+      playAlarm(btn);
+    }, 5000);
+  } else {
+    _alarmLastTap = now;
+  }
 }
+
+// 📹 ビデオ通話ボタン2回タップ ➔ 10秒後にアラーム再生
+function handleVideoTriggerTap() {
+  const now = Date.now();
+  if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+
+  if (_alarmPlaying || _pendingAlarmTimer) {
+    stopAlarm();
+    showToast("🔇 アラームを停止・解除しました");
+    return;
+  }
+
+  if (now - _videoAlarmLastTap < 600) {
+    _videoAlarmLastTap = 0;
+    const btn = document.getElementById('alarm-btn');
+    if (btn) btn.classList.add('alarm-active');
+    showToast("📹 ビデオ通話トリガー待機中: 【10秒後】にアラームが鳴ります", false, 9000);
+    _pendingAlarmTimer = setTimeout(() => {
+      _pendingAlarmTimer = null;
+      playAlarm(btn);
+    }, 10000);
+  } else {
+    _videoAlarmLastTap = now;
+  }
+}
+
 function playAlarm(btn) {
-  if (!_alarmAudioCtx) return;
-  _alarmPlaying = true; btn.classList.add('alarm-active'); _alarmNodes = [];
+  if (!_alarmAudioCtx) _alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+  _alarmPlaying = true;
+  if (btn) btn.classList.add('alarm-active');
+  _alarmNodes = [];
   _alarmGain = _alarmAudioCtx.createGain();
   _alarmGain.gain.setValueAtTime(0.0, _alarmAudioCtx.currentTime);
   _alarmGain.connect(_alarmAudioCtx.destination);
@@ -509,12 +559,16 @@ function playAlarm(btn) {
   });
   setTimeout(() => stopAlarm(), 4700);
 }
+
 function stopAlarm() {
-  if (!_alarmPlaying) return;
+  if (_pendingAlarmTimer) {
+    clearTimeout(_pendingAlarmTimer);
+    _pendingAlarmTimer = null;
+  }
   _alarmPlaying = false;
   const btn = document.getElementById('alarm-btn'); if (btn) btn.classList.remove('alarm-active');
   _alarmNodes.forEach(n => { try { n.stop(); } catch(e){} }); _alarmNodes = [];
-  if (_alarmGain) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
+  if (_alarmGain && _alarmAudioCtx) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
 }
 
 // 🔔 チャット着信通知音（LINE風 ポロン♪ ピロリン♪ - Web Audio API + HTML5 Audio ハイブリッド二重再生）

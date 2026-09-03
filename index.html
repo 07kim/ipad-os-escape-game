@@ -375,7 +375,7 @@
               </div>
               <div class="link-header-tools">
                 <button class="link-tool-icon-btn" onclick="showLinkDialog('無料通話', '相手が応答しないか、ネットワークの状態が不安定なため通話を開始できませんでした。')" title="音声通話"><i data-lucide="phone"></i></button>
-                <button class="link-tool-icon-btn" onclick="handleVideoTriggerTap(); showLinkDialog('ビデオ通話', 'ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話"><i data-lucide="video"></i></button>
+                <button class="link-tool-icon-btn" onclick="showLinkDialog('ビデオ通話', 'ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話"><i data-lucide="video"></i></button>
                 <button class="link-tool-icon-btn" onclick="showLinkDialog('トーク設定', 'グループ設定の変更は現在制限されています。')" title="メニュー"><i data-lucide="menu"></i></button>
               </div>
             </div>
@@ -2027,9 +2027,8 @@
             <button type="button" onclick="pressPhoneKey('0')">0</button>
             <button type="button" onclick="pressPhoneKey('#')">#</button>
           </div>
-          <div style="display:flex; justify-content:center; align-items:center; gap: 16px; width:100%; margin-top:20px;">
-            <button type="button" class="phone-call-btn" onclick="handlePhoneTriggerTap(); makePhoneCall()" title="音声通話"><i data-lucide="phone"></i></button>
-            <button type="button" class="phone-video-call-btn" onclick="handleVideoTriggerTap(); showIpadModal('ビデオ通話', 'ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。');" title="ビデオ通話"><i data-lucide="video"></i></button>
+          <div style="display:flex; justify-content:center; align-items:center; gap: 24px; width:100%; margin-top:20px;">
+            <button type="button" class="phone-call-btn" onclick="makePhoneCall()" title="音声通話"><i data-lucide="phone"></i></button>
             <button type="button" class="phone-clear-btn" onclick="clearPhoneKey()" title="削除"><i data-lucide="delete"></i></button>
           </div>
         </div>

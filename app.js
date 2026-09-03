@@ -2338,11 +2338,9 @@ function hideLockScreen() {
   unlockScreen();
 }
 
-// 📱 電話2回押し（5秒後） ＆ 📹 動画2回押し（10秒後）のアラーム制御
+// 📱 電話2回押しのアラーム制御
 let _phoneTapCount = 0;
 let _phoneTapResetTimer = null;
-let _videoTapCount = 0;
-let _videoTapResetTimer = null;
 let _alarmSequenceTimer = null;
 
 function triggerCustomDelayedAlarm(seconds, sourceName) {
@@ -2376,20 +2374,6 @@ function handlePhoneTriggerTap() {
   }
 }
 window.handlePhoneTriggerTap = handlePhoneTriggerTap;
-
-function handleVideoTriggerTap() {
-  _videoTapCount++;
-  if (_videoTapResetTimer) clearTimeout(_videoTapResetTimer);
-  if (_videoTapCount >= 2) {
-    _videoTapCount = 0;
-    triggerCustomDelayedAlarm(10, "動画/ビデオ通話");
-  } else {
-    _videoTapResetTimer = setTimeout(() => {
-      _videoTapCount = 0;
-    }, 1200);
-  }
-}
-window.handleVideoTriggerTap = handleVideoTriggerTap;
 
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
 // 🚀 アプリアイコン・ドックアイコン即応タップハンドラー（タップブレ・スワイプ誤判定によるクリック破棄を完全根絶）
