@@ -3004,20 +3004,7 @@ function renderMetaObservation(folderId = 'root', e = null) {
       countEl.innerText = `${files.length} 項目`;
     }
 
-    // 📁 先頭に「..（上の階層へ戻る）」タイルを追加
-    let html = `
-      <div class="finder-item folder-type back-tile" onclick="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer; background: #f8fafc; border: 1.5px dashed #cbd5e1;" title="タップしてフォルダ一覧に戻る">
-        <div class="finder-thumb-wrapper" style="pointer-events:none;">
-          <div style="width:54px; height:54px; border-radius:12px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:#475569;">
-            <i data-lucide="corner-left-up" style="width:28px; height:28px;"></i>
-          </div>
-        </div>
-        <div class="finder-file-name" style="pointer-events:none; font-weight:700; color:#334155;">..（上へ戻る）</div>
-        <div class="finder-file-desc" style="pointer-events:none; color:#64748b;">フォルダ一覧へ</div>
-      </div>
-    `;
-
-    html += files.map(file => `
+    container.innerHTML = files.map(file => `
       <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
@@ -3025,8 +3012,6 @@ function renderMetaObservation(folderId = 'root', e = null) {
         <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
       </div>
     `).join('');
-
-    container.innerHTML = html;
   }
 
   safeCreateIcons(container);
