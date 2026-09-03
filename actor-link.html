@@ -665,14 +665,25 @@ function pollGAS(isManual = false) {
       setStatusDot('ok');
       if (!data) return;
 
-      const cmd = (data.system && data.system.latestActorCommand) || data.latestActorCommand || (data.data && data.data.latestActorCommand);
-      if (cmd && cmd.triggerId) {
-        if (cmd.triggerId !== _lastPolledTriggerId || isManual) {
-          _lastPolledTriggerId = cmd.triggerId;
-          injectActorMessage(cmd, isManual ? false : true);
+      // 1. 直近のコマンドから演者メッセージを完全抽出（GASトップレベルのlatestCommandやparams対応）
+      let actorCmd = (data.system && data.system.latestActorCommand) || data.latestActorCommand || (data.data && data.data.latestActorCommand);
+      if (!actorCmd || !actorCmd.triggerId) {
+        const genCmd = data.latestCommand || (data.system && data.system.latestCommand) || (data.data && data.data.latestCommand);
+        if (genCmd && (genCmd.type === 'actor_message' || genCmd.action === 'actor_message' || (genCmd.params && genCmd.params.triggerId))) {
+          actorCmd = genCmd.params || genCmd;
+        }
+      }
+      if (actorCmd) {
+        const tid = actorCmd.triggerId || (actorCmd.params && actorCmd.params.triggerId);
+        if (tid) {
+          if (tid !== _lastPolledTriggerId || isManual) {
+            _lastPolledTriggerId = tid;
+            injectActorMessage(actorCmd.params || actorCmd, isManual ? false : true);
+          }
         }
       }
 
+      // 2. 送信済みトリガー一覧の同期
       const sentList = data.actorCommands || data.sentTriggers || (data.system && (data.system.actorCommands || data.system.sentTriggers)) || (data.data && (data.data.actorCommands || data.data.sentTriggers));
       if (Array.isArray(sentList)) {
         sentList.forEach(item => {
@@ -681,7 +692,8 @@ function pollGAS(isManual = false) {
         });
       }
 
-      const loop = (data.system && data.system.loop) || data.loop || (data.data && data.data.loop);
+      // 3. 周回情報の同期
+      const loop = Number((data.system && data.system.loop) || data.globalLoop || data.loop || (data.data && data.data.loop) || 0);
       if (loop && loop !== actorState.loop) {
         actorState.loop = loop;
         renderLinkChatList();

@@ -3329,6 +3329,7 @@
           if (descEl) descEl.innerText = cfg.desc;
         }
 
+        cardEl.className = 'flow-step-card';
         if (s < currentFlowStep) {
           cardEl.classList.add('done');
           tagEl.innerText = '完了 ✓';
