@@ -2371,6 +2371,8 @@ window.handlePhoneTriggerTap = handlePhoneTriggerTap;
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
 // 🚀 アプリアイコン・ドックアイコン即応タップハンドラー（タップブレ・スワイプ誤判定によるクリック破棄を完全根絶）
 let lastAppIconTapTime = 0;
+let _appOpenTimestamp = 0;
+
 function handleAppIconTap(appId, e) {
   const now = Date.now();
   if (appId === 'phone-app' || appId === 'phone') {
@@ -2389,6 +2391,8 @@ function handleAppIconTap(appId, e) {
 
 function openApp(appId) {
   if (!appId) return;
+  _appOpenTimestamp = Date.now();
+
   // 💡 アプリ起動時はロック画面の透明残留を100%防止
   const ls = document.getElementById('lock-screen');
   if (ls) {
@@ -2442,15 +2446,24 @@ function initHomeBarEvents() {
       e.stopPropagation();
       goHome();
     }, { passive: true });
+    homeBar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goHome();
+    });
   }
 
-  // 画面最下部エリア（下端50px）からの上フリックジェスチャーでホームに戻る
+  // 画面最下部エリア（下端45px）からの上フリックジェスチャーでホームに戻る（アプリ起動中のみ有効）
   let bottomTouchStartY = 0;
   document.addEventListener('touchstart', (e) => {
+    // ホーム画面にいる時は誤爆防止のため最下部タッチを監視しない
+    if (!gameState.activeApp) {
+      bottomTouchStartY = 0;
+      return;
+    }
     if (e.touches.length === 1) {
       const touchY = e.touches[0].clientY;
       const screenH = window.innerHeight;
-      if (touchY > screenH - 55) {
+      if (touchY > screenH - 45) {
         bottomTouchStartY = touchY;
       } else {
         bottomTouchStartY = 0;
@@ -2459,9 +2472,10 @@ function initHomeBarEvents() {
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
-    if (bottomTouchStartY > 0 && e.changedTouches.length === 1) {
+    if (bottomTouchStartY > 0 && e.changedTouches.length === 1 && gameState.activeApp) {
       const deltaY = bottomTouchStartY - e.changedTouches[0].clientY;
-      if (deltaY > 25) {
+      // 明確な上フリック（35px以上の引き上げ）のみホームに戻る
+      if (deltaY > 35) {
         goHome();
       }
     }
@@ -2470,6 +2484,11 @@ function initHomeBarEvents() {
 }
 
 function goHome() {
+  // アプリ起動直後400ms以内は誤爆防止ガード
+  if (Date.now() - _appOpenTimestamp < 400) {
+    return;
+  }
+
   // すべてのカメラストリームを停止
   stopAllCameraStreams();
 
