@@ -440,24 +440,24 @@ function fetchLatestDataFromSpreadsheet() {
         }
 
         // 🎬 周回（globalLoop）およびシーン進行統制（8ステップ）の完全同期
-        const serverStep = parseInt(json.flowStep || (json.data && json.data.flowStep) || 0, 10);
+        const serverStep = parseInt(json.flowStep || (json.data && json.data.flowStep) || json.step || (json.data && json.data.step) || 0, 10);
         const serverLoop = parseInt(json.globalLoop || (json.data && json.data.globalLoop) || (json.loop !== undefined ? json.loop : 0), 10);
         const serverTimerRunning = (json.timerRunning === true || json.timerRunning === "true");
         const serverStartTime = parseInt(json.startTime || (json.data && json.data.startTime) || 0, 10) || null;
 
         // 1. シーン進行ステップ（Step 01〜08）に基づく真の周回（1周目・2周目・3周目）を厳密判定
-        let targetLoop = 1;
+        let targetLoop = parseInt(gameState.loop || '1', 10);
         if (serverStep >= 1 && serverStep <= 8) {
           targetLoop = (serverStep <= 2) ? 1 : (serverStep <= 4) ? 2 : 3;
         } else if (!isNaN(serverLoop) && serverLoop >= 1 && serverLoop <= 3) {
           targetLoop = serverLoop;
         }
 
-        // 2. 周回の同期（ステップに基づく真の周回を適用 ＆ 初回アクセス時も確実にコンテンツ描画）
+        // 2. 周回の同期（ステップに基づく真の周回を適用 ＆ 初回アクセス時のみコンテンツ初期同期）
         const currentLoop = parseInt(gameState.loop || localStorage.getItem('game_loop') || '1', 10);
-        const isFirstSync = !window._hasInitialContentSynced;
-        if (currentLoop !== targetLoop || isFirstSync) {
-          console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${targetLoop}周目 (ステップ:0${serverStep}, 初回:${isFirstSync})`);
+        const isFirstContentSync = !window._hasInitialContentSynced;
+        if (isFirstContentSync || currentLoop !== targetLoop) {
+          console.log(`🌀 サーバー周回との同期: ${currentLoop}周目 ➔ ${targetLoop}周目 (ステップ:0${serverStep}, 初回:${isFirstContentSync})`);
           window._hasInitialContentSynced = true;
           gameState.loop = targetLoop;
           localStorage.setItem('game_loop', String(targetLoop));
@@ -467,7 +467,7 @@ function fetchLatestDataFromSpreadsheet() {
           metaObservationCurrentFolder = 'root';
           updateAppUI();
 
-          // 現在開いているアプリがある場合は、その画面も該当周回データで即座に再描画
+          // 現在開いているアプリがある場合は、閉じずに該当周回データで即座に再描画
           if (gameState.activeApp === 'meta-app') {
             renderMetaObservation('root');
             renderMetaEvidence();
@@ -480,7 +480,7 @@ function fetchLatestDataFromSpreadsheet() {
           }
         }
 
-        // 3. シーン進行ステップの同期
+        // 3. シーン進行ステップの同期（ステップ番号が実際に変化した時のみ適用）
         if (serverStep >= 1 && serverStep <= 8) {
           const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
           const stepChanged = (currentStoredStep !== serverStep);
@@ -643,15 +643,17 @@ function executeRemoteAdminCommand(cmd) {
     updateAppUI();
   }
 
-  // ⑦ 個別・全体 遠隔リロード（画面フリーズ・キャッシュリフレッシュ）
+  // ⑦ 個別・全体 遠隔リロード（5秒以内に明示送信された新規コマンドのみ）
   if (type === 'device_reload' || type === 'reload' || p.action === 'reload' || cmd.action === 'reload') {
     const target = cmd.target || p.target || 'ALL';
     const myTeam = gameState.teamId || 'iPad-01';
-    if (target === 'ALL' || target === myTeam) {
-      console.log(`🔄 運営より遠隔リロードを受信しました (対象: ${target})。即時リロードを実行します。`);
+    const cmdTimestamp = p.timestamp || cmd.timestamp || 0;
+    const cmdAge = cmdTimestamp ? (Date.now() - cmdTimestamp) : 999999;
+    if ((target === 'ALL' || target === myTeam) && cmdTimestamp && cmdAge < 5000) {
+      console.log(`🔄 運営よりリアルタイム遠隔リロードを受信しました (対象: ${target})。`);
       playSystemSound("beep");
       setTimeout(() => {
-        location.reload(true);
+        location.reload();
       }, 300);
       return;
     }
@@ -668,7 +670,7 @@ function executeRemoteAdminCommand(cmd) {
     }
   }
 
-  // ⑨ iPad接続リセット（接続登録を解除して接続待機画面に戻す）
+  // ⑨ iPad接続リセット（接続登録を解除して接続待機画面に戻す：リロードなしで即時UI切り替え）
   if (type === 'device_reset' || p.action === 'device_reset' || cmd.action === 'device_reset') {
     const target = cmd.target || p.target || 'ALL';
     const myTeam = gameState.teamId || localStorage.getItem('game_team_id') || '';
@@ -677,8 +679,11 @@ function executeRemoteAdminCommand(cmd) {
       const gasUrl = localStorage.getItem('gas_url');
       localStorage.clear();
       if (gasUrl) localStorage.setItem('gas_url', gasUrl);
-      // 待機画面へ（リロード）
-      setTimeout(() => { location.reload(true); }, 300);
+      closeAllWindowsSilent();
+      gameState.activeApp = null;
+      gameState.teamId = '';
+      const pairingEl = document.getElementById('device-pairing-screen');
+      if (pairingEl) pairingEl.style.display = 'flex';
       return;
     }
   }
@@ -973,39 +978,51 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId, emitNot
 // 自分の進捗ステータスをGASへ送信（GET+POST ハイブリッド送信：100%確実通信）
 function sendDeviceStatusHeartbeat() {
   const gasUrl = getResolvedGasUrl();
-  if (!gasUrl) return;
-
-  // ⚠️ 未登録（device_registered !== '1'）の場合はハートビートを送信しない
-  // リセット直後のiPadが空のIDや 'iPad-01' でモニタリングシートに行を生成するのを防止
-  const isRegistered = localStorage.getItem('device_registered') === '1';
-  if (!isRegistered) return;
-
-  const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || '';
-  if (!myDeviceId) return; // 管理番号が空の場合も送信しない
-
-  // ⚠️ GAME_DATABASE のデフォルト値（チームA等）は使わない。未設定のまま送信する
+  const myDeviceId = gameState.teamId || localStorage.getItem('game_team_id') || 'iPad-01';
   const myTeamName = localStorage.getItem('game_team_name') || '';
   const myLoop = parseInt(gameState.loop || 1, 10);
   const hintsCount = (gameState.unlockedHints || []).length;
   const currentManaba = gameState.manabaUser || gameState.manabaLoggedInUser;
   const myManaba = currentManaba ? `ログイン中: ${currentManaba}` : "未ログイン";
+  const isRegistered = localStorage.getItem('device_registered') === '1';
 
-  // 1. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
-  const getUrl = gasUrl.includes('?')
-    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`
-    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=1&_t=${Date.now()}`;
+  // 1. 同一ブラウザ内の管理画面（admin.html）へ BroadcastChannel 経由で即時通知
+  if (typeof BroadcastChannel !== 'undefined' && !window._isHandlingBroadcast) {
+    try {
+      const bc = new BroadcastChannel('escape_game_channel');
+      bc.postMessage({
+        type: 'device_heartbeat',
+        payload: {
+          id: myDeviceId,
+          teamId: myDeviceId,
+          teamName: myTeamName,
+          loop: myLoop,
+          hints: hintsCount,
+          manaba: myManaba,
+          registered: isRegistered,
+          timestamp: Date.now()
+        }
+      });
+    } catch (e) { }
+  }
 
-  fetch(getUrl).catch(() => { });
-
-  // 2. 同一端末テスト用 LocalStorage 更新
+  // 2. LocalStorage 同期（同一オリジン・タブ間通信）
   localStorage.setItem('team_id', myDeviceId);
   localStorage.setItem('game_team_id', myDeviceId);
-  // ⚠️ チーム名はスタッフが設定した値がある場合のみ上書き保存（デフォルト値で上書きしない）
   if (myTeamName) localStorage.setItem('game_team_name', myTeamName);
   localStorage.setItem('game_loop', String(myLoop));
   localStorage.setItem('game_unlocked_hints', JSON.stringify(gameState.unlockedHints || []));
   localStorage.setItem('game_manaba_user', currentManaba || "");
   localStorage.setItem('mon_last_update', String(Date.now()));
+
+  if (!gasUrl) return;
+
+  // 3. GETパラメータでの送信（CORSフリー・Google Apps Script最適化）
+  const getUrl = gasUrl.includes('?')
+    ? `${gasUrl}&action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`
+    : `${gasUrl}?action=update_status&teamId=${encodeURIComponent(myDeviceId)}&teamName=${encodeURIComponent(myTeamName)}&loop=${myLoop}&hints=${hintsCount}&manaba=${encodeURIComponent(myManaba)}&registered=${isRegistered ? 1 : 0}&_t=${Date.now()}`;
+
+  fetch(getUrl).catch(() => { });
 }
 
 // 📶 左上Wi-Fiアイコンによるスプレッドシート（GAS）接続状態の隠しインジケーター（不要な再描画・全画面点滅を完全防止）
@@ -1759,6 +1776,10 @@ function triggerLoopTransition(nextLoop, loopStartTime = null, startTimer = true
   closeAllWindowsSilent();
   gameState.activeApp = null;
 
+  // 1.5. 暗転オーバーレイを確実に非表示
+  const blackoutEl = document.getElementById('complete-blackout-overlay');
+  if (blackoutEl) blackoutEl.style.display = 'none';
+
   // 2. メタアプリ以外の全アプリ（manaba, Safari, 電話, メール, LINK等）を完全初期化
   resetAllAppsForNewLoop();
 
@@ -1819,6 +1840,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   const accurateLoop = (step <= 2) ? 1 : (step <= 4) ? 2 : 3;
   gameState.loop = accurateLoop;
   localStorage.setItem('game_loop', String(accurateLoop));
+  localStorage.setItem('current_flow_step', String(step));
 
   console.log(`🎬 [applyFlowStepState] ステップ 0${step} を適用（確定周回: ${accurateLoop}周目, 初回同期: ${isInitialSync}）`);
 
@@ -1832,7 +1854,6 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     localStorage.setItem('fake_clock_start_iso', '2026-09-04T09:44:00');
     localStorage.setItem('fake_clock_set_time', String(now));
     updateAppUI();
-    // ユーザーがすでにロック解除済みの場合は勝手に再ロックしない
     if (isInitialSync && !window._isUserUnlocked) {
       showLockScreen();
     }
@@ -1886,7 +1907,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
   } else if (step === 5) {
     // 05. 2周目終了 (3周目切替・09:44静止・タイマー停止・操作自由)
     if (blackoutEl) blackoutEl.style.display = 'none';
-    gameState.loop = accurateLoop;
+    gameState.loop = accurateLoop; // 3周目
     gameState.timerRunning = false;
     gameState.clockStartISO = '2026-09-04T09:44:00';
     gameState.clockSetTime = now;
@@ -1920,15 +1941,25 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     // 07. 3周目終了 (完全暗転・操作不能)
     gameState.timerRunning = false;
     localStorage.setItem('game_timer_running', 'false');
-    if (blackoutEl) blackoutEl.style.display = 'block';
+    if (blackoutEl) {
+      blackoutEl.style.display = 'block';
+    }
     closeAllWindowsSilent();
+    try {
+      const ma = document.getElementById('master-system-audio');
+      if (ma) { ma.pause(); ma.currentTime = 0; }
+    } catch(e) {}
+    try {
+      if (typeof stopAlarm === 'function') stopAlarm();
+    } catch(e) {}
   } else if (step === 8) {
     // 08. ゲーム終了
+    if (blackoutEl) blackoutEl.style.display = 'none';
     gameState.timerRunning = false;
     localStorage.setItem('game_timer_running', 'false');
   }
 
-  // 演者ツール（actor.html）へも連動通知（自分自身への再受信ループを防ぐため、BroadcastChannel経由での受信時は送信しない）
+  // 演者ツール（actor.html）へも連動通知
   if (typeof BroadcastChannel !== 'undefined' && !window._isHandlingBroadcast) {
     try {
       const bc = new BroadcastChannel('escape_game_channel');
@@ -2396,6 +2427,15 @@ function handleAppIconTap(appId, e) {
 
 function openApp(appId) {
   if (!appId) return;
+
+  // ⬛ 3周目終了（ステップ07・完全暗転中）は一切のアプリ起動を拒否（操作不能維持）
+  const currentStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
+  if (currentStep === 7) {
+    const bo = document.getElementById('complete-blackout-overlay');
+    if (bo) bo.style.display = 'block';
+    return;
+  }
+
   _appOpenTimestamp = Date.now();
 
   // 💡 アプリ起動時はロック画面・暗転オーバーレイの透明残留を100%防止
@@ -2406,10 +2446,8 @@ function openApp(appId) {
     ls.style.pointerEvents = 'none';
   }
   const bo = document.getElementById('complete-blackout-overlay');
-  if (bo && gameState.loop !== 3) {
-    // 07ステップ（完全暗転）以外では暗転オーバーレイを確実に非表示
-    const currentStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
-    if (currentStep !== 7) bo.style.display = 'none';
+  if (bo) {
+    bo.style.display = 'none';
   }
 
   // 💡 アイコンタップ時はロック画面を即座に自動解除してアプリを開く
@@ -2454,34 +2492,55 @@ function closeApp(appId) {
 }
 window.closeApp = closeApp;
 
-// 🏠 ホームバー操作（0ms即時反応 ＆ 最下部上フリックジェスチャー）
+// 🏠 ホームバー操作（誤爆防止 ＆ 上フリックジェスチャーによる安全なホーム復帰）
 function initHomeBarEvents() {
   const homeBar = document.getElementById('home-bar');
+  let homeBarTouchStartY = 0;
+  let homeBarTouchStartX = 0;
+
   if (homeBar) {
-    // タッチ開始で即時判定（300ms遅延ゼロ化）
+    // 💡 単純タップでの即時誤閉鎖を廃止。明確な上スワイプ（フリック）または明示的クリックのみ受付
     homeBar.addEventListener('touchstart', (e) => {
-      e.stopPropagation();
-      goHome();
+      if (e.touches && e.touches.length === 1) {
+        homeBarTouchStartY = e.touches[0].clientY;
+        homeBarTouchStartX = e.touches[0].clientX;
+      }
     }, { passive: true });
+
+    homeBar.addEventListener('touchend', (e) => {
+      if (homeBarTouchStartY > 0 && e.changedTouches && e.changedTouches.length === 1) {
+        const deltaY = homeBarTouchStartY - e.changedTouches[0].clientY;
+        const deltaX = Math.abs(homeBarTouchStartX - e.changedTouches[0].clientX);
+        // 上方向に25px以上引き上げた場合のみホームに戻る
+        if (deltaY > 25 && deltaY > deltaX * 1.5) {
+          goHome();
+        }
+      }
+      homeBarTouchStartY = 0;
+      homeBarTouchStartX = 0;
+    }, { passive: true });
+
+    // PC等でのマウスクリック
     homeBar.addEventListener('click', (e) => {
       e.stopPropagation();
       goHome();
     });
   }
 
-  // 画面最下部エリア（下端45px）からの上フリックジェスチャーでホームに戻る（アプリ起動中のみ有効）
+  // 画面最下部エリア（下端28px）からの明確な上フリックジェスチャー（アプリ起動中のみ有効）
   let bottomTouchStartY = 0;
+  let bottomTouchStartX = 0;
   document.addEventListener('touchstart', (e) => {
-    // ホーム画面にいる時は誤爆防止のため最下部タッチを監視しない
     if (!gameState.activeApp) {
       bottomTouchStartY = 0;
       return;
     }
-    if (e.touches.length === 1) {
+    if (e.touches && e.touches.length === 1) {
       const touchY = e.touches[0].clientY;
       const screenH = window.innerHeight;
-      if (touchY > screenH - 45) {
+      if (touchY > screenH - 28) {
         bottomTouchStartY = touchY;
+        bottomTouchStartX = e.touches[0].clientX;
       } else {
         bottomTouchStartY = 0;
       }
@@ -2489,20 +2548,22 @@ function initHomeBarEvents() {
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
-    if (bottomTouchStartY > 0 && e.changedTouches.length === 1 && gameState.activeApp) {
+    if (bottomTouchStartY > 0 && e.changedTouches && e.changedTouches.length === 1 && gameState.activeApp) {
       const deltaY = bottomTouchStartY - e.changedTouches[0].clientY;
-      // 明確な上フリック（35px以上の引き上げ）のみホームに戻る
-      if (deltaY > 35) {
+      const deltaX = Math.abs(bottomTouchStartX - e.changedTouches[0].clientX);
+      // 明確な上フリック（40px以上の引き上げ・縦移動優勢）のみホームに戻る
+      if (deltaY >= 40 && deltaY > deltaX * 2) {
         goHome();
       }
     }
     bottomTouchStartY = 0;
+    bottomTouchStartX = 0;
   }, { passive: true });
 }
 
 function goHome() {
-  // アプリ起動直後400ms以内は誤爆防止ガード
-  if (Date.now() - _appOpenTimestamp < 400) {
+  // アプリ起動直後600ms以内は誤爆防止ガード
+  if (Date.now() - _appOpenTimestamp < 600) {
     return;
   }
 
@@ -2816,10 +2877,12 @@ async function executeInstantMasterReset(preserveDeviceNames = true) {
 
   try { playSystemSound("fanfare"); } catch (e) { }
 
-  // ⑩ リロード（最新ファイル強制取得のためタイムスタンプを付与して置換）
-  setTimeout(() => {
-    location.replace(location.pathname + '?reset_done=' + Date.now());
-  }, 400);
+  // ⑩ UIの完全初期化（勝手に再読み込み・画面閉じを発生させず、滑らかに1周目待機画面へ復帰）
+  closeAllWindowsSilent();
+  metaObservationCurrentFolder = 'root';
+  updateAppUI();
+  showLockScreen(true);
+  console.log('✅ マスターリセット完了（リロードなしで1周目待機状態へ初期化しました）');
 }
 
 function performMasterReset() {
@@ -5626,14 +5689,49 @@ function handleManabaLogin() {
   const inputId = (document.getElementById('manaba-id-input').value || '').trim();
   const inputPass = (document.getElementById('manaba-pass-input').value || '').trim();
   const allUsers = (window.GAME_DATABASE && window.GAME_DATABASE.manaba && window.GAME_DATABASE.manaba.users) || {};
+  const characters = (window.GAME_DATABASE && window.GAME_DATABASE.characters) || {};
 
-  // 大文字・小文字を区別せずにユーザーとパスワードを照合
+  const cleanId = inputId.toLowerCase().replace(/@chibakou\.ac\.jp$/, '');
+  const cleanPass = inputPass.toLowerCase();
+
   let matchedUser = null;
   let matchedUserId = null;
 
+  // 大文字・小文字を完全に無視して照合（Mなし/あり学籍番号、キー名、メール、名前等）
   for (const [uid, udata] of Object.entries(allUsers)) {
-    if (uid.toLowerCase() === inputId.toLowerCase()) {
-      if (udata.pass && udata.pass.toLowerCase() === inputPass.toLowerCase()) {
+    const uKey = uid.toLowerCase();
+    const uStudId = (udata.studentId || '').toLowerCase();
+    const uName = (udata.name || '').toLowerCase();
+    const uPass = (udata.pass || udata.password || '').toLowerCase();
+
+    // IDの一致判定（キー、studentId、Mを除去したID、名前）
+    const isIdMatch = (
+      uKey === cleanId ||
+      uKey.replace(/^m/, '') === cleanId.replace(/^m/, '') ||
+      uStudId === cleanId ||
+      uStudId.replace(/^m/, '') === cleanId.replace(/^m/, '') ||
+      uName === cleanId
+    );
+
+    if (isIdMatch) {
+      // パスワードの一致判定（大文字小文字無視）
+      let isPassMatch = (uPass === cleanPass);
+
+      // characters テーブルのパスワードもフォールバック照合
+      if (!isPassMatch) {
+        for (const [cKey, cData] of Object.entries(characters)) {
+          const cStudId = (cData.studentId || '').toLowerCase();
+          const cName = (cData.name || '').toLowerCase();
+          if (cStudId.includes(cleanId.replace(/^m/, '')) || cName === uName) {
+            if ((cData.pass || '').toLowerCase() === cleanPass) {
+              isPassMatch = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (isPassMatch) {
         matchedUser = udata;
         matchedUserId = uid;
         break;

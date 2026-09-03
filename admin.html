@@ -3836,10 +3836,10 @@
       initAdminDashboard();
     }
 
-    // 4秒おきに30台ステータスを自動更新
+    // 3.5秒おきに30台ステータスを自動更新
     setInterval(() => {
       try { refreshMonitoringDashboard(); } catch(e) {}
-    }, 7000);
+    }, 3500);
 
     // 進行プリセットボタンの描画
     function renderPresetButtons() {
@@ -5716,12 +5716,46 @@
       try {
         const bc = new BroadcastChannel('escape_game_channel');
         bc.addEventListener('message', (event) => {
-          if (event.data && (event.data.type === 'actor_message' || event.data.type === 'actor_message_ack')) {
+          if (!event.data) return;
+          const { type, payload } = event.data;
+          if (type === 'actor_message' || type === 'actor_message_ack') {
             try {
               const saved = localStorage.getItem('actor_sent_triggers');
               if (saved) adminActorSentState = JSON.parse(saved);
             } catch (err) { }
             renderAdminActorTriggers();
+          } else if (type === 'device_heartbeat' && payload) {
+            // 📡 端末からのリアルタイム接続・ステータス更新を即時反映
+            const devId = payload.id || payload.teamId;
+            if (devId) {
+              const existing = (latestDevicesData || []).find(d => d.id === devId || d.teamId === devId);
+              if (existing) {
+                Object.assign(existing, {
+                  loop: payload.loop,
+                  hints: payload.hints,
+                  manaba: payload.manaba,
+                  registered: payload.registered,
+                  lastSeenMs: payload.timestamp || Date.now(),
+                  lastSeen: 'たった今'
+                });
+              } else {
+                if (!latestDevicesData) latestDevicesData = [];
+                latestDevicesData.push({
+                  id: devId,
+                  name: devId,
+                  teamId: payload.teamName || '未設定',
+                  teamName: payload.teamName || '',
+                  loop: payload.loop || 1,
+                  hints: payload.hints || 0,
+                  manaba: payload.manaba || '未ログイン',
+                  registered: !!payload.registered,
+                  screen: 'ホーム画面',
+                  lastSeen: 'たった今',
+                  lastSeenMs: payload.timestamp || Date.now()
+                });
+              }
+              renderDynamicMonitoringList();
+            }
           }
         });
       } catch (e) { }

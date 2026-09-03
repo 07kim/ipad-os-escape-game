@@ -2408,12 +2408,19 @@
   <div id="complete-blackout-overlay" style="
     display: none;
     position: fixed;
-    inset: 0;
-    z-index: 99999999;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999999;
     background: #000000;
     cursor: none;
     pointer-events: all;
+    touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
   "></div>
 
   <!-- Safari対応 マスターオーディオ再生プレイヤー -->
