@@ -484,6 +484,21 @@ function fetchLatestDataFromSpreadsheet() {
         if (cmd) {
           executeRemoteAdminCommand(cmd);
         }
+
+        // 🎭 演者トリガー（マスターデータ / GAS）からのLINKメッセージ自動同期
+        const actorCmd = json.latestActorCommand || (json.data && json.data.latestActorCommand);
+        if (actorCmd && actorCmd.triggerId) {
+          syncActorTriggerToLink(actorCmd.triggerId, targetLoop, actorCmd.time || null, true);
+        }
+        const actorCmdList = json.actorCommands || (json.data && json.data.actorCommands) || json.sentTriggers || (json.data && json.data.sentTriggers);
+        if (Array.isArray(actorCmdList)) {
+          actorCmdList.forEach(ac => {
+            const trId = typeof ac === 'string' ? ac : (ac.triggerId || ac.id);
+            const trLoop = (ac && ac.loop) ? ac.loop : targetLoop;
+            const trTime = (ac && ac.time) ? ac.time : null;
+            if (trId) syncActorTriggerToLink(trId, trLoop, trTime, false);
+          });
+        }
       }
 
       // 2. 自分の進捗ステータスをGASへ定期送信（ハートビート）
@@ -677,19 +692,16 @@ function executeRemoteAdminCommand(cmd) {
     const text = cmd.text || p.text;
     const autoReplySender = cmd.autoReplySender || p.autoReplySender;
     const autoReplyText = cmd.autoReplyText || p.autoReplyText;
+    const msgTime = formatChatTime(cmd.time || p.time || getFormattedFakeTime());
 
-    // 🕒 送信時刻は現実時間ではなく、常にこのiPadの世界線時刻（09:44からのバーチャル時間）を採用
-    const msgTime = getFormattedFakeTime();
-
-    if (text) {
-      addActorMessageToLinkChat(actor, text, msgTime, triggerId);
-
-      // J（陣内）からの送信でF（深澤）の自動返信が指定されている場合
-      // 人間らしい自然なチャット間隔として18秒後（15〜20秒）に深澤が「おけ」と返信・通知
+    if (triggerId && window.ACTOR_TRIGGER_DEFINITIONS && window.ACTOR_TRIGGER_DEFINITIONS[triggerId]) {
+      syncActorTriggerToLink(triggerId, gameState.loop, msgTime, true);
+    } else if (text) {
+      addActorMessageToLinkChat(actor, text, msgTime, triggerId, true);
       if (autoReplySender && autoReplyText) {
         setTimeout(() => {
-          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime(), triggerId ? triggerId + "_autoreply" : "");
-        }, 18000);
+          addActorMessageToLinkChat(autoReplySender, autoReplyText, getFormattedFakeTime(), triggerId ? triggerId + "_autoreply" : "", true);
+        }, 15000);
       }
     }
     return;
@@ -728,8 +740,78 @@ function formatChatTime(rawTime) {
   return getFormattedFakeTime();
 }
 
+// ==========================================================================
+// 🎭 演者メッセージ定数マスタ（J, G, H, F）
+// ==========================================================================
+window.ACTOR_TRIGGER_DEFINITIONS = {
+  "j_exit_hall": {
+    actor: "J",
+    senderId: "jinnai",
+    senderName: "陣内 樹",
+    text: "大ホール退出しました。施錠お願いします。遅れてすみません。",
+    autoReplySender: "fukasawa",
+    autoReplyText: "おけ",
+    allowedLoops: [1, 2, 3]
+  },
+  "g_search_morino": {
+    actor: "G",
+    senderId: "sotozono",
+    senderName: "外園 胡春",
+    text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。",
+    allowedLoops: [1, 2, 3]
+  },
+  "g_timewarp_alert": {
+    actor: "G",
+    senderId: "sotozono",
+    senderName: "外園 胡春",
+    text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
+    allowedLoops: [1, 2]
+  },
+  "h_timewarp_loop2": {
+    actor: "H",
+    senderId: "higa",
+    senderName: "比嘉 俊希",
+    text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
+    allowedLoops: [3]
+  },
+  "h_loop3_uzw_info": {
+    actor: "H",
+    senderId: "higa",
+    senderName: "比嘉 俊希",
+    text: "お疲れ様です。\nUZWに関する重要なお知らせとご協力のお願いです。\n①現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n\n②現在迷い込んでいる会員の1名が、前回のタイムワープの際に持って帰った資料が現因で、UZWの未来予知が成り立っているようです。現在その子にコンタクトを取っている状態です。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。",
+    allowedLoops: [3]
+  }
+};
+
+// 🎭 トリガーIDに基づく高信頼LINKメッセージ同期
+function syncActorTriggerToLink(triggerId, loop = null, timeStr = null, emitNotification = true) {
+  if (!triggerId) return;
+  const cleanId = String(triggerId).replace('_autoreply', '').trim();
+  const def = window.ACTOR_TRIGGER_DEFINITIONS[cleanId];
+  if (!def) return;
+
+  const currentLoop = loop || parseInt(gameState.loop || localStorage.getItem('game_loop') || '1', 10);
+  if (def.allowedLoops && !def.allowedLoops.includes(currentLoop)) {
+    console.log(`⚠️ トリガー [${cleanId}] は${def.allowedLoops.join('・')}周目専用のため、現在(${currentLoop}周目)は適用をスキップします`);
+    return;
+  }
+
+  const msgTime = timeStr || getFormattedFakeTime();
+  addActorMessageToLinkChat(def.actor, def.text, msgTime, cleanId, emitNotification);
+
+  if (def.autoReplySender && def.autoReplyText) {
+    if (emitNotification) {
+      setTimeout(() => {
+        addActorMessageToLinkChat(def.autoReplySender, def.autoReplyText, getFormattedFakeTime(), cleanId + '_autoreply', true);
+      }, 15000);
+    } else {
+      addActorMessageToLinkChat(def.autoReplySender, def.autoReplyText, msgTime, cleanId + '_autoreply', false);
+    }
+  }
+}
+
 // 🎭 演者メッセージをLINKチャットへリアルタイム注入（全体連絡グループ）
-function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
+function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId, emitNotification = true) {
   const actorMap = {
     'J': { id: 'jinnai', name: '陣内 樹', icon: 'J' },
     'G': { id: 'sotozono', name: '外園 胡春', icon: 'G' },
@@ -748,11 +830,14 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   if (!window.GAME_DATABASE.linkApp.chats) window.GAME_DATABASE.linkApp.chats = {};
   if (!window.GAME_DATABASE.linkApp.chats[targetRoom]) window.GAME_DATABASE.linkApp.chats[targetRoom] = [];
 
-  // メッセージの重複登録を防止（同一タイムスタンプまたは同一テキスト）
+  // メッセージの重複登録を防止（同一トリガーIDまたは同一テキスト）
   const existingList = window.GAME_DATABASE.linkApp.chats[targetRoom];
-  const isDuplicate = existingList.some(m => m.sender === senderInfo.id && m.text === text && (Date.now() - (m._addedAt || 0) < 5000));
+  const isDuplicate = existingList.some(m => {
+    if (triggerId && m._triggerId === triggerId) return true;
+    return (m.sender === senderInfo.id && m.text === text && (Date.now() - (m._addedAt || 0) < 4000));
+  });
+
   if (isDuplicate) {
-    console.log(`⚠️ 重複演者メッセージのためスキップ: ${senderInfo.name}「${text}」`);
     return;
   }
 
@@ -763,6 +848,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     date: "今日",
     text: text,
     time: cleanTime,
+    _triggerId: triggerId || null,
     _addedAt: Date.now()
   });
 
@@ -779,10 +865,7 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
   );
 
   if (isLinkOpen) {
-    // 左側トーク一覧（プレビューテキスト・時間・バッジ）を即座に更新
     renderLinkChatList();
-
-    // 現在開いている部屋が全体連絡（または初期状態）ならチャット画面を再描画
     const currentRoom = gameState.activeChatContact || 'committee_group';
     if (currentRoom === targetRoom) {
       openLinkChat(targetRoom, true);
@@ -796,44 +879,45 @@ function addActorMessageToLinkChat(senderCode, text, timeStr, triggerId) {
     }
   }
 
-  // 3. 【重要】LINK上で吹き出しが確実に作成・反映された直後に通知を発火させる
-  setTimeout(() => {
-    const badge = document.getElementById('dock-link-badge');
-    if (badge) {
-      badge.style.display = 'flex';
-      badge.innerText = String((parseInt(badge.innerText || '0') || 0) + 1);
-    }
+  // 3. 通知の発火（emitNotification=true時のみ）
+  if (emitNotification) {
+    setTimeout(() => {
+      const badge = document.getElementById('dock-link-badge');
+      if (badge) {
+        badge.style.display = 'flex';
+        badge.innerText = String((parseInt(badge.innerText || '0') || 0) + 1);
+      }
 
-    playSystemSound("notif");
+      playSystemSound("notif");
 
-    // 全体連絡画面を開いていない場合のみプッシュ通知を表示（開いている時は邪魔にならないよう音と画面更新のみ）
-    const isViewingRoom = (isLinkOpen && (gameState.activeChatContact === targetRoom || !gameState.activeChatContact));
-    if (!isViewingRoom) {
-      showPushNotification("LINK", senderInfo.name, text, "message-circle", () => {
-        openApp('link-app');
-        openLinkChat('committee_group', true);
+      const isViewingRoom = (isLinkOpen && (gameState.activeChatContact === targetRoom || !gameState.activeChatContact));
+      if (!isViewingRoom) {
+        showPushNotification("LINK", senderInfo.name, text, "message-circle", () => {
+          openApp('link-app');
+          openLinkChat('committee_group', true);
+        });
+      }
+
+      // 📱 ロック画面の通知センターにもリアルタイムに追加
+      if (!gameState.dynamicLockNotifications) gameState.dynamicLockNotifications = [];
+      gameState.dynamicLockNotifications.unshift({
+        id: "dyn_msg_" + Date.now(),
+        app: "LINK",
+        icon: "message-circle",
+        title: senderInfo.name,
+        body: text,
+        time: cleanTime,
+        targetApp: "link",
+        contactId: "committee_group"
       });
-    }
+      renderLockNotifications();
 
-    // 📱 ロック画面の通知センターにもリアルタイムに追加
-    if (!gameState.dynamicLockNotifications) gameState.dynamicLockNotifications = [];
-    gameState.dynamicLockNotifications.unshift({
-      id: "dyn_msg_" + Date.now(),
-      app: "LINK",
-      icon: "message-circle",
-      title: senderInfo.name,
-      body: text,
-      time: cleanTime,
-      targetApp: "link",
-      contactId: "committee_group"
-    });
-    renderLockNotifications();
-
-    const msgContainer = document.getElementById('link-messages-container');
-    if (msgContainer) {
-      msgContainer.scrollTop = msgContainer.scrollHeight;
-    }
-  }, 120);
+      const msgContainer = document.getElementById('link-messages-container');
+      if (msgContainer) {
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+      }
+    }, 120);
+  }
 
   // 演者ツールへ「LINK反映完了（ACK）」を通知
   if (triggerId) {
@@ -2883,7 +2967,7 @@ function renderMetaObservation(folderId = 'root', e = null) {
     }
 
     container.innerHTML = visibleFolders.map(folder => `
-      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}', event)" ontouchend="renderMetaObservation('${folder.id}', event)" style="touch-action:manipulation; cursor:pointer;" title="タップして「${folder.folderName}」を開く">
+      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}', event)" style="touch-action:manipulation; cursor:pointer;" title="タップして「${folder.folderName}」を開く">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <div class="finder-folder-icon">
             ${generateIpadosFolderSvg()}
@@ -2904,10 +2988,10 @@ function renderMetaObservation(folderId = 'root', e = null) {
 
     if (pathEl) {
       pathEl.innerHTML = `
-        <button class="explorer-back-btn" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;" title="フォルダ一覧に戻る">
+        <button class="explorer-back-btn" onclick="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;" title="フォルダ一覧に戻る">
           <i data-lucide="chevron-left" style="width:15px; height:15px;"></i> 戻る
         </button>
-        <span class="explorer-crumb clickable" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;">
+        <span class="explorer-crumb clickable" onclick="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;">
           <i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> 内部ストレージ
         </span>
         <span class="explorer-separator">&gt;</span>
@@ -2922,7 +3006,7 @@ function renderMetaObservation(folderId = 'root', e = null) {
 
     // 📁 先頭に「..（上の階層へ戻る）」タイルを追加
     let html = `
-      <div class="finder-item folder-type back-tile" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer; background: #f8fafc; border: 1.5px dashed #cbd5e1;" title="タップしてフォルダ一覧に戻る">
+      <div class="finder-item folder-type back-tile" onclick="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer; background: #f8fafc; border: 1.5px dashed #cbd5e1;" title="タップしてフォルダ一覧に戻る">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <div style="width:54px; height:54px; border-radius:12px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:#475569;">
             <i data-lucide="corner-left-up" style="width:28px; height:28px;"></i>
@@ -2934,7 +3018,7 @@ function renderMetaObservation(folderId = 'root', e = null) {
     `;
 
     html += files.map(file => `
-      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" ontouchend="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
+      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
         </div>

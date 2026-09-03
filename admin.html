@@ -1884,8 +1884,28 @@
         </div>
       </div>
 
-      <!-- 右カラム：全画面緊急アラート ＆ 定型文クイックボタン -->
+      <!-- 右カラム：演者LINKトリガー状況モニター ＆ 全画面緊急アラート -->
       <div>
+        <!-- 🎭 演者LINKトリガー送信状況モニター カード -->
+        <div class="card" style="margin-bottom:14px; border:1.5px solid #bfdbfe; background:#f8fafc;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div class="card-title" style="margin-bottom:0; color:#0369a1; font-size:14px;">
+              <i data-lucide="message-circle" style="color:#0284c7;"></i> 🎭 演者LINK送信状況モニター
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button class="nav-btn" onclick="resetAllAdminActorTriggers()" style="padding:4px 8px; font-size:11px; font-weight:700; color:#b91c1c; border-color:#fecaca;" title="全演者の送信状態を未送信に戻す">
+                <i data-lucide="rotate-ccw" style="width:11px; height:11px;"></i> 一括リセット
+              </button>
+            </div>
+          </div>
+          <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px; line-height:1.4;">
+            演者ツールから送信されたLINKメッセージの送信状況・iPad反映状態をリアルタイム表示します。
+          </p>
+          <div id="admin-actor-triggers-list" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- JSで動的生成 -->
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-title">
             <i data-lucide="radio" style="color:var(--danger);"></i> 全画面 緊急アラート送信（指示割込）
@@ -4866,29 +4886,6 @@
 
     // --- 🏆 ランキングビュー切り替え ---
     let currentMonitorView = 'grid';
-
-    function switchMonitorView(view) {
-      currentMonitorView = view;
-      document.querySelectorAll('.admin-view-tab-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`view-tab-${view}`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      const gridContainer = document.getElementById('team-monitor-container');
-      const rankingContainer = document.getElementById('team-ranking-container');
-      const filterBar = document.getElementById('monitor-filter-bar');
-
-      if (view === 'grid') {
-        if (gridContainer) gridContainer.style.display = 'grid';
-        if (rankingContainer) rankingContainer.style.display = 'none';
-        if (filterBar) filterBar.style.display = 'flex';
-      } else {
-        if (gridContainer) gridContainer.style.display = 'none';
-        if (rankingContainer) rankingContainer.style.display = 'block';
-        if (filterBar) filterBar.style.display = 'none';
-        renderMonitoringCards();
-      }
-    }
-
     // --- 🏆 リアルタイム進行度ランキングの描画 ---
     function renderRankingTable(devicesList) {
       const rankContainer = document.getElementById('team-ranking-container');
@@ -5401,6 +5398,238 @@
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
+
+    // --- 🏆 ランキングビュー切り替え ---
+    let currentMonitorView = 'grid';
+
+    function switchMonitorView(view) {
+      currentMonitorView = view;
+      document.querySelectorAll('.admin-view-tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`view-tab-${view}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const gridContainer = document.getElementById('team-monitor-container');
+      const rankingContainer = document.getElementById('team-ranking-container');
+      const filterBar = document.getElementById('monitor-filter-bar');
+
+      if (view === 'grid') {
+        if (gridContainer) gridContainer.style.display = 'grid';
+        if (rankingContainer) rankingContainer.style.display = 'none';
+        if (filterBar) filterBar.style.display = 'flex';
+      } else {
+        if (gridContainer) gridContainer.style.display = 'none';
+        if (rankingContainer) rankingContainer.style.display = 'block';
+        if (filterBar) filterBar.style.display = 'none';
+        renderMonitoringCards();
+      }
+    }
+
+    // ==========================================================================
+    // 🎭 演者LINKトリガー送信状況モニター ロジック (admin.html)
+    // ==========================================================================
+    const ADMIN_ACTOR_TRIGGERS = [
+      {
+        id: "j_exit_hall",
+        actor: "J",
+        actorName: "陣内 樹（J）",
+        actorColor: "#0284c7",
+        title: "大ホール施錠連絡",
+        desc: "大ホール退出しました。施錠お願いします…",
+        allowedLoops: [1, 2, 3]
+      },
+      {
+        id: "g_search_morino",
+        actor: "G",
+        actorName: "外園 胡春（G）",
+        actorColor: "#ec4899",
+        title: "【送信①】森野の捜索連絡",
+        desc: "先ほどから森野の姿が見えなくて…",
+        allowedLoops: [1, 2, 3]
+      },
+      {
+        id: "g_timewarp_alert",
+        actor: "G",
+        actorName: "外園 胡春（G）",
+        actorColor: "#ec4899",
+        title: "【送信②】タイムワープ報告",
+        desc: "100年前からタイムワープしてきた学生が…",
+        allowedLoops: [1, 2]
+      },
+      {
+        id: "h_timewarp_loop2",
+        actor: "H",
+        actorName: "比嘉 俊希（H）",
+        actorColor: "#8b5cf6",
+        title: "【送信①】タイムワープ報告",
+        desc: "3周目：タイムワープ報告メッセージ…",
+        allowedLoops: [3]
+      },
+      {
+        id: "h_loop3_uzw_info",
+        actor: "H",
+        actorName: "比嘉 俊希（H）",
+        actorColor: "#8b5cf6",
+        title: "【送信②】UZW・学友会情報",
+        desc: "3周目：UZWに関する重要なお知らせ…",
+        allowedLoops: [3]
+      }
+    ];
+
+    let adminActorSentState = {};
+    try {
+      const saved = localStorage.getItem('actor_sent_triggers');
+      if (saved) adminActorSentState = JSON.parse(saved);
+    } catch (e) { }
+
+    function getAdminTrigKey(triggerId, loop) {
+      const l = loop || (typeof currentFlowLoop !== 'undefined' ? currentFlowLoop : 1);
+      return `${triggerId}_L${l}`;
+    }
+
+    function renderAdminActorTriggers() {
+      const container = document.getElementById('admin-actor-triggers-list');
+      if (!container) return;
+
+      const currentLoop = (typeof currentFlowLoop !== 'undefined') ? currentFlowLoop : parseInt(localStorage.getItem('game_loop') || '1', 10);
+
+      container.innerHTML = ADMIN_ACTOR_TRIGGERS.map(tr => {
+        const key = getAdminTrigKey(tr.id, currentLoop);
+        const isSent = !!adminActorSentState[key] || !!adminActorSentState[tr.id];
+        const isAcked = !!localStorage.getItem(`actor_ack_${tr.id}`);
+        const isAllowed = tr.allowedLoops.includes(currentLoop);
+
+        let statusBadge = '';
+        if (!isAllowed) {
+          statusBadge = `<span style="font-size:10px; font-weight:700; color:#94a3b8; background:#f1f5f9; padding:2px 8px; border-radius:10px;">🔒 ${tr.allowedLoops.join('・')}周目限定</span>`;
+        } else if (isAcked) {
+          statusBadge = `<span style="font-size:10.5px; font-weight:800; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:10px;">📱 iPad反映完了</span>`;
+        } else if (isSent) {
+          statusBadge = `<span style="font-size:10.5px; font-weight:800; color:#0369a1; background:#e0f2fe; padding:2px 8px; border-radius:10px;">📤 送信済 (待機中)</span>`;
+        } else {
+          statusBadge = `<span style="font-size:10.5px; font-weight:700; color:#64748b; background:#f1f5f9; padding:2px 8px; border-radius:10px;">⚪ 未送信</span>`;
+        }
+
+        return `
+          <div style="padding:8px 10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <span style="width:24px; height:24px; border-radius:50%; background:${tr.actorColor}; color:#fff; font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${tr.actor}</span>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:12px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tr.title}</div>
+                <div style="font-size:10.5px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tr.desc}</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+              ${statusBadge}
+              <button onclick="adminFireActorTrigger('${tr.id}')" style="padding:4px 8px; font-size:11px; font-weight:700; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:6px; cursor:pointer;" title="管理画面から代理送信">
+                <i data-lucide="send" style="width:11px; height:11px;"></i> 送信
+              </button>
+              <button onclick="adminResetSingleActorTrigger('${tr.id}')" style="padding:4px 6px; font-size:11px; font-weight:700; background:#fff; border:1px solid #e2e8f0; color:#64748b; border-radius:6px; cursor:pointer;" title="未送信に戻す">
+                <i data-lucide="rotate-ccw" style="width:11px; height:11px;"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // 🚀 管理画面からの代理送信
+    function adminFireActorTrigger(triggerId) {
+      const def = ADMIN_ACTOR_TRIGGERS.find(t => t.id === triggerId);
+      if (!def) return;
+      const currentLoop = (typeof currentFlowLoop !== 'undefined') ? currentFlowLoop : parseInt(localStorage.getItem('game_loop') || '1', 10);
+
+      const commandPayload = {
+        type: 'actor_message',
+        target: 'ALL',
+        action: 'actor_message',
+        id: 'ACTOR_' + triggerId + '_' + Date.now(),
+        actor: def.actor,
+        triggerId: triggerId,
+        loop: currentLoop,
+        timestamp: Date.now()
+      };
+
+      // 1. ローカル送信 (BroadcastChannel + LocalStorage)
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('escape_game_channel');
+          bc.postMessage({ type: 'actor_message', payload: commandPayload });
+        } catch (e) { }
+      }
+      localStorage.setItem('latest_actor_command', JSON.stringify(commandPayload));
+      localStorage.setItem('latest_actor_command_time', String(Date.now()));
+
+      // 2. 状態更新
+      const key = getAdminTrigKey(triggerId, currentLoop);
+      adminActorSentState[key] = Date.now();
+      localStorage.setItem('actor_sent_triggers', JSON.stringify(adminActorSentState));
+
+      // 3. GASクラウド中継
+      const gasUrl = getAdminGasUrl();
+      if (gasUrl) {
+        const sendUrl = gasUrl.includes('?')
+          ? `${gasUrl}&action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`
+          : `${gasUrl}?action=send_command&cmd=${encodeURIComponent(JSON.stringify(commandPayload))}`;
+        fetch(sendUrl, { mode: 'no-cors' }).catch(() => { });
+      }
+
+      renderAdminActorTriggers();
+      showToast(`🎭 演者トリガー [${def.title}] を全iPad ＆ 演者LINKへ送信しました`, false, 3500);
+    }
+
+    // 🔄 個別リセット
+    function adminResetSingleActorTrigger(triggerId) {
+      for (let l = 1; l <= 3; l++) {
+        delete adminActorSentState[getAdminTrigKey(triggerId, l)];
+      }
+      delete adminActorSentState[triggerId];
+      localStorage.removeItem(`actor_ack_${triggerId}`);
+      localStorage.setItem('actor_sent_triggers', JSON.stringify(adminActorSentState));
+      renderAdminActorTriggers();
+      showToast(`🔄 [${triggerId}] を未送信にリセットしました`);
+    }
+
+    // 🔄 全演者トリガー一括リセット
+    function resetAllAdminActorTriggers() {
+      adminActorSentState = {};
+      localStorage.removeItem('actor_sent_triggers');
+      ADMIN_ACTOR_TRIGGERS.forEach(tr => localStorage.removeItem(`actor_ack_${tr.id}`));
+      renderAdminActorTriggers();
+      showToast('🔄 全演者トリガーを未送信にリセットしました');
+    }
+
+    // リスナー登録（同一ブラウザ・他タブからのACKおよび送信通知を即時反映）
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'actor_sent_triggers' || (e.key && e.key.startsWith('actor_ack_')) || e.key === 'latest_actor_command') {
+        try {
+          const saved = localStorage.getItem('actor_sent_triggers');
+          if (saved) adminActorSentState = JSON.parse(saved);
+        } catch (err) { }
+        renderAdminActorTriggers();
+      }
+    });
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('escape_game_channel');
+        bc.addEventListener('message', (event) => {
+          if (event.data && (event.data.type === 'actor_message' || event.data.type === 'actor_message_ack')) {
+            try {
+              const saved = localStorage.getItem('actor_sent_triggers');
+              if (saved) adminActorSentState = JSON.parse(saved);
+            } catch (err) { }
+            renderAdminActorTriggers();
+          }
+        });
+      } catch (e) { }
+    }
+
+    // 初期描画呼び出し
+    setTimeout(() => {
+      renderAdminActorTriggers();
+    }, 200);
   </script>
 </body>
 </html>
