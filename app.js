@@ -2723,7 +2723,7 @@ function switchMetaTab(tabId, e) {
   }
 
   if (tabId === 'observation') {
-    renderMetaObservation(metaObservationCurrentFolder);
+    renderMetaObservation('root');
   } else if (tabId === 'evidence') {
     renderMetaEvidence();
   } else if (tabId === 'memo') {
@@ -2833,7 +2833,8 @@ const DEFAULT_OBSERVATION_FOLDERS = [
 ];
 
 // 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー（周回解放対応）
-function renderMetaObservation(folderId = 'root') {
+function renderMetaObservation(folderId = 'root', e = null) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   metaObservationCurrentFolder = folderId;
   const container = document.getElementById('meta-observation-grid') || document.getElementById('meta-overview-grid');
   const countEl = document.getElementById('observation-file-count') || document.getElementById('overview-file-count');
@@ -2854,9 +2855,6 @@ function renderMetaObservation(folderId = 'root') {
   };
 
   // 現在の周回以下のフォルダのみ抽出（未解禁のフォルダはDOMから完全に非表示）
-  // 1周目: [観測] (1個)
-  // 2周目: [観測, 観測(1)] (2個)
-  // 3周目: [観測, 観測(1), 観測(2)] (3個)
   const visibleFolders = allFolders.filter(folder => getFolderUnlockLoop(folder) <= currentLoop);
 
   // 開こうとしているフォルダが現在の周回で解放されていない場合はルート階層に戻す
@@ -2865,7 +2863,7 @@ function renderMetaObservation(folderId = 'root') {
     metaObservationCurrentFolder = 'root';
   }
 
-  // アドレスバーの周回バッジ（ユーザー指示により非表示）
+  // アドレスバーの周回バッジ（非表示）
   const loopBadgeEl = document.getElementById('observation-loop-badge');
   if (loopBadgeEl) {
     loopBadgeEl.style.display = 'none';
@@ -2874,14 +2872,18 @@ function renderMetaObservation(folderId = 'root') {
   if (folderId === 'root') {
     // 最上位階層: 現在の周回で解禁済みのフォルダのみ表示
     if (pathEl) {
-      pathEl.innerHTML = `<i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ`;
+      pathEl.innerHTML = `
+        <span class="explorer-crumb active">
+          <i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> 内部ストレージ
+        </span>
+      `;
     }
     if (countEl) {
       countEl.innerText = `${visibleFolders.length} フォルダ`;
     }
 
     container.innerHTML = visibleFolders.map(folder => `
-      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}')" ontouchend="renderMetaObservation('${folder.id}')" style="touch-action:manipulation; cursor:pointer;" title="タップして「${folder.folderName}」を開く">
+      <div class="finder-item folder-type" onclick="renderMetaObservation('${folder.id}', event)" ontouchend="renderMetaObservation('${folder.id}', event)" style="touch-action:manipulation; cursor:pointer;" title="タップして「${folder.folderName}」を開く">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
           <div class="finder-folder-icon">
             ${generateIpadosFolderSvg()}
@@ -2901,31 +2903,51 @@ function renderMetaObservation(folderId = 'root') {
     const files = targetFolder.files || [];
 
     if (pathEl) {
-      pathEl.innerHTML = `<a href="javascript:void(0)" onclick="renderMetaObservation('root')" style="color:inherit; text-decoration:underline;"><i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> PC &gt; 内部ストレージ</a> &gt; <strong>${targetFolder.folderName}</strong>`;
+      pathEl.innerHTML = `
+        <button class="explorer-back-btn" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;" title="フォルダ一覧に戻る">
+          <i data-lucide="chevron-left" style="width:15px; height:15px;"></i> 戻る
+        </button>
+        <span class="explorer-crumb clickable" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer;">
+          <i data-lucide="hard-drive" style="width:14px; height:14px; vertical-align:middle;"></i> 内部ストレージ
+        </span>
+        <span class="explorer-separator">&gt;</span>
+        <span class="explorer-crumb active">
+          <i data-lucide="folder" style="width:14px; height:14px; vertical-align:middle;"></i> <strong>${targetFolder.folderName}</strong>
+        </span>
+      `;
     }
     if (countEl) {
       countEl.innerText = `${files.length} 項目`;
     }
 
-    if (files.length === 0) {
-      container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
-          このフォルダにはファイルがありません。
-        </div>
-      `;
-    } else {
-      container.innerHTML = files.map(file => `
-        <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}')" ontouchend="openMetaLightbox('${file.image}', '${file.fileName}')" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
-          <div class="finder-thumb-wrapper" style="pointer-events:none;">
-            <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
+    // 📁 先頭に「..（上の階層へ戻る）」タイルを追加
+    let html = `
+      <div class="finder-item folder-type back-tile" onclick="renderMetaObservation('root', event)" ontouchend="renderMetaObservation('root', event)" style="touch-action:manipulation; cursor:pointer; background: #f8fafc; border: 1.5px dashed #cbd5e1;" title="タップしてフォルダ一覧に戻る">
+        <div class="finder-thumb-wrapper" style="pointer-events:none;">
+          <div style="width:54px; height:54px; border-radius:12px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:#475569;">
+            <i data-lucide="corner-left-up" style="width:28px; height:28px;"></i>
           </div>
-          <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
         </div>
-      `).join('');
-    }
+        <div class="finder-file-name" style="pointer-events:none; font-weight:700; color:#334155;">..（上へ戻る）</div>
+        <div class="finder-file-desc" style="pointer-events:none; color:#64748b;">フォルダ一覧へ</div>
+      </div>
+    `;
+
+    html += files.map(file => `
+      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" ontouchend="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
+        <div class="finder-thumb-wrapper" style="pointer-events:none;">
+          <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
+        </div>
+        <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
   }
 
   safeCreateIcons(container);
+  if (pathEl) safeCreateIcons(pathEl);
+  try { playSystemSound('touch'); } catch (err) {}
 }
 
 // 🔍 フルスクリーン拡大プレビューモーダル（ギャラリーカルーセル・スワイプ・矢印送り対応）
