@@ -517,46 +517,99 @@ function stopAlarm() {
   if (_alarmGain) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
 }
 
-// 🔔 チャット着信通知音（LINE風 ポロン♪ ピロリン♪）
+// 🔔 チャット着信通知音（LINE風 ポロン♪ ピロリン♪ - Web Audio API + HTML5 Audio ハイブリッド二重再生）
+let _chatNotifAudioEl = null;
+
+function getChatNotifWavDataUri() {
+  const sampleRate = 22050;
+  const dur = 0.35;
+  const numSamples = Math.floor(sampleRate * dur);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let s = 0;
+    if (t < 0.14) s += Math.sin(2 * Math.PI * 587.33 * t) * Math.exp(-t * 18);
+    if (t >= 0.08) {
+      const t2 = t - 0.08;
+      s += Math.sin(2 * Math.PI * 880.00 * t2) * Math.exp(-t2 * 14);
+    }
+    s = Math.max(-1, Math.min(1, s * 0.75));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return 'data:audio/wav;base64,' + btoa(binary);
+}
+
 function playChatNotifSound() {
+  // 1. Web Audio API での再生
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    if (!_alarmAudioCtx) _alarmAudioCtx = new AudioContext();
-    if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+    if (AudioContext) {
+      if (!_alarmAudioCtx) _alarmAudioCtx = new AudioContext();
+      if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume().catch(() => {});
 
-    const ctx = _alarmAudioCtx;
-    const now = ctx.currentTime;
+      const ctx = _alarmAudioCtx;
+      const now = ctx.currentTime;
+      const notes = [
+        { freq: 587.33, start: 0.00, dur: 0.12 },
+        { freq: 880.00, start: 0.08, dur: 0.22 },
+      ];
 
-    // 音符1: ド (523.25Hz) → 音符2: ミ (659.25Hz) → 音符3: ソ (783.99Hz) の軽快なチャット着信音
-    const notes = [
-      { freq: 587.33, start: 0.00, dur: 0.12 }, // D5
-      { freq: 880.00, start: 0.10, dur: 0.18 }, // A5
-    ];
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.45, now);
+      masterGain.connect(ctx.destination);
 
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.35, now);
-    masterGain.connect(ctx.destination);
+      notes.forEach(n => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.freq, now + n.start);
 
-    notes.forEach(n => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(n.freq, now + n.start);
+        g.gain.setValueAtTime(0.0, now + n.start);
+        g.gain.linearRampToValueAtTime(0.7, now + n.start + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
 
-      g.gain.setValueAtTime(0.0, now + n.start);
-      g.gain.linearRampToValueAtTime(0.6, now + n.start + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
-
-      osc.connect(g);
-      g.connect(masterGain);
-      osc.start(now + n.start);
-      osc.stop(now + n.start + n.dur + 0.05);
-    });
-
-    if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(now + n.start);
+        osc.stop(now + n.start + n.dur + 0.05);
+      });
+    }
   } catch (e) {
-    console.warn('通知音再生エラー:', e);
+    console.warn('Web Audio再生エラー:', e);
+  }
+
+  // 2. HTML5 Audio によるフォールバック二重再生（Safari/Chrome制限耐性）
+  try {
+    if (!_chatNotifAudioEl) {
+      _chatNotifAudioEl = new Audio(getChatNotifWavDataUri());
+    }
+    _chatNotifAudioEl.currentTime = 0;
+    _chatNotifAudioEl.play().catch(() => {});
+  } catch (e) {}
+
+  if (navigator.vibrate) {
+    try { navigator.vibrate([80, 50, 80]); } catch (e) {}
   }
 }
 
@@ -721,18 +774,24 @@ function formatChatTime(timeStr) {
 function getCurrentTimeStr() { const now = new Date(); return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 function escapeHtml(str) { if (typeof str !== 'string') return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// 初回タップでAudioContextをアンロック（モバイル自動再生制限解除）
-function unlockAudioOnFirstTouch() {
-  if (!_alarmAudioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) _alarmAudioCtx = new AudioContext();
-  }
-  if (_alarmAudioCtx && _alarmAudioCtx.state === 'suspended') {
-    _alarmAudioCtx.resume();
-  }
+// ユーザーのあらゆる操作で音声システムを確実にアンロック（モバイル自動再生制限解除）
+function unlockAudioOnGesture() {
+  try {
+    if (!_alarmAudioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) _alarmAudioCtx = new AudioContext();
+    }
+    if (_alarmAudioCtx && _alarmAudioCtx.state === 'suspended') {
+      _alarmAudioCtx.resume().catch(() => {});
+    }
+    if (!_chatNotifAudioEl) {
+      _chatNotifAudioEl = new Audio(getChatNotifWavDataUri());
+    }
+  } catch(e) {}
 }
-document.addEventListener('touchstart', unlockAudioOnFirstTouch, { once: true, passive: true });
-document.addEventListener('click', unlockAudioOnFirstTouch, { once: true, passive: true });
+['touchstart', 'touchend', 'click', 'pointerdown'].forEach(ev => {
+  document.addEventListener(ev, unlockAudioOnGesture, { passive: true });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   initLinkData();

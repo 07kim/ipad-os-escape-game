@@ -3076,14 +3076,16 @@ function renderMetaObservation(folderId = 'root', e = null) {
       countEl.innerText = `${files.length} 項目`;
     }
 
-    container.innerHTML = files.map(file => `
+    container.innerHTML = files.map(file => {
+      const safeImg = (file.image || '').startsWith('data:') ? file.image : encodeURI((file.image || '').replace(/^\.\//, ''));
+      return `
       <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
-          <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
+          <img src="${safeImg}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async" onerror="this.src='./chibakou_logo.webp'">
         </div>
         <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
       </div>
-    `).join('');
+    `;}).join('');
   }
 
   safeCreateIcons(container);
@@ -3098,7 +3100,6 @@ let lightboxSwipeInitialized = false;
 
 function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  const now = Date.now();
   const modal = document.getElementById('meta-lightbox-modal');
   const img = document.getElementById('lightbox-img');
   if (!modal || !img) return;
@@ -3140,11 +3141,20 @@ function updateLightboxView() {
   const currentItem = currentLightboxGallery[currentLightboxIndex];
   if (!currentItem) return;
 
-  img.style.opacity = '0.5';
-  img.src = currentItem.image;
-  img.onload = () => {
+  const rawUrl = currentItem.image || '';
+  const safeSrc = rawUrl.startsWith('data:') ? rawUrl : encodeURI(rawUrl.replace(/^\.\//, ''));
+
+  img.style.opacity = '1';
+  img.src = safeSrc;
+  img.onload = () => { img.style.opacity = '1'; };
+  img.onerror = () => {
+    // フォールバック: 元のURLを直接試行
+    if (img.src !== rawUrl) img.src = rawUrl;
     img.style.opacity = '1';
   };
+  if (img.complete) {
+    img.style.opacity = '1';
+  }
 
   if (titleEl) titleEl.innerText = currentItem.fileName || currentItem.title || "プレビュー";
   if (counterEl) {
