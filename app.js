@@ -226,34 +226,39 @@ window.addEventListener('DOMContentLoaded', () => {
         actorChannel.onmessage = (event) => {
           if (!event.data) return;
           const { type, payload } = event.data;
-          if (type === 'actor_message' && payload) {
-            console.log('🎭 BroadcastChannel経由で演者メッセージを受信:', payload);
-            executeRemoteAdminCommand(payload);
-          } else if (type === 'loop_change' && payload && payload.loop) {
-            console.log('🌀 BroadcastChannel経由で周回変更を受信:', payload.loop);
-            triggerLoopTransition(payload.loop, payload.startTime, false, true);
-          } else if (type === 'scene_flow_step' && payload && payload.step) {
-            console.log('🎬 BroadcastChannel経由でシーン進行を受信:', payload);
-            applyFlowStepState(payload.step, payload.startTime, false, payload.loop);
-          } else if (type === 'preset' && payload && payload.loop) {
-            console.log('🎬 BroadcastChannel経由でプリセットを受信:', payload.loop);
-            triggerLoopTransition(payload.loop, null, false, true);
-          } else if (type === 'world_time_sync' && payload) {
-            if (payload.worldTime) {
-              window._latestWorldTimeStr = payload.worldTime;
+          window._isHandlingBroadcast = true;
+          try {
+            if (type === 'actor_message' && payload) {
+              console.log('🎭 BroadcastChannel経由で演者メッセージを受信:', payload);
+              executeRemoteAdminCommand(payload);
+            } else if (type === 'loop_change' && payload && payload.loop) {
+              console.log('🌀 BroadcastChannel経由で周回変更を受信:', payload.loop);
+              triggerLoopTransition(payload.loop, payload.startTime, false, true);
+            } else if (type === 'scene_flow_step' && payload && payload.step) {
+              console.log('🎬 BroadcastChannel経由でシーン進行を受信:', payload);
+              applyFlowStepState(payload.step, payload.startTime, false, payload.loop);
+            } else if (type === 'preset' && payload && payload.loop) {
+              console.log('🎬 BroadcastChannel経由でプリセットを受信:', payload.loop);
+              triggerLoopTransition(payload.loop, null, false, true);
+            } else if (type === 'world_time_sync' && payload) {
+              if (payload.worldTime) {
+                window._latestWorldTimeStr = payload.worldTime;
+              }
+              if (payload.startTime) {
+                gameState.clockSetTime = payload.startTime;
+              }
+              if (payload.isRunning !== undefined) {
+                gameState.timerRunning = !!payload.isRunning;
+              }
+              if (typeof window.updateFakeClockDisplay === 'function') {
+                window.updateFakeClockDisplay();
+              }
+            } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
+              console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
+              executeInstantMasterReset();
             }
-            if (payload.startTime) {
-              gameState.clockSetTime = payload.startTime;
-            }
-            if (payload.isRunning !== undefined) {
-              gameState.timerRunning = !!payload.isRunning;
-            }
-            if (typeof window.updateFakeClockDisplay === 'function') {
-              window.updateFakeClockDisplay();
-            }
-          } else if (type === 'master_reset' || type === 'reset_actor_triggers') {
-            console.log('🚨 BroadcastChannel経由でマスターリセットを受信');
-            executeInstantMasterReset();
+          } finally {
+            window._isHandlingBroadcast = false;
           }
         };
         console.log('✅ BroadcastChannelリスナーを起動しました (escape_game_channel)');
@@ -1900,8 +1905,8 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     localStorage.setItem('game_timer_running', 'false');
   }
 
-  // 演者ツール（actor.html）へも連動通知
-  if (typeof BroadcastChannel !== 'undefined') {
+  // 演者ツール（actor.html）へも連動通知（自分自身への再受信ループを防ぐため、BroadcastChannel経由での受信時は送信しない）
+  if (typeof BroadcastChannel !== 'undefined' && !window._isHandlingBroadcast) {
     try {
       const bc = new BroadcastChannel('escape_game_channel');
       bc.postMessage({ type: 'scene_flow_step', payload: { step: step, loop: gameState.loop, timerRunning: gameState.timerRunning } });
@@ -2333,11 +2338,67 @@ function hideLockScreen() {
   unlockScreen();
 }
 
+// 📱 電話2回押し（5秒後） ＆ 📹 動画2回押し（10秒後）のアラーム制御
+let _phoneTapCount = 0;
+let _phoneTapResetTimer = null;
+let _videoTapCount = 0;
+let _videoTapResetTimer = null;
+let _alarmSequenceTimer = null;
+
+function triggerCustomDelayedAlarm(seconds, sourceName) {
+  console.log(`🚨 [${sourceName}] 2回押し検知 ➔ ${seconds}秒後にアラームを発火します`);
+  if (_alarmSequenceTimer) clearTimeout(_alarmSequenceTimer);
+
+  _alarmSequenceTimer = setTimeout(() => {
+    console.log(`🚨 [${sourceName}] アラーム再生開始（${seconds}秒経過）`);
+    let playCount = 0;
+    const playNext = () => {
+      playSystemSound("alarm");
+      playCount++;
+      if (playCount < 3) {
+        setTimeout(playNext, 650);
+      }
+    };
+    playNext();
+  }, seconds * 1000);
+}
+
+function handlePhoneTriggerTap() {
+  _phoneTapCount++;
+  if (_phoneTapResetTimer) clearTimeout(_phoneTapResetTimer);
+  if (_phoneTapCount >= 2) {
+    _phoneTapCount = 0;
+    triggerCustomDelayedAlarm(5, "電話");
+  } else {
+    _phoneTapResetTimer = setTimeout(() => {
+      _phoneTapCount = 0;
+    }, 1200);
+  }
+}
+window.handlePhoneTriggerTap = handlePhoneTriggerTap;
+
+function handleVideoTriggerTap() {
+  _videoTapCount++;
+  if (_videoTapResetTimer) clearTimeout(_videoTapResetTimer);
+  if (_videoTapCount >= 2) {
+    _videoTapCount = 0;
+    triggerCustomDelayedAlarm(10, "動画/ビデオ通話");
+  } else {
+    _videoTapResetTimer = setTimeout(() => {
+      _videoTapCount = 0;
+    }, 1200);
+  }
+}
+window.handleVideoTriggerTap = handleVideoTriggerTap;
+
 // --- 画面ナビゲーション ＆ アプリ開閉 ---
 // 🚀 アプリアイコン・ドックアイコン即応タップハンドラー（タップブレ・スワイプ誤判定によるクリック破棄を完全根絶）
 let lastAppIconTapTime = 0;
 function handleAppIconTap(appId, e) {
   const now = Date.now();
+  if (appId === 'phone-app' || appId === 'phone') {
+    handlePhoneTriggerTap();
+  }
   if (now - lastAppIconTapTime < 240) return;
   lastAppIconTapTime = now;
   if (e) {

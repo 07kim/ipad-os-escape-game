@@ -148,9 +148,14 @@
             <span>トーク</span>
             <span id="status-dot" title="通信状態"></span>
           </div>
-          <button onclick="openNanaseQr()" class="link-qr-btn" title="七瀬いろは QR">
-            <i data-lucide="user-plus"></i>
-          </button>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button onclick="manualRefreshLinkData()" class="link-qr-btn" id="sidebar-refresh-btn" title="LINKデータを最新に再読み込み" style="background:#f1f5f9; color:#0284c7;">
+              <i data-lucide="refresh-cw" id="sidebar-refresh-icon" style="width:16px; height:16px;"></i>
+            </button>
+            <button onclick="openNanaseQr()" class="link-qr-btn" title="七瀬いろは QR">
+              <i data-lucide="user-plus" style="width:16px; height:16px;"></i>
+            </button>
+          </div>
         </div>
         <div class="link-chat-list" id="link-chat-list"></div>
       </div>
@@ -165,10 +170,13 @@
             <span class="contact-member-count" id="chat-member-count"></span>
           </div>
           <div class="link-header-tools">
+            <button class="link-tool-icon-btn" onclick="manualRefreshLinkData()" title="再読み込み">
+              <i data-lucide="refresh-cw" id="room-refresh-icon"></i>
+            </button>
             <button class="link-tool-icon-btn" id="alarm-btn" onclick="handleAlarmBtnClick()" title="警告音（2回タップ）">
               <i data-lucide="phone"></i>
             </button>
-            <button class="link-tool-icon-btn" onclick="showLinkDialog('ビデオ通話','ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話">
+            <button class="link-tool-icon-btn" onclick="handleVideoTriggerTap ? handleVideoTriggerTap() : null; showLinkDialog('ビデオ通話','ビデオ通話を開始できませんでした。ネットワーク接続を確認してください。')" title="ビデオ通話">
               <i data-lucide="video"></i>
             </button>
             <button class="link-tool-icon-btn" onclick="showLinkDialog('トーク設定','グループ設定の変更は現在制限されています。')" title="メニュー">
@@ -622,34 +630,70 @@ window.addEventListener('storage', (e) => {
   }
 });
 
+// 🔄 手動再読み込み（アイコン回転 ＆ ローカル・GAS全復元）
+function manualRefreshLinkData() {
+  const icon1 = document.getElementById('sidebar-refresh-icon');
+  const icon2 = document.getElementById('room-refresh-icon');
+  [icon1, icon2].forEach(ic => {
+    if (ic) {
+      ic.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      ic.style.transform = 'rotate(360deg)';
+      setTimeout(() => { ic.style.transform = ''; ic.style.transition = ''; }, 600);
+    }
+  });
+
+  restoreSentTriggersFromLocalStorage();
+  pollGAS(true);
+}
+
 let _lastPolledTriggerId = '';
-const GAS_URL = window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl ? window.GAME_DATABASE.system.gasUrl : '';
-function pollGAS() {
-  if (!GAS_URL) return;
+function getGasUrl() {
+  return (window.GAME_DATABASE && window.GAME_DATABASE.system && window.GAME_DATABASE.system.gasUrl)
+    || localStorage.getItem('gas_url')
+    || '';
+}
+
+function pollGAS(isManual = false) {
+  const gasUrl = getGasUrl();
+  if (!gasUrl) return;
   setStatusDot('syncing');
-  fetch(GAS_URL + '?action=get_data&t=' + Date.now(), { cache: 'no-store' })
+
+  const sep = gasUrl.includes('?') ? '&' : '?';
+  fetch(`${gasUrl}${sep}action=get_data&t=${Date.now()}`, { cache: 'no-store' })
     .then(r => r.json())
     .then(data => {
       setStatusDot('ok');
-      const cmd = data && data.system && data.system.latestActorCommand;
-      if (cmd && cmd.triggerId && cmd.triggerId !== _lastPolledTriggerId) {
-        _lastPolledTriggerId = cmd.triggerId;
-        injectActorMessage(cmd, true);
+      if (!data) return;
+
+      const cmd = (data.system && data.system.latestActorCommand) || data.latestActorCommand || (data.data && data.data.latestActorCommand);
+      if (cmd && cmd.triggerId) {
+        if (cmd.triggerId !== _lastPolledTriggerId || isManual) {
+          _lastPolledTriggerId = cmd.triggerId;
+          injectActorMessage(cmd, isManual ? false : true);
+        }
       }
-      const sentList = data && (data.actorCommands || data.sentTriggers || (data.system && (data.system.actorCommands || data.system.sentTriggers)));
+
+      const sentList = data.actorCommands || data.sentTriggers || (data.system && (data.system.actorCommands || data.system.sentTriggers)) || (data.data && (data.data.actorCommands || data.data.sentTriggers));
       if (Array.isArray(sentList)) {
         sentList.forEach(item => {
           const tid = typeof item === 'string' ? item : (item.triggerId || item.id);
           if (tid) injectTriggerById(tid, false);
         });
       }
-      if (data && data.system && data.system.loop && data.system.loop !== actorState.loop) {
-        actorState.loop = data.system.loop;
+
+      const loop = (data.system && data.system.loop) || data.loop || (data.data && data.data.loop);
+      if (loop && loop !== actorState.loop) {
+        actorState.loop = loop;
+        renderLinkChatList();
+        if (actorState.activeChatContact) openLinkChat(actorState.activeChatContact, false);
       }
     })
-    .catch(() => setStatusDot('error'));
+    .catch(err => {
+      console.warn('GASポーリングエラー:', err);
+      setStatusDot('error');
+    });
 }
-if (GAS_URL) { setInterval(pollGAS, 3000); setTimeout(pollGAS, 1500); }
+if (getGasUrl()) { setInterval(pollGAS, 3000); setTimeout(pollGAS, 1000); }
 
 function setStatusDot(state) {
   const dot = document.getElementById('status-dot'); if (!dot) return;

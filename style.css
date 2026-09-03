@@ -7685,6 +7685,24 @@ body {
   cursor: pointer;
 }
 
+.phone-video-call-btn {
+  background-color: #0284c7;
+  color: white;
+  border: none;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+.phone-video-call-btn:active {
+  background-color: #0369a1;
+  transform: scale(0.95);
+}
+
 .phone-clear-btn {
   background-color: #e5e5ea;
   color: #333;
