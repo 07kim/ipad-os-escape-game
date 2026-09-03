@@ -233,18 +233,107 @@
 </div>
 
 <script>
-const actorState = { activeChatContact: null, loop: 1, addedFriends: ['committee_group'], chats: null, contacts: null };
+// 🎭 演者メッセージ定数マスタ
+const ACTOR_TRIGGER_DEFINITIONS = {
+  "j_exit_hall": { actor: "J", senderId: "jinnai", text: "大ホール退出しました。施錠お願いします。遅れてすみません。", autoReplySender: "fukasawa", autoReplyText: "おけ", allowedLoops: [1, 2, 3] },
+  "g_search_morino": { actor: "G", senderId: "sotozono", text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。", allowedLoops: [1, 2, 3] },
+  "g_timewarp_alert": { actor: "G", senderId: "sotozono", text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [1, 2] },
+  "h_timewarp_loop2": { actor: "H", senderId: "higa", text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [3] },
+  "h_loop3_uzw_info": { actor: "H", senderId: "higa", text: "お疲れ様です。\nUZWに関する重要なお知らせとご協力のお願いです。\n①現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n\n②現在迷い込んでいる会員の1名が、前回のタイムワープの際に持って帰った資料が現因で、UZWの未来予知が成り立っているようです。現在その子にコンタクトを取っている状態です。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [3] }
+};
 
+const actorState = {
+  activeChatContact: null,
+  loop: 1,
+  addedFriends: ['committee_group'],
+  chats: null,
+  contacts: null
+};
+
+// ─── 起動時にdata.jsから初期化 ＆ 送信済みメッセージを一括復元 ───
 function initLinkData() {
   if (!window.GAME_DATABASE || !window.GAME_DATABASE.linkApp) {
     document.getElementById('link-chat-list').innerHTML = '<div style="padding:20px;color:#64748b;text-align:center;font-size:13px;">データを読み込めませんでした</div>';
-    setStatusDot('error'); return;
+    setStatusDot('error');
+    return;
   }
   const db = window.GAME_DATABASE.linkApp;
   actorState.contacts = db.contacts;
   actorState.chats = JSON.parse(JSON.stringify(db.chats || {}));
+  if (!actorState.chats['committee_group']) actorState.chats['committee_group'] = [];
+
+  // 1. 周回を復元
+  actorState.loop = parseInt(localStorage.getItem('game_loop') || '1', 10);
+
+  // 2. LocalStorageに保存された送信済みトリガーを一括展開・復元
+  restoreSentTriggersFromLocalStorage();
+
   renderLinkChatList();
   setStatusDot('ok');
+}
+
+// 送信済みトリガーを復元
+function restoreSentTriggersFromLocalStorage() {
+  try {
+    const savedTriggers = localStorage.getItem('actor_sent_triggers');
+    if (savedTriggers) {
+      const parsed = JSON.parse(savedTriggers);
+      Object.keys(parsed).forEach(key => {
+        // key例: "j_exit_hall_L1" または "j_exit_hall"
+        const cleanId = key.replace(/_L\d+$/, '').trim();
+        injectTriggerById(cleanId, false);
+      });
+    }
+    const latestCmd = localStorage.getItem('latest_actor_command');
+    if (latestCmd) {
+      const parsedCmd = JSON.parse(latestCmd);
+      if (parsedCmd && (parsedCmd.triggerId || parsedCmd.text)) {
+        injectActorMessage(parsedCmd, false);
+      }
+    }
+  } catch (e) {
+    console.warn('送信済みトリガー復元エラー:', e);
+  }
+}
+
+// トリガーIDからメッセージを注入
+function injectTriggerById(triggerId, animate = true) {
+  if (!triggerId) return;
+  const def = ACTOR_TRIGGER_DEFINITIONS[triggerId];
+  if (!def) return;
+
+  const target = 'committee_group';
+  if (!actorState.chats[target]) actorState.chats[target] = [];
+  if (actorState.chats[target].some(m => m._triggerId === triggerId)) return;
+
+  const senderMap = { j: 'jinnai', f: 'fukasawa', g: 'sotozono', h: 'higa', i: 'nanase', l: 'renjo' };
+  const senderId = senderMap[def.actor.toLowerCase()] || def.senderId || 'fukasawa';
+
+  actorState.chats[target].push({
+    sender: senderId,
+    text: def.text,
+    time: getCurrentTimeStr(),
+    date: '今日',
+    isNew: animate,
+    _addedAt: Date.now(),
+    _triggerId: triggerId
+  });
+
+  if (def.autoReplySender && def.autoReplyText) {
+    const autoId = senderMap[def.autoReplySender.toLowerCase()] || def.autoReplySender;
+    actorState.chats[target].push({
+      sender: autoId,
+      text: def.autoReplyText,
+      time: getCurrentTimeStr(),
+      date: '今日',
+      isNew: animate,
+      _addedAt: Date.now() + 1,
+      _triggerId: triggerId + '_auto'
+    });
+  }
+
+  renderLinkChatList();
+  if (actorState.activeChatContact === target) openLinkChat(target, animate);
 }
 
 const SENDER_METAS = {
@@ -420,18 +509,10 @@ function stopAlarm() {
   if (_alarmGain) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
 }
 
-// 🎭 演者メッセージ定数マスタ
-const ACTOR_TRIGGER_DEFINITIONS = {
-  "j_exit_hall": { actor: "J", senderId: "jinnai", text: "大ホール退出しました。施錠お願いします。遅れてすみません。", autoReplySender: "fukasawa", autoReplyText: "おけ", allowedLoops: [1, 2, 3] },
-  "g_search_morino": { actor: "G", senderId: "sotozono", text: "お疲れ様です。\n先ほどから森野の姿が見えなくて、どこかで見つけた人がいましたら私まで連絡をお願いします。", allowedLoops: [1, 2, 3] },
-  "g_timewarp_alert": { actor: "G", senderId: "sotozono", text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [1, 2] },
-  "h_timewarp_loop2": { actor: "H", senderId: "higa", text: "お疲れ様です。\n重要なお知らせとご協力のお願いです。\n現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [3] },
-  "h_loop3_uzw_info": { actor: "H", senderId: "higa", text: "お疲れ様です。\nUZWに関する重要なお知らせとご協力のお願いです。\n①現在、100年前(2026年)からタイムワープしてきたと思われる学生の方々(5名)が、ホテル内に迷い込んでいることが判明いたしました。\nもし見つけた場合、このグループで教えてください。\nまた、失礼の無いよう対応をお願いします。\n今送還の準備をしているので、何か情報がわかり次第連絡します。\n\n②現在迷い込んでいる会員の1名が、前回のタイムワープの際に持って帰った資料が現因で、UZWの未来予知が成り立っているようです。現在その子にコンタクトを取っている状態です。\n突然のことで驚かれるかと思いますが、混乱を防ぎ安全に対応するため、ご協力いただけますと幸いです。", allowedLoops: [3] }
-};
-
 // リアルタイム受信
-function injectActorMessage(payload) {
-  const triggerId = payload.triggerId || '';
+function injectActorMessage(payload, animate = true) {
+  if (!payload) return;
+  const triggerId = payload.triggerId || payload.id || '';
   const cleanId = String(triggerId).replace('_autoreply', '').trim();
   const def = ACTOR_TRIGGER_DEFINITIONS[cleanId];
 
@@ -448,36 +529,43 @@ function injectActorMessage(payload) {
   const senderMap = { j: 'jinnai', f: 'fukasawa', g: 'sotozono', h: 'higa', i: 'nanase', l: 'renjo' };
   const senderId = senderMap[actor] || actor || 'fukasawa';
 
-  actorState.chats[target].push({ sender: senderId, text, time, date: '今日', isNew: true, _addedAt: Date.now(), _triggerId: triggerId });
+  actorState.chats[target].push({ sender: senderId, text, time, date: '今日', isNew: animate, _addedAt: Date.now(), _triggerId: triggerId });
 
   if (autoReplySender && autoReplyText) {
     const autoId = senderMap[(autoReplySender || '').toLowerCase()] || autoReplySender;
-    actorState.chats[target].push({ sender: autoId, text: autoReplyText, time, date: '今日', isNew: true, _addedAt: Date.now() + 1, _triggerId: triggerId ? triggerId + '_auto' : '' });
+    actorState.chats[target].push({ sender: autoId, text: autoReplyText, time, date: '今日', isNew: animate, _addedAt: Date.now() + 1, _triggerId: triggerId ? triggerId + '_auto' : '' });
   }
 
   renderLinkChatList();
-  if (actorState.activeChatContact === target) openLinkChat(target, true);
+  if (actorState.activeChatContact === target) openLinkChat(target, animate);
 }
 
+// BroadcastChannel
 try {
   const bc = new BroadcastChannel('escape_game_channel');
   bc.onmessage = (e) => {
     const d = e.data || {};
     if (d.type === 'actor_message' || d.action === 'actor_message' || (d.text && d.actor) || d.triggerId) {
-      injectActorMessage(d.payload || d);
+      injectActorMessage(d.payload || d, true);
     }
     if (d.type === 'change_loop' && d.loop) actorState.loop = d.loop;
+    if (d.type === 'master_reset' || d.type === 'reset_actor_triggers') {
+      initLinkData();
+    }
   };
 } catch(e) {}
 
+// StorageEvent
 window.addEventListener('storage', (e) => {
   if (e.key === 'latest_actor_command' && e.newValue) {
     try {
       const cmd = JSON.parse(e.newValue);
       if (cmd && (cmd.action === 'actor_message' || cmd.type === 'actor_message' || (cmd.text && cmd.actor) || cmd.triggerId)) {
-        injectActorMessage(cmd);
+        injectActorMessage(cmd, true);
       }
     } catch(err) {}
+  } else if (e.key === 'actor_sent_triggers') {
+    restoreSentTriggersFromLocalStorage();
   }
 });
 
@@ -493,7 +581,14 @@ function pollGAS() {
       const cmd = data && data.system && data.system.latestActorCommand;
       if (cmd && cmd.triggerId && cmd.triggerId !== _lastPolledTriggerId) {
         _lastPolledTriggerId = cmd.triggerId;
-        injectActorMessage(cmd);
+        injectActorMessage(cmd, true);
+      }
+      const sentList = data && (data.actorCommands || data.sentTriggers || (data.system && (data.system.actorCommands || data.system.sentTriggers)));
+      if (Array.isArray(sentList)) {
+        sentList.forEach(item => {
+          const tid = typeof item === 'string' ? item : (item.triggerId || item.id);
+          if (tid) injectTriggerById(tid, false);
+        });
       }
       if (data && data.system && data.system.loop && data.system.loop !== actorState.loop) {
         actorState.loop = data.system.loop;
