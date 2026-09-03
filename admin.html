@@ -3537,7 +3537,9 @@
     }
 
     // シーン実行（クラウド送信 ＆ タイマー・周回同期）
+    let _lastManualAdminStepTime = 0;
     function executeFlowStep(stepNum) {
+      _lastManualAdminStepTime = Date.now();
       currentFlowStep = stepNum;
       updateFlowStepsUI();
 
@@ -4031,8 +4033,11 @@
             }
 
             if (sStep && sStep !== currentFlowStep) {
-              currentFlowStep = sStep;
-              updateFlowStepsUI();
+              // 管理者が直近15秒以内に手動で進めた場合は、GAS側の未反映データによる巻き戻しを完全にブロック
+              if (Date.now() - _lastManualAdminStepTime > 15000) {
+                currentFlowStep = sStep;
+                updateFlowStepsUI();
+              }
             }
           }
           renderDynamicMonitoringList();
