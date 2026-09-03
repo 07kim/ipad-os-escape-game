@@ -2378,11 +2378,16 @@ function handleAppIconTap(appId, e) {
   if (appId === 'phone-app' || appId === 'phone') {
     handlePhoneTriggerTap();
   }
-  if (now - lastAppIconTapTime < 240) return;
+  if (now - lastAppIconTapTime < 450) {
+    if (e && e.cancelable && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    return;
+  }
   lastAppIconTapTime = now;
   if (e) {
     if (typeof e.stopPropagation === 'function') e.stopPropagation();
-    if (e.cancelable && typeof e.preventDefault === 'function' && e.type === 'touchend') {
+    if (e.cancelable && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
   }
@@ -2393,12 +2398,18 @@ function openApp(appId) {
   if (!appId) return;
   _appOpenTimestamp = Date.now();
 
-  // 💡 アプリ起動時はロック画面の透明残留を100%防止
+  // 💡 アプリ起動時はロック画面・暗転オーバーレイの透明残留を100%防止
   const ls = document.getElementById('lock-screen');
   if (ls) {
     ls.classList.add('hidden');
     ls.style.display = 'none';
     ls.style.pointerEvents = 'none';
+  }
+  const bo = document.getElementById('complete-blackout-overlay');
+  if (bo && gameState.loop !== 3) {
+    // 07ステップ（完全暗転）以外では暗転オーバーレイを確実に非表示
+    const currentStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
+    if (currentStep !== 7) bo.style.display = 'none';
   }
 
   // 💡 アイコンタップ時はロック画面を即座に自動解除してアプリを開く
@@ -2411,21 +2422,27 @@ function openApp(appId) {
   const win = document.getElementById(`app-${pureId}-app`) || document.getElementById(`app-${appId}`);
   if (win) {
     win.style.display = 'flex';
+    win.style.opacity = '1';
+    win.style.pointerEvents = 'all';
     win.classList.add('active');
     gameState.activeApp = `${pureId}-app`;
 
-    if (pureId === 'meta') {
-      metaObservationCurrentFolder = 'root';
-      switchMetaTab(gameState.activeMetaTab || 'observation');
-    } else if (pureId === 'browser') {
-      goBrowserHome();
-    } else if (pureId === 'link') {
-      renderLinkChatList();
-      openLinkChat('committee_group');
-    } else if (pureId === 'manaba') {
-      initManabaApp();
-    } else if (pureId === 'mail') {
-      renderMailList();
+    try {
+      if (pureId === 'meta') {
+        metaObservationCurrentFolder = 'root';
+        switchMetaTab(gameState.activeMetaTab || 'observation');
+      } else if (pureId === 'browser') {
+        goBrowserHome();
+      } else if (pureId === 'link') {
+        renderLinkChatList();
+        openLinkChat('committee_group');
+      } else if (pureId === 'manaba') {
+        initManabaApp();
+      } else if (pureId === 'mail') {
+        renderMailList();
+      }
+    } catch(err) {
+      console.error(`アプリ [${pureId}] の内部レンダリングエラー:`, err);
     }
 
     logWriteToGAS("APP_OPEN", `アプリを開きました: ${pureId}`);
