@@ -457,14 +457,27 @@ function fetchLatestDataFromSpreadsheet() {
         // 3. シーン進行ステップの同期
         if (serverStep >= 1 && serverStep <= 8) {
           const currentStoredStep = parseInt(localStorage.getItem('current_flow_step') || '0', 10);
+          const stepChanged = (currentStoredStep !== serverStep);
           const timerStateChanged = (gameState.timerRunning !== serverTimerRunning);
-          const startTimeChanged = serverStartTime && (Math.abs(serverStartTime - (gameState.clockSetTime || 0)) > 3000);
-          if (!window._hasInitialFlowSynced || currentStoredStep !== serverStep || timerStateChanged || startTimeChanged) {
+
+          // ⭐ ステップ番号自体が変化した時、または初回同期時のみ画面演出・ロック画面制御を含む applyFlowStepState を実行
+          if (!window._hasInitialFlowSynced || stepChanged) {
             const isFirst = !window._hasInitialFlowSynced;
             window._hasInitialFlowSynced = true;
             localStorage.setItem('current_flow_step', String(serverStep));
             console.log(`🎬 サーバーのシーン進行状態（ステップ0${serverStep} / 確定周回:${targetLoop}周目 / タイマー:${serverTimerRunning}）を適用します (初回:${isFirst})`);
             applyFlowStepState(serverStep, serverStartTime, isFirst, targetLoop);
+          } else if (timerStateChanged || (serverStartTime && Math.abs(serverStartTime - (gameState.clockSetTime || 0)) > 60000)) {
+            // ⭐ 同一ステップ内でタイマー状態や基準時刻が更新された場合は、画面リセットや再ロックを一切行わず、時計のみを静かに同期
+            gameState.timerRunning = serverTimerRunning;
+            localStorage.setItem('game_timer_running', serverTimerRunning ? 'true' : 'false');
+            if (serverStartTime) {
+              gameState.clockSetTime = serverStartTime;
+              localStorage.setItem('fake_clock_set_time', String(serverStartTime));
+            }
+            if (typeof window.updateFakeClockDisplay === 'function') {
+              window.updateFakeClockDisplay();
+            }
           }
         }
 
@@ -7444,7 +7457,8 @@ function logWriteToGAS(logType, message) {
   if (!gasUrl) return;
 
   const isUrgent = logType.includes('SUBMIT') || logType.includes('COLLECTED') || logType.includes('LOOP') || logType.includes('RESET');
-  if (isUrgent) {
+  // ユーザーの明示的なフォーム送信やアイテム収集時のみ「通信中…」を表示
+  if (logType.includes('SUBMIT') || logType.includes('COLLECTED')) {
     showNetworkLoadingIndicator("通信中…");
   }
 

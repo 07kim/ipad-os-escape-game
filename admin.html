@@ -3188,14 +3188,19 @@
         }
       }
 
-      // 📡 iPad全アプリが「世界線時刻 (作中)」と100%完全一致して参照できるように常時保存・配信
+      // 📡 iPad全アプリが「世界線時刻 (作中)」と100%完全一致して参照できるように差分時のみ保存・配信
       const currentWorldTimeStr = `${currentWorldH}:${currentWorldM}`;
       const currentWorldTimeFull = `${currentWorldH}:${currentWorldM}:${currentWorldS}`;
       const effectiveStartTime = adminTimerState.isRunning ? (now - loopMs) : now;
-      localStorage.setItem('admin_world_time_str', currentWorldTimeStr);
-      localStorage.setItem('admin_world_time_full', currentWorldTimeFull);
-      localStorage.setItem('fake_clock_set_time', String(effectiveStartTime));
-      localStorage.setItem('game_timer_running', adminTimerState.isRunning ? 'true' : 'false');
+      
+      if (window._lastSavedWorldTimeStr !== currentWorldTimeStr || window._lastSavedTimerRunning !== adminTimerState.isRunning) {
+        window._lastSavedWorldTimeStr = currentWorldTimeStr;
+        window._lastSavedTimerRunning = adminTimerState.isRunning;
+        localStorage.setItem('admin_world_time_str', currentWorldTimeStr);
+        localStorage.setItem('admin_world_time_full', currentWorldTimeFull);
+        localStorage.setItem('fake_clock_set_time', String(effectiveStartTime));
+        localStorage.setItem('game_timer_running', adminTimerState.isRunning ? 'true' : 'false');
+      }
 
       if (typeof BroadcastChannel !== 'undefined') {
         try {
