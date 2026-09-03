@@ -2988,6 +2988,25 @@ const DEFAULT_OBSERVATION_FOLDERS = [
   }
 ];
 
+// 🖼️ 観測ファイル画像の安全な実体URL解決（.png ➔ .webp 自動補正・日本語URLエンコード完全対応）
+function getObservationFileImageSrc(file) {
+  if (!file) return './chibakou_logo.webp';
+  let raw = typeof file === 'string' ? file : (file.image || file.fileName || '');
+  if (!raw) return './chibakou_logo.webp';
+  if (raw.startsWith('data:') || raw.startsWith('http')) return raw;
+
+  // パスを正規化（./ や assets/ を整理）
+  let clean = raw.replace(/^\.\//, '').replace(/^assets\//, '');
+  // .png 指定されているものを実体の .webp に自動正規化
+  clean = clean.replace(/\.png$/i, '.webp');
+
+  try {
+    return encodeURI('./' + clean);
+  } catch (e) {
+    return './' + clean;
+  }
+}
+
 // 📁 【観測】タブ描画: エクスプローラー風フォルダ・ファイル階層ビュー（周回解放対応）
 function renderMetaObservation(folderId = 'root', e = null) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -3076,14 +3095,16 @@ function renderMetaObservation(folderId = 'root', e = null) {
       countEl.innerText = `${files.length} 項目`;
     }
 
-    container.innerHTML = files.map(file => `
-      <div class="finder-item" onclick="openMetaLightbox('${file.image}', '${file.fileName}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
+    container.innerHTML = files.map(file => {
+      const srcUrl = getObservationFileImageSrc(file);
+      return `
+      <div class="finder-item" onclick="openMetaLightbox('${srcUrl}', '${file.fileName || file.title}', null, event)" style="touch-action:manipulation; cursor:pointer;" title="タップでプレビュー">
         <div class="finder-thumb-wrapper" style="pointer-events:none;">
-          <img src="${file.image}" class="finder-thumb-img" alt="${file.fileName}" loading="lazy" decoding="async">
+          <img src="${srcUrl}" class="finder-thumb-img" alt="${file.fileName || '画像'}" loading="lazy" decoding="async" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='${srcUrl.replace(/\.webp$/i, '.png')}';}else{this.src='./chibakou_logo.webp';}">
         </div>
-        <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || "").replace(/\.webp$/i, ".png")}</div>
+        <div class="finder-file-name" style="pointer-events:none;">${(file.fileName || file.title || "").replace(/\.webp$/i, ".png")}</div>
       </div>
-    `).join('');
+    `;}).join('');
   }
 
   safeCreateIcons(container);
@@ -3116,7 +3137,10 @@ function openMetaLightbox(imgUrl, title, galleryList = null, e = null) {
   }
 
   // 現在の画像のインデックスを特定
-  const foundIdx = currentLightboxGallery.findIndex(item => item.image === imgUrl || item.fileName === title);
+  const foundIdx = currentLightboxGallery.findIndex(item => {
+    const itemSrc = getObservationFileImageSrc(item);
+    return itemSrc === imgUrl || item.image === imgUrl || item.fileName === title;
+  });
   currentLightboxIndex = foundIdx !== -1 ? foundIdx : 0;
 
   updateLightboxView();
@@ -3140,13 +3164,21 @@ function updateLightboxView() {
   const currentItem = currentLightboxGallery[currentLightboxIndex];
   if (!currentItem) return;
 
-  img.style.opacity = '0.5';
-  img.src = currentItem.image;
-  img.onload = () => {
+  const imgSrc = getObservationFileImageSrc(currentItem);
+  img.style.opacity = '1';
+  img.src = imgSrc;
+  img.onload = () => { img.style.opacity = '1'; };
+  img.onerror = () => {
+    if (img.src.endsWith('.webp')) {
+      img.src = img.src.replace(/\.webp$/i, '.png');
+    }
     img.style.opacity = '1';
   };
+  if (img.complete) {
+    img.style.opacity = '1';
+  }
 
-  if (titleEl) titleEl.innerText = currentItem.fileName || currentItem.title || "プレビュー";
+  if (titleEl) titleEl.innerText = (currentItem.fileName || currentItem.title || "プレビュー").replace(/\.webp$/i, ".png");
   if (counterEl) {
     if (currentLightboxGallery.length > 1) {
       counterEl.style.display = 'inline-block';
