@@ -509,6 +509,49 @@ function stopAlarm() {
   if (_alarmGain) _alarmGain.gain.linearRampToValueAtTime(0, _alarmAudioCtx.currentTime + 0.1);
 }
 
+// 🔔 チャット着信通知音（LINE風 ポロン♪ ピロリン♪）
+function playChatNotifSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!_alarmAudioCtx) _alarmAudioCtx = new AudioContext();
+    if (_alarmAudioCtx.state === 'suspended') _alarmAudioCtx.resume();
+
+    const ctx = _alarmAudioCtx;
+    const now = ctx.currentTime;
+
+    // 音符1: ド (523.25Hz) → 音符2: ミ (659.25Hz) → 音符3: ソ (783.99Hz) の軽快なチャット着信音
+    const notes = [
+      { freq: 587.33, start: 0.00, dur: 0.12 }, // D5
+      { freq: 880.00, start: 0.10, dur: 0.18 }, // A5
+    ];
+
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.35, now);
+    masterGain.connect(ctx.destination);
+
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(n.freq, now + n.start);
+
+      g.gain.setValueAtTime(0.0, now + n.start);
+      g.gain.linearRampToValueAtTime(0.6, now + n.start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(now + n.start);
+      osc.stop(now + n.start + n.dur + 0.05);
+    });
+
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+  } catch (e) {
+    console.warn('通知音再生エラー:', e);
+  }
+}
+
 // リアルタイム受信
 function injectActorMessage(payload, animate = true) {
   if (!payload) return;
@@ -531,9 +574,19 @@ function injectActorMessage(payload, animate = true) {
 
   actorState.chats[target].push({ sender: senderId, text, time, date: '今日', isNew: animate, _addedAt: Date.now(), _triggerId: triggerId });
 
+  // 🔔 リアルタイム受信時は通知音 ＆ バイブレーションを再生
+  if (animate) {
+    playChatNotifSound();
+  }
+
   if (autoReplySender && autoReplyText) {
     const autoId = senderMap[(autoReplySender || '').toLowerCase()] || autoReplySender;
-    actorState.chats[target].push({ sender: autoId, text: autoReplyText, time, date: '今日', isNew: animate, _addedAt: Date.now() + 1, _triggerId: triggerId ? triggerId + '_auto' : '' });
+    setTimeout(() => {
+      actorState.chats[target].push({ sender: autoId, text: autoReplyText, time: getCurrentTimeStr(), date: '今日', isNew: animate, _addedAt: Date.now() + 1, _triggerId: triggerId ? triggerId + '_auto' : '' });
+      renderLinkChatList();
+      if (actorState.activeChatContact === target) openLinkChat(target, animate);
+      if (animate) playChatNotifSound();
+    }, 15000);
   }
 
   renderLinkChatList();
@@ -612,7 +665,23 @@ function formatChatTime(timeStr) {
 function getCurrentTimeStr() { const now = new Date(); return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
 function escapeHtml(str) { if (typeof str !== 'string') return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-document.addEventListener('DOMContentLoaded', () => { initLinkData(); lucide.createIcons({ attrs: { 'stroke-width': 2 } }); });
+// 初回タップでAudioContextをアンロック（モバイル自動再生制限解除）
+function unlockAudioOnFirstTouch() {
+  if (!_alarmAudioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) _alarmAudioCtx = new AudioContext();
+  }
+  if (_alarmAudioCtx && _alarmAudioCtx.state === 'suspended') {
+    _alarmAudioCtx.resume();
+  }
+}
+document.addEventListener('touchstart', unlockAudioOnFirstTouch, { once: true, passive: true });
+document.addEventListener('click', unlockAudioOnFirstTouch, { once: true, passive: true });
+
+document.addEventListener('DOMContentLoaded', () => {
+  initLinkData();
+  lucide.createIcons({ attrs: { 'stroke-width': 2 } });
+});
 </script>
 </body>
 </html>
