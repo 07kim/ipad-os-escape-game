@@ -315,8 +315,10 @@ window.addEventListener('DOMContentLoaded', () => {
       unlockScreen();
       if (blackoutOverlay) blackoutOverlay.style.display = 'none';
     } else if (savedFlowStep === 1) {
-      // 01オープニング待機中のみロック画面を表示
-      showLockScreen();
+      // 01オープニング待機中：ユーザーがすでに解除済みの場合は勝手に再ロックしない
+      if (!window._isUserUnlocked) {
+        showLockScreen();
+      }
     }
 
     // 🔋 実機バッテリー連動の開始
@@ -1831,8 +1833,7 @@ function applyFlowStepState(stepNum, startTime = null, isInitialSync = false, ex
     localStorage.setItem('fake_clock_set_time', String(now));
     updateAppUI();
     // ユーザーがすでにロック解除済みの場合は勝手に再ロックしない
-    const lsEl = document.getElementById('lock-screen');
-    if (isInitialSync && (!lsEl || !lsEl.classList.contains('hidden'))) {
+    if (isInitialSync && !window._isUserUnlocked) {
       showLockScreen();
     }
   } else if (step === 2) {
@@ -2196,17 +2197,20 @@ function closeIpadModal() {
 }
 
 // --- ロック画面表示（カバーシート呼び出し：その下はホーム画面に戻す） ---
-function showLockScreen() {
+window._isUserUnlocked = false;
+
+function showLockScreen(force = false) {
+  if (!force && window._isUserUnlocked) return;
   const lockScreen = document.getElementById('lock-screen');
   if (lockScreen) {
+    window._isUserUnlocked = false;
     // 🏠 ロック画面の背面にあるアプリ・ウィンドウ・モーダルをすべて閉じ、ホーム画面状態に戻す
     closeAllWindowsSilent();
     gameState.activeApp = null;
 
+    lockScreen.style.pointerEvents = 'all';
     lockScreen.style.display = 'flex';
-    requestAnimationFrame(() => {
-      lockScreen.classList.remove('hidden');
-    });
+    lockScreen.classList.remove('hidden');
 
     const lockClock = document.getElementById('lock-clock');
     if (lockClock && !gameState.timerRunning) {
@@ -2234,12 +2238,11 @@ function initTopSwipeForLockScreen() {
 
   document.addEventListener('touchstart', (e) => {
     const ls = document.getElementById('lock-screen');
-    if (ls && !ls.classList.contains('hidden')) return;
+    if (ls && !ls.classList.contains('hidden') && ls.style.display !== 'none') return;
 
-    // 💡 タップ遮断バグ根絶: 勝手にロック画面をスタンバイ（display:flex）させず、明示的な下スワイプのみで制御
     if (e.touches && e.touches.length === 1) {
       const touch = e.touches[0];
-      if (touch.clientY <= 16) {
+      if (touch.clientY <= 12) {
         touchStartY = touch.clientY;
         touchStartX = touch.clientX;
         touchStartTime = Date.now();
@@ -2257,47 +2260,16 @@ function initTopSwipeForLockScreen() {
     const deltaX = Math.abs(touch.clientX - touchStartX);
     const elapsed = Date.now() - touchStartTime;
 
-    // 800ms以内、下方向に100px以上明確にスワイプし、かつ横ブレが少ない場合のみロック画面呼び出し
-    if (elapsed < 800 && deltaY >= 100 && deltaY > deltaX * 2) {
+    // 800ms以内、下方向に120px以上明確にスワイプし、かつ横ブレが極小の場合のみロック画面呼び出し
+    if (elapsed < 800 && deltaY >= 120 && deltaY > deltaX * 2.5) {
       isTrackingTopSwipe = false;
-      showLockScreen();
+      showLockScreen(true);
     }
   }, { passive: true });
 
   document.addEventListener('touchend', () => {
-    if (isTrackingTopSwipe) {
-      const ls = document.getElementById('lock-screen');
-      if (ls && ls.classList.contains('hidden')) {
-        ls.style.display = 'none';
-      }
-    }
     isTrackingTopSwipe = false;
   }, { passive: true });
-
-  // ステータスバー（PC用：明確にステータスバー内でドラッグを開始し、800ms以内に100px以上下ドラッグした場合のみ）
-  const statusBar = document.getElementById('status-bar') || document.querySelector('.status-bar');
-  if (statusBar) {
-    let mouseStartY = 0;
-    let mouseStartTime = 0;
-    statusBar.addEventListener('mousedown', (e) => {
-      const ls = document.getElementById('lock-screen');
-      if (ls && !ls.classList.contains('hidden')) return;
-      mouseStartY = e.clientY;
-      mouseStartTime = Date.now();
-      if (ls) ls.style.display = 'flex';
-    });
-    document.addEventListener('mouseup', (e) => {
-      const elapsed = Date.now() - mouseStartTime;
-      if (mouseStartY > 0 && elapsed < 800 && (e.clientY - mouseStartY) >= 100) {
-        showLockScreen();
-      } else {
-        const ls = document.getElementById('lock-screen');
-        if (ls && ls.classList.contains('hidden')) ls.style.display = 'none';
-      }
-      mouseStartY = 0;
-      mouseStartTime = 0;
-    });
-  }
 }
 
 // --- ロック画面操作 ＆ 解除ジェスチャー（完全非ブロッキング・タップ/スワイプ 0ms即時解除） ---
@@ -2306,13 +2278,11 @@ function initLockScreenGestures() {
   if (!lockScreen) return;
 
   let touchStartY = 0;
-  let touchStartX = 0;
   let isDragging = false;
 
   lockScreen.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length > 0) {
       touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
       isDragging = true;
     }
   }, { passive: true });
@@ -2329,7 +2299,7 @@ function initLockScreenGestures() {
 
   window.addEventListener('keydown', (e) => {
     const ls = document.getElementById('lock-screen');
-    if (ls && !ls.classList.contains('hidden')) {
+    if (ls && !ls.classList.contains('hidden') && ls.style.display !== 'none') {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') {
         e.preventDefault();
         unlockScreen();
@@ -2341,16 +2311,17 @@ function initLockScreenGestures() {
 // --- ロック画面解除 ---
 let lockScreenHideTimer = null;
 function unlockScreen() {
+  window._isUserUnlocked = true;
   const lockScreen = document.getElementById('lock-screen');
   if (lockScreen) {
     lockScreen.classList.add('hidden');
     lockScreen.style.pointerEvents = 'none';
-    lockScreen.style.display = 'none'; // 💡 遅延タイマーを待たず即時消滅させてタップ遮断を根絶
+    lockScreen.style.display = 'none'; // 💡 遅延タイマーを待たず即時消滅させてタップ遮断・チラつきを根絶
     if (lockScreenHideTimer) {
       clearTimeout(lockScreenHideTimer);
       lockScreenHideTimer = null;
     }
-    playSystemSound("notif");
+    try { playSystemSound("notif"); } catch(e) {}
     logWriteToGAS("LOCK_DISMISS", "ロック解除されました。");
   }
 }
