@@ -240,15 +240,13 @@ window.addEventListener('DOMContentLoaded', () => {
             triggerLoopTransition(payload.loop, null, false, true);
           } else if (type === 'world_time_sync' && payload) {
             if (payload.worldTime) {
-              localStorage.setItem('admin_world_time_str', payload.worldTime);
+              window._latestWorldTimeStr = payload.worldTime;
             }
             if (payload.startTime) {
               gameState.clockSetTime = payload.startTime;
-              localStorage.setItem('fake_clock_set_time', String(payload.startTime));
             }
             if (payload.isRunning !== undefined) {
               gameState.timerRunning = !!payload.isRunning;
-              localStorage.setItem('game_timer_running', gameState.timerRunning ? 'true' : 'false');
             }
             if (typeof window.updateFakeClockDisplay === 'function') {
               window.updateFakeClockDisplay();
@@ -1241,7 +1239,9 @@ function loadStateFromStorage() {
   const savedFlowStep = parseInt(localStorage.getItem('current_flow_step') || '1', 10);
   const accurateLoop = (savedFlowStep <= 2) ? 1 : (savedFlowStep <= 4) ? 2 : 3;
   gameState.loop = accurateLoop;
-  localStorage.setItem('game_loop', String(accurateLoop));
+  if (localStorage.getItem('game_loop') !== String(accurateLoop)) {
+    localStorage.setItem('game_loop', String(accurateLoop));
+  }
 
   // 🕒 タイマー稼働ステップ（02, 04, 06 のみ計時進行、それ以外は09:44静止）
   const isRunningStep = (savedFlowStep === 2 || savedFlowStep === 4 || savedFlowStep === 6);
@@ -1357,8 +1357,13 @@ function handleStorageEvent(e) {
     // マスターリセット
     performMasterReset();
   } else if (e.key === 'fake_clock_start_iso' || e.key === 'fake_clock_set_time' || e.key === 'admin_world_time_str' || e.key === 'game_timer_running') {
-    // 🌍 管理画面の世界線時刻（作中）の更新を即時キャッチして時計へ反映
-    loadStateFromStorage();
+    // 🌍 管理画面の世界線時刻（作中）の更新を即時キャッチして時計表示のみを静かに反映
+    if (e.key === 'fake_clock_set_time' && e.newValue) {
+      gameState.clockSetTime = parseInt(e.newValue, 10) || gameState.clockSetTime;
+    }
+    if (e.key === 'game_timer_running' && e.newValue) {
+      gameState.timerRunning = (e.newValue === 'true');
+    }
     if (typeof window.updateFakeClockDisplay === 'function') {
       window.updateFakeClockDisplay();
     }
@@ -1393,8 +1398,8 @@ function getFormattedFakeTime() {
     if (!isRunning) {
       return '09:44';
     }
-    // 🌍 管理画面の世界線時刻(作中)がLocalStorageにあれば最優先で参照
-    const directTime = localStorage.getItem('admin_world_time_str');
+    // 🌍 管理画面の世界線時刻(作中)があれば最優先で参照
+    const directTime = window._latestWorldTimeStr || localStorage.getItem('admin_world_time_str');
     if (directTime && directTime.match(/^\d{2}:\d{2}$/)) {
       return directTime;
     }
@@ -1427,7 +1432,7 @@ function startFakeClock() {
       }
 
       // 🌍 管理画面の世界線時刻(作中)を最優先でダイレクト参照
-      const directTime = localStorage.getItem('admin_world_time_str');
+      const directTime = window._latestWorldTimeStr || localStorage.getItem('admin_world_time_str');
       if (directTime && directTime.match(/^\d{2}:\d{2}$/)) {
         clockStr = directTime;
       } else {
